@@ -59,7 +59,7 @@ pub enum UsiCheckMate {
 	Timeout,
 	Nomate,
 }
-#[derive(Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaKind {
 	Fu = 0,
 	Kyou,
@@ -87,6 +87,11 @@ pub enum MochigomaKind {
 	Hisha,
 	Ou,
 	Tail,
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum Kyokumen {
+	Ban(Teban,KomaKind,u32,u32),
+	MochigomaKind(Teban,MochigomaKind),
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaSrcPosition {
@@ -240,14 +245,6 @@ const SENTE_KOMA_MAP:[char; 8] = ['P','L','N','S','G','B','R','K'];
 const GOTE_KOMA_MAP:[char; 8] = ['p','l','n','s','g','b','r','k'];
 struct KomaStringCreator {
 
-}
-impl KomaStrFromKind<KomaKind> for KomaStringCreator {
-	fn str_from(t:Teban,k:KomaKind) -> String {
-		match t {
-			Teban::Sente => format!("{}",SENTE_KOMA_MAP[k as usize]),
-			Teban::Gote => format!("{}",GOTE_KOMA_MAP[k as usize]),
-		}
-	}
 }
 impl KomaStrFromKind<MochigomaKind> for KomaStringCreator {
 	fn str_from(t:Teban,k:MochigomaKind) -> String {
