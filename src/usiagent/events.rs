@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use std::sync::Mutex;
 use usiagent::errors::EventDispatchError;
 use usiagent::errors::EventHandlerError;
+use usiagent::UsiOutput;
 
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
@@ -11,8 +12,7 @@ pub trait MaxIndex {
 	fn max_index() -> usize;
 }
 pub enum SystemEventKind {
-	USIID = 0,
-	USIOPT,
+	SENDUSICOMMAND = 0,
 	Tail
 }
 impl MaxIndex for SystemEventKind {
@@ -21,16 +21,7 @@ impl MaxIndex for SystemEventKind {
 	}
 }
 pub enum SystemEvent {
-	USIID(String, String),
-	USIOPT(String, USIOPTType),
-}
-pub enum USIOPTType {
-	Check(Option<bool>),
-	Spin(u32, u32),
-	Combo(Option<String>, Option<Vec<String>>),
-	Button,
-	String(Option<String>),
-	FileName(Option<String>),
+	SendUSICommand(UsiOutput),
 }
 #[derive(Debug)]
 pub struct EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
