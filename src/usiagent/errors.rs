@@ -45,3 +45,54 @@ impl<'a,T> From<EventHandlerError> for EventDispatchError<'a,T> where T: fmt::De
 		EventDispatchError::ErrorFromHandler(err)
 	}
 }
+#[derive(Debug)]
+pub struct DanConvertError(pub u32);
+impl fmt::Display for DanConvertError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		DanConvertError(n) => write!(f, "段の値{}は有効な値の範囲外です。",n)
+	 	}
+	 }
+}
+impl error::Error for DanConvertError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		DanConvertError(_) => "段の値が有効な値の範囲外です。"
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		DanConvertError(_) => None
+	 	}
+	 }
+}
+#[derive(Debug)]
+pub enum ToMoveStringConvertError {
+	CharConvert(DanConvertError),
+}
+impl fmt::Display for ToMoveStringConvertError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		ToMoveStringConvertError::CharConvert(ref e) => e.fmt(f),
+	 	}
+	 }
+}
+impl error::Error for ToMoveStringConvertError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		ToMoveStringConvertError::CharConvert(ref e) => e.description(),
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		ToMoveStringConvertError::CharConvert(ref e) => Some(e)
+	 	}
+	 }
+}
+impl From<DanConvertError> for ToMoveStringConvertError {
+	fn from(err: DanConvertError) -> ToMoveStringConvertError {
+		ToMoveStringConvertError::CharConvert(err)
+	}
+}

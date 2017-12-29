@@ -6,7 +6,7 @@ use std::error;
 
 use usiagent::commands::TryToString;
 use usiagent::commands::UsiCommand;
-use usiagent::commands::ToMoveStringConvertError;
+use usiagent::errors::ToMoveStringConvertError;
 
 pub enum UsiOutput {
 	Command(Vec<String>),

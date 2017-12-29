@@ -2,6 +2,9 @@ use std::collections::HashSet;
 use std::fmt;
 use std::error;
 
+use usiagent::errors::DanConvertError;
+use usiagent::errors::ToMoveStringConvertError;
+
 pub enum UsiCommand {
 	UsiOk,
 	UsiId(String, String),
@@ -220,28 +223,6 @@ trait DanCharFromNum {
 struct DanCharCreator {
 
 }
-#[derive(Debug)]
-pub struct DanConvertError(u32);
-impl fmt::Display for DanConvertError {
-	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	 	match *self {
-	 		DanConvertError(n) => write!(f, "段の値{}は有効な値の範囲外です。",n)
-	 	}
-	 }
-}
-impl error::Error for DanConvertError {
-	 fn description(&self) -> &str {
-	 	match *self {
-	 		DanConvertError(_) => "段の値が有効な値の範囲外です。"
-	 	}
-	 }
-
-	fn cause(&self) -> Option<&error::Error> {
-	 	match *self {
-	 		DanConvertError(_) => None
-	 	}
-	 }
-}
 impl DanCharFromNum for DanCharCreator {
 	fn char_from(n: u32) -> Result<char, DanConvertError> {
 		const DAN_MAP:[char; 9] = ['a','b','c','d','e','f','g','h','i'];
@@ -287,35 +268,6 @@ trait MoveStringFrom {
 }
 struct MoveStringCreator {
 
-}
-#[derive(Debug)]
-pub enum ToMoveStringConvertError {
-	CharConvert(DanConvertError),
-}
-impl fmt::Display for ToMoveStringConvertError {
-	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	 	match *self {
-	 		ToMoveStringConvertError::CharConvert(ref e) => e.fmt(f),
-	 	}
-	 }
-}
-impl error::Error for ToMoveStringConvertError {
-	 fn description(&self) -> &str {
-	 	match *self {
-	 		ToMoveStringConvertError::CharConvert(ref e) => e.description(),
-	 	}
-	 }
-
-	fn cause(&self) -> Option<&error::Error> {
-	 	match *self {
-	 		ToMoveStringConvertError::CharConvert(ref e) => Some(e)
-	 	}
-	 }
-}
-impl From<DanConvertError> for ToMoveStringConvertError {
-	fn from(err: DanConvertError) -> ToMoveStringConvertError {
-		ToMoveStringConvertError::CharConvert(err)
-	}
 }
 impl MoveStringFrom for MoveStringCreator {
 	fn str_from(teban:Teban,ms:KomaSrcPosition,md:KomaDstPosition) -> Result<String, ToMoveStringConvertError> {
