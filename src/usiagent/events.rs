@@ -96,15 +96,19 @@ impl<K,E,T> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T> where K: MaxInd
 			event_queue.lock()?.drain_events()
 		};
 
-		for e in &(*events) {
+		for e in &events {
 			for h in &self.handlers[usize::from(e.event_kind())] {
 				h(ctx, &e)?;
 			}
 
-			for h in &self.once_handlers[usize::from(e.event_kind())] {
-				h(ctx, &e)?;
+			if !self.once_handlers[usize::from(e.event_kind())].is_empty() {
+				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError>>> =
+											self.once_handlers[usize::from(e.event_kind())].drain(0..)
+																							.collect();
+				for h in &once_handlers {
+					h(ctx, &e)?;
+				}
 			}
-			self.once_handlers.clear();
 		}
 
 		Ok(())
