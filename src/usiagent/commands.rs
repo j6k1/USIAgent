@@ -14,7 +14,11 @@ pub enum UsiCommand {
 	UsiOption(String,UsiOptType),
 	UsiCheckMate,
 }
-pub struct BestMove(Teban,KomaSrcPosition,KomaDstPosition,Option<(KomaSrcPosition,KomaDstPosition)>);
+pub enum BestMove {
+	Move(Teban,KomaSrcPosition,KomaDstPosition,Option<(KomaSrcPosition,KomaDstPosition)>),
+	Resign,
+	Win,
+}
 pub enum UsiInfoSubCommand {
 	Depth(u32),
 	SelDepth(u32),
@@ -118,8 +122,8 @@ pub enum UsiOptType {
 impl UsiCommand {
 	pub fn validate(&self) -> bool {
 		match *self {
-			UsiCommand::UsiBestMove(BestMove(_,ref s,ref d,_)) if !s.validate() || !d.validate() => false,
-			UsiCommand::UsiBestMove(BestMove(_,_,_,Some((ref s,ref d)))) if !s.validate() || !d.validate() => false,
+			UsiCommand::UsiBestMove(BestMove::Move(_,ref s,ref d,_)) if !s.validate() || !d.validate() => false,
+			UsiCommand::UsiBestMove(BestMove::Move(_,_,_,Some((ref s,ref d)))) if !s.validate() || !d.validate() => false,
 			UsiCommand::UsiInfo(ref commands) => {
 				let mut hs = HashSet::new();
 
@@ -284,16 +288,18 @@ pub trait TryToString<E> where E: fmt::Debug + error::Error {
 impl TryToString<ToMoveStringConvertError> for BestMove {
 	fn try_to_string(&self) -> Result<String, ToMoveStringConvertError> {
 		match *self {
-			BestMove(t,s,d,None) => Ok(MoveStringCreator::str_from(t,s,d)?),
-			BestMove(t,s,d,Some((ps,pd))) => {
+			BestMove::Resign => Ok(String::from("bestmove resign")),
+			BestMove::Win => Ok(String::from("bestmove win")),
+			BestMove::Move(t,s,d,None) => Ok(MoveStringCreator::str_from(t,s,d)?),
+			BestMove::Move(t,s,d,Some((ps,pd))) => {
 				match t {
 					Teban::Sente => {
-						Ok(format!("{} ponder {}",
+						Ok(format!("bestmove {} ponder {}",
 							MoveStringCreator::str_from(t,s,d)?,
 							MoveStringCreator::str_from(Teban::Gote,ps,pd)?))
 					},
 					Teban::Gote => {
-						Ok(format!("{} ponder {}",
+						Ok(format!("bestmove {} ponder {}",
 							MoveStringCreator::str_from(t,s,d)?,
 							MoveStringCreator::str_from(Teban::Sente,ps,pd)?))
 					}
