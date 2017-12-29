@@ -69,11 +69,16 @@ pub struct USIEventDispatcher<K,E,T>
 impl<K,E,T> USIEventDispatcher<K,E,T>
 	where K: MaxIndex + fmt::Debug, E: MapEventKind<K> + fmt::Debug {
 	pub fn new() -> USIEventDispatcher<K,E,T> {
-		USIEventDispatcher {
+		let mut o = USIEventDispatcher {
 			event_kind:PhantomData::<K>,
 			handlers:Vec::with_capacity(K::max_index()),
 			once_handlers:Vec::with_capacity(K::max_index()),
+		};
+		for _ in 0..K::max_index() {
+			o.handlers.push(Vec::new());
+			o.once_handlers.push(Vec::new());
 		}
+		o
 	}
 }
 impl<K,E,T> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T> where K: MaxIndex + fmt::Debug,
