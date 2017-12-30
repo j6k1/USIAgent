@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use usiagent::errors::EventDispatchError;
 use usiagent::errors::EventHandlerError;
 use usiagent::UsiOutput;
+use usiagent::Logger;
 
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
@@ -51,16 +52,22 @@ pub trait EventDispatcher<K,E,T> where K: MaxIndex + fmt::Debug,
 										Result<(), EventDispatchError<'a,EventQueue<E,K>>>
 										where E: fmt::Debug, K: fmt::Debug;
 }
-pub struct USIEventDispatcher<K,E,T>
-	where K: MaxIndex + fmt::Debug, E: MapEventKind<K> + fmt::Debug {
+pub struct USIEventDispatcher<K,E,T,L>
+	where K: MaxIndex + fmt::Debug,
+			E: MapEventKind<K> + fmt::Debug,
+			L: Logger {
+	logger:L,
 	event_kind:PhantomData<K>,
 	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError>>>>,
 	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError>>>>,
 }
-impl<K,E,T> USIEventDispatcher<K,E,T>
-	where K: MaxIndex + fmt::Debug, E: MapEventKind<K> + fmt::Debug {
-	pub fn new() -> USIEventDispatcher<K,E,T> {
+impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
+	where K: MaxIndex + fmt::Debug,
+			E: MapEventKind<K> + fmt::Debug,
+			L: Logger {
+	pub fn new(logger:L) -> USIEventDispatcher<K,E,T,L> {
 		let mut o = USIEventDispatcher {
+			logger:logger,
 			event_kind:PhantomData::<K>,
 			handlers:Vec::with_capacity(K::max_index()),
 			once_handlers:Vec::with_capacity(K::max_index()),
@@ -72,8 +79,9 @@ impl<K,E,T> USIEventDispatcher<K,E,T>
 		o
 	}
 }
-impl<K,E,T> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T> where K: MaxIndex + fmt::Debug,
+impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: MaxIndex + fmt::Debug,
 																		E: MapEventKind<K> + fmt::Debug,
+																		L: Logger,
 																		usize: From<K> {
 	fn add_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
 											Result<(), EventHandlerError>>) {
@@ -94,7 +102,12 @@ impl<K,E,T> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T> where K: MaxInd
 
 		for e in &events {
 			for h in &self.handlers[usize::from(e.event_kind())] {
-				h(ctx, &e)?;
+				match h(ctx, &e) {
+					Ok(_) => (),
+					Err(ref e) => {
+						self.logger.logging_error(e);
+					}
+				}
 			}
 
 			if !self.once_handlers[usize::from(e.event_kind())].is_empty() {
@@ -102,7 +115,12 @@ impl<K,E,T> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T> where K: MaxInd
 											self.once_handlers[usize::from(e.event_kind())].drain(0..)
 																							.collect();
 				for h in &once_handlers {
-					h(ctx, &e)?;
+					match h(ctx, &e) {
+						Ok(_) => (),
+						Err(ref e) => {
+							self.logger.logging_error(e);
+						}
+					}
 				}
 			}
 		}

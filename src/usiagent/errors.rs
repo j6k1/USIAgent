@@ -13,6 +13,26 @@ pub enum EventDispatchError<'a,T> where T: fmt::Debug + 'a {
 pub enum EventHandlerError {
 	Fail(String),
 }
+impl fmt::Display for EventHandlerError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		EventHandlerError::Fail(ref s) => write!(f,"{}",s)
+	 	}
+	 }
+}
+impl error::Error for EventHandlerError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		EventHandlerError::Fail(_) => "イベントハンドラの実行でエラーが発生しました。"
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		EventHandlerError::Fail(_) => None
+	 	}
+	 }
+}
 impl<'a,T> fmt::Display for EventDispatchError<'a,T> where T: fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {

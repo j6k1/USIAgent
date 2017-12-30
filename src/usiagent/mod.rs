@@ -2,6 +2,8 @@ pub mod events;
 pub mod errors;
 pub mod commands;
 
+use std::error::Error;
+
 use usiagent::commands::TryToString;
 use usiagent::commands::UsiCommand;
 use usiagent::errors::UsiOutputCreateError;
@@ -23,6 +25,10 @@ impl UsiOutput {
 			UsiCommand::UsiCheckMate(ref c) => vec![format!("checkmate {}", c.try_to_string()?)],
 		}))
 	}
+}
+pub trait Logger {
+	fn logging(&self, msg:&String);
+	fn logging_error<E: Error>(&self, e:&E);
 }
 pub struct UsiAgent {
 
