@@ -414,8 +414,10 @@ impl TryToString<UsiOutputCreateError> for UsiOptType {
 									.map(|va| format!("var {}", va)).collect::<Vec<String>>().join(" "))
 			},
 			UsiOptType::Button => format!("button"),
+			UsiOptType::String(Some(ref s)) if s.is_empty() => format!("string default <empty>"),
 			UsiOptType::String(Some(ref s)) => format!("string default {}", s),
 			UsiOptType::String(None) => format!("string"),
+			UsiOptType::FileName(Some(ref s)) if s.is_empty() => format!("filename <empty>"),
 			UsiOptType::FileName(Some(ref s)) => format!("filename {}", s),
 			UsiOptType::FileName(None) => format!("filename"),
 		})
