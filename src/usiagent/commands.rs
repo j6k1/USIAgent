@@ -4,7 +4,9 @@ use std::error;
 
 use usiagent::errors::DanConvertError;
 use usiagent::errors::ToMoveStringConvertError;
+use usiagent::errors::UsiOutputCreateError;
 
+#[derive(Debug)]
 pub enum UsiCommand {
 	UsiOk,
 	UsiId(String, String),
@@ -12,20 +14,22 @@ pub enum UsiCommand {
 	UsiBestMove(BestMove),
 	UsiInfo(Vec<UsiInfoSubCommand>),
 	UsiOption(String,UsiOptType),
-	UsiCheckMate,
+	UsiCheckMate(CheckMate),
 }
+#[derive(Debug)]
 pub enum BestMove {
 	Move(Teban,KomaSrcPosition,KomaDstPosition,Option<(KomaSrcPosition,KomaDstPosition)>),
 	Resign,
 	Win,
 }
+#[derive(Debug)]
 pub enum UsiInfoSubCommand {
 	Depth(u32),
 	SelDepth(u32),
 	Time(u32),
 	Nodes(u32),
 	Pv(Teban,Vec<(KomaSrcPosition,KomaDstPosition)>),
-	Score(UsiScore,Option<UsiScoreKind>),
+	Score(UsiScore),
 	CurMove(Teban,KomaSrcPosition,KomaDstPosition),
 	Hashfull(u32),
 	Nps(u32),
@@ -44,21 +48,24 @@ pub enum UsiInfoSubCommandKind {
 	Nps,
 	Str,
 }
+#[derive(Debug)]
 pub enum UsiScore {
 	Cp(i32),
+	CpUpper(i32),
+	CpLower(i32),
 	Mate(UsiScoreMate),
+	MateUpper(i32),
+	MateLower(i32),
 }
-pub enum UsiScoreKind {
-	Upper,
-	Lower,
-}
+#[derive(Debug)]
 pub enum UsiScoreMate {
 	Num(i32),
 	Plus,
 	Minus,
 }
-pub enum UsiCheckMate {
-	Moves(Vec<(KomaSrcPosition,KomaDstPosition)>),
+#[derive(Debug)]
+pub enum CheckMate {
+	Moves(Teban,Vec<(KomaSrcPosition,KomaDstPosition)>),
 	NotiImplemented,
 	Timeout,
 	Nomate,
@@ -119,16 +126,20 @@ impl Teban {
 		}
 	}
 }
+#[derive(Debug)]
 pub enum UsiOptType {
 	Check(Option<bool>),
-	Spin(u32, u32),
-	Combo(Option<String>, Option<Vec<String>>),
+	Spin(u32, u32,Option<u32>),
+	Combo(Option<String>, Vec<String>),
 	Button,
 	String(Option<String>),
 	FileName(Option<String>),
 }
-impl UsiCommand {
-	pub fn validate(&self) -> bool {
+trait Validate {
+	fn validate(&self) -> bool;
+}
+impl Validate for UsiCommand {
+	fn validate(&self) -> bool {
 		match *self {
 			UsiCommand::UsiBestMove(BestMove::Move(_,ref s,ref d,_)) if !s.validate() || !d.validate() => false,
 			UsiCommand::UsiBestMove(BestMove::Move(_,_,_,Some((ref s,ref d)))) if !s.validate() || !d.validate() => false,
@@ -141,6 +152,9 @@ impl UsiCommand {
 							return false;
 						},
 						UsiInfoSubCommand::Str(_) if hs.contains(&UsiInfoSubCommandKind::Pv) => {
+							return false;
+						},
+						UsiInfoSubCommand::SelDepth(_) if !hs.contains(&UsiInfoSubCommandKind::Depth) => {
 							return false;
 						},
 						ref c @ UsiInfoSubCommand::Pv(_,_) => {
@@ -160,7 +174,8 @@ impl UsiCommand {
 				}
 				true
 			},
-			ref c @ UsiCommand::UsiCheckMate => c.validate(),
+			UsiCommand::UsiOption(_,ref opt) => opt.validate(),
+			UsiCommand::UsiCheckMate(ref c) => c.validate(),
 			_ => true
 		}
 	}
@@ -173,15 +188,16 @@ impl UsiInfoSubCommand {
 			UsiInfoSubCommand::Time(_) => UsiInfoSubCommandKind::Time,
 			UsiInfoSubCommand::Nodes(_) => UsiInfoSubCommandKind::Nodes,
 			UsiInfoSubCommand::Pv(_,_) => UsiInfoSubCommandKind::Pv,
-			UsiInfoSubCommand::Score(_,_) => UsiInfoSubCommandKind::Score,
+			UsiInfoSubCommand::Score(_) => UsiInfoSubCommandKind::Score,
 			UsiInfoSubCommand::CurMove(_,_,_) => UsiInfoSubCommandKind::CurMove,
 			UsiInfoSubCommand::Hashfull(_) => UsiInfoSubCommandKind::Hashfull,
 			UsiInfoSubCommand::Nps(_) => UsiInfoSubCommandKind::Nps,
 			UsiInfoSubCommand::Str(_) => UsiInfoSubCommandKind::Str,
 		}
 	}
-
-	pub fn validate(&self) -> bool {
+}
+impl Validate for UsiInfoSubCommand {
+	fn validate(&self) -> bool {
 		match *self {
 			UsiInfoSubCommand::Pv(_,ref v) if v.len() < 1 => false,
 			UsiInfoSubCommand::Pv(_,ref v) => {
@@ -200,11 +216,11 @@ impl UsiInfoSubCommand {
 		}
 	}
 }
-impl UsiCheckMate {
-	pub fn validate(&self) -> bool {
+impl Validate for CheckMate {
+	fn validate(&self) -> bool {
 		match *self {
-			UsiCheckMate::Moves(ref v) if v.len() < 1 => false,
-			UsiCheckMate::Moves(ref v) => {
+			CheckMate::Moves(_, ref v) if v.len() < 1 => false,
+			CheckMate::Moves(_, ref v) => {
 				for m in v {
 					match *m {
 						(ref s,ref d) if !s.validate() || !d.validate() => {
@@ -219,16 +235,24 @@ impl UsiCheckMate {
 		}
 	}
 }
-impl KomaSrcPosition {
-	pub fn validate(&self) -> bool {
+impl Validate for UsiOptType {
+	fn validate(&self) -> bool {
+		match *self {
+			UsiOptType::Combo(_,ref l) if l.len() < 1 => false,
+			_ => true,
+		}
+	}
+}
+impl Validate for KomaSrcPosition {
+	fn validate(&self) -> bool {
 		match *self {
 			KomaSrcPosition::Mochigoma(_) => true,
 			KomaSrcPosition::Ban(x, y) => x < 9 && y < 9,
 		}
 	}
 }
-impl KomaDstPosition {
-	pub fn validate(&self) -> bool {
+impl Validate for KomaDstPosition {
+	fn validate(&self) -> bool {
 		match *self {
 			KomaDstPosition::Ban(x, y) => x < 9 && y < 9,
 		}
@@ -273,18 +297,18 @@ impl KomaStrFromKind<MochigomaKind> for KomaStringCreator {
 	}
 }
 trait MoveStringFrom {
-	fn str_from(t:Teban,s:KomaSrcPosition,d:KomaDstPosition) -> Result<String, ToMoveStringConvertError>;
+	fn str_from(t:Teban,s:&KomaSrcPosition,d:&KomaDstPosition) -> Result<String, ToMoveStringConvertError>;
 }
 struct MoveStringCreator {
 
 }
 impl MoveStringFrom for MoveStringCreator {
-	fn str_from(teban:Teban,ms:KomaSrcPosition,md:KomaDstPosition) -> Result<String, ToMoveStringConvertError> {
+	fn str_from(teban:Teban,ms:&KomaSrcPosition,md:&KomaDstPosition) -> Result<String, ToMoveStringConvertError> {
 		match (teban, ms, md) {
-			(t,KomaSrcPosition::Mochigoma(s),KomaDstPosition::Ban(x,y)) => {
+			(t,&KomaSrcPosition::Mochigoma(s),&KomaDstPosition::Ban(x,y)) => {
 				Ok(format!("{}*{}{}", KomaStringCreator::str_from(t,s), x+1, DanCharCreator::char_from(y)?))
 			},
-			(_,KomaSrcPosition::Ban(sx,sy),KomaDstPosition::Ban(dx,dy)) => {
+			(_,&KomaSrcPosition::Ban(sx,sy),&KomaDstPosition::Ban(dx,dy)) => {
 				Ok(format!("{}{}{}{}", sx+1, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
 			},
 		}
@@ -296,15 +320,132 @@ pub trait TryToString<E> where E: fmt::Debug + error::Error {
 impl TryToString<ToMoveStringConvertError> for BestMove {
 	fn try_to_string(&self) -> Result<String, ToMoveStringConvertError> {
 		match *self {
-			BestMove::Resign => Ok(String::from("bestmove resign")),
-			BestMove::Win => Ok(String::from("bestmove win")),
-			BestMove::Move(t,s,d,None) => Ok(MoveStringCreator::str_from(t,s,d)?),
-			BestMove::Move(t,s,d,Some((ps,pd))) => {
-				Ok(format!("bestmove {} ponder {}",
+			BestMove::Resign => Ok(String::from("resign")),
+			BestMove::Win => Ok(String::from("win")),
+			BestMove::Move(t,ref s,ref d,None) => Ok(MoveStringCreator::str_from(t,s,d)?),
+			BestMove::Move(t,ref s,ref d,Some((ref ps,ref pd))) => {
+				Ok(format!("{} ponder {}",
 						MoveStringCreator::str_from(t,s,d)?,
 						MoveStringCreator::str_from(t.opposite(),ps,pd)?))
 
 			}
 		}
+	}
+}
+impl TryToString<UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
+	fn try_to_string(&self) -> Result<String, UsiOutputCreateError> {
+		let mut strs:Vec<String> = Vec::with_capacity(self.len());
+
+		for cmd in self {
+			strs.push(cmd.try_to_string()?);
+		}
+
+		Ok(strs.join(" "))
+	}
+}
+impl TryToString<UsiOutputCreateError> for UsiInfoSubCommand {
+	fn try_to_string(&self) -> Result<String, UsiOutputCreateError> {
+		Ok(match *self {
+			UsiInfoSubCommand::Depth(d) => format!("depth {}", d),
+			UsiInfoSubCommand::SelDepth(d) => format!("seldepth {}", d),
+			UsiInfoSubCommand::Time(t) => format!("time {}",t),
+			UsiInfoSubCommand::Nodes(n) => format!("nodes {}", n),
+			UsiInfoSubCommand::Pv(_,ref v) if v.len() < 1 => {
+				return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
+			},
+			UsiInfoSubCommand::Pv(t,ref v) => {
+				let mut t:Teban = t;
+				let mut mv:Vec<String> = Vec::with_capacity(v.len());
+				for m in v {
+					match *m {
+						(ref s,ref d) if !s.validate() || !d.validate() => {
+							return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
+						},
+						(ref s,ref d) => {
+							mv.push(MoveStringCreator::str_from(t,s,d)?);
+							t = t.opposite();
+						}
+					}
+				}
+				mv.join(" ")
+			},
+			UsiInfoSubCommand::Score(UsiScore::Cp(cp)) => format!("score cp {}", cp),
+			UsiInfoSubCommand::Score(UsiScore::CpUpper(cp)) => {
+				format!("score cp {} upperbound", cp)
+			},
+			UsiInfoSubCommand::Score(UsiScore::CpLower(cp)) => {
+				format!("score cp {} lowerbound", cp)
+			},
+			UsiInfoSubCommand::Score(UsiScore::Mate(UsiScoreMate::Num(n))) => format!("score mate {}",n),
+			UsiInfoSubCommand::Score(UsiScore::Mate(UsiScoreMate::Plus)) => format!("score mate +"),
+			UsiInfoSubCommand::Score(UsiScore::Mate(UsiScoreMate::Minus)) => format!("score mate -"),
+			UsiInfoSubCommand::Score(UsiScore::MateUpper(n)) => {
+				format!("score mate {} upperbound",n)
+			},
+			UsiInfoSubCommand::Score(UsiScore::MateLower(n)) => {
+				format!("score mate {} lowerbound",n)
+			},
+			UsiInfoSubCommand::CurMove(t,ref s,ref d) => {
+				MoveStringCreator::str_from(t,s,d)?
+			},
+			UsiInfoSubCommand::Hashfull(v) => format!("hashfull {}", v),
+			UsiInfoSubCommand::Nps(v) => format!("nps {}",v),
+			UsiInfoSubCommand::Str(ref s) => format!("string {}",s),
+		})
+	}
+}
+impl TryToString<UsiOutputCreateError> for UsiOptType {
+	fn try_to_string(&self) -> Result<String, UsiOutputCreateError> {
+		Ok(match *self {
+			UsiOptType::Check(Some(b)) if b => format!("check default true"),
+			UsiOptType::Check(Some(_)) => format!("check default false"),
+			UsiOptType::Check(None) => format!("check"),
+			UsiOptType::Spin(min, max,Some(d)) => format!("spin min {} max {} default {}",min,max,d),
+			UsiOptType::Spin(min, max,None) => format!("spin min {} max {}", min, max),
+			UsiOptType::Combo(Some(_), ref v) if v.len() < 1 => {
+				return Err(UsiOutputCreateError::InvalidStateError(String::from("オプションコマンドのtype=combo")))
+			},
+			UsiOptType::Combo(Some(ref d), ref v) => {
+				format!("combo default {} {}", d,
+					v.iter().map(|va| format!("var {}", va)).collect::<Vec<String>>().join(" "))
+			},
+			UsiOptType::Combo(None, ref v) => {
+				format!("combo {}", v.iter()
+									.map(|va| format!("var {}", va)).collect::<Vec<String>>().join(" "))
+			},
+			UsiOptType::Button => format!("button"),
+			UsiOptType::String(Some(ref s)) => format!("string default {}", s),
+			UsiOptType::String(None) => format!("string"),
+			UsiOptType::FileName(Some(ref s)) => format!("filename {}", s),
+			UsiOptType::FileName(None) => format!("filename"),
+		})
+	}
+}
+impl TryToString<UsiOutputCreateError> for CheckMate {
+	fn try_to_string(&self) -> Result<String, UsiOutputCreateError> {
+		Ok(match *self {
+			CheckMate::Moves(_, ref v) if v.len() < 1 => {
+				return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
+			},
+			CheckMate::Moves(t, ref v) => {
+				let mut t:Teban = t;
+				let mut mv:Vec<String> = Vec::with_capacity(v.len());
+				for m in v {
+					match *m {
+						(ref s,ref d) if !s.validate() || !d.validate() => {
+							return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
+						},
+						(ref s,ref d) => {
+							mv.push(MoveStringCreator::str_from(t,s,d)?);
+							t = t.opposite();
+						}
+					}
+				}
+				mv.join(" ")
+			},
+			CheckMate::NotiImplemented => format!("notimplemented"),
+			CheckMate::Timeout => format!("timeout"),
+			CheckMate::Nomate => format!("nomate"),
+		})
 	}
 }

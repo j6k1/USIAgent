@@ -2,6 +2,7 @@ use std::error;
 use std::fmt;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
+use usiagent::commands::UsiCommand;
 
 #[derive(Debug)]
 pub enum EventDispatchError<'a,T> where T: fmt::Debug + 'a {
@@ -94,5 +95,56 @@ impl error::Error for ToMoveStringConvertError {
 impl From<DanConvertError> for ToMoveStringConvertError {
 	fn from(err: DanConvertError) -> ToMoveStringConvertError {
 		ToMoveStringConvertError::CharConvert(err)
+	}
+}
+#[derive(Debug)]
+pub enum UsiOutputCreateError {
+	ValidationError(UsiCommand),
+	InvalidStateError(String),
+	ConvertError(ToMoveStringConvertError),
+}
+impl fmt::Display for UsiOutputCreateError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		UsiOutputCreateError::ConvertError(ref e) => e.fmt(f),
+	 		UsiOutputCreateError::InvalidStateError(ref s) => write!(f, "{}の状態が不正です。", s),
+	 		UsiOutputCreateError::ValidationError(ref cmd) => {
+	 			match *cmd {
+	 				UsiCommand::UsiBestMove(_) => write!(f, "bestmoveコマンドの生成元オブジェクトの状態が不正です。"),
+	 				UsiCommand::UsiInfo(_) => write!(f, "infoコマンドの生成元オブジェクトの状態が不正です。"),
+	 				UsiCommand::UsiCheckMate(_) => write!(f, "checkmateコマンドの生成元オブジェクトの状態が不正です。"),
+		 			_ => write!(f,"コマンドのバリデーションで想定しない例外が発生しました。"),
+	 			}
+	 		}
+	 	}
+	 }
+}
+impl error::Error for UsiOutputCreateError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		UsiOutputCreateError::ConvertError(ref e) => e.description(),
+	 		UsiOutputCreateError::InvalidStateError(_) => "コマンドの生成オブジェクトの状態が不正です。",
+	 		UsiOutputCreateError::ValidationError(ref cmd) => {
+	 			match *cmd {
+	 				UsiCommand::UsiBestMove(_) => "bestmoveコマンドの生成元オブジェクトの状態が不正です。",
+	 				UsiCommand::UsiInfo(_) => "infoコマンドの生成元オブジェクトの状態が不正です。",
+	 				UsiCommand::UsiCheckMate(_) => "checkmateコマンドの生成元オブジェクトの状態が不正です。",
+	 				_ => "コマンドのバリデーションで想定しない例外が発生しました。",
+	 			}
+	 		}
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		UsiOutputCreateError::ConvertError(ref e) => Some(e),
+	 		UsiOutputCreateError::InvalidStateError(_) => None,
+	 		UsiOutputCreateError::ValidationError(_) => None,
+	 	}
+	 }
+}
+impl From<ToMoveStringConvertError> for UsiOutputCreateError {
+	fn from(err: ToMoveStringConvertError) -> UsiOutputCreateError {
+		UsiOutputCreateError::ConvertError(err)
 	}
 }
