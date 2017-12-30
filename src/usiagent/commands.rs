@@ -111,6 +111,14 @@ pub enum Teban {
 	Sente,
 	Gote,
 }
+impl Teban {
+	pub fn opposite(&self) -> Teban {
+		match *self {
+			Teban::Sente => Teban::Gote,
+			Teban::Gote => Teban::Sente,
+		}
+	}
+}
 pub enum UsiOptType {
 	Check(Option<bool>),
 	Spin(u32, u32),
@@ -292,18 +300,10 @@ impl TryToString<ToMoveStringConvertError> for BestMove {
 			BestMove::Win => Ok(String::from("bestmove win")),
 			BestMove::Move(t,s,d,None) => Ok(MoveStringCreator::str_from(t,s,d)?),
 			BestMove::Move(t,s,d,Some((ps,pd))) => {
-				match t {
-					Teban::Sente => {
-						Ok(format!("bestmove {} ponder {}",
-							MoveStringCreator::str_from(t,s,d)?,
-							MoveStringCreator::str_from(Teban::Gote,ps,pd)?))
-					},
-					Teban::Gote => {
-						Ok(format!("bestmove {} ponder {}",
-							MoveStringCreator::str_from(t,s,d)?,
-							MoveStringCreator::str_from(Teban::Sente,ps,pd)?))
-					}
-				}
+				Ok(format!("bestmove {} ponder {}",
+						MoveStringCreator::str_from(t,s,d)?,
+						MoveStringCreator::str_from(t.opposite(),ps,pd)?))
+
 			}
 		}
 	}
