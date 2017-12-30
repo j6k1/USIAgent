@@ -8,6 +8,7 @@ use usiagent::commands::UsiCommand;
 pub enum EventDispatchError<'a,T> where T: fmt::Debug + 'a {
 	ErrorFromHandler(EventHandlerError),
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+	ContainError,
 }
 #[derive(Debug)]
 pub enum EventHandlerError {
@@ -38,6 +39,7 @@ impl<'a,T> fmt::Display for EventDispatchError<'a,T> where T: fmt::Debug {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(EventHandlerError::Fail(ref s)) => write!(f, "{}", s),
 	 		EventDispatchError::MutexLockFailedError(_) => write!(f, "オブジェクトのロックを確保できませんでした。"),
+	 		EventDispatchError::ContainError => write!(f, "イベントハンドラーを実行中に一つ以上のエラーが発生しました。"),
 	 	}
 	 }
 }
@@ -46,6 +48,7 @@ impl<'a,T> error::Error for EventDispatchError<'a,T> where T: fmt::Debug {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(EventHandlerError::Fail(ref s)) => s,
 	 		EventDispatchError::MutexLockFailedError(ref e) => e.description(),
+	 		EventDispatchError::ContainError => "イベントハンドラーを実行中にエラー",
 	 	}
 	 }
 
@@ -53,6 +56,7 @@ impl<'a,T> error::Error for EventDispatchError<'a,T> where T: fmt::Debug {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(_) => None,
 	 		EventDispatchError::MutexLockFailedError(ref e) => Some(e),
+	 		EventDispatchError::ContainError => None,
 	 	}
 	 }
 }

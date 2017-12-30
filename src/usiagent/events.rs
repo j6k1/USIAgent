@@ -100,12 +100,15 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 			event_queue.lock()?.drain_events()
 		};
 
+		let mut has_error = false;
+
 		for e in &events {
 			for h in &self.handlers[usize::from(e.event_kind())] {
 				match h(ctx, &e) {
 					Ok(_) => (),
 					Err(ref e) => {
 						self.logger.logging_error(e);
+						has_error = true;
 					}
 				}
 			}
@@ -119,12 +122,16 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 						Ok(_) => (),
 						Err(ref e) => {
 							self.logger.logging_error(e);
+							has_error = true;
 						}
 					}
 				}
 			}
 		}
 
-		Ok(())
+		match has_error {
+			true => Err(EventDispatchError::ContainError),
+			false => Ok(()),
+		}
 	}
 }
