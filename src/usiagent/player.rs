@@ -15,8 +15,8 @@ impl USIInfoSender {
 		}
 	}
 	pub fn send(&self,commands:Vec<UsiInfoSubCommand>) ->
-		Result<(), UsiOutputSendError<EventQueue<SystemEvent,SystemEventKind>>> {
-		self.system_event_queue.lock()?.push_event(
+		Result<(), UsiEventSendError<EventQueue<SystemEvent,SystemEventKind>>> {
+		self.system_event_queue.lock()?.push(
 			SystemEvent::SendUSICommand(UsiOutput::try_from(UsiCommand::UsiInfo(commands))?));
 		Ok(())
 	}

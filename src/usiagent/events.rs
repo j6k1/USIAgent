@@ -46,7 +46,7 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 			events: Vec::new()
 		}
 	}
-	pub fn push_event(&mut self,e:E) {
+	pub fn push(&mut self,e:E) {
 		self.events.push(e);
 	}
 	pub fn drain_events(&mut self) -> Vec<E> {
