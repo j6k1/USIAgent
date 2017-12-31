@@ -64,7 +64,7 @@ pub struct Banmen([KomaKind; 81]);
 impl Debug for Banmen {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		match *self {
-			Banmen(ref v) => write!(f, "{}", v.iter()
+			Banmen(ref v) => write!(f, "Banmen[{}]", v.iter()
 												.map(|k| format!("{:?}", k))
 												.collect::<Vec<String>>().join(" "))
 		}
