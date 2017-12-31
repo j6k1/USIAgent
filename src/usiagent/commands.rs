@@ -403,7 +403,7 @@ impl TryToString<UsiOutputCreateError> for UsiOptType {
 			UsiOptType::Spin(min, max,Some(d)) => format!("spin min {} max {} default {}",min,max,d),
 			UsiOptType::Spin(min, max,None) => format!("spin min {} max {}", min, max),
 			UsiOptType::Combo(Some(_), ref v) if v.len() < 1 => {
-				return Err(UsiOutputCreateError::InvalidStateError(String::from("オプションコマンドのtype=combo")))
+				return Err(UsiOutputCreateError::InvalidStateError(String::from("There is no selection item of combo")))
 			},
 			UsiOptType::Combo(Some(ref d), ref v) => {
 				format!("combo default {} {}", d,

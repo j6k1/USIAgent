@@ -24,7 +24,7 @@ impl fmt::Display for EventHandlerError {
 impl error::Error for EventHandlerError {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		EventHandlerError::Fail(_) => "イベントハンドラの実行でエラーが発生しました。"
+	 		EventHandlerError::Fail(_) => "An error occurred while executing the event handler."
 	 	}
 	 }
 
@@ -38,8 +38,8 @@ impl<'a,T> fmt::Display for EventDispatchError<'a,T> where T: fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(EventHandlerError::Fail(ref s)) => write!(f, "{}", s),
-	 		EventDispatchError::MutexLockFailedError(_) => write!(f, "オブジェクトのロックを確保できませんでした。"),
-	 		EventDispatchError::ContainError => write!(f, "イベントハンドラーを実行中に一つ以上のエラーが発生しました。"),
+	 		EventDispatchError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
+	 		EventDispatchError::ContainError => write!(f, "One or more errors occurred while executing the event handler."),
 	 	}
 	 }
 }
@@ -48,7 +48,7 @@ impl<'a,T> error::Error for EventDispatchError<'a,T> where T: fmt::Debug {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(EventHandlerError::Fail(ref s)) => s,
 	 		EventDispatchError::MutexLockFailedError(ref e) => e.description(),
-	 		EventDispatchError::ContainError => "イベントハンドラーを実行中にエラー",
+	 		EventDispatchError::ContainError => "Error executing event handler",
 	 	}
 	 }
 
@@ -75,14 +75,14 @@ pub struct DanConvertError(pub u32);
 impl fmt::Display for DanConvertError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		DanConvertError(n) => write!(f, "段の値{}は有効な値の範囲外です。",n)
+	 		DanConvertError(n) => write!(f, "The 'dan' value {} is outside the range of valid values.",n)
 	 	}
 	 }
 }
 impl error::Error for DanConvertError {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		DanConvertError(_) => "段の値が有効な値の範囲外です。"
+	 		DanConvertError(_) => "The value of the 'dan' is out of the range of valid values"
 	 	}
 	 }
 
@@ -131,13 +131,13 @@ impl fmt::Display for UsiOutputCreateError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		UsiOutputCreateError::ConvertError(ref e) => e.fmt(f),
-	 		UsiOutputCreateError::InvalidStateError(ref s) => write!(f, "{}の状態が不正です。", s),
+	 		UsiOutputCreateError::InvalidStateError(ref s) => write!(f, "The state of {} is invalid.", s),
 	 		UsiOutputCreateError::ValidationError(ref cmd) => {
 	 			match *cmd {
-	 				UsiCommand::UsiBestMove(_) => write!(f, "bestmoveコマンドの生成元オブジェクトの状態が不正です。"),
-	 				UsiCommand::UsiInfo(_) => write!(f, "infoコマンドの生成元オブジェクトの状態が不正です。"),
-	 				UsiCommand::UsiCheckMate(_) => write!(f, "checkmateコマンドの生成元オブジェクトの状態が不正です。"),
-		 			_ => write!(f,"コマンドのバリデーションで想定しない例外が発生しました。"),
+	 				UsiCommand::UsiBestMove(_) => write!(f, "The state of the object that generated the bestmove command is invalid."),
+	 				UsiCommand::UsiInfo(_) => write!(f, "The state of the object that generated the info command is invalid."),
+	 				UsiCommand::UsiCheckMate(_) => write!(f, "The state of the object that generated the checkmate command is invalid."),
+		 			_ => write!(f,"An unexpected exception occurred in command validation."),
 	 			}
 	 		}
 	 	}
@@ -147,13 +147,13 @@ impl error::Error for UsiOutputCreateError {
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		UsiOutputCreateError::ConvertError(ref e) => e.description(),
-	 		UsiOutputCreateError::InvalidStateError(_) => "コマンドの生成オブジェクトの状態が不正です。",
+	 		UsiOutputCreateError::InvalidStateError(_) => "The state of the command generation object is invalid",
 	 		UsiOutputCreateError::ValidationError(ref cmd) => {
 	 			match *cmd {
-	 				UsiCommand::UsiBestMove(_) => "bestmoveコマンドの生成元オブジェクトの状態が不正です。",
-	 				UsiCommand::UsiInfo(_) => "infoコマンドの生成元オブジェクトの状態が不正です。",
-	 				UsiCommand::UsiCheckMate(_) => "checkmateコマンドの生成元オブジェクトの状態が不正です。",
-	 				_ => "コマンドのバリデーションで想定しない例外が発生しました。",
+	 				UsiCommand::UsiBestMove(_) => "The state of the object that generated the bestmove command is invalid",
+	 				UsiCommand::UsiInfo(_) => "The state of the object that generated the info command is invalid",
+	 				UsiCommand::UsiCheckMate(_) => "The state of the object that generated the checkmate command is invalid",
+	 				_ => "An unexpected exception occurred in command validation",
 	 			}
 	 		}
 	 	}
