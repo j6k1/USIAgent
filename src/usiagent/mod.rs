@@ -4,6 +4,7 @@ pub mod commands;
 pub mod logger;
 pub mod string;
 pub mod output;
+pub mod player;
 
 use std::error::Error;
 
@@ -11,6 +12,7 @@ use usiagent::commands::TryToString;
 use usiagent::commands::UsiCommand;
 use usiagent::errors::UsiOutputCreateError;
 
+#[derive(Debug)]
 pub enum UsiOutput {
 	Command(Vec<String>),
 }

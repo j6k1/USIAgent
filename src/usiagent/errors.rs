@@ -172,3 +172,41 @@ impl From<ToMoveStringConvertError> for UsiOutputCreateError {
 		UsiOutputCreateError::ConvertError(err)
 	}
 }
+#[derive(Debug)]
+pub enum UsiOutputSendError<'a,T> where T: fmt::Debug + 'a {
+	FailCreateOutput(UsiOutputCreateError),
+	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+}
+impl<'a,T> fmt::Display for UsiOutputSendError<'a,T> where T: fmt::Debug + 'a {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		UsiOutputSendError::FailCreateOutput(ref e) => e.fmt(f),
+	 		UsiOutputSendError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
+	 	}
+	 }
+}
+impl<'a,T> error::Error for UsiOutputSendError<'a,T> where T: fmt::Debug + 'a {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		UsiOutputSendError::FailCreateOutput(ref e) => e.description(),
+	 		UsiOutputSendError::MutexLockFailedError(ref e) => e.description(),
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		UsiOutputSendError::FailCreateOutput(ref e) => Some(e),
+	 		UsiOutputSendError::MutexLockFailedError(ref e) => Some(e),
+	 	}
+	 }
+}
+impl<'a,T> From<UsiOutputCreateError> for UsiOutputSendError<'a,T> where T: fmt::Debug + 'a {
+	fn from(err: UsiOutputCreateError) -> UsiOutputSendError<'a,T> {
+		UsiOutputSendError::FailCreateOutput(err)
+	}
+}
+impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for UsiOutputSendError<'a,T> where T: fmt::Debug + 'a {
+	fn from(err: PoisonError<MutexGuard<'a,T>>) -> UsiOutputSendError<'a,T> {
+		UsiOutputSendError::MutexLockFailedError(err)
+	}
+}

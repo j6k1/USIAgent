@@ -13,6 +13,7 @@ pub trait MapEventKind<K> {
 pub trait MaxIndex {
 	fn max_index() -> usize;
 }
+#[derive(Debug)]
 pub enum SystemEventKind {
 	SENDUSICOMMAND = 0,
 	Tail
@@ -22,8 +23,16 @@ impl MaxIndex for SystemEventKind {
 		SystemEventKind::Tail as usize
 	}
 }
+#[derive(Debug)]
 pub enum SystemEvent {
 	SendUSICommand(UsiOutput),
+}
+impl MapEventKind<SystemEventKind> for SystemEvent {
+	fn event_kind(&self) -> SystemEventKind {
+		match *self {
+			SystemEvent::SendUSICommand(_) => SystemEventKind::SENDUSICOMMAND,
+		}
+	}
 }
 #[derive(Debug)]
 pub struct EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
@@ -36,6 +45,9 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 			event_kind:PhantomData::<K>,
 			events: Vec::new()
 		}
+	}
+	pub fn push_event(&mut self,e:E) {
+		self.events.push(e);
 	}
 	pub fn drain_events(&mut self) -> Vec<E> {
 		self.events.drain(0..).collect()
