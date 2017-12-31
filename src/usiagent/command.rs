@@ -2,9 +2,10 @@ use std::collections::HashSet;
 use std::fmt;
 use std::error;
 
-use usiagent::errors::DanConvertError;
-use usiagent::errors::ToMoveStringConvertError;
-use usiagent::errors::UsiOutputCreateError;
+use usiagent::shogi::*;
+use usiagent::error::DanConvertError;
+use usiagent::error::ToMoveStringConvertError;
+use usiagent::error::UsiOutputCreateError;
 
 #[derive(Debug)]
 pub enum UsiCommand {
@@ -71,41 +72,6 @@ pub enum CheckMate {
 	Nomate,
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum KomaKind {
-	Fu = 0,
-	Kyou,
-	Kei,
-	Gin,
-	Kin,
-	Kaku,
-	Hisha,
-	Ou,
-	FuN,
-	KyouN,
-	KeiN,
-	KakuN,
-	HishaN,
-	Blank,
-	Tail,
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum MochigomaKind {
-	Fu = 0,
-	Kyou,
-	Kei,
-	Gin,
-	Kin,
-	Kaku,
-	Hisha,
-	Ou,
-	Tail,
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum Kyokumen {
-	Ban(Teban,KomaKind,u32,u32),
-	MochigomaKind(Teban,MochigomaKind),
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaSrcPosition {
 	Ban(u32,u32),
 	Mochigoma(MochigomaKind),
@@ -113,19 +79,6 @@ pub enum KomaSrcPosition {
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaDstPosition {
 	Ban(u32,u32),
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum Teban {
-	Sente,
-	Gote,
-}
-impl Teban {
-	pub fn opposite(&self) -> Teban {
-		match *self {
-			Teban::Sente => Teban::Gote,
-			Teban::Gote => Teban::Sente,
-		}
-	}
 }
 #[derive(Debug)]
 pub enum UsiOptType {

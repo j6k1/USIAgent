@@ -5,11 +5,11 @@ use std::io::{self, Write};
 use std::fmt::Debug;
 use std::fmt::Formatter;
 
-use usiagent::errors::EventDispatchError;
-use usiagent::errors::EventHandlerError;
+use usiagent::error::EventDispatchError;
+use usiagent::error::EventHandlerError;
 use usiagent::UsiOutput;
 use usiagent::Logger;
-use usiagent::commands::*;
+use usiagent::shogi::*;
 
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;

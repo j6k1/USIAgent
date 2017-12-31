@@ -1,8 +1,8 @@
 use std::sync::Mutex;
 
-use usiagent::commands::*;
-use usiagent::errors::*;
-use usiagent::events::{EventQueue,SystemEvent,SystemEventKind};
+use usiagent::command::*;
+use usiagent::error::*;
+use usiagent::event::{EventQueue,SystemEvent,SystemEventKind};
 use usiagent::UsiOutput;
 
 pub struct USIInfoSender {

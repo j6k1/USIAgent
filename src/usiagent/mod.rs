@@ -1,16 +1,16 @@
-pub mod events;
-pub mod errors;
-pub mod commands;
+pub mod event;
+pub mod error;
+pub mod command;
 pub mod logger;
 pub mod string;
 pub mod output;
 pub mod player;
-
+pub mod shogi;
 use std::error::Error;
 
-use usiagent::commands::TryToString;
-use usiagent::commands::UsiCommand;
-use usiagent::errors::UsiOutputCreateError;
+use usiagent::command::TryToString;
+use usiagent::command::UsiCommand;
+use usiagent::error::UsiOutputCreateError;
 
 #[derive(Debug)]
 pub enum UsiOutput {

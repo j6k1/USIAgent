@@ -2,7 +2,7 @@ use std::error;
 use std::fmt;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
-use usiagent::commands::UsiCommand;
+use usiagent::command::UsiCommand;
 
 #[derive(Debug)]
 pub enum EventDispatchError<'a,T> where T: fmt::Debug + 'a {
