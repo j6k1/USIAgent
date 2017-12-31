@@ -9,12 +9,17 @@ pub mod shogi;
 use std::error::Error;
 use std::fmt;
 
-use usiagent::command::TryToString;
 use usiagent::command::UsiCommand;
 use usiagent::error::*;
 
-trait TryFrom<T> where Self: Sized {
+pub trait TryFrom<T> where Self: Sized {
 	fn try_from(s:T) -> Result<Self, TypeConvertError<T>> where T: fmt::Debug;
+}
+pub trait TryToString<E> where E: fmt::Debug + Error {
+	fn try_to_string(&self) -> Result<String,E>;
+}
+pub trait Validate {
+	fn validate(&self) -> bool;
 }
 #[derive(Debug)]
 pub enum UsiOutput {

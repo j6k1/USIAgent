@@ -2,6 +2,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use usiagent::TryFrom;
 use usiagent::error::*;
+use usiagent::Validate;
 
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaKind {
@@ -33,6 +34,17 @@ pub enum KomaKind {
 	GHishaN,
 	Blank,
 }
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum KomaSrcPosition {
+	Ban(u32,u32),
+	Mochigoma(MochigomaKind),
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum KomaDstPosition {
+	Ban(u32,u32),
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub struct Move(pub KomaSrcPosition, pub KomaDstPosition);
 impl TryFrom<String> for KomaKind {
 	fn try_from(s: String) -> Result<KomaKind, TypeConvertError<String>> {
 		Ok(match &*s {
@@ -134,6 +146,28 @@ impl TryFrom<String> for Banmen {
 		}
 
 		Ok(Banmen(banmen))
+	}
+}
+impl Validate for KomaSrcPosition {
+	fn validate(&self) -> bool {
+		match *self {
+			KomaSrcPosition::Mochigoma(_) => true,
+			KomaSrcPosition::Ban(x, y) => x < 9 && y < 9,
+		}
+	}
+}
+impl Validate for KomaDstPosition {
+	fn validate(&self) -> bool {
+		match *self {
+			KomaDstPosition::Ban(x, y) => x < 9 && y < 9,
+		}
+	}
+}
+impl Validate for Move {
+	fn validate(&self) -> bool {
+		match *self {
+			Move(ref s, ref d) => s.validate() && d.validate()
+		}
 	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
