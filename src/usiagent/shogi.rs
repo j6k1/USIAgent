@@ -76,6 +76,41 @@ impl fmt::Debug for Banmen {
 		}
 	}
 }
+impl TryFrom<String> for Banmen {
+	fn try_from(s: String) -> Result<Banmen, TypeConvertError<String>> {
+		let mut chars = s.chars();
+
+		let mut banmen:[KomaKind; 81] = [KomaKind::Blank; 81];
+
+		let mut i = 0;
+
+		while let Some(c) = chars.next() {
+			let mut s = String::new();
+			s.push(match i {
+				i if i >= 81 => {
+					return Err(TypeConvertError(
+							String::from("Invalid SFEN character string (pieces outside the range of the board)")));
+				},
+				_ => c,
+			});
+
+			match c {
+				'+' => match chars.next() {
+					None => {
+						return Err(TypeConvertError(
+							String::from("Invalid SFEN character string (illegal expression of piece)")));
+					},
+					Some(n) => s.push(n),
+				},
+				_ => (),
+			}
+			banmen[i] = KomaKind::try_from(s)?;
+			i += 1;
+		}
+
+		Ok(Banmen(banmen))
+	}
+}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum MochigomaKind {
 	Fu = 0,
