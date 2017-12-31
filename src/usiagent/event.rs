@@ -92,6 +92,13 @@ pub enum SysEventOption {
 	Num(u32),
 	Bool(bool),
 }
+/*
+impl TryFrom<String> for MochigomaCollections {
+	fn try_from(s: String) -> Result<MochigomaCollections, TypeConvertError<String>> {
+
+	}
+}
+*/
 impl MapEventKind<SystemEventKind> for SystemEvent {
 	fn event_kind(&self) -> SystemEventKind {
 		match *self {

@@ -211,24 +211,30 @@ impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for UsiEventSendError<'a,T> where
 	}
 }
 #[derive(Debug)]
-pub struct TypeConvertError<T>(pub T) where T: fmt::Debug;
+pub enum TypeConvertError<T> where T: fmt::Debug {
+	SyntaxError(T),
+	LogicError(T),
+}
 impl<T> fmt::Display for TypeConvertError<T> where T: fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		TypeConvertError(ref s) => write!(f, "An error occurred in type conversion. from = ({:?})",s)
+	 		TypeConvertError::SyntaxError(ref e) => write!(f, "An error occurred in type conversion. from = ({:?})",e),
+		 	TypeConvertError::LogicError(ref e) => e.fmt(f),
 	 	}
 	 }
 }
 impl<T> error::Error for TypeConvertError<T> where T: fmt::Debug {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		TypeConvertError(_) => "An error occurred in type conversion"
+	 		TypeConvertError::SyntaxError(_) => "An error occurred in type conversion",
+	 		TypeConvertError::LogicError(_) => "An error occurred in type conversion (logic error)",
 	 	}
 	 }
 
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
-	 		TypeConvertError(_) => None
+	 		TypeConvertError::SyntaxError(_) => None,
+	 		TypeConvertError::LogicError(_) => None,
 	 	}
 	 }
 }

@@ -74,7 +74,7 @@ impl TryFrom<String> for KomaKind {
 			"+n" => KomaKind::GKeiN,
 			"+l" => KomaKind::GKyouN,
 			"+p" => KomaKind::GFuN,
-			_ => return Err(TypeConvertError(s)),
+			_ => return Err(TypeConvertError::SyntaxError(s)),
 		})
 	}
 }
@@ -102,7 +102,7 @@ impl TryFrom<String> for Banmen {
 
 			s.push(match j {
 				j if j >= 9=> {
-					return Err(TypeConvertError(
+					return Err(TypeConvertError::SyntaxError(
 							String::from("Invalid SFEN character string (pieces outside the range of the board)")));
 				},
 				_ => c,
@@ -110,18 +110,18 @@ impl TryFrom<String> for Banmen {
 
 			match c {
 				_ if i > 9 => {
-					return Err(TypeConvertError(
+					return Err(TypeConvertError::LogicError(
 						String::from("Logic error of SFEN character string parsing process.")));
 				},
 				'/' => if i == 9 {
 					j += 1; i = 0;
 				},
 				_ if i == 9 => {
-					return Err(TypeConvertError(
+					return Err(TypeConvertError::SyntaxError(
 						String::from("Invalid SFEN string (line separator '/' not found)")));
 				},
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' if i + ((c as u32) - ('0' as u32)) > 9 => {
-					return Err(TypeConvertError(
+					return Err(TypeConvertError::SyntaxError(
 							String::from("Invalid SFEN character string (pieces outside the range of the board)")));
 				},
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
@@ -129,7 +129,7 @@ impl TryFrom<String> for Banmen {
 				},
 				'+' => match chars.next() {
 					None => {
-						return Err(TypeConvertError(
+						return Err(TypeConvertError::SyntaxError(
 							String::from("Invalid SFEN character string (illegal expression of piece)")));
 					},
 					Some(n) => {
