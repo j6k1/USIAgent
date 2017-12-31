@@ -2,8 +2,6 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;
 use std::io::{self, Write};
-use std::fmt::Debug;
-use std::fmt::Formatter;
 
 use usiagent::error::EventDispatchError;
 use usiagent::error::EventHandlerError;
@@ -59,16 +57,6 @@ pub enum GameEndState {
 pub enum UsiInitialPosition {
 	Sfen(Banmen, MochigomaCollections),
 	Startpos,
-}
-pub struct Banmen([KomaKind; 81]);
-impl Debug for Banmen {
-	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-		match *self {
-			Banmen(ref v) => write!(f, "Banmen[{}]", v.iter()
-												.map(|k| format!("{:?}", k))
-												.collect::<Vec<String>>().join(" "))
-		}
-	}
 }
 #[derive(Debug)]
 pub enum MochigomaCollections {

@@ -239,13 +239,7 @@ struct KomaStringCreator {
 impl KomaStrFromKind<MochigomaKind> for KomaStringCreator {
 	fn str_from(t:Teban,k:MochigomaKind) -> String {
 		match t {
-			Teban::Sente if k > MochigomaKind::Ou => {
-				format!("+{}", SENTE_KOMA_MAP[(k as usize) - (MochigomaKind::Ou as usize)])
-			},
 			Teban::Sente => format!("{}",SENTE_KOMA_MAP[k as usize]),
-			Teban::Gote if k > MochigomaKind::Ou => {
-				format!("+{}", GOTE_KOMA_MAP[(k as usize) - (MochigomaKind::Ou as usize)])
-			},
 			Teban::Gote => format!("{}",GOTE_KOMA_MAP[k as usize]),
 		}
 	}

@@ -7,11 +7,15 @@ pub mod output;
 pub mod player;
 pub mod shogi;
 use std::error::Error;
+use std::fmt;
 
 use usiagent::command::TryToString;
 use usiagent::command::UsiCommand;
-use usiagent::error::UsiOutputCreateError;
+use usiagent::error::*;
 
+trait TryFrom<T> where Self: Sized {
+	fn try_from(s:T) -> Result<Self, TypeConvertError<T>> where T: fmt::Debug;
+}
 #[derive(Debug)]
 pub enum UsiOutput {
 	Command(Vec<String>),

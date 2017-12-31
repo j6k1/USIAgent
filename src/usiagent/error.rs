@@ -210,3 +210,25 @@ impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for UsiEventSendError<'a,T> where
 		UsiEventSendError::MutexLockFailedError(err)
 	}
 }
+#[derive(Debug)]
+pub struct TypeConvertError<T>(pub T) where T: fmt::Debug;
+impl<T> fmt::Display for TypeConvertError<T> where T: fmt::Debug {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		TypeConvertError(ref s) => write!(f, "An error occurred in type conversion. from = ({:?})",s)
+	 	}
+	 }
+}
+impl<T> error::Error for TypeConvertError<T> where T: fmt::Debug {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		TypeConvertError(_) => "An error occurred in type conversion"
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		TypeConvertError(_) => None
+	 	}
+	 }
+}
