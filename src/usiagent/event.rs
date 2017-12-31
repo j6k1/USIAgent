@@ -29,11 +29,10 @@ pub enum SystemEventKind {
 	PonderHit,
 	GameOver,
 	SendUsiCommand,
-	Tail
 }
 impl MaxIndex for SystemEventKind {
 	fn max_index() -> usize {
-		SystemEventKind::Tail as usize
+		SystemEventKind::SendUsiCommand as usize
 	}
 }
 #[derive(Debug)]
@@ -223,10 +222,10 @@ impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 		let mut o = USIEventDispatcher {
 			logger:logger,
 			event_kind:PhantomData::<K>,
-			handlers:Vec::with_capacity(K::max_index()),
-			once_handlers:Vec::with_capacity(K::max_index()),
+			handlers:Vec::with_capacity(K::max_index()+1),
+			once_handlers:Vec::with_capacity(K::max_index()+1),
 		};
-		for _ in 0..K::max_index() {
+		for _ in 0..K::max_index() + 1 {
 			o.handlers.push(Vec::new());
 			o.once_handlers.push(Vec::new());
 		}
