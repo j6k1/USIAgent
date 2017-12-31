@@ -1,6 +1,8 @@
 pub mod events;
 pub mod errors;
 pub mod commands;
+pub mod logger;
+pub mod string;
 
 use std::error::Error;
 

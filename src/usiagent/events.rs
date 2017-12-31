@@ -1,6 +1,7 @@
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;
+use std::io::{self, Write};
 use usiagent::errors::EventDispatchError;
 use usiagent::errors::EventHandlerError;
 use usiagent::UsiOutput;
@@ -56,7 +57,7 @@ pub struct USIEventDispatcher<K,E,T,L>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
 			L: Logger {
-	logger:L,
+	logger:Mutex<L>,
 	event_kind:PhantomData<K>,
 	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError>>>>,
 	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError>>>>,
@@ -65,7 +66,7 @@ impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
 			L: Logger {
-	pub fn new(logger:L) -> USIEventDispatcher<K,E,T,L> {
+	pub fn new(logger:Mutex<L>) -> USIEventDispatcher<K,E,T,L> {
 		let mut o = USIEventDispatcher {
 			logger:logger,
 			event_kind:PhantomData::<K>,
@@ -107,7 +108,16 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 				match h(ctx, &e) {
 					Ok(_) => (),
 					Err(ref e) => {
-						self.logger.logging_error(e);
+						match self.logger.lock() {
+							Ok(logger) => {
+								logger.logging_error(e);
+							},
+							Err(_) => {
+								let stderr = io::stderr();
+								let mut h = stderr.lock();
+								h.write(b"Logger's exclusive lock could not be secured").unwrap();
+							}
+						}
 						has_error = true;
 					}
 				}
@@ -121,7 +131,16 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 					match h(ctx, &e) {
 						Ok(_) => (),
 						Err(ref e) => {
-							self.logger.logging_error(e);
+							match self.logger.lock() {
+								Ok(logger) => {
+									logger.logging_error(e);
+								},
+								Err(_) => {
+									let stderr = io::stderr();
+									let mut h = stderr.lock();
+									h.write(b"Logger's exclusive lock could not be secured").unwrap();
+								}
+							}
 							has_error = true;
 						}
 					}
