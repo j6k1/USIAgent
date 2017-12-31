@@ -2,10 +2,14 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;
 use std::io::{self, Write};
+use std::fmt::Debug;
+use std::fmt::Formatter;
+
 use usiagent::errors::EventDispatchError;
 use usiagent::errors::EventHandlerError;
 use usiagent::UsiOutput;
 use usiagent::Logger;
+use usiagent::commands::*;
 
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
@@ -15,7 +19,16 @@ pub trait MaxIndex {
 }
 #[derive(Debug)]
 pub enum SystemEventKind {
-	SENDUSICOMMAND = 0,
+	Usi = 0,
+	IsReady,
+	SetOption,
+	UsiNewGame,
+	Position,
+	Go,
+	Stop,
+	PonderHit,
+	GameOver,
+	SendUsiCommand,
 	Tail
 }
 impl MaxIndex for SystemEventKind {
@@ -25,12 +38,85 @@ impl MaxIndex for SystemEventKind {
 }
 #[derive(Debug)]
 pub enum SystemEvent {
+	Usi,
+	IsReady,
+	SetOption(String,SysEventOption),
+	UsiNewGame,
+	Position(Teban,UsiInitialPosition,u32),
+	Go,
+	Stop,
+	PonderHit,
+	Gameover(GameEndState),
 	SendUSICommand(UsiOutput),
+}
+#[derive(Debug)]
+pub enum GameEndState {
+	Win,
+	Lose,
+	Draw,
+}
+#[derive(Debug)]
+pub enum UsiInitialPosition {
+	Sfen(Banmen, MochigomaCollections),
+	Startpos,
+}
+pub struct Banmen([KomaKind; 81]);
+impl Debug for Banmen {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+		match *self {
+			Banmen(ref v) => write!(f, "{}", v.iter()
+												.map(|k| format!("{:?}", k))
+												.collect::<Vec<String>>().join(" "))
+		}
+	}
+}
+#[derive(Debug)]
+pub enum MochigomaCollections {
+	Empty,
+	Pair((Vec<MochigomaKind>,Vec<MochigomaKind>)),
+}
+#[derive(Debug)]
+pub enum UsiGo {
+	Go(UsiGoTimeLimit),
+	Ponder(UsiGoTimeLimit),
+	Mate(UsiGoMateTimeLimit),
+}
+#[derive(Debug)]
+pub enum UsiGoTimeLimit {
+	None,
+	Limit(Option<u32>,Option<u32>,UsiGoByoyomiOrInc),
+	Infinite,
+}
+#[derive(Debug)]
+pub enum UsiGoMateTimeLimit {
+	Limit(u32),
+	Infinite,
+}
+#[derive(Debug)]
+pub enum UsiGoByoyomiOrInc {
+	None,
+	Byoyomi(u32),
+	Inc(u32,u32),
+}
+#[derive(Debug)]
+pub enum SysEventOption {
+	Str(String),
+	Num(u32),
+	Bool(bool),
 }
 impl MapEventKind<SystemEventKind> for SystemEvent {
 	fn event_kind(&self) -> SystemEventKind {
 		match *self {
-			SystemEvent::SendUSICommand(_) => SystemEventKind::SENDUSICOMMAND,
+			SystemEvent::Usi => SystemEventKind::Usi,
+			SystemEvent::IsReady => SystemEventKind::IsReady,
+			SystemEvent::SetOption(_,_) => SystemEventKind::SetOption,
+			SystemEvent::UsiNewGame => SystemEventKind::UsiNewGame,
+			SystemEvent::Position(_,_,_) => SystemEventKind::Position,
+			SystemEvent::Go => SystemEventKind::Go,
+			SystemEvent::Stop => SystemEventKind::Stop,
+			SystemEvent::PonderHit => SystemEventKind::PonderHit,
+			SystemEvent::Gameover(_) => SystemEventKind::GameOver,
+			SystemEvent::SendUSICommand(_) => SystemEventKind::SendUsiCommand,
 		}
 	}
 }

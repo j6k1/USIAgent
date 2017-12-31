@@ -85,6 +85,7 @@ pub enum KomaKind {
 	KeiN,
 	KakuN,
 	HishaN,
+	Blank,
 	Tail,
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
