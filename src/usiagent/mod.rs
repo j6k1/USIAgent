@@ -3,6 +3,7 @@ pub mod errors;
 pub mod commands;
 pub mod logger;
 pub mod string;
+pub mod output;
 
 use std::error::Error;
 
