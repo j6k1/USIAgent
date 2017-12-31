@@ -131,7 +131,25 @@ impl TryFrom<String> for MochigomaCollections {
 
 					match chars.next() {
 						Some(n) if n >= '1' && n <= '9' => {
-							let n = n as u32;
+							let mut ns = String::new();
+							ns.push(n);
+
+							let mut nchars = chars.clone();
+
+							while let Some(next) = nchars.next() {
+								match next {
+									'0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
+										ns.push(next);
+										chars.clone_from(&nchars);
+									},
+									_ => {
+										break;
+									}
+								}
+							}
+
+							let n = ns.parse::<u32>()?;
+
 							match t {
 								Teban::Sente => {
 									for _ in 0..n {

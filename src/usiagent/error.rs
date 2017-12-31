@@ -2,6 +2,7 @@ use std::error;
 use std::fmt;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
+use std::num::ParseIntError;
 use usiagent::command::UsiCommand;
 
 #[derive(Debug)]
@@ -237,4 +238,9 @@ impl<T> error::Error for TypeConvertError<T> where T: fmt::Debug {
 	 		TypeConvertError::LogicError(_) => None,
 	 	}
 	 }
+}
+impl From<ParseIntError> for TypeConvertError<String> where String: fmt::Debug {
+	fn from(_: ParseIntError) -> TypeConvertError<String> {
+		TypeConvertError::SyntaxError(String::from("Failed parse string to integer."))
+	}
 }
