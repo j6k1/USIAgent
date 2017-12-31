@@ -83,11 +83,19 @@ impl TryFrom<String> for Banmen {
 		let mut banmen:[KomaKind; 81] = [KomaKind::Blank; 81];
 
 		let mut i = 0;
+		let mut j = 0;
 
 		while let Some(c) = chars.next() {
 			let mut s = String::new();
-			s.push(match i {
-				i if i >= 81 => {
+			match i {
+				i if i > 9 => {
+					return Err(TypeConvertError(
+						String::from("Logic error of SFEN character string parsing process.")));
+				},
+				_ => (),
+			}
+			s.push(match j {
+				j if j >= 9=> {
 					return Err(TypeConvertError(
 							String::from("Invalid SFEN character string (pieces outside the range of the board)")));
 				},
@@ -95,6 +103,13 @@ impl TryFrom<String> for Banmen {
 			});
 
 			match c {
+				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' if i + ((c as u32) - ('0' as u32)) > 9 => {
+					return Err(TypeConvertError(
+							String::from("Invalid SFEN character string (pieces outside the range of the board)")));
+				},
+				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
+					i += (c as u32) - ('0' as u32);
+				},
 				'+' => match chars.next() {
 					None => {
 						return Err(TypeConvertError(
@@ -104,8 +119,21 @@ impl TryFrom<String> for Banmen {
 				},
 				_ => (),
 			}
-			banmen[i] = KomaKind::try_from(s)?;
+
+			banmen[j as usize * 9 + i as usize] = KomaKind::try_from(s)?;
+
 			i += 1;
+
+			match i {
+				9 if c == '/' => {
+					j += 1; i = 0;
+				},
+				9 => {
+					return Err(TypeConvertError(
+						String::from("Invalid SFEN string (line separator '/' not found)")));
+				},
+				_ =>  (),
+			}
 		}
 
 		Ok(Banmen(banmen))
