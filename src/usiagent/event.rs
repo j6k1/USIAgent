@@ -3,8 +3,10 @@ use std::marker::PhantomData;
 use std::sync::Mutex;
 use std::io::{self, Write};
 
+use usiagent::TryFrom;
 use usiagent::error::EventDispatchError;
 use usiagent::error::EventHandlerError;
+use usiagent::error::TypeConvertError;
 use usiagent::UsiOutput;
 use usiagent::Logger;
 use usiagent::shogi::*;
@@ -61,7 +63,7 @@ pub enum UsiInitialPosition {
 #[derive(Debug)]
 pub enum MochigomaCollections {
 	Empty,
-	Pair((Vec<MochigomaKind>,Vec<MochigomaKind>)),
+	Pair(Vec<MochigomaKind>,Vec<MochigomaKind>),
 }
 #[derive(Debug)]
 pub enum UsiGo {
@@ -92,13 +94,71 @@ pub enum SysEventOption {
 	Num(u32),
 	Bool(bool),
 }
-/*
 impl TryFrom<String> for MochigomaCollections {
 	fn try_from(s: String) -> Result<MochigomaCollections, TypeConvertError<String>> {
+		Ok(match &*s {
+			"-" => MochigomaCollections::Pair(Vec::new(),Vec::new()),
+			_ => {
+				let mut chars = s.chars();
 
+				let mut sente:Vec<MochigomaKind> = Vec::new();
+				let mut gote:Vec<MochigomaKind> = Vec::new();
+
+				while let Some(c) = chars.next() {
+					let t = match c {
+						'R' | 'B' | 'G' | 'S' | 'N' | 'L' | 'P' => Teban::Sente,
+						'r' | 'b' | 'g' | 's' | 'n' | 'l' | 'p' => Teban::Gote,
+						_ => {
+							return Err(TypeConvertError::SyntaxError(
+								String::from("Invalid SFEN character string (illegal representation character string of the piece)"
+							)));
+						}
+					};
+
+					let k = match c {
+						'R' | 'r' => MochigomaKind::Hisha,
+						'B' | 'b' => MochigomaKind::Kaku,
+						'G' | 'g' => MochigomaKind::Kin,
+						'S' | 's'=> MochigomaKind::Gin,
+						'N' | 'n' => MochigomaKind::Kei,
+						'L' | 'l' => MochigomaKind::Kyou,
+						'P' | 'p' => MochigomaKind::Fu,
+						_ => {
+							return Err(TypeConvertError::LogicError(String::from(
+								"SFEN This is a logic error of the pieces analysis phase of the character string analysis process.")
+							));
+						}
+					};
+
+					match chars.next() {
+						Some(n) if n >= '1' && n <= '9' => {
+							let n = n as u32;
+							match t {
+								Teban::Sente => {
+									for _ in 0..n {
+										sente.push(k);
+									}
+								},
+								Teban::Gote => {
+									for _ in 0..n {
+										gote.push(k);
+									}
+								},
+							}
+						},
+						_ => {
+							return Err(TypeConvertError::SyntaxError(
+								String::from("Invalid SFEN character string (no number of pieces count)"
+							)));
+						}
+					}
+				}
+
+				MochigomaCollections::Pair(sente,gote)
+			}
+		})
 	}
 }
-*/
 impl MapEventKind<SystemEventKind> for SystemEvent {
 	fn event_kind(&self) -> SystemEventKind {
 		match *self {

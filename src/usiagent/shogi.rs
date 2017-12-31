@@ -179,7 +179,6 @@ pub enum MochigomaKind {
 	Kin,
 	Kaku,
 	Hisha,
-	Ou,
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum Kyokumen {
