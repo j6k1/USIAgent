@@ -12,8 +12,8 @@ use std::fmt;
 use usiagent::command::UsiCommand;
 use usiagent::error::*;
 
-pub trait TryFrom<T> where Self: Sized {
-	fn try_from(s:T) -> Result<Self, TypeConvertError<T>> where T: fmt::Debug;
+pub trait TryFrom<T,E> where Self: Sized {
+	fn try_from(s:T) -> Result<Self, TypeConvertError<E>> where E: fmt::Debug;
 }
 pub trait TryToString<E> where E: fmt::Debug + Error {
 	fn try_to_string(&self) -> Result<String,E>;

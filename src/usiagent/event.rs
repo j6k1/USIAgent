@@ -93,8 +93,8 @@ pub enum SysEventOption {
 	Num(u32),
 	Bool(bool),
 }
-impl TryFrom<String> for MochigomaCollections {
-	fn try_from(s: String) -> Result<MochigomaCollections, TypeConvertError<String>> {
+impl<'a> TryFrom<&'a str,String> for MochigomaCollections {
+	fn try_from(s: &'a str) -> Result<MochigomaCollections, TypeConvertError<String>> {
 		Ok(match &*s {
 			"-" => MochigomaCollections::Pair(Vec::new(),Vec::new()),
 			_ => {
