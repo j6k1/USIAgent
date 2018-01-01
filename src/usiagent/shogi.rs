@@ -187,17 +187,6 @@ impl<'a> TryFrom<&'a str,String> for Move {
 		})
 	}
 }
-impl<'a> TryFrom<&'a [&'a str],String> for Vec<Move> {
-	fn try_from(s: &'a [&'a str]) -> Result<Vec<Move>, TypeConvertError<String>> {
-		let mut r:Vec<Move> = Vec::new();
-
-		for m in s {
-			r.push(Move::try_from(m)?);
-		}
-
-		Ok(r)
-	}
-}
 impl TryFrom<String,String> for KomaKind {
 	fn try_from(s: String) -> Result<KomaKind, TypeConvertError<String>> {
 		Ok(match &*s {
@@ -349,5 +338,18 @@ impl Teban {
 			Teban::Sente => Teban::Gote,
 			Teban::Gote => Teban::Sente,
 		}
+	}
+}
+impl<'a> TryFrom<&'a str,String> for Teban {
+	fn try_from(s: &'a str) -> Result<Teban, TypeConvertError<String>> {
+		Ok(match s {
+			"b" => Teban::Sente,
+			"w" => Teban::Gote,
+			_ => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"It is an illegal character string as a character string representing a turn."
+				)));
+			}
+		})
 	}
 }

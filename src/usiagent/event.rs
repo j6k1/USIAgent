@@ -192,13 +192,42 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 		}
 	}
 }
-/*
 struct PositionParser {
-	pub fn with_startpos() -> SystemEvent::Position(Teban,UsiInitialPosition,u32,Vec<Move>) {
+}
+impl PositionParser {
+	pub fn with_startpos<'a>(v:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		let mut r:Vec<Move> = Vec::new();
 
+		for m in v {
+			r.push(Move::try_from(m)?);
+		}
+
+		Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r))
+	}
+
+	pub fn with_sfen<'a>(v:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		Ok(match v {
+			v if v.len() >= 4 => match (v[0],v[1],v[2],v[3]) {
+				(p, t, m, n) => {
+					let mut mv:Vec<Move> = Vec::new();
+
+					for m in &v[4..] {
+							mv.push(Move::try_from(m)?);
+					}
+					SystemEvent::Position(
+						Teban::try_from(t)?,
+						UsiInitialPosition::Sfen(Banmen::try_from(p)?,MochigomaCollections::try_from(m)?),
+						n.parse::<u32>()?,mv)
+				}
+			},
+			_ => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+			}
+		})
 	}
 }
-*/
 #[derive(Debug)]
 pub struct EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 	event_kind:PhantomData<K>,
