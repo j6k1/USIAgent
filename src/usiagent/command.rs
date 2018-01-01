@@ -19,7 +19,7 @@ pub enum UsiCommand {
 }
 #[derive(Debug)]
 pub enum BestMove {
-	Move(Teban,Move,Option<Move>),
+	Move(Move,Option<Move>),
 	Resign,
 	Win,
 }
@@ -31,7 +31,7 @@ pub enum UsiInfoSubCommand {
 	Nodes(u32),
 	Pv(Teban,Vec<Move>),
 	Score(UsiScore),
-	CurMove(Teban,Move),
+	CurMove(Move),
 	Hashfull(u32),
 	Nps(u32),
 	Str(String),
@@ -66,7 +66,7 @@ pub enum UsiScoreMate {
 }
 #[derive(Debug)]
 pub enum CheckMate {
-	Moves(Teban,Vec<Move>),
+	Moves(Vec<Move>),
 	NotiImplemented,
 	Timeout,
 	Nomate,
@@ -83,8 +83,8 @@ pub enum UsiOptType {
 impl Validate for UsiCommand {
 	fn validate(&self) -> bool {
 		match *self {
-			UsiCommand::UsiBestMove(BestMove::Move(_,ref m,_)) if !m.validate() => false,
-			UsiCommand::UsiBestMove(BestMove::Move(_,_,Some(ref m))) if !m.validate() => false,
+			UsiCommand::UsiBestMove(BestMove::Move(ref m,_)) if !m.validate() => false,
+			UsiCommand::UsiBestMove(BestMove::Move(_,Some(ref m))) if !m.validate() => false,
 			UsiCommand::UsiInfo(ref commands) => {
 				let mut hs = HashSet::new();
 
@@ -102,7 +102,7 @@ impl Validate for UsiCommand {
 						ref c @ UsiInfoSubCommand::Pv(_,_) => {
 							return c.validate();
 						},
-						ref c @ UsiInfoSubCommand::CurMove(_,_) => {
+						ref c @ UsiInfoSubCommand::CurMove(_) => {
 							c.validate();
 						}
 						_ => (),
@@ -131,7 +131,7 @@ impl UsiInfoSubCommand {
 			UsiInfoSubCommand::Nodes(_) => UsiInfoSubCommandKind::Nodes,
 			UsiInfoSubCommand::Pv(_,_) => UsiInfoSubCommandKind::Pv,
 			UsiInfoSubCommand::Score(_) => UsiInfoSubCommandKind::Score,
-			UsiInfoSubCommand::CurMove(_,_) => UsiInfoSubCommandKind::CurMove,
+			UsiInfoSubCommand::CurMove(_) => UsiInfoSubCommandKind::CurMove,
 			UsiInfoSubCommand::Hashfull(_) => UsiInfoSubCommandKind::Hashfull,
 			UsiInfoSubCommand::Nps(_) => UsiInfoSubCommandKind::Nps,
 			UsiInfoSubCommand::Str(_) => UsiInfoSubCommandKind::Str,
@@ -153,7 +153,7 @@ impl Validate for UsiInfoSubCommand {
 				}
 				true
 			},
-			UsiInfoSubCommand::CurMove(_,ref m) if !m.validate() => false,
+			UsiInfoSubCommand::CurMove(ref m) if !m.validate() => false,
 			_ => true,
 		}
 	}
@@ -161,8 +161,8 @@ impl Validate for UsiInfoSubCommand {
 impl Validate for CheckMate {
 	fn validate(&self) -> bool {
 		match *self {
-			CheckMate::Moves(_, ref v) if v.len() < 1 => false,
-			CheckMate::Moves(_, ref v) => {
+			CheckMate::Moves(ref v) if v.len() < 1 => false,
+			CheckMate::Moves(ref v) => {
 				for m in v {
 					match *m {
 						Move(ref s,ref d) if !s.validate() || !d.validate() => {
@@ -202,34 +202,31 @@ impl DanCharFromNum for DanCharCreator {
 	}
 }
 trait KomaStrFromKind<T> {
-	fn str_from(t:Teban,k:T) -> String;
+	fn str_from(k:T) -> String;
 }
-const SENTE_KOMA_MAP:[char; 8] = ['P','L','N','S','G','B','R','K'];
-const GOTE_KOMA_MAP:[char; 8] = ['p','l','n','s','g','b','r','k'];
+const MOCHIGOMA_MAP:[char; 8] = ['P','L','N','S','G','B','R','K'];
+
 struct KomaStringCreator {
 
 }
 impl KomaStrFromKind<MochigomaKind> for KomaStringCreator {
-	fn str_from(t:Teban,k:MochigomaKind) -> String {
-		match t {
-			Teban::Sente => format!("{}",SENTE_KOMA_MAP[k as usize]),
-			Teban::Gote => format!("{}",GOTE_KOMA_MAP[k as usize]),
-		}
+	fn str_from(k:MochigomaKind) -> String {
+		format!("{}",MOCHIGOMA_MAP[k as usize])
 	}
 }
 trait MoveStringFrom {
-	fn str_from(t:Teban,m:&Move) -> Result<String, ToMoveStringConvertError>;
+	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError>;
 }
 struct MoveStringCreator {
 
 }
 impl MoveStringFrom for MoveStringCreator {
-	fn str_from(teban:Teban,m:&Move) -> Result<String, ToMoveStringConvertError> {
-		match (teban, m) {
-			(t,&Move(KomaSrcPosition::Mochigoma(s),KomaDstPosition::Ban(x,y))) => {
-				Ok(format!("{}*{}{}", KomaStringCreator::str_from(t,s), x+1, DanCharCreator::char_from(y)?))
+	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError> {
+		match m {
+			&Move(KomaSrcPosition::Mochigoma(s),KomaDstPosition::Ban(x,y)) => {
+				Ok(format!("{}*{}{}", KomaStringCreator::str_from(s), x+1, DanCharCreator::char_from(y)?))
 			},
-			(_,&Move(KomaSrcPosition::Ban(sx,sy),KomaDstPosition::Ban(dx,dy))) => {
+			&Move(KomaSrcPosition::Ban(sx,sy),KomaDstPosition::Ban(dx,dy)) => {
 				Ok(format!("{}{}{}{}", sx+1, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
 			},
 		}
@@ -240,11 +237,11 @@ impl TryToString<ToMoveStringConvertError> for BestMove {
 		match *self {
 			BestMove::Resign => Ok(String::from("resign")),
 			BestMove::Win => Ok(String::from("win")),
-			BestMove::Move(t,ref m,None) => Ok(MoveStringCreator::str_from(t,m)?),
-			BestMove::Move(t,ref m,Some(ref pm)) => {
+			BestMove::Move(ref m,None) => Ok(MoveStringCreator::str_from(m)?),
+			BestMove::Move(ref m,Some(ref pm)) => {
 				Ok(format!("{} ponder {}",
-						MoveStringCreator::str_from(t,m)?,
-						MoveStringCreator::str_from(t.opposite(),pm)?))
+						MoveStringCreator::str_from(m)?,
+						MoveStringCreator::str_from(pm)?))
 
 			}
 		}
@@ -280,7 +277,7 @@ impl TryToString<UsiOutputCreateError> for UsiInfoSubCommand {
 							return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
 						},
 						ref m => {
-							mv.push(MoveStringCreator::str_from(t,m)?);
+							mv.push(MoveStringCreator::str_from(m)?);
 							t = t.opposite();
 						}
 					}
@@ -303,8 +300,8 @@ impl TryToString<UsiOutputCreateError> for UsiInfoSubCommand {
 			UsiInfoSubCommand::Score(UsiScore::MateLower(n)) => {
 				format!("score mate {} lowerbound",n)
 			},
-			UsiInfoSubCommand::CurMove(t,ref m) => {
-				MoveStringCreator::str_from(t,m)?
+			UsiInfoSubCommand::CurMove(ref m) => {
+				MoveStringCreator::str_from(m)?
 			},
 			UsiInfoSubCommand::Hashfull(v) => format!("hashfull {}", v),
 			UsiInfoSubCommand::Nps(v) => format!("nps {}",v),
@@ -344,11 +341,10 @@ impl TryToString<UsiOutputCreateError> for UsiOptType {
 impl TryToString<UsiOutputCreateError> for CheckMate {
 	fn try_to_string(&self) -> Result<String, UsiOutputCreateError> {
 		Ok(match *self {
-			CheckMate::Moves(_, ref v) if v.len() < 1 => {
+			CheckMate::Moves(ref v) if v.len() < 1 => {
 				return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
 			},
-			CheckMate::Moves(t, ref v) => {
-				let mut t:Teban = t;
+			CheckMate::Moves(ref v) => {
 				let mut mv:Vec<String> = Vec::with_capacity(v.len());
 				for m in v {
 					match *m {
@@ -356,8 +352,7 @@ impl TryToString<UsiOutputCreateError> for CheckMate {
 							return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
 						},
 						ref m => {
-							mv.push(MoveStringCreator::str_from(t,m)?);
-							t = t.opposite();
+							mv.push(MoveStringCreator::str_from(m)?);
 						}
 					}
 				}
