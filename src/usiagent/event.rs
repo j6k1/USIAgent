@@ -42,7 +42,7 @@ pub enum SystemEvent {
 	SetOption(String,SysEventOption),
 	UsiNewGame,
 	Position(Teban,UsiInitialPosition,u32,Vec<Move>),
-	Go,
+	Go(UsiGo),
 	Stop,
 	PonderHit,
 	Gameover(GameEndState),
@@ -71,9 +71,14 @@ pub enum UsiGo {
 	Mate(UsiGoMateTimeLimit),
 }
 #[derive(Debug)]
+pub enum UsiGoKind {
+	Go,
+	Ponder,
+}
+#[derive(Debug)]
 pub enum UsiGoTimeLimit {
 	None,
-	Limit(Option<u32>,Option<u32>,UsiGoByoyomiOrInc),
+	Limit(Option<(u32,u32)>,UsiGoByoyomiOrInc),
 	Infinite,
 }
 #[derive(Debug)]
@@ -81,9 +86,8 @@ pub enum UsiGoMateTimeLimit {
 	Limit(u32),
 	Infinite,
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoByoyomiOrInc {
-	None,
 	Byoyomi(u32),
 	Inc(u32,u32),
 }
@@ -184,7 +188,7 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 			SystemEvent::SetOption(_,_) => SystemEventKind::SetOption,
 			SystemEvent::UsiNewGame => SystemEventKind::UsiNewGame,
 			SystemEvent::Position(_,_,_,_) => SystemEventKind::Position,
-			SystemEvent::Go => SystemEventKind::Go,
+			SystemEvent::Go(_) => SystemEventKind::Go,
 			SystemEvent::Stop => SystemEventKind::Stop,
 			SystemEvent::PonderHit => SystemEventKind::PonderHit,
 			SystemEvent::Gameover(_) => SystemEventKind::GameOver,
@@ -195,23 +199,48 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 struct PositionParser {
 }
 impl PositionParser {
-	pub fn with_startpos<'a>(v:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+	pub fn new() -> PositionParser {
+		PositionParser{}
+	}
+
+	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		let p = match params.len() {
+			0 => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+			},
+			_ => params,
+		};
+
+		match p[0] {
+			"startpos" => self.parse_startpos(&params[1..]),
+			"sefn" => self.parse_sfen(&params[1..]),
+			_ => {
+				Err(TypeConvertError::SyntaxError(String::from(
+					"The input form of the go command is invalid. (Insufficient parameters)"
+				)))
+			}
+		}
+	}
+
+	fn parse_startpos<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
 		let mut r:Vec<Move> = Vec::new();
 
-		for m in v {
+		for m in params {
 			r.push(Move::try_from(m)?);
 		}
 
 		Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r))
 	}
 
-	pub fn with_sfen<'a>(v:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
-		Ok(match v {
-			v if v.len() >= 4 => match (v[0],v[1],v[2],v[3]) {
+	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		Ok(match params {
+			params if params.len() >= 4 => match (params[0],params[1],params[2],params[3]) {
 				(p, t, m, n) => {
 					let mut mv:Vec<Move> = Vec::new();
 
-					for m in &v[4..] {
+					for m in &params[4..] {
 							mv.push(Move::try_from(m)?);
 					}
 					SystemEvent::Position(
@@ -226,6 +255,176 @@ impl PositionParser {
 				)));
 			}
 		})
+	}
+}
+struct GoParser {
+}
+impl GoParser {
+	pub fn new() -> GoParser {
+		GoParser{}
+	}
+
+	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent, TypeConvertError<String>> {
+		match params[0] {
+			"mate" if params.len() == 2 => {
+				match params[1] {
+					"infinite" => return Ok(SystemEvent::Go(UsiGo::Mate(UsiGoMateTimeLimit::Infinite))),
+					n => return Ok(SystemEvent::Go(
+									UsiGo::Mate(UsiGoMateTimeLimit::Limit(n.parse::<u32>()?)))),
+				}
+			},
+			_ => (),
+		}
+
+		let (params,kind) = match params[0] {
+			"ponder" => (&params[1..], UsiGoKind::Ponder),
+			_ => (params, UsiGoKind::Go),
+		};
+
+		match params[0] {
+			"infinite" => match params.len() {
+				1 => match kind {
+					UsiGoKind::Ponder => return Ok(SystemEvent::Go(UsiGo::Ponder(UsiGoTimeLimit::Infinite))),
+					UsiGoKind::Go => return Ok(SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::Infinite))),
+				},
+				_ => {
+						return Err(TypeConvertError::SyntaxError(String::from(
+							"The format of the position command input is invalid."
+						)));
+				}
+			},
+			_ => (),
+		}
+
+		let mut it = params.iter();
+		let mut limit = None;
+		let mut byori = None;
+
+		while let Some(&p) = it.next() {
+			match p {
+				"btime" => {
+					match limit {
+						Some(_) => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Duplicate parameters)"
+							)));
+						},
+						_ => (),
+					}
+					let bt = match it.next() {
+						Some(n) => n.parse::<u32>()?,
+						_ => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (There is no value for item)"
+							)));
+						}
+					};
+					let wt = match it.next() {
+						Some(&"wtime") => match it.next () {
+							Some(n) => n.parse::<u32>()?,
+							_ => {
+								return Err(TypeConvertError::SyntaxError(String::from(
+									"The input form of the go command is invalid. (There is no value for item)"
+								)));
+							}
+						},
+						_ => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Insufficient parameters)"
+							)));
+						}
+					};
+					limit = Some((bt,wt));
+				},
+				"binc" => {
+					match byori {
+						Some(_) => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Duplicate parameters)"
+							)));
+						},
+						_ => (),
+					}
+					let bi = match it.next() {
+						Some(n) => n.parse::<u32>()?,
+						_ => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (There is no value for item)"
+							)));
+						}
+					};
+					let wi = match it.next() {
+						Some(&"winc") => match it.next() {
+							Some(n) => n.parse::<u32>()?,
+							_ => {
+								return Err(TypeConvertError::SyntaxError(String::from(
+									"The input form of the go command is invalid. (There is no value for item)"
+								)));
+							}
+						},
+						_ => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Insufficient parameters)"
+							)));
+						}
+					};
+					byori = Some(UsiGoByoyomiOrInc::Inc(bi,wi));
+				},
+				"byoyomi" => {
+					match byori {
+						Some(_) => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Duplicate parameters)"
+							)));
+						},
+						_ => (),
+					}
+					byori = match it.next() {
+						Some(n) => Some(UsiGoByoyomiOrInc::Byoyomi(n.parse::<u32>()?)),
+						_ => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (There is no value for item)"
+							)));
+						}
+					};
+				},
+				_ => {
+					return Err(TypeConvertError::SyntaxError(String::from(
+						"The input form of the go command is invalid. (Unknown parameter)")));
+				}
+			}
+		}
+
+		match it.next() {
+			Some(_) => Err(TypeConvertError::SyntaxError(String::from(
+						"The input form of the go command is invalid. (Unknown parameter)"))),
+			None => match limit {
+				None => Ok(match byori {
+					None => match kind {
+						UsiGoKind::Ponder => SystemEvent::Go(UsiGo::Ponder(UsiGoTimeLimit::None)),
+						UsiGoKind::Go => SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::None)),
+					},
+					Some(ref byori) => match kind {
+						UsiGoKind::Ponder => SystemEvent::Go(
+												UsiGo::Ponder(UsiGoTimeLimit::Limit(limit,*byori))),
+						UsiGoKind::Go => SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::Limit(limit,*byori))),
+					}
+				}),
+				ref limit @ Some(_) => Ok(match byori {
+					Some(byori) => match kind {
+						UsiGoKind::Ponder => SystemEvent::Go(
+													UsiGo::Ponder(UsiGoTimeLimit::Limit(*limit,byori))),
+						UsiGoKind::Go => SystemEvent::Go(
+													UsiGo::Go(UsiGoTimeLimit::Limit(*limit,byori))),
+					},
+					None => {
+						return Err(TypeConvertError::SyntaxError(String::from(
+							"The input form of the go command is invalid. (Insufficient parameters)"
+						)));
+					}
+				})
+			}
+		}
 	}
 }
 #[derive(Debug)]
