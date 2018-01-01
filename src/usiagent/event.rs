@@ -192,6 +192,13 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 		}
 	}
 }
+/*
+struct PositionParser {
+	pub fn with_startpos() -> SystemEvent::Position(Teban,UsiInitialPosition,u32,Vec<Move>) {
+
+	}
+}
+*/
 #[derive(Debug)]
 pub struct EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 	event_kind:PhantomData<K>,

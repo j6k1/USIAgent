@@ -4,6 +4,7 @@ pub mod command;
 pub mod logger;
 pub mod string;
 pub mod output;
+pub mod input;
 pub mod player;
 pub mod shogi;
 use std::error::Error;

@@ -24,7 +24,7 @@ impl Logger for FileLogger {
 				let mut writer = BufWriter::new(f);
 				let dt = Local::now();
 
-				let msg = format!("{}\n{}", dt.format("%Y-%m-%d %H:%M:%S").to_string(), msg);
+				let msg = format!("{}\n{}", dt.format("%Y-%m-%d %H:%M:%S").to_string(), msg.add_indent(2));
 				match writer.write(msg.as_bytes()) {
 					Ok(_) => (),
 					Err(_)=> {
@@ -39,7 +39,7 @@ impl Logger for FileLogger {
 	}
 	fn logging_error<E: Error>(&self, e:&E) {
 		let mut messages:Vec<String> = vec![];
-		let mut indent:u32 = 1;
+		let mut indent:u32 = 0;
 
 		messages.push(format!("{}", e).add_indent(indent*2));
 
