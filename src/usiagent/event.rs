@@ -30,10 +30,11 @@ pub enum SystemEventKind {
 	Quit,
 	GameOver,
 	SendUsiCommand,
+	QuitReady,
 }
 impl MaxIndex for SystemEventKind {
 	fn max_index() -> usize {
-		SystemEventKind::SendUsiCommand as usize
+		SystemEventKind::QuitReady as usize
 	}
 }
 #[derive(Debug)]
@@ -49,6 +50,7 @@ pub enum SystemEvent {
 	Quit,
 	Gameover(GameEndState),
 	SendUSICommand(UsiOutput),
+	QuitReady,
 }
 #[derive(Debug)]
 pub enum GameEndState {
@@ -196,6 +198,7 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 			SystemEvent::Quit => SystemEventKind::Quit,
 			SystemEvent::Gameover(_) => SystemEventKind::GameOver,
 			SystemEvent::SendUSICommand(_) => SystemEventKind::SendUsiCommand,
+			SystemEvent::QuitReady => SystemEventKind::QuitReady,
 		}
 	}
 }
