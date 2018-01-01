@@ -455,13 +455,13 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 pub trait EventDispatcher<K,E,T> where K: MaxIndex + fmt::Debug,
 											E: MapEventKind<K> + fmt::Debug {
 	fn add_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-													Result<(), EventHandlerError>>);
+													Result<(), EventHandlerError<E>>>);
 
 	fn add_once_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-													Result<(), EventHandlerError>>);
+													Result<(), EventHandlerError<E>>>);
 
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
-										Result<(), EventDispatchError<'a,EventQueue<E,K>>>
+										Result<(), EventDispatchError<'a,EventQueue<E,K>,E>>
 										where E: fmt::Debug, K: fmt::Debug;
 }
 pub struct USIEventDispatcher<K,E,T,L>
@@ -470,8 +470,8 @@ pub struct USIEventDispatcher<K,E,T,L>
 			L: Logger {
 	logger:Mutex<L>,
 	event_kind:PhantomData<K>,
-	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError>>>>,
-	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError>>>>,
+	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<E>>>>>,
+	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<E>>>>>,
 }
 impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 	where K: MaxIndex + fmt::Debug,
@@ -496,17 +496,17 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 																		L: Logger,
 																		usize: From<K> {
 	fn add_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-											Result<(), EventHandlerError>>) {
+											Result<(), EventHandlerError<E>>>) {
 		self.handlers[usize::from(id)].push(handler);
 	}
 
 	fn add_once_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-											Result<(), EventHandlerError>>) {
+											Result<(), EventHandlerError<E>>>) {
 		self.once_handlers[usize::from(id)].push(handler);
 	}
 
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
-									Result<(), EventDispatchError<'a,EventQueue<E,K>>>
+									Result<(), EventDispatchError<'a,EventQueue<E,K>,E>>
 									where E: fmt::Debug, K: fmt::Debug {
 		let events = {
 			event_queue.lock()?.drain_events()
@@ -533,7 +533,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 			}
 
 			if !self.once_handlers[usize::from(e.event_kind())].is_empty() {
-				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError>>> =
+				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<E>>>> =
 											self.once_handlers[usize::from(e.event_kind())].drain(0..)
 																							.collect();
 				for h in &once_handlers {

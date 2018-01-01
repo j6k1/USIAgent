@@ -6,48 +6,53 @@ use std::num::ParseIntError;
 use usiagent::command::UsiCommand;
 
 #[derive(Debug)]
-pub enum EventDispatchError<'a,T> where T: fmt::Debug + 'a {
-	ErrorFromHandler(EventHandlerError),
+pub enum EventDispatchError<'a,T,E> where T: fmt::Debug + 'a, E: fmt::Debug {
+	ErrorFromHandler(EventHandlerError<E>),
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
 	ContainError,
 }
 #[derive(Debug)]
-pub enum EventHandlerError {
+pub enum EventHandlerError<E> where E: fmt::Debug {
 	Fail(String),
+	InvalidState(E),
 }
-impl fmt::Display for EventHandlerError {
+impl<E> fmt::Display for EventHandlerError<E> where E: fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		EventHandlerError::Fail(ref s) => write!(f,"{}",s)
+	 		EventHandlerError::Fail(ref s) => write!(f,"{}",s),
+	 		EventHandlerError::InvalidState(ref e) => write!(f,
+	 			"The type of event passed and the event being processed do not match. (Event passed = {:?})", e),
 	 	}
 	 }
 }
-impl error::Error for EventHandlerError {
+impl<E> error::Error for EventHandlerError<E> where E: fmt::Debug {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		EventHandlerError::Fail(_) => "An error occurred while executing the event handler."
+	 		EventHandlerError::Fail(_) => "An error occurred while executing the event handler.",
+	 		EventHandlerError::InvalidState(_) => "The type of event passed and the event being processed do not match.",
 	 	}
 	 }
 
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
-	 		EventHandlerError::Fail(_) => None
+	 		EventHandlerError::Fail(_) => None,
+	 		EventHandlerError::InvalidState(_) => None,
 	 	}
 	 }
 }
-impl<'a,T> fmt::Display for EventDispatchError<'a,T> where T: fmt::Debug {
+impl<'a,T,E> fmt::Display for EventDispatchError<'a,T,E> where T: fmt::Debug, E: fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		EventDispatchError::ErrorFromHandler(EventHandlerError::Fail(ref s)) => write!(f, "{}", s),
+	 		EventDispatchError::ErrorFromHandler(ref e) => e.fmt(f),
 	 		EventDispatchError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
 	 		EventDispatchError::ContainError => write!(f, "One or more errors occurred while executing the event handler."),
 	 	}
 	 }
 }
-impl<'a,T> error::Error for EventDispatchError<'a,T> where T: fmt::Debug {
+impl<'a,T,E> error::Error for EventDispatchError<'a,T,E> where T: fmt::Debug, E: fmt::Debug {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		EventDispatchError::ErrorFromHandler(EventHandlerError::Fail(ref s)) => s,
+	 		EventDispatchError::ErrorFromHandler(ref e) => e.description(),
 	 		EventDispatchError::MutexLockFailedError(ref e) => e.description(),
 	 		EventDispatchError::ContainError => "Error executing event handler",
 	 	}
@@ -61,13 +66,14 @@ impl<'a,T> error::Error for EventDispatchError<'a,T> where T: fmt::Debug {
 	 	}
 	 }
 }
-impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for EventDispatchError<'a,T> where T: fmt::Debug + 'a {
-	fn from(err: PoisonError<MutexGuard<'a,T>>) -> EventDispatchError<'a,T> {
+impl<'a,T,E> From<PoisonError<MutexGuard<'a,T>>> for EventDispatchError<'a,T,E>
+	where T: fmt::Debug + 'a, E: fmt::Debug {
+	fn from(err: PoisonError<MutexGuard<'a,T>>) -> EventDispatchError<'a,T,E> {
 		EventDispatchError::MutexLockFailedError(err)
 	}
 }
-impl<'a,T> From<EventHandlerError> for EventDispatchError<'a,T> where T: fmt::Debug {
-	fn from(err: EventHandlerError) -> EventDispatchError<'a,T> {
+impl<'a,T,E> From<EventHandlerError<E>> for EventDispatchError<'a,T,E> where T: fmt::Debug, E: fmt::Debug {
+	fn from(err: EventHandlerError<E>) -> EventDispatchError<'a,T,E> {
 		EventDispatchError::ErrorFromHandler(err)
 	}
 }
