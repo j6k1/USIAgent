@@ -29,7 +29,7 @@ pub enum UsiInfoSubCommand {
 	SelDepth(u32),
 	Time(u32),
 	Nodes(u32),
-	Pv(Teban,Vec<Move>),
+	Pv(Vec<Move>),
 	Score(UsiScore),
 	CurMove(Move),
 	Hashfull(u32),
@@ -90,7 +90,7 @@ impl Validate for UsiCommand {
 
 				for cmd in commands {
 					match *cmd {
-						UsiInfoSubCommand::Pv(_,_) if hs.contains(&UsiInfoSubCommandKind::Str) => {
+						UsiInfoSubCommand::Pv(_) if hs.contains(&UsiInfoSubCommandKind::Str) => {
 							return false;
 						},
 						UsiInfoSubCommand::Str(_) if hs.contains(&UsiInfoSubCommandKind::Pv) => {
@@ -99,7 +99,7 @@ impl Validate for UsiCommand {
 						UsiInfoSubCommand::SelDepth(_) if !hs.contains(&UsiInfoSubCommandKind::Depth) => {
 							return false;
 						},
-						ref c @ UsiInfoSubCommand::Pv(_,_) => {
+						ref c @ UsiInfoSubCommand::Pv(_) => {
 							return c.validate();
 						},
 						ref c @ UsiInfoSubCommand::CurMove(_) => {
@@ -129,7 +129,7 @@ impl UsiInfoSubCommand {
 			UsiInfoSubCommand::SelDepth(_) => UsiInfoSubCommandKind::SelDepth,
 			UsiInfoSubCommand::Time(_) => UsiInfoSubCommandKind::Time,
 			UsiInfoSubCommand::Nodes(_) => UsiInfoSubCommandKind::Nodes,
-			UsiInfoSubCommand::Pv(_,_) => UsiInfoSubCommandKind::Pv,
+			UsiInfoSubCommand::Pv(_) => UsiInfoSubCommandKind::Pv,
 			UsiInfoSubCommand::Score(_) => UsiInfoSubCommandKind::Score,
 			UsiInfoSubCommand::CurMove(_) => UsiInfoSubCommandKind::CurMove,
 			UsiInfoSubCommand::Hashfull(_) => UsiInfoSubCommandKind::Hashfull,
@@ -141,8 +141,8 @@ impl UsiInfoSubCommand {
 impl Validate for UsiInfoSubCommand {
 	fn validate(&self) -> bool {
 		match *self {
-			UsiInfoSubCommand::Pv(_,ref v) if v.len() < 1 => false,
-			UsiInfoSubCommand::Pv(_,ref v) => {
+			UsiInfoSubCommand::Pv(ref v) if v.len() < 1 => false,
+			UsiInfoSubCommand::Pv(ref v) => {
 				for m in v {
 					match *m {
 						ref mv if !mv.validate() => {
@@ -265,11 +265,10 @@ impl TryToString<UsiOutputCreateError> for UsiInfoSubCommand {
 			UsiInfoSubCommand::SelDepth(d) => format!("seldepth {}", d),
 			UsiInfoSubCommand::Time(t) => format!("time {}",t),
 			UsiInfoSubCommand::Nodes(n) => format!("nodes {}", n),
-			UsiInfoSubCommand::Pv(_,ref v) if v.len() < 1 => {
+			UsiInfoSubCommand::Pv(ref v) if v.len() < 1 => {
 				return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
 			},
-			UsiInfoSubCommand::Pv(t,ref v) => {
-				let mut t:Teban = t;
+			UsiInfoSubCommand::Pv(ref v) => {
 				let mut mv:Vec<String> = Vec::with_capacity(v.len());
 				for m in v {
 					match *m {
@@ -278,7 +277,6 @@ impl TryToString<UsiOutputCreateError> for UsiInfoSubCommand {
 						},
 						ref m => {
 							mv.push(MoveStringCreator::str_from(m)?);
-							t = t.opposite();
 						}
 					}
 				}
