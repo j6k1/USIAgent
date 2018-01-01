@@ -75,11 +75,6 @@ pub enum UsiGo {
 	Mate(UsiGoMateTimeLimit),
 }
 #[derive(Debug)]
-pub enum UsiGoKind {
-	Go,
-	Ponder,
-}
-#[derive(Debug)]
 pub enum UsiGoTimeLimit {
 	None,
 	Limit(Option<(u32,u32)>,UsiGoByoyomiOrInc),
@@ -263,6 +258,20 @@ impl PositionParser {
 		})
 	}
 }
+struct UsiGoCreator {
+	f:Box<Fn(UsiGoTimeLimit) -> SystemEvent>,
+}
+impl UsiGoCreator {
+	pub fn new(f:Box<Fn(UsiGoTimeLimit) -> SystemEvent>) -> UsiGoCreator {
+		UsiGoCreator {
+			f:f,
+		}
+	}
+
+	pub fn create(&self,l:UsiGoTimeLimit) -> SystemEvent {
+		(*self.f)(l)
+	}
+}
 struct GoParser {
 }
 impl GoParser {
@@ -282,16 +291,15 @@ impl GoParser {
 			_ => (),
 		}
 
-		let (params,kind) = match params[0] {
-			"ponder" => (&params[1..], UsiGoKind::Ponder),
-			_ => (params, UsiGoKind::Go),
+		let (params,f) = match params[0] {
+			"ponder" => (&params[1..], UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Ponder(l))))),
+			_ => (params, UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Go(l))))),
 		};
 
 		match params[0] {
 			"infinite" => match params.len() {
-				1 => match kind {
-					UsiGoKind::Ponder => return Ok(SystemEvent::Go(UsiGo::Ponder(UsiGoTimeLimit::Infinite))),
-					UsiGoKind::Go => return Ok(SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::Infinite))),
+				1 => {
+					return Ok(f.create(UsiGoTimeLimit::Infinite));
 				},
 				_ => {
 						return Err(TypeConvertError::SyntaxError(String::from(
@@ -406,23 +414,11 @@ impl GoParser {
 						"The input form of the go command is invalid. (Unknown parameter)"))),
 			None => match limit {
 				None => Ok(match byori {
-					None => match kind {
-						UsiGoKind::Ponder => SystemEvent::Go(UsiGo::Ponder(UsiGoTimeLimit::None)),
-						UsiGoKind::Go => SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::None)),
-					},
-					Some(ref byori) => match kind {
-						UsiGoKind::Ponder => SystemEvent::Go(
-												UsiGo::Ponder(UsiGoTimeLimit::Limit(limit,*byori))),
-						UsiGoKind::Go => SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::Limit(limit,*byori))),
-					}
+					None => f.create(UsiGoTimeLimit::None),
+					Some(ref byori) => f.create(UsiGoTimeLimit::Limit(limit,*byori)),
 				}),
 				ref limit @ Some(_) => Ok(match byori {
-					Some(byori) => match kind {
-						UsiGoKind::Ponder => SystemEvent::Go(
-													UsiGo::Ponder(UsiGoTimeLimit::Limit(*limit,byori))),
-						UsiGoKind::Go => SystemEvent::Go(
-													UsiGo::Go(UsiGoTimeLimit::Limit(*limit,byori))),
-					},
+					Some(byori) => f.create(UsiGoTimeLimit::Limit(*limit,byori)),
 					None => {
 						return Err(TypeConvertError::SyntaxError(String::from(
 							"The input form of the go command is invalid. (Insufficient parameters)"
