@@ -15,3 +15,12 @@ impl USIOutputWriter for USIStdOutputWriter {
 		writer.write(lines.join("\n").add("\n").as_bytes())
 	}
 }
+pub struct USIStdErrorWriter {
+}
+impl USIStdErrorWriter {
+	pub fn write(s:&str) -> Result<usize> {
+		let stderr = io::stderr();
+		let mut h = stderr.lock();
+		h.write(s.as_bytes())
+	}
+}

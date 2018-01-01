@@ -1,9 +1,9 @@
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;
-use std::io::{self, Write};
 
 use usiagent::TryFrom;
+use usiagent::output::USIStdErrorWriter;
 use usiagent::error::EventDispatchError;
 use usiagent::error::EventHandlerError;
 use usiagent::error::TypeConvertError;
@@ -283,9 +283,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 								logger.logging_error(e);
 							},
 							Err(_) => {
-								let stderr = io::stderr();
-								let mut h = stderr.lock();
-								h.write(b"Logger's exclusive lock could not be secured").unwrap();
+								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 							}
 						}
 						has_error = true;
@@ -306,9 +304,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 									logger.logging_error(e);
 								},
 								Err(_) => {
-									let stderr = io::stderr();
-									let mut h = stderr.lock();
-									h.write(b"Logger's exclusive lock could not be secured").unwrap();
+									USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 								}
 							}
 							has_error = true;

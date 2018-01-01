@@ -1,8 +1,9 @@
 use std::error::Error;
 use std::fs;
-use std::io::{self, BufWriter, Write};
+use std::io::{ BufWriter, Write };
 use chrono::prelude::*;
 
+use usiagent::output::USIStdErrorWriter;
 use usiagent::Logger;
 use usiagent::string::AddIndent;
 
@@ -27,16 +28,12 @@ impl Logger for FileLogger {
 				match writer.write(msg.as_bytes()) {
 					Ok(_) => (),
 					Err(_)=> {
-						let stderr = io::stderr();
-						let mut h = stderr.lock();
-						h.write(b"The log could not be written to the file.").unwrap();
+						USIStdErrorWriter::write("The log could not be written to the file.").unwrap();
 					}
 				}
 			},
 			Err(_) => {
-				let stderr = io::stderr();
-				let mut h = stderr.lock();
-				h.write(b"The log output destination file could not be opened.").unwrap();
+				USIStdErrorWriter::write("The log output destination file could not be opened.").unwrap();
 			}
 		}
 	}
