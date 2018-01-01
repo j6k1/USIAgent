@@ -27,6 +27,7 @@ pub enum SystemEventKind {
 	Go,
 	Stop,
 	PonderHit,
+	Quit,
 	GameOver,
 	SendUsiCommand,
 }
@@ -45,6 +46,7 @@ pub enum SystemEvent {
 	Go(UsiGo),
 	Stop,
 	PonderHit,
+	Quit,
 	Gameover(GameEndState),
 	SendUSICommand(UsiOutput),
 }
@@ -191,6 +193,7 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 			SystemEvent::Go(_) => SystemEventKind::Go,
 			SystemEvent::Stop => SystemEventKind::Stop,
 			SystemEvent::PonderHit => SystemEventKind::PonderHit,
+			SystemEvent::Quit => SystemEventKind::Quit,
 			SystemEvent::Gameover(_) => SystemEventKind::GameOver,
 			SystemEvent::SendUSICommand(_) => SystemEventKind::SendUsiCommand,
 		}
