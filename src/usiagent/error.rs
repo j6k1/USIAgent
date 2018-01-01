@@ -53,7 +53,7 @@ impl<'a,T,E> error::Error for EventDispatchError<'a,T,E> where T: fmt::Debug, E:
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(ref e) => e.description(),
-	 		EventDispatchError::MutexLockFailedError(ref e) => e.description(),
+	 		EventDispatchError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
 	 		EventDispatchError::ContainError => "Error executing event handler",
 	 	}
 	 }
@@ -106,14 +106,18 @@ pub enum ToMoveStringConvertError {
 impl fmt::Display for ToMoveStringConvertError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		ToMoveStringConvertError::CharConvert(ref e) => e.fmt(f),
+	 		ToMoveStringConvertError::CharConvert(_) => {
+	 			write!(f, "Conversion of move to string representation failed.")
+	 		},
 	 	}
 	 }
 }
 impl error::Error for ToMoveStringConvertError {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		ToMoveStringConvertError::CharConvert(ref e) => e.description(),
+	 		ToMoveStringConvertError::CharConvert(_) => {
+	 			"Conversion of move to string representation failed."
+	 		}
 	 	}
 	 }
 
@@ -137,7 +141,7 @@ pub enum UsiOutputCreateError {
 impl fmt::Display for UsiOutputCreateError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		UsiOutputCreateError::ConvertError(ref e) => e.fmt(f),
+	 		UsiOutputCreateError::ConvertError(_) => write!(f, "Failed to generate command string output to USI protocol."),
 	 		UsiOutputCreateError::InvalidStateError(ref s) => write!(f, "The state of {} is invalid.", s),
 	 		UsiOutputCreateError::ValidationError(ref cmd) => {
 	 			match *cmd {
@@ -153,7 +157,7 @@ impl fmt::Display for UsiOutputCreateError {
 impl error::Error for UsiOutputCreateError {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		UsiOutputCreateError::ConvertError(ref e) => e.description(),
+	 		UsiOutputCreateError::ConvertError(_) => "Failed to generate command string output to USI protocol.",
 	 		UsiOutputCreateError::InvalidStateError(_) => "The state of the command generation object is invalid",
 	 		UsiOutputCreateError::ValidationError(ref cmd) => {
 	 			match *cmd {
@@ -187,7 +191,7 @@ pub enum UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
 impl<'a,T> fmt::Display for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		UsiEventSendError::FailCreateOutput(ref e) => e.fmt(f),
+	 		UsiEventSendError::FailCreateOutput(_) => write!(f, "Failed to generate command string to send from AI to USI."),
 	 		UsiEventSendError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
 	 	}
 	 }
@@ -195,8 +199,8 @@ impl<'a,T> fmt::Display for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
 impl<'a,T> error::Error for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		UsiEventSendError::FailCreateOutput(ref e) => e.description(),
-	 		UsiEventSendError::MutexLockFailedError(ref e) => e.description(),
+	 		UsiEventSendError::FailCreateOutput(_) => "Failed to generate command string to send from AI to USI.",
+	 		UsiEventSendError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
 	 	}
 	 }
 
