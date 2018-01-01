@@ -35,7 +35,7 @@ impl UsiOutput {
 			},
 			UsiCommand::UsiReadyOk => vec![String::from("readyok")],
 			UsiCommand::UsiBestMove(m) => vec![format!("bestmove {}", m.try_to_string()?)],
-			UsiCommand::UsiInfo(i) => vec![i.try_to_string()?],
+			UsiCommand::UsiInfo(i) => vec![format!("info {}", i.try_to_string()?)],
 			UsiCommand::UsiOption(s,opt) => vec![format!("option name {} type {}",s,opt.try_to_string()?)],
 			UsiCommand::UsiCheckMate(ref c) => vec![format!("checkmate {}", c.try_to_string()?)],
 		}))
