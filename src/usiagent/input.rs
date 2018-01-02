@@ -7,6 +7,13 @@ pub trait USIInputReader {
 pub struct USIStdInputReader {
 
 }
+impl USIStdInputReader {
+	pub fn new() -> USIStdInputReader {
+		USIStdInputReader {
+
+		}
+	}
+}
 impl USIInputReader for USIStdInputReader {
 	fn read(&mut self) -> io::Result<String> {
 		let stdin = io::stdin();

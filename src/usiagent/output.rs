@@ -1,11 +1,18 @@
 use std::io::{self, Write,Result};
 use std::ops::Add;
 
-trait USIOutputWriter {
+pub trait USIOutputWriter {
 	fn write(&self,lines:&Vec<String>) -> Result<usize>;
 }
-struct USIStdOutputWriter {
+pub struct USIStdOutputWriter {
 
+}
+impl USIStdOutputWriter {
+	pub fn new() -> USIStdOutputWriter {
+		USIStdOutputWriter {
+
+		}
+	}
 }
 impl USIOutputWriter for USIStdOutputWriter {
 	fn write(&self,lines:&Vec<String>) -> Result<usize> {

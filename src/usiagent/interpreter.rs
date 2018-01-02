@@ -9,7 +9,7 @@ use usiagent::output::USIStdErrorWriter;
 use usiagent::input::USIInputReader;
 use usiagent::Logger;
 
-struct USIInterpreter {
+pub struct USIInterpreter {
 }
 impl USIInterpreter {
 	pub fn new() -> USIInterpreter {
@@ -18,11 +18,12 @@ impl USIInterpreter {
 		}
 	}
 
-	pub fn start<L,R>(
+	pub fn start<L,R>(&self,
 		event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
-		reader:Arc<Mutex<R>>,optmap:HashMap<String,SysEventOptionKind>, logger:Arc<Mutex<L>>)
+		reader:Arc<Mutex<R>>,optmap:HashMap<String,SysEventOptionKind>, logger:&Arc<Mutex<L>>)
 		where R: USIInputReader, L: Logger,
-				Arc<Mutex<R>>: Send + 'static, Mutex<L>: Send, Arc<Mutex<L>>: Send + 'static {
+				Arc<Mutex<R>>: Send + 'static, Arc<Mutex<L>>: Send + 'static {
+		let logger = logger.clone();
 
 		thread::spawn(move || {
 			let position_parser = PositionParser::new();
@@ -31,33 +32,27 @@ impl USIInterpreter {
 			loop {
 				match reader.lock() {
 					Err(ref e) => {
-						match logger.lock() {
-							Ok(mut logger) => logger.logging_error(e),
-							Err(_) => {
-								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-							}
-						}
+						logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+							USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+							false
+						}).is_err();
 					},
 					Ok(ref mut reader) => match reader.read() {
 						Err(ref e) => {
-							match logger.lock() {
-								Ok(mut logger) => logger.logging_error(e),
-								Err(_) => {
-									USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-								}
-							}
+							logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+								false
+							}).is_err();
 						},
 						Ok(ref line) => {
 							let f = line.split(" ").collect::<Vec<&str>>();
 
 							match event_queue.lock() {
 								Err(ref e) => {
-									match logger.lock() {
-										Ok(mut logger) => logger.logging_error(e),
-										Err(_) => {
-											USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-										}
-									}
+									logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+										USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+										false
+									}).is_err();
 								},
 								Ok(mut event_queue) => {
 									match f[0] {
@@ -66,12 +61,10 @@ impl USIInterpreter {
 										"setoption" if f.len() == 5 => {
 											match optmap.get(&f[2].to_string()) {
 												None => {
-													match logger.lock() {
-														Ok(mut logger) => logger.logging(&String::from("Could not get option type.")),
-														Err(_) => {
-															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-														}
-													}
+													logger.lock().map(|mut logger| logger.logging(&String::from("Could not get option type."))).map_err(|_| {
+														USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+														false
+													}).is_err();
 												},
 												Some(kind) => {
 													match (f[1],f[2],f[3],f[4], kind) {
@@ -79,15 +72,14 @@ impl USIInterpreter {
 															event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Str(v.to_string())));
 														},
 														("name", id, "value", v, &SysEventOptionKind::Num) => {
-															match v.parse::<u32>() {
-																Ok(n) => event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Num(n))),
-																Err(ref e) => match logger.lock() {
-																	Ok(mut logger) => logger.logging_error(e),
-																	Err(_) => {
-																		USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-																	}
-																}
-															}
+															v.parse::<u32>().map(|n|{
+																event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Num(n)));
+															}).map_err(|ref e| {
+																logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+																	USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+																	false
+																})
+															}).is_err();
 														},
 														("name", id, "value", "true", &SysEventOptionKind::Bool) => {
 															event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Bool(true)));
@@ -96,12 +88,10 @@ impl USIInterpreter {
 															event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Bool(false)));
 														},
 														_ => {
-															match logger.lock() {
-																Ok(mut logger) => logger.logging(&String::from("The format of the option command is illegal.")),
-																Err(_) => {
-																	USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-																}
-															}
+															logger.lock().map(|mut logger| logger.logging(&String::from("The format of the option command is illegal."))).map_err(|_| {
+																USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+																false
+															}).is_err();
 														}
 													}
 												}
@@ -112,12 +102,10 @@ impl USIInterpreter {
 											match position_parser.parse(&f[1..]) {
 												Ok(e) => event_queue.push(e),
 												Err(ref e) => {
-													match logger.lock() {
-														Ok(mut logger) => logger.logging_error(e),
-														Err(_) => {
-															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-														}
-													}
+													logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+														USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+														false
+													}).is_err();
 												}
 											}
 										}
@@ -125,12 +113,10 @@ impl USIInterpreter {
 											match go_parser.parse(&f[1..]) {
 												Ok(e) => event_queue.push(e),
 												Err(ref e) => {
-													match logger.lock() {
-														Ok(mut logger) => logger.logging_error(e),
-														Err(_) => {
-															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-														}
-													}
+													logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+														USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+														false
+													}).is_err();
 												}
 											}
 										},
@@ -143,22 +129,18 @@ impl USIInterpreter {
 												"lose" =>event_queue.push(SystemEvent::GameOver(GameEndState::Lose)),
 												"draw" => event_queue.push(SystemEvent::GameOver(GameEndState::Draw)),
 												_ => {
-													match logger.lock() {
-														Ok(mut logger) => logger.logging(&String::from("The format of the gameover command is illegal.")),
-														Err(_) => {
-															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-														}
-													}
+													logger.lock().map(|mut logger| logger.logging(&String::from("The format of the gameover command is illegal."))).map_err(|_| {
+														USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+														false
+													}).is_err();
 												}
 											}
 										},
 										_ => {
-											match logger.lock() {
-												Ok(mut logger) => logger.logging(&String::from("The format of the command is illegal.")),
-												Err(_) => {
-													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-												}
-											}
+											logger.lock().map(|mut logger| logger.logging(&String::from("The format of the command is illegal."))).map_err(|_| {
+												USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+												false
+											}).is_err();
 										}
 									}
 								}
@@ -166,7 +148,7 @@ impl USIInterpreter {
 						}
 					}
 				}
-			}
+			};
 		});
 	}
 }

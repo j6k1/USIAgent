@@ -1,4 +1,5 @@
 use std::error;
+use std::error::Error;
 use std::fmt;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
@@ -21,7 +22,7 @@ impl<E> fmt::Display for EventHandlerError<E> where E: fmt::Debug {
 	 	match *self {
 	 		EventHandlerError::Fail(ref s) => write!(f,"{}",s),
 	 		EventHandlerError::InvalidState(ref e) => write!(f,
-	 			"The type of event passed and the event being processed do not match. (Event passed = {:?})", e),
+	 			"The type of event passed and the event being processed do not match. (Event kind = {:?})", e),
 	 	}
 	 }
 }
@@ -183,6 +184,11 @@ impl From<ToMoveStringConvertError> for UsiOutputCreateError {
 		UsiOutputCreateError::ConvertError(err)
 	}
 }
+impl<T> From<UsiOutputCreateError> for EventHandlerError<T> where T: fmt::Debug {
+	fn from(err: UsiOutputCreateError) -> EventHandlerError<T> {
+		EventHandlerError::Fail(err.description().to_string())
+	}
+}
 #[derive(Debug)]
 pub enum UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
 	FailCreateOutput(UsiOutputCreateError),
@@ -254,3 +260,38 @@ impl From<ParseIntError> for TypeConvertError<String> where String: fmt::Debug {
 		TypeConvertError::SyntaxError(String::from("Failed parse string to integer."))
 	}
 }
+#[derive(Debug)]
+pub enum USIAgentStartupError<'a,T> where T: fmt::Debug + 'a {
+	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+	MutexLockFailedOtherError(String),
+}
+impl<'a,T> fmt::Display for USIAgentStartupError<'a,T> where T: fmt::Debug {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		USIAgentStartupError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
+		 	USIAgentStartupError::MutexLockFailedOtherError(ref s) => write!(f, "{}",s),
+	 	}
+	 }
+}
+impl<'a,T> error::Error for USIAgentStartupError<'a,T> where T: fmt::Debug {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		USIAgentStartupError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
+	 		USIAgentStartupError::MutexLockFailedOtherError(_) => "Could not get exclusive lock on object.",
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		USIAgentStartupError::MutexLockFailedError(ref e) => Some(e),
+	 		USIAgentStartupError::MutexLockFailedOtherError(_) => None,
+	 	}
+	 }
+}
+impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for USIAgentStartupError<'a,T>
+	where T: fmt::Debug + 'a {
+	fn from(err: PoisonError<MutexGuard<'a,T>>) -> USIAgentStartupError<'a,T> {
+		USIAgentStartupError::MutexLockFailedError(err)
+	}
+}
+

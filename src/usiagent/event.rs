@@ -1,6 +1,7 @@
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;
+use std::sync::Arc;
 
 use usiagent::TryFrom;
 use usiagent::output::USIStdErrorWriter;
@@ -10,14 +11,13 @@ use usiagent::error::TypeConvertError;
 use usiagent::UsiOutput;
 use usiagent::Logger;
 use usiagent::shogi::*;
-
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
 }
 pub trait MaxIndex {
 	fn max_index() -> usize;
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum SystemEventKind {
 	Usi = 0,
 	IsReady,
@@ -31,6 +31,11 @@ pub enum SystemEventKind {
 	GameOver,
 	SendUsiCommand,
 	QuitReady,
+}
+impl From<SystemEventKind> for usize {
+	fn from(kind: SystemEventKind) -> usize {
+		kind as usize
+	}
 }
 impl MaxIndex for SystemEventKind {
 	fn max_index() -> usize {
@@ -49,7 +54,7 @@ pub enum SystemEvent {
 	PonderHit,
 	Quit,
 	GameOver(GameEndState),
-	SendUSICommand(UsiOutput),
+	SendUsiCommand(UsiOutput),
 	QuitReady,
 }
 #[derive(Debug)]
@@ -198,7 +203,7 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 			SystemEvent::PonderHit => SystemEventKind::PonderHit,
 			SystemEvent::Quit => SystemEventKind::Quit,
 			SystemEvent::GameOver(_) => SystemEventKind::GameOver,
-			SystemEvent::SendUSICommand(_) => SystemEventKind::SendUsiCommand,
+			SystemEvent::SendUsiCommand(_) => SystemEventKind::SendUsiCommand,
 			SystemEvent::QuitReady => SystemEventKind::QuitReady,
 		}
 	}
@@ -446,33 +451,40 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 	}
 }
 pub trait EventDispatcher<K,E,T> where K: MaxIndex + fmt::Debug,
-											E: MapEventKind<K> + fmt::Debug {
+											E: MapEventKind<K> + fmt::Debug,
+											usize: From<K> {
 	fn add_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-													Result<(), EventHandlerError<E>>>);
+													Result<(), EventHandlerError<K>>>);
 
 	fn add_once_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-													Result<(), EventHandlerError<E>>>);
+													Result<(), EventHandlerError<K>>>);
 
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
 										Result<(), EventDispatchError<'a,EventQueue<E,K>,E>>
-										where E: fmt::Debug, K: fmt::Debug;
+										where E: fmt::Debug, K: fmt::Debug, usize: From<K>;
 }
 pub struct USIEventDispatcher<K,E,T,L>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
-			L: Logger {
-	logger:Mutex<L>,
+			L: Logger,
+			usize: From<K> {
+	logger:Arc<Mutex<L>>,
 	event_kind:PhantomData<K>,
-	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<E>>>>>,
-	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<E>>>>>,
+	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<K>>>>>,
+	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K>>>>>,
 }
 impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
-			L: Logger {
-	pub fn new(logger:Mutex<L>) -> USIEventDispatcher<K,E,T,L> {
+			L: Logger,
+			usize: From<K> {
+	pub fn new(logger:&Arc<Mutex<L>>) -> USIEventDispatcher<K,E,T,L>
+											where K: MaxIndex + fmt::Debug, usize: From<K>,
+											E: MapEventKind<K> + fmt::Debug,
+											L: Logger {
+
 		let mut o = USIEventDispatcher {
-			logger:logger,
+			logger:logger.clone(),
 			event_kind:PhantomData::<K>,
 			handlers:Vec::with_capacity(K::max_index()+1),
 			once_handlers:Vec::with_capacity(K::max_index()+1),
@@ -489,18 +501,18 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 																		L: Logger,
 																		usize: From<K> {
 	fn add_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-											Result<(), EventHandlerError<E>>>) {
+											Result<(), EventHandlerError<K>>>) {
 		self.handlers[usize::from(id)].push(handler);
 	}
 
 	fn add_once_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-											Result<(), EventHandlerError<E>>>) {
+											Result<(), EventHandlerError<K>>>) {
 		self.once_handlers[usize::from(id)].push(handler);
 	}
 
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
 									Result<(), EventDispatchError<'a,EventQueue<E,K>,E>>
-									where E: fmt::Debug, K: fmt::Debug {
+									where E: fmt::Debug, K: fmt::Debug, usize: From<K> {
 		let events = {
 			event_queue.lock()?.drain_events()
 		};
@@ -509,41 +521,33 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 
 		for e in &events {
 			for h in &self.handlers[usize::from(e.event_kind())] {
-				match h(ctx, &e) {
-					Ok(_) => (),
+				match h(ctx, e) {
+					Ok(_) => true,
 					Err(ref e) => {
-						match self.logger.lock() {
-							Ok(mut logger) => {
-								logger.logging_error(e);
-							},
-							Err(_) => {
-								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-							}
-						}
 						has_error = true;
+						self.logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+							USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+							false
+						}).is_err()
 					}
-				}
+				};
 			}
 
 			if !self.once_handlers[usize::from(e.event_kind())].is_empty() {
-				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<E>>>> =
+				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K>>>> =
 											self.once_handlers[usize::from(e.event_kind())].drain(0..)
 																							.collect();
 				for h in &once_handlers {
-					match h(ctx, &e) {
-						Ok(_) => (),
+					match h(ctx, e) {
+						Ok(_) => true,
 						Err(ref e) => {
-							match self.logger.lock() {
-								Ok(mut logger) => {
-									logger.logging_error(e);
-								},
-								Err(_) => {
-									USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-								}
-							}
 							has_error = true;
+							self.logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+								false
+							}).is_err()
 						}
-					}
+					};
 				}
 			}
 		}

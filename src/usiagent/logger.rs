@@ -18,7 +18,7 @@ impl FileLogger {
 	}
 }
 impl Logger for FileLogger {
-	fn logging(&mut self, msg:&String) {
+	fn logging(&mut self, msg:&String) -> bool {
 		match fs::File::create(&self.file) {
 			Ok(ref f) => {
 				let mut writer = BufWriter::new(f);
@@ -26,18 +26,20 @@ impl Logger for FileLogger {
 
 				let msg = format!("{}\n{}", dt.format("%Y-%m-%d %H:%M:%S").to_string(), msg.add_indent(2));
 				match writer.write(msg.as_bytes()) {
-					Ok(_) => (),
+					Ok(_) => true,
 					Err(_)=> {
 						USIStdErrorWriter::write("The log could not be written to the file.").unwrap();
+						false
 					}
 				}
 			},
 			Err(_) => {
 				USIStdErrorWriter::write("The log output destination file could not be opened.").unwrap();
+				false
 			}
 		}
 	}
-	fn logging_error<E: Error>(&mut self, e:&E) {
+	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
 		let mut messages:Vec<String> = vec![];
 		let mut indent:u32 = 0;
 
@@ -51,6 +53,6 @@ impl Logger for FileLogger {
 			e = cause;
 		}
 
-		self.logging(&messages.join("\n"));
+		self.logging(&messages.join("\n"))
 	}
 }
