@@ -122,7 +122,10 @@ impl USIInterpreter {
 										},
 										"stop" => event_queue.push(SystemEvent::Stop),
 										"ponderhit" => event_queue.push(SystemEvent::PonderHit),
-										"quit" => event_queue.push(SystemEvent::Quit),
+										"quit" => {
+											event_queue.push(SystemEvent::Quit);
+											break;
+										},
 										"gameover" if f.len() == 2 => {
 											match f[2] {
 												"win" => event_queue.push(SystemEvent::GameOver(GameEndState::Win)),
