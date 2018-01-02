@@ -135,13 +135,13 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 		}).or(Err(USIAgentStartupError::MutexLockFailedOtherError(
 					String::from("Failed to acquire exclusive lock of player object."))))?;
 
-		let quit_ready = Arc::new(Mutex::new(false));
+		let quit_ready_arc = Arc::new(Mutex::new(false));
 
 		let system_event_queue = system_event_queue_arc.clone();
 
 		let delay = time::Duration::from_millis(50);
 
-		let quit_ready = quit_ready.clone();
+		let quit_ready = quit_ready_arc.clone();
 
 		while !(match quit_ready.lock() {
 			Ok(quit_ready) => *quit_ready,
