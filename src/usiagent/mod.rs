@@ -152,7 +152,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 		while !(match quit_ready.lock() {
 			Ok(quit_ready) => *quit_ready,
 			Err(ref e) => {
-				!logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+				logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
 					USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 					e
 				}).is_err()
