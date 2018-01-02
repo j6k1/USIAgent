@@ -1,6 +1,7 @@
 use std::error::Error;
+use std::io::{ self, BufWriter, Write  };
 use std::fs;
-use std::io::{ BufWriter, Write };
+use std::fs::OpenOptions;
 use chrono::prelude::*;
 
 use usiagent::output::USIStdErrorWriter;
@@ -8,33 +9,25 @@ use usiagent::Logger;
 use usiagent::string::AddIndent;
 
 pub struct FileLogger {
-	file:String,
+	writer:BufWriter<fs::File>,
 }
 impl FileLogger {
-	pub fn new(file:String) -> FileLogger {
-		FileLogger {
-			file:file,
-		}
+	pub fn new(file:String) -> Result<FileLogger,io::Error> {
+		Ok(FileLogger {
+			writer:BufWriter::new(OpenOptions::new().append(true).create(true).open(file)?),
+		})
 	}
 }
 impl Logger for FileLogger {
 	fn logging(&mut self, msg:&String) -> bool {
-		match fs::File::create(&self.file) {
-			Ok(ref f) => {
-				let mut writer = BufWriter::new(f);
-				let dt = Local::now();
+		let dt = Local::now();
 
-				let msg = format!("{}\n{}", dt.format("%Y-%m-%d %H:%M:%S").to_string(), msg.add_indent(2));
-				match writer.write(msg.as_bytes()) {
-					Ok(_) => true,
-					Err(_)=> {
-						USIStdErrorWriter::write("The log could not be written to the file.").unwrap();
-						false
-					}
-				}
-			},
-			Err(_) => {
-				USIStdErrorWriter::write("The log output destination file could not be opened.").unwrap();
+		let msg = format!("{}\n{}", dt.format("%Y-%m-%d %H:%M:%S").to_string(), msg.add_indent(2));
+		match self.writer.write(msg.as_bytes()) {
+			Ok(_) => !self.writer.flush().is_err(),
+			Err(_)=> {
+				USIStdErrorWriter::write("The log could not be written to the file.").unwrap();
+				self.writer.flush().is_err();
 				false
 			}
 		}

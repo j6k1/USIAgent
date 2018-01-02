@@ -54,7 +54,9 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 	pub fn start_with_log_path(&self,path:String) ->
 		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>> {
 
-		let logger = FileLogger::new(path);
+		let logger = FileLogger::new(path)
+									.or(Err(USIAgentStartupError::IOError(
+										String::from("The log output destination file could not be opened."))))?;
 
 		let input_reader = USIStdInputReader::new();
 		let output_writer = USIStdOutputWriter::new();

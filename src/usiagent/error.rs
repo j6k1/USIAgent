@@ -264,12 +264,14 @@ impl From<ParseIntError> for TypeConvertError<String> where String: fmt::Debug {
 pub enum USIAgentStartupError<'a,T> where T: fmt::Debug + 'a {
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
 	MutexLockFailedOtherError(String),
+	IOError(String),
 }
 impl<'a,T> fmt::Display for USIAgentStartupError<'a,T> where T: fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
 		 	USIAgentStartupError::MutexLockFailedOtherError(ref s) => write!(f, "{}",s),
+		 	USIAgentStartupError::IOError(ref s) => write!(f, "{}",s),
 	 	}
 	 }
 }
@@ -278,6 +280,7 @@ impl<'a,T> error::Error for USIAgentStartupError<'a,T> where T: fmt::Debug {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
 	 		USIAgentStartupError::MutexLockFailedOtherError(_) => "Could not get exclusive lock on object.",
+	 		USIAgentStartupError::IOError(_) => "IO Error.",
 	 	}
 	 }
 
@@ -285,6 +288,7 @@ impl<'a,T> error::Error for USIAgentStartupError<'a,T> where T: fmt::Debug {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedError(ref e) => Some(e),
 	 		USIAgentStartupError::MutexLockFailedOtherError(_) => None,
+	 		USIAgentStartupError::IOError(_) => None,
 	 	}
 	 }
 }
