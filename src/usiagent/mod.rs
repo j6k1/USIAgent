@@ -7,6 +7,7 @@ pub mod output;
 pub mod input;
 pub mod player;
 pub mod shogi;
+pub mod interpreter;
 use std::error::Error;
 use std::fmt;
 
@@ -42,8 +43,8 @@ impl UsiOutput {
 	}
 }
 pub trait Logger {
-	fn logging(&self, msg:&String);
-	fn logging_error<E: Error>(&self, e:&E);
+	fn logging(&mut self, msg:&String);
+	fn logging_error<E: Error>(&mut self, e:&E);
 }
 pub struct UsiAgent {
 

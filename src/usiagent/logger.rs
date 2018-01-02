@@ -18,7 +18,7 @@ impl FileLogger {
 	}
 }
 impl Logger for FileLogger {
-	fn logging(&self, msg:&String) {
+	fn logging(&mut self, msg:&String) {
 		match fs::File::create(&self.file) {
 			Ok(ref f) => {
 				let mut writer = BufWriter::new(f);
@@ -37,7 +37,7 @@ impl Logger for FileLogger {
 			}
 		}
 	}
-	fn logging_error<E: Error>(&self, e:&E) {
+	fn logging_error<E: Error>(&mut self, e:&E) {
 		let mut messages:Vec<String> = vec![];
 		let mut indent:u32 = 0;
 

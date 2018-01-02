@@ -48,7 +48,7 @@ pub enum SystemEvent {
 	Stop,
 	PonderHit,
 	Quit,
-	Gameover(GameEndState),
+	GameOver(GameEndState),
 	SendUSICommand(UsiOutput),
 	QuitReady,
 }
@@ -95,6 +95,12 @@ pub enum SysEventOption {
 	Str(String),
 	Num(u32),
 	Bool(bool),
+}
+#[derive(Debug)]
+pub enum SysEventOptionKind {
+	Str,
+	Num,
+	Bool,
 }
 impl<'a> TryFrom<&'a str,String> for MochigomaCollections {
 	fn try_from(s: &'a str) -> Result<MochigomaCollections, TypeConvertError<String>> {
@@ -191,13 +197,13 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 			SystemEvent::Stop => SystemEventKind::Stop,
 			SystemEvent::PonderHit => SystemEventKind::PonderHit,
 			SystemEvent::Quit => SystemEventKind::Quit,
-			SystemEvent::Gameover(_) => SystemEventKind::GameOver,
+			SystemEvent::GameOver(_) => SystemEventKind::GameOver,
 			SystemEvent::SendUSICommand(_) => SystemEventKind::SendUsiCommand,
 			SystemEvent::QuitReady => SystemEventKind::QuitReady,
 		}
 	}
 }
-struct PositionParser {
+pub struct PositionParser {
 }
 impl PositionParser {
 	pub fn new() -> PositionParser {
@@ -272,7 +278,7 @@ impl UsiGoCreator {
 		(*self.f)(l)
 	}
 }
-struct GoParser {
+pub struct GoParser {
 }
 impl GoParser {
 	pub fn new() -> GoParser {
@@ -507,7 +513,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 					Ok(_) => (),
 					Err(ref e) => {
 						match self.logger.lock() {
-							Ok(logger) => {
+							Ok(mut logger) => {
 								logger.logging_error(e);
 							},
 							Err(_) => {
@@ -528,7 +534,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 						Ok(_) => (),
 						Err(ref e) => {
 							match self.logger.lock() {
-								Ok(logger) => {
+								Ok(mut logger) => {
 									logger.logging_error(e);
 								},
 								Err(_) => {
