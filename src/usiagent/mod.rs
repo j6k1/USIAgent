@@ -50,10 +50,10 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 		Result<(), USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>> {
 		let logger = FileLogger::new(String::from("log/log.txt"));
 
-		let inputreader = USIStdInputReader::new();
+		let input_reader = USIStdInputReader::new();
 		let output_writer = USIStdOutputWriter::new();
 
-		self.start(inputreader,output_writer,logger)
+		self.start(input_reader,output_writer,logger)
 	}
 
 	pub fn start<R,W,L>(&self,reader:R,writer:W,logger:L) ->
