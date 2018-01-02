@@ -47,8 +47,14 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 	}
 
 	pub fn start_default(&self) ->
-		Result<(), USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>> {
-		let logger = FileLogger::new(String::from("log/log.txt"));
+		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>> {
+		self.start_with_log_path(String::from("logs/log.txt"))
+	}
+
+	pub fn start_with_log_path(&self,path:String) ->
+		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>> {
+
+		let logger = FileLogger::new(path);
 
 		let input_reader = USIStdInputReader::new();
 		let output_writer = USIStdOutputWriter::new();
