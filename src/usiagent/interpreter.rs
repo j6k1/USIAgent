@@ -23,6 +23,8 @@ impl USIInterpreter {
 		reader:Arc<Mutex<R>>,optmap:HashMap<String,SysEventOptionKind>, logger:&Arc<Mutex<L>>)
 		where R: USIInputReader, L: Logger,
 				Arc<Mutex<R>>: Send + 'static, Arc<Mutex<L>>: Send + 'static {
+		let event_queue = event_queue.clone();
+		let reader = reader.clone();
 		let logger = logger.clone();
 
 		thread::spawn(move || {

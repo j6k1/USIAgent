@@ -98,18 +98,10 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 	pub fn start<R,W,L>(&self,reader:R,writer:W,logger:L) ->
 		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
-			Arc<Mutex<T>>: Send + 'static,
 			Arc<Mutex<R>>: Send + 'static,
 			Arc<Mutex<L>>: Send + 'static,
 			Arc<Mutex<W>>: Send + 'static,
-			Arc<Mutex<Option<OnPonderHit>>>: Send + 'static,
-			Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>: Send + 'static,
-			Arc<Mutex<USIEventDispatcher<SystemEventKind,SystemEvent,UsiAgent<T>,L>>>: Send + 'static,
-			Arc<Mutex<USIEventDispatcher<UserEventKind,UserEvent,T,L>>>: Send + 'static,
-			Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>: Send + 'static,
-			Arc<Mutex<USIInfoSender>>: Send + 'static,
-			Arc<UsiGoTimeLimit>: Send + 'static,
-			Arc<UsiGoMateTimeLimit>: Send + 'static {
+			Arc<Mutex<Option<OnPonderHit>>>: Send + 'static {
 
 		let reader_arc = Arc::new(Mutex::new(reader));
 		let writer_arc = Arc::new(Mutex::new(writer));

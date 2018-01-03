@@ -524,11 +524,13 @@ impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
 			L: Logger,
-			usize: From<K> {
+			usize: From<K>,
+			Arc<Mutex<USIEventDispatcher<K,E,T,L>>>: Send + 'static {
 	pub fn new(logger:&Arc<Mutex<L>>) -> USIEventDispatcher<K,E,T,L>
 											where K: MaxIndex + fmt::Debug, usize: From<K>,
 											E: MapEventKind<K> + fmt::Debug,
-											L: Logger {
+											L: Logger,
+											Arc<Mutex<USIEventDispatcher<K,E,T,L>>>: Send + 'static {
 
 		let mut o = USIEventDispatcher {
 			logger:logger.clone(),
