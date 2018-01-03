@@ -17,6 +17,21 @@ pub trait MapEventKind<K> {
 pub trait MaxIndex {
 	fn max_index() -> usize;
 }
+#[derive(Debug)]
+pub enum SystemEvent {
+	Usi,
+	IsReady,
+	SetOption(String,SysEventOption),
+	UsiNewGame,
+	Position(Teban,UsiInitialPosition,u32,Vec<Move>),
+	Go(UsiGo),
+	Stop,
+	PonderHit,
+	Quit,
+	GameOver(GameEndState),
+	SendUsiCommand(UsiOutput),
+	QuitReady,
+}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum SystemEventKind {
 	Usi = 0,
@@ -42,20 +57,48 @@ impl MaxIndex for SystemEventKind {
 		SystemEventKind::QuitReady as usize
 	}
 }
+impl MapEventKind<SystemEventKind> for SystemEvent {
+	fn event_kind(&self) -> SystemEventKind {
+		match *self {
+			SystemEvent::Usi => SystemEventKind::Usi,
+			SystemEvent::IsReady => SystemEventKind::IsReady,
+			SystemEvent::SetOption(_,_) => SystemEventKind::SetOption,
+			SystemEvent::UsiNewGame => SystemEventKind::UsiNewGame,
+			SystemEvent::Position(_,_,_,_) => SystemEventKind::Position,
+			SystemEvent::Go(_) => SystemEventKind::Go,
+			SystemEvent::Stop => SystemEventKind::Stop,
+			SystemEvent::PonderHit => SystemEventKind::PonderHit,
+			SystemEvent::Quit => SystemEventKind::Quit,
+			SystemEvent::GameOver(_) => SystemEventKind::GameOver,
+			SystemEvent::SendUsiCommand(_) => SystemEventKind::SendUsiCommand,
+			SystemEvent::QuitReady => SystemEventKind::QuitReady,
+		}
+	}
+}
 #[derive(Debug)]
-pub enum SystemEvent {
-	Usi,
-	IsReady,
-	SetOption(String,SysEventOption),
-	UsiNewGame,
-	Position(Teban,UsiInitialPosition,u32,Vec<Move>),
-	Go(UsiGo),
-	Stop,
-	PonderHit,
-	Quit,
-	GameOver(GameEndState),
-	SendUsiCommand(UsiOutput),
-	QuitReady,
+pub enum UserEvent {
+	Ready,
+}
+#[derive(Debug)]
+pub enum UserEventKind {
+	Ready = 0,
+}
+impl MapEventKind<UserEventKind> for UserEvent {
+	fn event_kind(&self) -> UserEventKind {
+		match *self {
+			UserEvent::Ready => UserEventKind::Ready,
+		}
+	}
+}
+impl From<UserEventKind> for usize {
+	fn from(kind: UserEventKind) -> usize {
+		kind as usize
+	}
+}
+impl MaxIndex for UserEventKind {
+	fn max_index() -> usize {
+		UserEventKind::Ready as usize
+	}
 }
 #[derive(Debug)]
 pub enum GameEndState {
@@ -188,24 +231,6 @@ impl<'a> TryFrom<&'a str,String> for MochigomaCollections {
 				MochigomaCollections::Pair(sente,gote)
 			}
 		})
-	}
-}
-impl MapEventKind<SystemEventKind> for SystemEvent {
-	fn event_kind(&self) -> SystemEventKind {
-		match *self {
-			SystemEvent::Usi => SystemEventKind::Usi,
-			SystemEvent::IsReady => SystemEventKind::IsReady,
-			SystemEvent::SetOption(_,_) => SystemEventKind::SetOption,
-			SystemEvent::UsiNewGame => SystemEventKind::UsiNewGame,
-			SystemEvent::Position(_,_,_,_) => SystemEventKind::Position,
-			SystemEvent::Go(_) => SystemEventKind::Go,
-			SystemEvent::Stop => SystemEventKind::Stop,
-			SystemEvent::PonderHit => SystemEventKind::PonderHit,
-			SystemEvent::Quit => SystemEventKind::Quit,
-			SystemEvent::GameOver(_) => SystemEventKind::GameOver,
-			SystemEvent::SendUsiCommand(_) => SystemEventKind::SendUsiCommand,
-			SystemEvent::QuitReady => SystemEventKind::QuitReady,
-		}
 	}
 }
 pub struct PositionParser {

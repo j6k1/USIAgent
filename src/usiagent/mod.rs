@@ -39,9 +39,10 @@ pub struct UsiAgent<T> where T: USIPlayer + fmt::Debug {
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
 impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
-	pub fn new(player:T) -> UsiAgent<T> where T: USIPlayer + fmt::Debug {
+	pub fn new<F>(factory:F) -> UsiAgent<T>
+	where T: USIPlayer + fmt::Debug, F: Fn(Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>) -> T {
 		UsiAgent {
-			player:Arc::new(Mutex::new(player)),
+			player:Arc::new(Mutex::new(factory(Arc::new(Mutex::new(EventQueue::new()))))),
 			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
 		}
 	}
@@ -104,14 +105,41 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 
 		let logger = logger_arc.clone();
 
-		let system_event_queue = system_event_queue_arc.clone();
-
 		system_event_dispatcher.add_handler(SystemEventKind::Usi, Box::new(move |ctx,e| {
 			match e {
 				&SystemEvent::Usi => {
-					let cmd = UsiOutput::try_from(UsiCommand::UsiOk)?;
+					let mut commands:Vec<UsiCommand> = Vec::new();
+
+					match ctx.player.lock() {
+						Ok(player) => {
+							commands.push(UsiCommand::UsiId(T::ID,T::AUTHOR));
+							for cmd in player.get_options().iter()
+															.map(|(k,v)| UsiCommand::UsiOption(k.clone(),v.clone()))
+															.collect::<Vec<UsiCommand>>().into_iter() {
+								commands.push(cmd);
+							}
+						},
+						Err(_) => {
+							return Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on player object"
+							)));
+						}
+					};
+
+					commands.push(UsiCommand::UsiOk);
+
+					let mut outputs:Vec<UsiOutput> = Vec::new();
+
+					for cmd in &commands {
+						outputs.push(UsiOutput::try_from(&cmd)?);
+					}
+
 					match ctx.system_event_queue.lock() {
-						Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
+						Ok(mut system_event_queue) => {
+							for cmd in outputs {
+								system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+							}
+						},
 						Err(ref e) => {
 							logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
 								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
@@ -119,6 +147,51 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 							}).is_err();
 						}
 					};
+					Ok(())
+				},
+				e => Err(EventHandlerError::InvalidState(e.event_kind())),
+			}
+		}));
+
+
+		let logger = logger_arc.clone();
+
+		let system_event_queue = system_event_queue_arc.clone();
+
+		system_event_dispatcher.add_handler(SystemEventKind::IsReady, Box::new(move |ctx,e| {
+			match e {
+				&SystemEvent::IsReady => {
+					let player = match ctx.player.lock() {
+						Ok(player) => player,
+						Err(_) => {
+							return Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on player object"
+							)));
+						}
+					};
+
+					let system_event_queue = ctx.system_event_queue.clone();
+					let logger_inner = logger.clone();
+
+					player.take_ready(move || {
+						let logger = &logger_inner;
+						let cmd = UsiOutput::try_from(&UsiCommand::UsiReadyOk)?;
+
+						match system_event_queue.lock() {
+							Ok(mut system_event_queue) => {
+								system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+								Ok(())
+							},
+							Err(ref e) => {
+								logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+									USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+									false
+								}).is_err();
+								Err(EventHandlerError::Fail(
+										String::from("Failed to get exclusive lock of system event queue.")))
+							}
+						}
+					});
 					Ok(())
 				},
 				e => Err(EventHandlerError::InvalidState(e.event_kind())),
@@ -133,7 +206,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 		let player = self.player.clone();
 
 		player.lock().map(|player| {
-			interpreter.start(system_event_queue,reader,player.get_option_map(),&logger);
+			interpreter.start(system_event_queue,reader,player.get_option_kinds(),&logger);
 			true
 		}).or_else(|e| {
 			logger.lock().map(|ref mut logger| logger.logging_error(&e)).map_err(|_| {
@@ -180,16 +253,16 @@ pub enum UsiOutput {
 	Command(Vec<String>),
 }
 impl UsiOutput {
-	fn try_from(cmd: UsiCommand) -> Result<UsiOutput, UsiOutputCreateError> {
-		Ok(UsiOutput::Command(match cmd {
+	fn try_from(cmd: &UsiCommand) -> Result<UsiOutput, UsiOutputCreateError> {
+		Ok(UsiOutput::Command(match *cmd {
 			UsiCommand::UsiOk => vec![String::from("usiok")],
-			UsiCommand::UsiId(name, author) => {
+			UsiCommand::UsiId(ref name, ref author) => {
 				vec![format!("id name {}", name), format!("id author {}", author)]
 			},
 			UsiCommand::UsiReadyOk => vec![String::from("readyok")],
-			UsiCommand::UsiBestMove(m) => vec![format!("bestmove {}", m.try_to_string()?)],
-			UsiCommand::UsiInfo(i) => vec![format!("info {}", i.try_to_string()?)],
-			UsiCommand::UsiOption(s,opt) => vec![format!("option name {} type {}",s,opt.try_to_string()?)],
+			UsiCommand::UsiBestMove(ref m) => vec![format!("bestmove {}", m.try_to_string()?)],
+			UsiCommand::UsiInfo(ref i) => vec![format!("info {}", i.try_to_string()?)],
+			UsiCommand::UsiOption(ref s,ref opt) => vec![format!("option name {} type {}",s,opt.try_to_string()?)],
 			UsiCommand::UsiCheckMate(ref c) => vec![format!("checkmate {}", c.try_to_string()?)],
 		}))
 	}

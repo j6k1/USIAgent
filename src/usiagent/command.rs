@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::clone::Clone;
 
 use usiagent::shogi::*;
 use usiagent::TryToString;
@@ -79,6 +80,25 @@ pub enum UsiOptType {
 	Button,
 	String(Option<String>),
 	FileName(Option<String>),
+}
+impl Clone for UsiOptType {
+	fn clone(&self) -> UsiOptType {
+		match *self {
+			UsiOptType::Check(None) => UsiOptType::Check(None),
+			UsiOptType::Check(Some(b)) => UsiOptType::Check(Some(b)),
+			UsiOptType::Spin(l,u,None) => UsiOptType::Spin(l,u,None),
+			UsiOptType::Spin(l,u,Some(d)) => UsiOptType::Spin(l,u,Some(d)),
+			UsiOptType::Combo(None, ref i) => UsiOptType::Combo(None, i.iter().map(|s| s.clone())
+																.collect::<Vec<String>>()),
+			UsiOptType::Combo(Some(ref d), ref i) => UsiOptType::Combo(Some(d.clone()), i.iter().map(|s| s.clone())
+																.collect::<Vec<String>>()),
+			UsiOptType::Button => UsiOptType::Button,
+			UsiOptType::String(None) => UsiOptType::String(None),
+			UsiOptType::String(Some(ref s)) => UsiOptType::String(Some(s.clone())),
+			UsiOptType::FileName(None) => UsiOptType::FileName(None),
+			UsiOptType::FileName(Some(ref s)) => UsiOptType::FileName(Some(s.clone())),
+		}
+	}
 }
 impl Validate for UsiCommand {
 	fn validate(&self) -> bool {
