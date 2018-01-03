@@ -34,14 +34,43 @@ pub trait TryToString<E> where E: fmt::Debug + Error {
 pub trait Validate {
 	fn validate(&self) -> bool;
 }
+struct OnPonderHit  {
+	cmd:UsiOutput,
+}
+impl OnPonderHit {
+	pub fn new(cmd:UsiOutput) -> OnPonderHit {
+		OnPonderHit {
+			cmd:cmd,
+		}
+	}
+
+	pub fn notify<L>(&self,
+		system_event_queue:&Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
+		logger:&Arc<Mutex<L>>) where L: Logger, Arc<Mutex<L>>: Send + 'static {
+
+		match system_event_queue.lock() {
+			Ok(system_event_queue) => {
+				system_event_queue.push(SystemEvent::SendUsiCommand(self.cmd));
+			},
+			Err(ref e) => {
+				logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+					USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+					false
+				}).is_err();
+			}
+		};
+	}
+}
 #[derive(Debug)]
-pub struct UsiAgent<T> where T: USIPlayer + fmt::Debug {
+pub struct UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'static {
 	player:Arc<Mutex<T>>,
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
-impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
+impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'static {
 	pub fn new<F>(factory:F) -> UsiAgent<T>
-	where T: USIPlayer + fmt::Debug, F: Fn(Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>) -> T {
+	where T: USIPlayer + fmt::Debug,
+			F: Fn(Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>) -> T,
+			Arc<Mutex<T>>: Send + 'static, {
 		UsiAgent {
 			player:Arc::new(Mutex::new(factory(Arc::new(Mutex::new(EventQueue::new()))))),
 			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
@@ -69,7 +98,10 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 	pub fn start<R,W,L>(&self,reader:R,writer:W,logger:L) ->
 		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger,
-		Arc<Mutex<R>>: Send + 'static, Arc<Mutex<L>>: Send + 'static, Arc<Mutex<W>>: Send + 'static {
+			Arc<Mutex<R>>: Send + 'static,
+			Arc<Mutex<L>>: Send + 'static,
+			Arc<Mutex<W>>: Send + 'static,
+			Arc<Mutex<Option<OnPonderHit>>>: Send + 'static, {
 
 		let reader_arc = Arc::new(Mutex::new(reader));
 		let writer_arc = Arc::new(Mutex::new(writer));
@@ -77,201 +109,429 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 
 		let system_event_queue_arc = self.system_event_queue.clone();
 
-		let mut system_event_dispatcher:USIEventDispatcher<SystemEventKind,SystemEvent,UsiAgent<T>,L> =
+		let system_event_dispatcher:USIEventDispatcher<SystemEventKind,SystemEvent,UsiAgent<T>,L> =
 																			USIEventDispatcher::new(&logger_arc);
 
-		let writer = writer_arc.clone();
+		let system_event_dispatcher_arc = Arc::new(Mutex::new(system_event_dispatcher));
 
-		let logger = logger_arc.clone();
+		let system_event_dispatcher = system_event_dispatcher_arc.clone();
 
-		system_event_dispatcher.add_handler(SystemEventKind::SendUsiCommand, Box::new(move |_,e| {
-			match e {
-				&SystemEvent::SendUsiCommand(UsiOutput::Command(ref s)) => {
-					match writer.lock() {
-						Err(ref e) => {
-							logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-								false
-							}).is_err()
+		let user_event_queue:EventQueue<UserEvent,UserEventKind> = EventQueue::new();
+		let user_event_queue_arc = Arc::new(Mutex::new(user_event_queue));
+
+		let user_event_dispatcher:USIEventDispatcher<UserEventKind,UserEvent,UsiAgent<T>,L> =
+																			USIEventDispatcher::new(&logger_arc);
+		let user_event_dispatcher_arc = Arc::new(Mutex::new(user_event_dispatcher));
+
+		match system_event_dispatcher.lock() {
+			Err(_) => {
+				return Err(USIAgentStartupError::MutexLockFailedOtherError(
+					String::from("Failed to get exclusive lock of system event queue.")));
+			},
+			Ok(mut system_event_dispatcher) => {
+
+				let writer = writer_arc.clone();
+
+				let logger = logger_arc.clone();
+
+				system_event_dispatcher.add_handler(SystemEventKind::SendUsiCommand, Box::new(move |_,e| {
+					match e {
+						&SystemEvent::SendUsiCommand(UsiOutput::Command(ref s)) => {
+							match writer.lock() {
+								Err(ref e) => {
+									logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+										USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+										false
+									}).is_err()
+								},
+								Ok(ref writer) => {
+									writer.write(s).is_err()
+								}
+							};
+							Ok(())
 						},
-						Ok(ref writer) => {
-							writer.write(s).is_err()
-						}
-					};
-					Ok(())
-				},
-				e => Err(EventHandlerError::InvalidState(e.event_kind())),
-			}
-		}));
-
-		let logger = logger_arc.clone();
-
-		system_event_dispatcher.add_handler(SystemEventKind::Usi, Box::new(move |ctx,e| {
-			match e {
-				&SystemEvent::Usi => {
-					let mut commands:Vec<UsiCommand> = Vec::new();
-
-					match ctx.player.lock() {
-						Ok(player) => {
-							commands.push(UsiCommand::UsiId(T::ID,T::AUTHOR));
-							for cmd in player.get_options().iter()
-															.map(|(k,v)| UsiCommand::UsiOption(k.clone(),v.clone()))
-															.collect::<Vec<UsiCommand>>().into_iter() {
-								commands.push(cmd);
-							}
-						},
-						Err(_) => {
-							return Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on player object"
-							)));
-						}
-					};
-
-					commands.push(UsiCommand::UsiOk);
-
-					let mut outputs:Vec<UsiOutput> = Vec::new();
-
-					for cmd in &commands {
-						outputs.push(UsiOutput::try_from(&cmd)?);
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
+				}));
 
-					match ctx.system_event_queue.lock() {
-						Ok(mut system_event_queue) => {
-							for cmd in outputs {
-								system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+				let logger = logger_arc.clone();
+
+				system_event_dispatcher.add_handler(SystemEventKind::Usi, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::Usi => {
+							let mut commands:Vec<UsiCommand> = Vec::new();
+
+							match ctx.player.lock() {
+								Ok(player) => {
+									commands.push(UsiCommand::UsiId(T::ID,T::AUTHOR));
+									for cmd in player.get_options().iter()
+																	.map(|(k,v)| UsiCommand::UsiOption(k.clone(),v.clone()))
+																	.collect::<Vec<UsiCommand>>().into_iter() {
+										commands.push(cmd);
+									}
+								},
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on player object"
+									)));
+								}
+							};
+
+							commands.push(UsiCommand::UsiOk);
+
+							let mut outputs:Vec<UsiOutput> = Vec::new();
+
+							for cmd in &commands {
+								outputs.push(UsiOutput::try_from(&cmd)?);
 							}
+
+							match ctx.system_event_queue.lock() {
+								Ok(mut system_event_queue) => {
+									for cmd in outputs {
+										system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+									}
+								},
+								Err(ref e) => {
+									logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+										USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+										e
+									}).is_err();
+								}
+							};
+							Ok(())
 						},
-						Err(ref e) => {
-							logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-								e
-							}).is_err();
-						}
-					};
-					Ok(())
-				},
-				e => Err(EventHandlerError::InvalidState(e.event_kind())),
-			}
-		}));
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
 
 
-		let logger = logger_arc.clone();
+				let logger = logger_arc.clone();
 
-		let system_event_queue = system_event_queue_arc.clone();
+				system_event_dispatcher.add_handler(SystemEventKind::IsReady, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::IsReady => {
+							let player = match ctx.player.lock() {
+								Ok(player) => player,
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on player object"
+									)));
+								}
+							};
 
-		system_event_dispatcher.add_handler(SystemEventKind::IsReady, Box::new(move |ctx,e| {
-			match e {
-				&SystemEvent::IsReady => {
-					let player = match ctx.player.lock() {
-						Ok(player) => player,
-						Err(_) => {
-							return Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on player object"
-							)));
-						}
-					};
+							let system_event_queue = ctx.system_event_queue.clone();
+							let logger_inner = logger.clone();
 
-					let system_event_queue = ctx.system_event_queue.clone();
-					let logger_inner = logger.clone();
+							player.take_ready(move || {
+								let logger = &logger_inner;
+								let cmd = UsiOutput::try_from(&UsiCommand::UsiReadyOk)?;
 
-					player.take_ready(move || {
-						let logger = &logger_inner;
-						let cmd = UsiOutput::try_from(&UsiCommand::UsiReadyOk)?;
+								match system_event_queue.lock() {
+									Ok(mut system_event_queue) => {
+										system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+										Ok(())
+									},
+									Err(ref e) => {
+										logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+											USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+											false
+										}).is_err();
+										Err(EventHandlerError::Fail(
+												String::from("Failed to get exclusive lock of system event queue.")))
+									}
+								}
+							});
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
 
-						match system_event_queue.lock() {
-							Ok(mut system_event_queue) => {
-								system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-								Ok(())
-							},
-							Err(ref e) => {
-								logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-									USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-									false
-								}).is_err();
-								Err(EventHandlerError::Fail(
-										String::from("Failed to get exclusive lock of system event queue.")))
+				system_event_dispatcher.add_handler(SystemEventKind::SetOption, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::SetOption(ref name, ref value) => {
+							match ctx.player.lock() {
+								Ok(player) => {
+									player.set_option(name.clone(), value.clone());
+								},
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on player object"
+									)));
+								}
+							};
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
+
+				system_event_dispatcher.add_handler(SystemEventKind::UsiNewGame, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::UsiNewGame => {
+							match ctx.player.lock() {
+								Ok(player) => {
+									player.newgame();
+								},
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on player object"
+									)));
+								}
+							};
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
+
+				system_event_dispatcher.add_handler(SystemEventKind::Position, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
+							let(b,m) = match p {
+								&UsiInitialPosition::Startpos => {
+									(shogi::BANMEN_START_POS, MochigomaCollections::Pair(Vec::new(),Vec::new()))
+								},
+								&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Pair(ref ms,ref mg)) => {
+									(b,MochigomaCollections::Pair(ms.clone(),mg.clone()))
+								},
+								&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Empty) => {
+									(b,MochigomaCollections::Pair(Vec::new(),Vec::new()))
+								}
+							};
+
+							let (ms,mg) = match m {
+								MochigomaCollections::Pair(ms, mg) => (ms, mg),
+								_ => (Vec::new(), Vec::new())
+							};
+
+							match ctx.player.lock() {
+								Ok(player) => {
+									player.set_position(*t, b, ms, mg, *n, v.clone());
+								},
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on player object"
+									)));
+								}
+							};
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
+
+				let ready_accept = true;
+				let ready_accept_arc = Arc::new(Mutex::new(ready_accept));
+
+				let busy = false;
+				let busy_arc = Arc::new(Mutex::new(busy));
+
+				let ready_accept = ready_accept_arc.clone();
+				let busy = busy_arc.clone();
+
+				let logger = logger_arc.clone();
+				let on_ponder_move_handler_arc:Arc<Mutex<Option<OnPonderHit>>> = Arc::new(Mutex::new(None));
+				let allow_immediate_ponder_move_arc = Arc::new(Mutex::new(false));
+				let allow_immediate_ponder_move = allow_immediate_ponder_move_arc;
+				let on_ponder_move_handler = on_ponder_move_handler_arc.clone();
+
+				system_event_dispatcher.add_handler(SystemEventKind::Go, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::Go(UsiGo::Go(opt)) => {
+								let player = ctx.player.lock().or(Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on player object."
+							))))?;
+							let system_event_queue = ctx.system_event_queue.clone();
+							let logger_inner = logger.clone();
+							let player = ctx.player.clone();
+
+							thread::spawn(move || {
+								match player.lock() {
+									Ok(player) => {
+										let m = player.think(opt);
+										match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
+											Ok(cmd) => {
+												match system_event_queue.lock() {
+													Ok(system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
+													Err(ref e) => {
+														logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+															false
+														}).is_err();
+													}
+												};
+											},
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+											}
+										}
+									},
+									Err(ref e) => {
+										logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+											USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+											false
+										}).is_err();
+									}
+								}
+							});
+							Ok(())
+						},
+						&SystemEvent::Go(UsiGo::Ponder(opt)) => {
+							let player = ctx.player.clone();
+							let system_event_queue = ctx.system_event_queue.clone();
+							let logger_inner = logger.clone();
+							let allow_immediate_ponder_move_inner = allow_immediate_ponder_move.clone();
+							let on_ponder_move_handler_inner = on_ponder_move_handler.clone();
+
+							thread::spawn(move || {
+								match player.lock() {
+									Ok(player) => {
+										let bm = player.think(opt);
+										match UsiOutput::try_from(&UsiCommand::UsiBestMove(bm)) {
+											Ok(cmd) => {
+												match allow_immediate_ponder_move_inner.lock() {
+													Ok(allow_immediate_ponder_move) => {
+														if *allow_immediate_ponder_move {
+															match system_event_queue.lock() {
+																Ok(system_event_queue) => {
+																	system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+																},
+																Err(ref e) => {
+																	logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+																		USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+																		false
+																	}).is_err();
+																}
+															}
+														} else {
+															let system_event_queue_ponder = system_event_queue.clone();
+															let logger_ponder = logger_inner.clone();
+															match on_ponder_move_handler_inner.lock() {
+																Ok(on_ponder_move_handler_inner) => {
+																	 *on_ponder_move_handler_inner = Some(OnPonderHit::new(cmd));
+																},
+																Err(ref e) => {
+																	logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+																		USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+																		false
+																	}).is_err();
+																}
+															}
+													}
+													},
+													Err(ref e) => {
+														logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+															false
+														}).is_err();
+														return;
+													}
+												}
+											},
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+											}
+										}
+									},
+									Err(ref e) => {
+										logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+											USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+											false
+										}).is_err();
+									}
+								}
+							});
+							Ok(())
+						},
+						/*
+						&SystemEvent::Go(UsiGo::Mate(opt)) => {
+
+						},
+						*/
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
+
+				let ready_accept = ready_accept_arc.clone();
+				let busy = busy_arc.clone();
+				let user_event_queue = user_event_queue_arc.clone();
+
+				system_event_dispatcher.add_once_handler(SystemEventKind::Stop, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::Stop => {
+							let mut ready_accept = ready_accept.lock().or(Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on ready accept flag object."
+							))))?;
+
+							*ready_accept = true;
+
+							if *busy.lock().or(Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on busy flag object."
+							))))? {
+								match user_event_queue.lock() {
+									Ok(user_event_queue) => {
+										user_event_queue.push(UserEvent::Stop);
+									},
+									Err(_) => {
+										return Err(EventHandlerError::Fail(String::from(
+											"Could not get exclusive lock on user event queue object."
+										)));
+									}
+								}
 							}
-						}
-					});
-					Ok(())
-				},
-				e => Err(EventHandlerError::InvalidState(e.event_kind())),
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
+
+				let ready_accept = ready_accept_arc.clone();
+				let busy = busy_arc.clone();
+				let allow_immediate_ponder_move = allow_immediate_ponder_move_arc;
+				let on_ponder_move_handler = on_ponder_move_handler_arc.clone();
+				let logger = logger_arc.clone();
+
+				system_event_dispatcher.add_once_handler(SystemEventKind::PonderHit, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::PonderHit => {
+							let mut ready_accept = ready_accept.lock().or(Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on ready accept flag object."
+							))))?;
+
+							*ready_accept = true;
+
+							match allow_immediate_ponder_move.lock() {
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										 "Could not get exclusive lock on ready allow immediate ponder move flag object."
+									)));
+								},
+								Ok(allow_immediate_ponder_move) => *allow_immediate_ponder_move = true,
+							};
+
+							match *on_ponder_move_handler.lock().or(Err(EventHandlerError::Fail(String::from(
+								 "Could not get exclusive lock on on ponder handler object."
+							))))? {
+								ref on @ Some(ref n) => {
+									n.notify(&ctx.system_event_queue,&logger);
+									*on = None;
+								},
+								None => (),
+							}
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
 			}
-		}));
-
-		system_event_dispatcher.add_handler(SystemEventKind::SetOption, Box::new(move |ctx,e| {
-			match e {
-				&SystemEvent::SetOption(ref name, ref value) => {
-					match ctx.player.lock() {
-						Ok(player) => {
-							player.set_option(name.clone(), value.clone());
-						},
-						Err(_) => {
-							return Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on player object"
-							)));
-						}
-					};
-					Ok(())
-				},
-				e => Err(EventHandlerError::InvalidState(e.event_kind())),
-			}
-		}));
-
-		system_event_dispatcher.add_handler(SystemEventKind::UsiNewGame, Box::new(move |ctx,e| {
-			match e {
-				&SystemEvent::UsiNewGame => {
-					match ctx.player.lock() {
-						Ok(player) => {
-							player.newgame();
-						},
-						Err(_) => {
-							return Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on player object"
-							)));
-						}
-					};
-					Ok(())
-				},
-				e => Err(EventHandlerError::InvalidState(e.event_kind())),
-			}
-		}));
-
-		system_event_dispatcher.add_handler(SystemEventKind::Position, Box::new(move |ctx,e| {
-			match e {
-				&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
-					let(b,m) = match p {
-						&UsiInitialPosition::Startpos => {
-							(shogi::BANMEN_START_POS, MochigomaCollections::Pair(Vec::new(),Vec::new()))
-						},
-						&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Pair(ref ms,ref mg)) => {
-							(b,MochigomaCollections::Pair(ms.clone(),mg.clone()))
-						},
-						&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Empty) => {
-							(b,MochigomaCollections::Pair(Vec::new(),Vec::new()))
-						}
-					};
-
-					let (ms,mg) = match m {
-						MochigomaCollections::Pair(ms, mg) => (ms, mg),
-						_ => (Vec::new(), Vec::new())
-					};
-
-					match ctx.player.lock() {
-						Ok(player) => {
-							player.set_position(*t, b, ms, mg, *n, v.clone());
-						},
-						Err(_) => {
-							return Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on player object"
-							)));
-						}
-					};
-					Ok(())
-				},
-				e => Err(EventHandlerError::InvalidState(e.event_kind())),
-			}
-		}));
+		}
 
 		let interpreter = USIInterpreter::new();
 
@@ -279,6 +539,8 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 		let reader = reader_arc.clone();
 
 		let player = self.player.clone();
+
+		let system_event_queue = system_event_queue_arc.clone();
 
 		player.lock().map(|player| {
 			interpreter.start(system_event_queue,reader,player.get_option_kinds(),&logger);
@@ -299,6 +561,10 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 
 		let quit_ready = quit_ready_arc.clone();
 
+		let system_event_dispatcher = system_event_dispatcher_arc.clone();
+
+		let logger = logger_arc.clone();
+
 		while !(match quit_ready.lock() {
 			Ok(quit_ready) => *quit_ready,
 			Err(ref e) => {
@@ -308,7 +574,10 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 				}).is_err()
 			}
 		}) {
-			match system_event_dispatcher.dispatch_events(self, &*system_event_queue) {
+			match system_event_dispatcher.lock().or(
+				Err(USIAgentStartupError::MutexLockFailedOtherError(
+					String::from("Failed to get exclusive lock of system event queue.")))
+			)?.dispatch_events(self, &*system_event_queue) {
 				Ok(_) => true,
 				Err(ref e) => {
 					logger.lock().map(|ref mut logger| logger.logging_error(e)).map_err(|_| {

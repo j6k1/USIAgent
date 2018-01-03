@@ -18,6 +18,8 @@ pub trait USIPlayer {
 	fn set_option(&self,name:String,value:SysEventOption);
 	fn newgame(&self);
 	fn set_position(&self,Teban,[KomaKind; 81],Vec<MochigomaKind>,Vec<MochigomaKind>,u32,Vec<Move>);
+	fn think(&self,UsiGoTimeLimit) -> BestMove;
+	fn think_mate(&self,UsiGoMateTimeLimit) -> Vec<Move>;
 }
 pub struct USIInfoSender {
 	system_event_queue:Mutex<EventQueue<SystemEvent,SystemEventKind>>,
