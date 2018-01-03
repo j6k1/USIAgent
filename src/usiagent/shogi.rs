@@ -3,6 +3,7 @@ use std::fmt::Formatter;
 use usiagent::TryFrom;
 use usiagent::error::*;
 use usiagent::Validate;
+use self::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaKind {
@@ -220,7 +221,7 @@ impl TryFrom<String,String> for KomaKind {
 		})
 	}
 }
-pub struct Banmen([KomaKind; 81]);
+pub struct Banmen(pub [KomaKind; 81]);
 impl fmt::Debug for Banmen {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		match *self {
@@ -230,6 +231,18 @@ impl fmt::Debug for Banmen {
 		}
 	}
 }
+/// 右上を(0,0)とした位置
+pub const BANMEN_START_POS:[KomaKind; 81] = [
+	GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou,
+	Blank,GKaku,Blank,Blank,Blank,Blank,Blank,GHisha,Blank,
+	GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,
+	Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,
+	Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,
+	Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,
+	SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,
+	Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank,
+	SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou,
+];
 impl<'a> TryFrom<&'a str,String> for Banmen {
 	fn try_from(s: &'a str) -> Result<Banmen, TypeConvertError<String>> {
 		let mut chars = s.chars();

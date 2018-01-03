@@ -23,6 +23,7 @@ use usiagent::input::*;
 use usiagent::output::*;
 use usiagent::interpreter::*;
 use usiagent::player::*;
+use usiagent::shogi::*;
 
 pub trait TryFrom<T,E> where Self: Sized {
 	fn try_from(s:T) -> Result<Self, TypeConvertError<E>> where E: fmt::Debug;
@@ -192,6 +193,80 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug {
 							}
 						}
 					});
+					Ok(())
+				},
+				e => Err(EventHandlerError::InvalidState(e.event_kind())),
+			}
+		}));
+
+		system_event_dispatcher.add_handler(SystemEventKind::SetOption, Box::new(move |ctx,e| {
+			match e {
+				&SystemEvent::SetOption(ref name, ref value) => {
+					match ctx.player.lock() {
+						Ok(player) => {
+							player.set_option(name.clone(), value.clone());
+						},
+						Err(_) => {
+							return Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on player object"
+							)));
+						}
+					};
+					Ok(())
+				},
+				e => Err(EventHandlerError::InvalidState(e.event_kind())),
+			}
+		}));
+
+		system_event_dispatcher.add_handler(SystemEventKind::UsiNewGame, Box::new(move |ctx,e| {
+			match e {
+				&SystemEvent::UsiNewGame => {
+					match ctx.player.lock() {
+						Ok(player) => {
+							player.newgame();
+						},
+						Err(_) => {
+							return Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on player object"
+							)));
+						}
+					};
+					Ok(())
+				},
+				e => Err(EventHandlerError::InvalidState(e.event_kind())),
+			}
+		}));
+
+		system_event_dispatcher.add_handler(SystemEventKind::Position, Box::new(move |ctx,e| {
+			match e {
+				&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
+					let(b,m) = match p {
+						&UsiInitialPosition::Startpos => {
+							(shogi::BANMEN_START_POS, MochigomaCollections::Pair(Vec::new(),Vec::new()))
+						},
+						&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Pair(ref ms,ref mg)) => {
+							(b,MochigomaCollections::Pair(ms.clone(),mg.clone()))
+						},
+						&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Empty) => {
+							(b,MochigomaCollections::Pair(Vec::new(),Vec::new()))
+						}
+					};
+
+					let (ms,mg) = match m {
+						MochigomaCollections::Pair(ms, mg) => (ms, mg),
+						_ => (Vec::new(), Vec::new())
+					};
+
+					match ctx.player.lock() {
+						Ok(player) => {
+							player.set_position(*t, b, ms, mg, *n, v.clone());
+						},
+						Err(_) => {
+							return Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on player object"
+							)));
+						}
+					};
 					Ok(())
 				},
 				e => Err(EventHandlerError::InvalidState(e.event_kind())),

@@ -144,6 +144,15 @@ pub enum SysEventOption {
 	Num(u32),
 	Bool(bool),
 }
+impl Clone for SysEventOption {
+	fn clone(&self) -> SysEventOption {
+		match *self {
+			SysEventOption::Str(ref s) => SysEventOption::Str(s.clone()),
+			SysEventOption::Num(n) => SysEventOption::Num(n),
+			SysEventOption::Bool(b) => SysEventOption::Bool(b),
+		}
+	}
+}
 #[derive(Debug)]
 pub enum SysEventOptionKind {
 	Str,
@@ -268,7 +277,11 @@ impl PositionParser {
 			r.push(Move::try_from(m)?);
 		}
 
-		Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r))
+		let t = match r.len() {
+			l if l % 2 == 0 => Teban::Sente,
+			_ => Teban::Gote,
+		};
+		Ok(SystemEvent::Position(t,UsiInitialPosition::Startpos,1,r))
 	}
 
 	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
