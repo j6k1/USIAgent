@@ -8,6 +8,7 @@ use usiagent::output::USIStdErrorWriter;
 use usiagent::Logger;
 use usiagent::string::AddIndent;
 
+#[derive(Debug)]
 pub struct FileLogger {
 	writer:BufWriter<fs::File>,
 }

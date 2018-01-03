@@ -34,7 +34,7 @@ pub trait TryToString<E> where E: fmt::Debug + Error {
 pub trait Validate {
 	fn validate(&self) -> bool;
 }
-struct OnPonderHit  {
+pub struct OnPonderHit  {
 	cmd:UsiOutput,
 }
 impl OnPonderHit {
@@ -92,16 +92,24 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 		let input_reader = USIStdInputReader::new();
 		let output_writer = USIStdOutputWriter::new();
 
-		self.start(input_reader,output_writer,logger)
+		self.start::<USIStdInputReader,USIStdOutputWriter,FileLogger>(input_reader,output_writer,logger)
 	}
 
 	pub fn start<R,W,L>(&self,reader:R,writer:W,logger:L) ->
 		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>>
-		where R: USIInputReader, W: USIOutputWriter, L: Logger,
+		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
+			Arc<Mutex<T>>: Send + 'static,
 			Arc<Mutex<R>>: Send + 'static,
 			Arc<Mutex<L>>: Send + 'static,
 			Arc<Mutex<W>>: Send + 'static,
-			Arc<Mutex<Option<OnPonderHit>>>: Send + 'static, {
+			Arc<Mutex<Option<OnPonderHit>>>: Send + 'static,
+			Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>: Send + 'static,
+			Arc<Mutex<USIEventDispatcher<SystemEventKind,SystemEvent,UsiAgent<T>,L>>>: Send + 'static,
+			Arc<Mutex<USIEventDispatcher<UserEventKind,UserEvent,T,L>>>: Send + 'static,
+			Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>: Send + 'static,
+			Arc<Mutex<USIInfoSender>>: Send + 'static,
+			Arc<UsiGoTimeLimit>: Send + 'static,
+			Arc<UsiGoMateTimeLimit>: Send + 'static {
 
 		let reader_arc = Arc::new(Mutex::new(reader));
 		let writer_arc = Arc::new(Mutex::new(writer));
@@ -119,7 +127,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 		let user_event_queue:EventQueue<UserEvent,UserEventKind> = EventQueue::new();
 		let user_event_queue_arc = Arc::new(Mutex::new(user_event_queue));
 
-		let user_event_dispatcher:USIEventDispatcher<UserEventKind,UserEvent,UsiAgent<T>,L> =
+		let user_event_dispatcher:USIEventDispatcher<UserEventKind,UserEvent,T,L> =
 																			USIEventDispatcher::new(&logger_arc);
 		let user_event_dispatcher_arc = Arc::new(Mutex::new(user_event_dispatcher));
 
@@ -336,20 +344,58 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				let allow_immediate_ponder_move = allow_immediate_ponder_move_arc;
 				let on_ponder_move_handler = on_ponder_move_handler_arc.clone();
 
+				let user_event_dispatcher = user_event_dispatcher_arc.clone();
+				let user_event_queue = user_event_queue_arc.clone();
+				let system_event_queue = system_event_queue_arc.clone();
+
+				let info_sender_arc = Arc::new(Mutex::new(USIInfoSender::new(system_event_queue)));
+
 				system_event_dispatcher.add_handler(SystemEventKind::Go, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::Go(UsiGo::Go(opt)) => {
-								let player = ctx.player.lock().or(Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on player object."
-							))))?;
 							let system_event_queue = ctx.system_event_queue.clone();
 							let logger_inner = logger.clone();
 							let player = ctx.player.clone();
+							let info_sender = info_sender_arc.clone();
+							let user_event_dispatcher_inner = user_event_dispatcher.clone();
+							let user_event_queue_inner = user_event_queue.clone();
+							let opt = Arc::new(opt);
+							let opt = opt.clone();
 
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(player) => {
-										let m = player.think(opt);
+										let info_sender = match info_sender.lock() {
+											Ok(info_sender) => info_sender,
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+												return;
+											}
+										};
+										let user_event_dispatcher = match user_event_dispatcher_inner.lock() {
+											Ok(user_event_dispatcher) => user_event_dispatcher,
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+												return;
+											}
+										};
+										let user_event_queue = match user_event_queue_inner.lock() {
+											Ok(user_event_queue) => user_event_queue,
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+												return;
+											}
+										};
+										let m = player.think(&*opt,&*user_event_queue,&*user_event_dispatcher,&*info_sender);
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
 											Ok(cmd) => {
 												match system_event_queue.lock() {
@@ -386,11 +432,46 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							let logger_inner = logger.clone();
 							let allow_immediate_ponder_move_inner = allow_immediate_ponder_move.clone();
 							let on_ponder_move_handler_inner = on_ponder_move_handler.clone();
+							let info_sender = info_sender_arc.clone();
+							let user_event_dispatcher_inner = user_event_dispatcher.clone();
+							let user_event_queue_inner = user_event_queue.clone();
+							let opt = Arc::new(opt);
+							let opt = opt.clone();
 
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(player) => {
-										let bm = player.think(opt);
+										let info_sender = match info_sender.lock() {
+											Ok(info_sender) => info_sender,
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+												return;
+											}
+										};
+										let user_event_dispatcher = match user_event_dispatcher_inner.lock() {
+											Ok(user_event_dispatcher) => user_event_dispatcher,
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+												return;
+											}
+										};
+										let user_event_queue = match user_event_queue_inner.lock() {
+											Ok(user_event_queue) => user_event_queue,
+											Err(ref e) => {
+												logger_inner.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+												return;
+											}
+										};
+										let bm = player.think(&*opt,&*user_event_queue,&*user_event_dispatcher,&*info_sender);
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(bm)) {
 											Ok(cmd) => {
 												match allow_immediate_ponder_move_inner.lock() {
@@ -408,8 +489,6 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 																}
 															}
 														} else {
-															let system_event_queue_ponder = system_event_queue.clone();
-															let logger_ponder = logger_inner.clone();
 															match on_ponder_move_handler_inner.lock() {
 																Ok(on_ponder_move_handler_inner) => {
 																	 *on_ponder_move_handler_inner = Some(OnPonderHit::new(cmd));
@@ -463,7 +542,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				let busy = busy_arc.clone();
 				let user_event_queue = user_event_queue_arc.clone();
 
-				system_event_dispatcher.add_once_handler(SystemEventKind::Stop, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::Stop, Box::new(move |_,e| {
 					match e {
 						&SystemEvent::Stop => {
 							let mut ready_accept = ready_accept.lock().or(Err(EventHandlerError::Fail(String::from(
@@ -498,7 +577,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				let on_ponder_move_handler = on_ponder_move_handler_arc.clone();
 				let logger = logger_arc.clone();
 
-				system_event_dispatcher.add_once_handler(SystemEventKind::PonderHit, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::PonderHit, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::PonderHit => {
 							let mut ready_accept = ready_accept.lock().or(Err(EventHandlerError::Fail(String::from(
@@ -519,11 +598,11 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							match *on_ponder_move_handler.lock().or(Err(EventHandlerError::Fail(String::from(
 								 "Could not get exclusive lock on on ponder handler object."
 							))))? {
-								ref on @ Some(ref n) => {
-									n.notify(&ctx.system_event_queue,&logger);
+								ref on => {
+									let system_event_queue = ctx.system_event_queue.clone();
+									on.map(move |n| n.notify(&system_event_queue,&logger));
 									*on = None;
-								},
-								None => (),
+								}
 							}
 							Ok(())
 						},
