@@ -236,32 +236,34 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				system_event_dispatcher.add_handler(SystemEventKind::IsReady, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::IsReady => {
-							let mut player = match ctx.player.lock() {
-								Ok(player) => player,
-								Err(_) => {
-									return Err(EventHandlerError::Fail(String::from(
-										"Could not get exclusive lock on player object"
-									)));
-								}
-							};
-
 							let system_event_queue = ctx.system_event_queue.clone();
 							let on_error_handler_inner = on_error_handler.clone();
+							let player = ctx.player.clone();
 
-							player.take_ready(move || {
-								let cmd = UsiOutput::try_from(&UsiCommand::UsiReadyOk)?;
-
-								match system_event_queue.lock() {
-									Ok(mut system_event_queue) => {
-										system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-										Ok(())
+							thread::spawn(move || {
+								match player.lock() {
+									Ok(mut player) => {
+										player.take_ready();
+										match UsiOutput::try_from(&UsiCommand::UsiReadyOk) {
+											Ok(cmd) => {
+												match system_event_queue.lock() {
+													Ok(mut system_event_queue) => {
+														system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+													},
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												};
+											},
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										}
 									},
 									Err(ref e) => {
 										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-										Err(EventHandlerError::Fail(
-												String::from("Failed to get exclusive lock of system event queue.")))
 									}
-								}
+								};
 							});
 							Ok(())
 						},
@@ -645,21 +647,30 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::Quit => {
-							let mut player = match ctx.player.lock() {
-								Ok(player) => player,
-								Err(_) => {
-									return Err(EventHandlerError::Fail(String::from(
-										"Could not get exclusive lock on player object"
-									)));
-								}
-							};
-
 							let system_event_queue = ctx.system_event_queue.clone();
 							let on_error_handler_inner = on_error_handler.clone();
+							let player = ctx.player.clone();
 
-							player.quit(move || {
-								match system_event_queue.lock() {
-									Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::QuitReady),
+							thread::spawn(move || {
+								match player.lock() {
+									Ok(mut player) => {
+										player.quit();
+										match UsiOutput::try_from(&UsiCommand::UsiReadyOk) {
+											Ok(cmd) => {
+												match system_event_queue.lock() {
+													Ok(mut system_event_queue) => {
+														system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+													},
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												};
+											},
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										}
+									},
 									Err(ref e) => {
 										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 									}

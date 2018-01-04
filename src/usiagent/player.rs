@@ -16,7 +16,7 @@ pub trait USIPlayer: fmt::Debug {
 	const AUTHOR: String;
 	fn get_option_kinds(&mut self) -> HashMap<String,SysEventOptionKind>;
 	fn get_options(&mut self) -> HashMap<String,UsiOptType>;
-	fn take_ready<F: Fn() -> Result<(), EventHandlerError<SystemEventKind>>>(&mut self,on_ready:F) -> bool;
+	fn take_ready(&mut self) -> bool;
 	fn set_option(&mut self,name:String,value:SysEventOption);
 	fn newgame(&mut self);
 	fn set_position(&mut self,Teban,[KomaKind; 81],Vec<MochigomaKind>,Vec<MochigomaKind>,u32,Vec<Move>);
@@ -26,7 +26,7 @@ pub trait USIPlayer: fmt::Debug {
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> CheckMate where L: Logger;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind>>;
 	fn gameover(&mut self,&GameEndState);
-	fn quit<F>(&mut self,on_quit:F) where F: Fn();
+	fn quit(&mut self);
 	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> bool where L: Logger {
 		match self.dispatch_events(&*event_queue,&on_error_handler) {
