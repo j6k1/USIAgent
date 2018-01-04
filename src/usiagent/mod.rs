@@ -359,8 +359,19 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				let system_event_queue = system_event_queue_arc.clone();
 
 				let info_sender_arc = Arc::new(Mutex::new(USIInfoSender::new(system_event_queue)));
+				let busy = busy_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Go, Box::new(move |ctx,e| {
+					match busy.lock() {
+						Ok(mut busy) => {
+							*busy = true;
+						},
+						Err(_) => {
+							return Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on busy flag object."
+							)));
+						}
+					};
 					match *e {
 						SystemEvent::Go(UsiGo::Go(ref opt)) => {
 							let system_event_queue = ctx.system_event_queue.clone();
@@ -370,6 +381,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							let user_event_queue_inner = user_event_queue.clone();
 							let opt = Arc::new(*opt);
 							let opt = opt.clone();
+							let busy_inner = busy.clone();
 
 							thread::spawn(move || {
 								match player.lock() {
@@ -389,6 +401,14 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 											}
 										};
 										let m = player.think(&*opt,&*user_event_queue,&*info_sender);
+										match busy_inner.lock() {
+											Ok(mut busy) => {
+												*busy = false;
+											},
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										};
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
 											Ok(cmd) => {
 												match system_event_queue.lock() {
@@ -420,6 +440,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							let user_event_queue_inner = user_event_queue.clone();
 							let opt = Arc::new(*opt);
 							let opt = opt.clone();
+							let busy_inner = busy.clone();
 
 							thread::spawn(move || {
 								match player.lock() {
@@ -439,6 +460,14 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 											}
 										};
 										let bm = player.think(&*opt,&*user_event_queue,&*info_sender);
+										match busy_inner.lock() {
+											Ok(mut busy) => {
+												*busy = false;
+											},
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										};
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(bm)) {
 											Ok(cmd) => {
 												match allow_immediate_ponder_move_inner.lock() {
