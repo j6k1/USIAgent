@@ -18,7 +18,7 @@ pub enum UsiCommand {
 	UsiOption(String,UsiOptType),
 	UsiCheckMate(CheckMate),
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum BestMove {
 	Move(Move,Option<Move>),
 	Resign,

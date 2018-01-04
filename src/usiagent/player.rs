@@ -7,7 +7,6 @@ use usiagent::command::*;
 use usiagent::error::*;
 use usiagent::event::*;
 use usiagent::UsiOutput;
-use usiagent::Logger;
 use usiagent::shogi::*;
 
 pub trait USIPlayer: fmt::Debug {
@@ -20,18 +19,10 @@ pub trait USIPlayer: fmt::Debug {
 	fn set_option(&self,name:String,value:SysEventOption);
 	fn newgame(&self);
 	fn set_position(&self,Teban,[KomaKind; 81],Vec<MochigomaKind>,Vec<MochigomaKind>,u32,Vec<Move>);
-	fn think<T,L>(&self,&UsiGoTimeLimit,event_queue:&EventQueue<UserEvent,UserEventKind>,
-					event_dispatcher:&USIEventDispatcher<UserEventKind,UserEvent,T,L>,
-					info_sender:&USIInfoSender) -> BestMove where T: USIPlayer,
-																	L: Logger + fmt::Debug,
-																	Arc<Mutex<T>>: Send + 'static,
-																	Arc<Mutex<L>>: Send + 'static;
-	fn think_mate<T,L>(&self,&UsiGoMateTimeLimit,event_queue:&EventQueue<UserEvent,UserEventKind>,
-					event_dispatcher:&USIEventDispatcher<UserEventKind,UserEvent,T,L>,
-					info_sender:&USIInfoSender) -> Vec<Move> where T: USIPlayer,
-																	L: Logger + fmt::Debug,
-																	Arc<Mutex<T>>: Send + 'static,
-																	Arc<Mutex<L>>: Send + 'static;
+	fn think(&self,&UsiGoTimeLimit,event_queue:&EventQueue<UserEvent,UserEventKind>,
+					info_sender:&USIInfoSender) -> BestMove;
+	fn think_mate(&self,&UsiGoMateTimeLimit,event_queue:&EventQueue<UserEvent,UserEventKind>,
+					info_sender:&USIInfoSender) -> Vec<Move>;
 }
 pub struct USIInfoSender {
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,

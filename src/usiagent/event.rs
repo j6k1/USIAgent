@@ -125,19 +125,19 @@ pub enum MochigomaCollections {
 	Empty,
 	Pair(Vec<MochigomaKind>,Vec<MochigomaKind>),
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGo {
 	Go(UsiGoTimeLimit),
 	Ponder(UsiGoTimeLimit),
 	Mate(UsiGoMateTimeLimit),
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoTimeLimit {
 	None,
 	Limit(Option<(u32,u32)>,UsiGoByoyomiOrInc),
 	Infinite,
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoMateTimeLimit {
 	Limit(u32),
 	Infinite,
@@ -524,13 +524,11 @@ impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
 			L: Logger,
-			usize: From<K>,
-			Arc<Mutex<USIEventDispatcher<K,E,T,L>>>: Send + 'static {
+			usize: From<K> {
 	pub fn new(logger:&Arc<Mutex<L>>) -> USIEventDispatcher<K,E,T,L>
 											where K: MaxIndex + fmt::Debug, usize: From<K>,
 											E: MapEventKind<K> + fmt::Debug,
-											L: Logger,
-											Arc<Mutex<USIEventDispatcher<K,E,T,L>>>: Send + 'static {
+											L: Logger {
 
 		let mut o = USIEventDispatcher {
 			logger:logger.clone(),
