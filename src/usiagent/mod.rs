@@ -655,7 +655,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 								match player.lock() {
 									Ok(mut player) => {
 										player.quit();
-										match UsiOutput::try_from(&UsiCommand::UsiReadyOk) {
+										match UsiOutput::try_from(&UsiCommand::QuitReady) {
 											Ok(cmd) => {
 												match system_event_queue.lock() {
 													Ok(mut system_event_queue) => {
