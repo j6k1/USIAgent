@@ -77,18 +77,15 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 }
 #[derive(Debug)]
 pub enum UserEvent {
-	Ready,
 	Stop,
 }
 #[derive(Debug)]
 pub enum UserEventKind {
-	Ready = 0,
-	Stop,
+	Stop = 0,
 }
 impl MapEventKind<UserEventKind> for UserEvent {
 	fn event_kind(&self) -> UserEventKind {
 		match *self {
-			UserEvent::Ready => UserEventKind::Ready,
 			UserEvent::Stop => UserEventKind::Stop,
 		}
 	}
