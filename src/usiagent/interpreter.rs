@@ -95,10 +95,7 @@ impl USIInterpreter {
 											match position_parser.parse(&f[1..]) {
 												Ok(e) => event_queue.push(e),
 												Err(ref e) => {
-													logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-														USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-														false
-													}).is_err();
+													on_error_handler.lock().map(|h| h.call(e)).is_err();
 												}
 											}
 										}
@@ -106,10 +103,7 @@ impl USIInterpreter {
 											match go_parser.parse(&f[1..]) {
 												Ok(e) => event_queue.push(e),
 												Err(ref e) => {
-													logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-														USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-														false
-													}).is_err();
+													on_error_handler.lock().map(|h| h.call(e)).is_err();
 												}
 											}
 										},
