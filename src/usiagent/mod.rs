@@ -390,14 +390,9 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 												return;
 											}
 										};
-										let user_event_queue = match user_event_queue_inner.lock() {
-											Ok(user_event_queue) => user_event_queue,
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-												return;
-											}
-										};
-										let m = player.think(&*opt,&*user_event_queue,&*info_sender);
+										let m = player.think(&*opt,
+																user_event_queue_inner.clone(),
+																&*info_sender,on_error_handler_inner.clone());
 										match busy_inner.lock() {
 											Ok(mut busy) => {
 												*busy = false;
@@ -449,14 +444,9 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 												return;
 											}
 										};
-										let user_event_queue = match user_event_queue_inner.lock() {
-											Ok(user_event_queue) => user_event_queue,
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-												return;
-											}
-										};
-										let bm = player.think(&*opt,&*user_event_queue,&*info_sender);
+										let bm = player.think(&*opt,
+																user_event_queue_inner.clone(),
+																&*info_sender,on_error_handler_inner.clone());
 										match busy_inner.lock() {
 											Ok(mut busy) => {
 												*busy = false;

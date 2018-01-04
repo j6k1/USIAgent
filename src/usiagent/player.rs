@@ -7,6 +7,8 @@ use usiagent::command::*;
 use usiagent::error::*;
 use usiagent::event::*;
 use usiagent::UsiOutput;
+use usiagent::Logger;
+use usiagent::OnErrorHandler;
 use usiagent::shogi::*;
 
 pub trait USIPlayer: fmt::Debug {
@@ -19,10 +21,39 @@ pub trait USIPlayer: fmt::Debug {
 	fn set_option(&self,name:String,value:SysEventOption);
 	fn newgame(&self);
 	fn set_position(&self,Teban,[KomaKind; 81],Vec<MochigomaKind>,Vec<MochigomaKind>,u32,Vec<Move>);
-	fn think(&self,&UsiGoTimeLimit,event_queue:&EventQueue<UserEvent,UserEventKind>,
-					info_sender:&USIInfoSender) -> BestMove;
-	fn think_mate(&self,&UsiGoMateTimeLimit,event_queue:&EventQueue<UserEvent,UserEventKind>,
-					info_sender:&USIInfoSender) -> Vec<Move>;
+	fn think<L>(&self,&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> BestMove where L: Logger;
+	fn think_mate<L>(&self,&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Vec<Move> where L: Logger;
+	fn on_stop(&self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind>>;
+	fn dispatch_events<'a,L>(&mut self, event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
+						on_error_handler:Mutex<OnErrorHandler<L>>) ->
+						Result<(), EventDispatchError<'a,EventQueue<UserEvent,UserEventKind>,UserEvent>> where L: Logger{
+		let events = {
+			event_queue.lock()?.drain_events()
+		};
+
+		let mut has_error = false;
+
+		for e in &events {
+			match e {
+				&UserEvent::Stop => {
+					match self.on_stop(e) {
+						Ok(_) => (),
+						Err(ref e) => {
+							on_error_handler.lock().map(|h| h.call(e)).is_err();
+							has_error = true;
+						}
+					};
+				}
+			};
+		}
+
+		match has_error {
+			true => Err(EventDispatchError::ContainError),
+			false => Ok(()),
+		}
+	}
 }
 pub struct USIInfoSender {
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
