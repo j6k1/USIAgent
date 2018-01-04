@@ -497,11 +497,58 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							});
 							Ok(())
 						},
-						/*
-						&SystemEvent::Go(UsiGo::Mate(opt)) => {
+						SystemEvent::Go(UsiGo::Mate(opt)) => {
+							let system_event_queue = ctx.system_event_queue.clone();
+							let on_error_handler_inner = on_error_handler.clone();
+							let player = ctx.player.clone();
+							let info_sender = info_sender_arc.clone();
+							let user_event_queue_inner = user_event_queue.clone();
+							let opt = Arc::new(opt);
+							let opt = opt.clone();
+							let busy_inner = busy.clone();
 
+							thread::spawn(move || {
+								match player.lock() {
+									Ok(player) => {
+										let info_sender = match info_sender.lock() {
+											Ok(info_sender) => info_sender,
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												return;
+											}
+										};
+										let m = player.think_mate(&*opt,
+																user_event_queue_inner.clone(),
+																&*info_sender,on_error_handler_inner.clone());
+										match busy_inner.lock() {
+											Ok(mut busy) => {
+												*busy = false;
+											},
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										};
+										match UsiOutput::try_from(&UsiCommand::UsiCheckMate(m)) {
+											Ok(cmd) => {
+												match system_event_queue.lock() {
+													Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												};
+											},
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										}
+									},
+									Err(ref e) => {
+										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+									}
+								};
+							});
+							Ok(())
 						},
-						*/
 						ref e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
 				}));
