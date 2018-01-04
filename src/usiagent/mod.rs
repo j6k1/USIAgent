@@ -750,7 +750,10 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 
 		while !(match quit_ready.lock() {
 			Ok(quit_ready) => *quit_ready,
-			Err(ref e) => on_error_handler.lock().map(|h| h.call(e)).is_err(),
+			Err(ref e) => {
+				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				true
+			}
 		}) {
 			match system_event_dispatcher.lock().or(
 				Err(USIAgentStartupError::MutexLockFailedOtherError(
