@@ -79,23 +79,17 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 pub enum UserEvent {
 	Ready,
 	Stop,
-	PonderHit,
-	PonderFailed,
 }
 #[derive(Debug)]
 pub enum UserEventKind {
 	Ready = 0,
 	Stop,
-	PonderHit,
-	PonderFailed,
 }
 impl MapEventKind<UserEventKind> for UserEvent {
 	fn event_kind(&self) -> UserEventKind {
 		match *self {
 			UserEvent::Ready => UserEventKind::Ready,
 			UserEvent::Stop => UserEventKind::Stop,
-			UserEvent::PonderHit => UserEventKind::PonderHit,
-			UserEvent::PonderFailed => UserEventKind::PonderFailed,
 		}
 	}
 }
@@ -106,7 +100,7 @@ impl From<UserEventKind> for usize {
 }
 impl MaxIndex for UserEventKind {
 	fn max_index() -> usize {
-		UserEventKind::PonderFailed as usize
+		UserEventKind::Stop as usize
 	}
 }
 #[derive(Debug)]
