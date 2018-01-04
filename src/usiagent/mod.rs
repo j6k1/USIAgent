@@ -155,6 +155,8 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 		let user_event_queue:EventQueue<UserEvent,UserEventKind> = EventQueue::new();
 		let user_event_queue_arc = Arc::new(Mutex::new(user_event_queue));
 
+		let quit_ready_arc = Arc::new(Mutex::new(false));
+
 		match system_event_dispatcher.lock() {
 			Err(_) => {
 				return Err(USIAgentStartupError::MutexLockFailedOtherError(
@@ -638,6 +640,74 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
 				}));
+
+				let on_error_handler = on_error_handler_arc.clone();
+
+				system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |ctx,e| {
+					match e {
+						&SystemEvent::Quit => {
+							let player = match ctx.player.lock() {
+								Ok(player) => player,
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on player object"
+									)));
+								}
+							};
+
+							let system_event_queue = ctx.system_event_queue.clone();
+							let on_error_handler_inner = on_error_handler.clone();
+
+							player.quit(move || {
+								match system_event_queue.lock() {
+									Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::QuitReady),
+									Err(ref e) => {
+										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+									}
+								};
+							});
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
+
+				system_event_dispatcher.add_handler(SystemEventKind::GameOver, Box::new(move |ctx,e| {
+					match *e {
+						SystemEvent::GameOver(ref s) => {
+							let player = match ctx.player.lock() {
+								Ok(player) => player,
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on player object"
+									)));
+								}
+							};
+							player.gameover(s);
+							Ok(())
+						},
+						ref e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
+
+				let quit_ready = quit_ready_arc.clone();
+
+				system_event_dispatcher.add_handler(SystemEventKind::QuitReady, Box::new(move |_,e| {
+					match e {
+						&SystemEvent::QuitReady => {
+							match quit_ready.lock() {
+								Ok(mut quit_ready) => *quit_ready = true,
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on quit ready flag object."
+									)));
+								}
+							}
+							Ok(())
+						},
+						e => Err(EventHandlerError::InvalidState(e.event_kind())),
+					}
+				}));
 			}
 		}
 
@@ -658,9 +728,6 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 			on_error_handler.lock().map(|h| h.call(&e))
 		}).or(Err(USIAgentStartupError::MutexLockFailedOtherError(
 					String::from("Failed to acquire exclusive lock of player object."))))?;
-
-		let quit_ready_arc = Arc::new(Mutex::new(false));
-
 		let system_event_queue = system_event_queue_arc.clone();
 
 		let delay = time::Duration::from_millis(50);
