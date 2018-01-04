@@ -103,12 +103,11 @@ pub struct UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 's
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
 impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'static {
-	pub fn new<F>(factory:F) -> UsiAgent<T>
+	pub fn new<F>(player:T) -> UsiAgent<T>
 	where T: USIPlayer + fmt::Debug,
-			F: Fn(Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>) -> T,
 			Arc<Mutex<T>>: Send + 'static, {
 		UsiAgent {
-			player:Arc::new(Mutex::new(factory(Arc::new(Mutex::new(EventQueue::new()))))),
+			player:Arc::new(Mutex::new(player)),
 			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
 		}
 	}

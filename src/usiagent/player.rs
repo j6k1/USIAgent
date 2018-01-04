@@ -14,7 +14,6 @@ use usiagent::shogi::*;
 pub trait USIPlayer: fmt::Debug {
 	const ID: String;
 	const AUTHOR: String;
-	fn with_user_event_queue(event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>) -> Self;
 	fn get_option_kinds(&self) -> HashMap<String,SysEventOptionKind>;
 	fn get_options(&self) -> HashMap<String,UsiOptType>;
 	fn take_ready<F: Fn() -> Result<(), EventHandlerError<SystemEventKind>>>(&self,on_ready:F) -> bool;
