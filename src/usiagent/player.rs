@@ -26,9 +26,20 @@ pub trait USIPlayer: fmt::Debug {
 	fn think_mate<L>(&self,&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Vec<Move> where L: Logger;
 	fn on_stop(&self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind>>;
+	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+						on_error_handler:Mutex<OnErrorHandler<L>>) -> bool where L: Logger {
+		match self.dispatch_events(&*event_queue,&on_error_handler) {
+			Ok(_)=> true,
+			Err(ref e) => {
+				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				return false
+			}
+		}
+	}
+
 	fn dispatch_events<'a,L>(&mut self, event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
-						on_error_handler:Mutex<OnErrorHandler<L>>) ->
-						Result<(), EventDispatchError<'a,EventQueue<UserEvent,UserEventKind>,UserEvent>> where L: Logger{
+						on_error_handler:&Mutex<OnErrorHandler<L>>) ->
+						Result<(), EventDispatchError<'a,EventQueue<UserEvent,UserEventKind>,UserEvent>> where L: Logger {
 		let events = {
 			event_queue.lock()?.drain_events()
 		};
