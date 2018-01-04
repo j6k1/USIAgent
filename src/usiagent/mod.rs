@@ -192,7 +192,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							let mut commands:Vec<UsiCommand> = Vec::new();
 
 							match ctx.player.lock() {
-								Ok(player) => {
+								Ok(mut player) => {
 									commands.push(UsiCommand::UsiId(T::ID,T::AUTHOR));
 									for cmd in player.get_options().iter()
 																	.map(|(k,v)| UsiCommand::UsiOption(k.clone(),v.clone()))
@@ -236,7 +236,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				system_event_dispatcher.add_handler(SystemEventKind::IsReady, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::IsReady => {
-							let player = match ctx.player.lock() {
+							let mut player = match ctx.player.lock() {
 								Ok(player) => player,
 								Err(_) => {
 									return Err(EventHandlerError::Fail(String::from(
@@ -273,7 +273,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 					match e {
 						&SystemEvent::SetOption(ref name, ref value) => {
 							match ctx.player.lock() {
-								Ok(player) => {
+								Ok(mut player) => {
 									player.set_option(name.clone(), value.clone());
 								},
 								Err(_) => {
@@ -292,7 +292,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 					match e {
 						&SystemEvent::UsiNewGame => {
 							match ctx.player.lock() {
-								Ok(player) => {
+								Ok(mut player) => {
 									player.newgame();
 								},
 								Err(_) => {
@@ -328,7 +328,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							};
 
 							match ctx.player.lock() {
-								Ok(player) => {
+								Ok(mut player) => {
 									player.set_position(*t, b, ms, mg, *n, v.clone());
 								},
 								Err(_) => {
@@ -383,7 +383,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 
 							thread::spawn(move || {
 								match player.lock() {
-									Ok(player) => {
+									Ok(mut player) => {
 										let info_sender = match info_sender.lock() {
 											Ok(info_sender) => info_sender,
 											Err(ref e) => {
@@ -437,7 +437,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 
 							thread::spawn(move || {
 								match player.lock() {
-									Ok(player) => {
+									Ok(mut player) => {
 										let info_sender = match info_sender.lock() {
 											Ok(info_sender) => info_sender,
 											Err(ref e) => {
@@ -510,7 +510,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 
 							thread::spawn(move || {
 								match player.lock() {
-									Ok(player) => {
+									Ok(mut player) => {
 										let info_sender = match info_sender.lock() {
 											Ok(info_sender) => info_sender,
 											Err(ref e) => {
@@ -645,7 +645,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::Quit => {
-							let player = match ctx.player.lock() {
+							let mut player = match ctx.player.lock() {
 								Ok(player) => player,
 								Err(_) => {
 									return Err(EventHandlerError::Fail(String::from(
@@ -674,7 +674,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				system_event_dispatcher.add_handler(SystemEventKind::GameOver, Box::new(move |ctx,e| {
 					match *e {
 						SystemEvent::GameOver(ref s) => {
-							let player = match ctx.player.lock() {
+							let mut player = match ctx.player.lock() {
 								Ok(player) => player,
 								Err(_) => {
 									return Err(EventHandlerError::Fail(String::from(
@@ -720,7 +720,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 
 		let system_event_queue = system_event_queue_arc.clone();
 
-		player.lock().map(|player| {
+		player.lock().map(|mut player| {
 			interpreter.start(system_event_queue,reader,player.get_option_kinds(),&logger);
 			true
 		}).or_else(|e| {
