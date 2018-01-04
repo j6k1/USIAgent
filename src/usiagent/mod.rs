@@ -51,6 +51,20 @@ impl<L> OnErrorHandler<L> where L: Logger {
 		}).is_err()
 	}
 }
+pub struct SandBox {
+
+}
+impl SandBox {
+	pub fn immediate<F,E,L>(f:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+	where E: Error, F: Fn() -> Result<(),E>, L: Logger {
+		match f() {
+			Ok(_) => (),
+			Err(ref e) => {
+				on_error_handler.lock().map(|h| h.call(e)).is_err();
+			}
+		}
+	}
+}
 pub enum OnPonderHit  {
 	Some(BestMove),
 	None,

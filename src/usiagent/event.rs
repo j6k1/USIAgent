@@ -4,12 +4,12 @@ use std::sync::Mutex;
 use std::sync::Arc;
 
 use usiagent::TryFrom;
-use usiagent::output::USIStdErrorWriter;
 use usiagent::error::EventDispatchError;
 use usiagent::error::EventHandlerError;
 use usiagent::error::TypeConvertError;
 use usiagent::UsiOutput;
 use usiagent::Logger;
+use usiagent::OnErrorHandler;
 use usiagent::shogi::*;
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
@@ -515,7 +515,7 @@ pub struct USIEventDispatcher<K,E,T,L>
 			E: MapEventKind<K> + fmt::Debug,
 			L: Logger,
 			usize: From<K> {
-	logger:Arc<Mutex<L>>,
+	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>,
 	event_kind:PhantomData<K>,
 	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<K>>>>>,
 	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K>>>>>,
@@ -531,7 +531,7 @@ impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 											L: Logger {
 
 		let mut o = USIEventDispatcher {
-			logger:logger.clone(),
+			on_error_handler:Arc::new(Mutex::new(OnErrorHandler::new(logger.clone()))),
 			event_kind:PhantomData::<K>,
 			handlers:Vec::with_capacity(K::max_index()+1),
 			once_handlers:Vec::with_capacity(K::max_index()+1),
@@ -572,10 +572,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 					Ok(_) => true,
 					Err(ref e) => {
 						has_error = true;
-						self.logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-							USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-							false
-						}).is_err()
+						self.on_error_handler.lock().map(|h| h.call(e)).is_err()
 					}
 				};
 			}
@@ -589,10 +586,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 						Ok(_) => true,
 						Err(ref e) => {
 							has_error = true;
-							self.logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-								false
-							}).is_err()
+							self.on_error_handler.lock().map(|h| h.call(e)).is_err()
 						}
 					};
 				}

@@ -8,6 +8,7 @@ use usiagent::event::*;
 use usiagent::output::USIStdErrorWriter;
 use usiagent::input::USIInputReader;
 use usiagent::Logger;
+use usiagent::OnErrorHandler;
 
 pub struct USIInterpreter {
 }
@@ -26,6 +27,8 @@ impl USIInterpreter {
 		let event_queue = event_queue.clone();
 		let reader = reader.clone();
 		let logger = logger.clone();
+		let on_error_handler = Arc::new(Mutex::new(OnErrorHandler::new(logger.clone())));
+		let on_error_handler = on_error_handler.clone();
 
 		thread::spawn(move || {
 			let position_parser = PositionParser::new();
@@ -34,27 +37,18 @@ impl USIInterpreter {
 			loop {
 				match reader.lock() {
 					Err(ref e) => {
-						logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-							USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-							false
-						}).is_err();
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
 					},
 					Ok(ref mut reader) => match reader.read() {
 						Err(ref e) => {
-							logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-								false
-							}).is_err();
+							on_error_handler.lock().map(|h| h.call(e)).is_err();
 						},
 						Ok(ref line) => {
 							let f = line.split(" ").collect::<Vec<&str>>();
 
 							match event_queue.lock() {
 								Err(ref e) => {
-									logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-										USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-										false
-									}).is_err();
+									on_error_handler.lock().map(|h| h.call(e)).is_err();
 								},
 								Ok(mut event_queue) => {
 									match f[0] {
@@ -77,10 +71,7 @@ impl USIInterpreter {
 															v.parse::<u32>().map(|n|{
 																event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Num(n)));
 															}).map_err(|ref e| {
-																logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
-																	USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-																	false
-																})
+																on_error_handler.lock().map(|h| h.call(e))
 															}).is_err();
 														},
 														("name", id, "value", "true", &SysEventOptionKind::Bool) => {
