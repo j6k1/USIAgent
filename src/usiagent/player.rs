@@ -27,7 +27,7 @@ pub trait USIPlayer: fmt::Debug {
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Vec<Move> where L: Logger;
 	fn on_stop(&self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind>>;
 	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-						on_error_handler:Mutex<OnErrorHandler<L>>) -> bool where L: Logger {
+						on_error_handler:&Mutex<OnErrorHandler<L>>) -> bool where L: Logger {
 		match self.dispatch_events(&*event_queue,&on_error_handler) {
 			Ok(_)=> true,
 			Err(ref e) => {
