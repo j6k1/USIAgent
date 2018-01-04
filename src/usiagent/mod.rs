@@ -445,6 +445,15 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							let opt = opt.clone();
 							let busy_inner = busy.clone();
 
+							match allow_immediate_ponder_move.lock() {
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										 "Could not get exclusive lock on ready allow immediate ponder move flag object."
+									)));
+								},
+								Ok(mut allow_immediate_ponder_move) => *allow_immediate_ponder_move = false,
+							};
+
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
