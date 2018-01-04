@@ -100,7 +100,7 @@ impl MaxIndex for UserEventKind {
 		UserEventKind::Stop as usize
 	}
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum GameEndState {
 	Win,
 	Lose,

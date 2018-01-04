@@ -655,21 +655,14 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 								match player.lock() {
 									Ok(mut player) => {
 										player.quit();
-										match UsiOutput::try_from(&UsiCommand::QuitReady) {
-											Ok(cmd) => {
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => {
-														system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-													},
-													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-													}
-												};
+										match system_event_queue.lock() {
+											Ok(mut system_event_queue) => {
+												system_event_queue.push(SystemEvent::QuitReady);
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
-										}
+										};
 									},
 									Err(ref e) => {
 										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -682,18 +675,25 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 					}
 				}));
 
+				let on_error_handler = on_error_handler_arc.clone();
+
 				system_event_dispatcher.add_handler(SystemEventKind::GameOver, Box::new(move |ctx,e| {
 					match *e {
 						SystemEvent::GameOver(ref s) => {
-							let mut player = match ctx.player.lock() {
-								Ok(player) => player,
-								Err(_) => {
-									return Err(EventHandlerError::Fail(String::from(
-										"Could not get exclusive lock on player object"
-									)));
-								}
-							};
-							player.gameover(s);
+							let player = ctx.player.clone();
+							let on_error_handler_inner = on_error_handler.clone();
+							let s = s.clone();
+
+							thread::spawn(move || {
+								match player.lock() {
+									Ok(mut player) => {
+										player.gameover(&s);
+									},
+									Err(ref e) => {
+										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+									}
+								};
+							});
 							Ok(())
 						},
 						ref e => Err(EventHandlerError::InvalidState(e.event_kind())),
