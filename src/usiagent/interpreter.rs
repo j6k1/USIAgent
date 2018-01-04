@@ -54,7 +54,7 @@ impl USIInterpreter {
 									match f[0] {
 										"usi" => event_queue.push(SystemEvent::Usi),
 										"isready" => event_queue.push(SystemEvent::IsReady),
-										"setoption" if f.len() == 5 => {
+										"setoption" if f.len() >= 5 => {
 											match optmap.get(&f[2].to_string()) {
 												None => {
 													logger.lock().map(|mut logger| logger.logging(&String::from("Could not get option type."))).map_err(|_| {
