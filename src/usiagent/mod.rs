@@ -342,9 +342,6 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 					}
 				}));
 
-				let ready_accept = true;
-				let ready_accept_arc = Arc::new(Mutex::new(ready_accept));
-
 				let busy = false;
 				let busy_arc = Arc::new(Mutex::new(busy));
 
@@ -519,19 +516,15 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 					}
 				}));
 
-				let ready_accept = ready_accept_arc.clone();
 				let busy = busy_arc.clone();
 				let user_event_queue = user_event_queue_arc.clone();
+				let allow_immediate_ponder_move = allow_immediate_ponder_move_arc.clone();
+				let on_ponder_move_handler = on_ponder_move_handler_arc.clone();
+				let on_error_handler = on_error_handler_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::Stop, Box::new(move |_,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::Stop, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::Stop => {
-							let mut ready_accept = ready_accept.lock().or(Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on ready accept flag object."
-							))))?;
-
-							*ready_accept = true;
-
 							if *busy.lock().or(Err(EventHandlerError::Fail(String::from(
 								"Could not get exclusive lock on busy flag object."
 							))))? {
@@ -546,13 +539,34 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 									}
 								}
 							}
+							match allow_immediate_ponder_move.lock() {
+								Err(_) => {
+									return Err(EventHandlerError::Fail(String::from(
+										 "Could not get exclusive lock on ready allow immediate ponder move flag object."
+									)));
+								},
+								Ok(mut allow_immediate_ponder_move) => *allow_immediate_ponder_move = true,
+							};
+							match on_ponder_move_handler.lock().or(Err(EventHandlerError::Fail(String::from(
+								 "Could not get exclusive lock on on ponder handler object."
+							))))? {
+								mut g => {
+									match *g {
+										ref mut n @ OnPonderHit::Some(_) => {
+											let system_event_queue = ctx.system_event_queue.clone();
+											n.notify(&system_event_queue,&on_error_handler);
+										},
+										OnPonderHit::None => (),
+									};
+									*g = OnPonderHit::None;
+								}
+							};
 							Ok(())
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
 				}));
 
-				let ready_accept = ready_accept_arc.clone();
 				let allow_immediate_ponder_move = allow_immediate_ponder_move_arc.clone();
 				let on_ponder_move_handler = on_ponder_move_handler_arc.clone();
 				let on_error_handler = on_error_handler_arc.clone();
@@ -560,12 +574,6 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 				system_event_dispatcher.add_handler(SystemEventKind::PonderHit, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::PonderHit => {
-							let mut ready_accept = ready_accept.lock().or(Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on ready accept flag object."
-							))))?;
-
-							*ready_accept = true;
-
 							match allow_immediate_ponder_move.lock() {
 								Err(_) => {
 									return Err(EventHandlerError::Fail(String::from(
