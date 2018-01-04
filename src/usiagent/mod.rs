@@ -309,6 +309,8 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 					}
 				}));
 
+				let on_error_handler = on_error_handler_arc.clone();
+
 				system_event_dispatcher.add_handler(SystemEventKind::Position, Box::new(move |ctx,e| {
 					match e {
 						&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
@@ -329,16 +331,22 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 								_ => (Vec::new(), Vec::new())
 							};
 
-							match ctx.player.lock() {
-								Ok(mut player) => {
-									player.set_position(*t, b, ms, mg, *n, v.clone());
-								},
-								Err(_) => {
-									return Err(EventHandlerError::Fail(String::from(
-										"Could not get exclusive lock on player object"
-									)));
-								}
-							};
+							let on_error_handler_inner = on_error_handler.clone();
+							let player = ctx.player.clone();
+							let v = v.clone();
+							let n = n.clone();
+							let t = t.clone();
+
+							thread::spawn(move || {
+								match player.lock() {
+									Ok(mut player) => {
+										player.set_position(t, b, ms, mg, n, v);
+									},
+									Err(ref e) => {
+										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+									}
+								};
+							});
 							Ok(())
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
