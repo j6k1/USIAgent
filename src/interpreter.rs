@@ -4,11 +4,11 @@ use std::sync::Arc;
 use std::marker::Send;
 use std::collections::HashMap;
 
-use usiagent::event::*;
-use usiagent::output::USIStdErrorWriter;
-use usiagent::input::USIInputReader;
-use usiagent::Logger;
-use usiagent::OnErrorHandler;
+use event::*;
+use output::USIStdErrorWriter;
+use input::USIInputReader;
+use Logger;
+use OnErrorHandler;
 
 pub struct USIInterpreter {
 }

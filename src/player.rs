@@ -3,13 +3,13 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use std::fmt;
 
-use usiagent::command::*;
-use usiagent::error::*;
-use usiagent::event::*;
-use usiagent::UsiOutput;
-use usiagent::Logger;
-use usiagent::OnErrorHandler;
-use usiagent::shogi::*;
+use command::*;
+use error::*;
+use event::*;
+use UsiOutput;
+use Logger;
+use OnErrorHandler;
+use shogi::*;
 
 pub trait USIPlayer: fmt::Debug {
 	const ID: String;

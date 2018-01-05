@@ -1,8 +1,8 @@
 use std::fmt;
 use std::fmt::Formatter;
-use usiagent::TryFrom;
-use usiagent::error::*;
-use usiagent::Validate;
+use TryFrom;
+use error::*;
+use Validate;
 use self::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]

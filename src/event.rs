@@ -3,14 +3,14 @@ use std::marker::PhantomData;
 use std::sync::Mutex;
 use std::sync::Arc;
 
-use usiagent::TryFrom;
-use usiagent::error::EventDispatchError;
-use usiagent::error::EventHandlerError;
-use usiagent::error::TypeConvertError;
-use usiagent::UsiOutput;
-use usiagent::Logger;
-use usiagent::OnErrorHandler;
-use usiagent::shogi::*;
+use TryFrom;
+use error::EventDispatchError;
+use error::EventHandlerError;
+use error::TypeConvertError;
+use UsiOutput;
+use Logger;
+use OnErrorHandler;
+use shogi::*;
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
 }

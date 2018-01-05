@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 use std::clone::Clone;
 
-use usiagent::shogi::*;
-use usiagent::TryToString;
-use usiagent::Validate;
-use usiagent::error::DanConvertError;
-use usiagent::error::ToMoveStringConvertError;
-use usiagent::error::UsiOutputCreateError;
+use shogi::*;
+use TryToString;
+use Validate;
+use error::DanConvertError;
+use error::ToMoveStringConvertError;
+use error::UsiOutputCreateError;
 
 #[derive(Debug)]
 pub enum UsiCommand {

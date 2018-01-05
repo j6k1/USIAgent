@@ -4,9 +4,9 @@ use std::fs;
 use std::fs::OpenOptions;
 use chrono::prelude::*;
 
-use usiagent::output::USIStdErrorWriter;
-use usiagent::Logger;
-use usiagent::string::AddIndent;
+use output::USIStdErrorWriter;
+use Logger;
+use string::AddIndent;
 
 #[derive(Debug)]
 pub struct FileLogger {

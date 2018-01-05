@@ -4,7 +4,7 @@ use std::fmt;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
 use std::num::ParseIntError;
-use usiagent::command::UsiCommand;
+use command::UsiCommand;
 
 #[derive(Debug)]
 pub enum EventDispatchError<'a,T,E> where T: fmt::Debug + 'a, E: fmt::Debug {
