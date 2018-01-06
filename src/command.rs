@@ -184,8 +184,8 @@ impl Validate for CheckMate {
 			CheckMate::Moves(ref v) if v.len() < 1 => false,
 			CheckMate::Moves(ref v) => {
 				for m in v {
-					match *m {
-						Move(ref s,ref d) if !s.validate() || !d.validate() => {
+					match m.validate() {
+						false => {
 							return false;
 						},
 						_ => (),
@@ -243,11 +243,14 @@ struct MoveStringCreator {
 impl MoveStringFrom for MoveStringCreator {
 	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError> {
 		match m {
-			&Move(KomaSrcPosition::Mochigoma(s),KomaDstPosition::Ban(x,y)) => {
-				Ok(format!("{}*{}{}", KomaStringCreator::str_from(s), x+1, DanCharCreator::char_from(y)?))
-			},
-			&Move(KomaSrcPosition::Ban(sx,sy),KomaDstPosition::Ban(dx,dy)) => {
+			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,false)) => {
 				Ok(format!("{}{}{}{}", sx+1, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
+			},
+			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,true)) => {
+				Ok(format!("{}{}{}{}+", sx+1, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
+			},
+			&Move::Put(k,KomaDstPutPosition(x,y)) => {
+				Ok(format!("{}*{}{}", KomaStringCreator::str_from(k), x+1, DanCharCreator::char_from(y)?))
 			},
 		}
 	}

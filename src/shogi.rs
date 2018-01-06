@@ -36,16 +36,21 @@ pub enum KomaKind {
 	Blank,
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum KomaSrcPosition {
-	Ban(u32,u32),
-	Mochigoma(MochigomaKind),
-}
+pub struct KomaSrcPosition(pub u32,pub u32);
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum KomaDstPosition {
-	Ban(u32,u32),
-}
-impl<'a> TryFrom<&'a str,String> for KomaSrcPosition {
-	fn try_from(s: &'a str) -> Result<KomaSrcPosition, TypeConvertError<String>> {
+pub struct KomaDstToPosition(pub u32,pub u32,pub bool);
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub struct KomaDstPutPosition(pub u32,pub u32);
+impl<'a> TryFrom<&'a str,String> for Move {
+	fn try_from(s: &'a str) -> Result<Move, TypeConvertError<String>> {
+		match s {
+			s if s.len() != 4 => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"Invalid SFEN character string (number of characters of move expression is invalid)")));
+			},
+			_ => (),
+		};
+
 		let mut chars = s.chars();
 
 		Ok(match chars.next() {
@@ -58,25 +63,82 @@ impl<'a> TryFrom<&'a str,String> for KomaSrcPosition {
 								String::from("Invalid SFEN string (there no '*' after the name)")));
 						}
 					}
-					match c {
-						'R' => KomaSrcPosition::Mochigoma(MochigomaKind::Hisha),
-						'B' => KomaSrcPosition::Mochigoma(MochigomaKind::Kaku),
-						'G' => KomaSrcPosition::Mochigoma(MochigomaKind::Kin),
-						'S' => KomaSrcPosition::Mochigoma(MochigomaKind::Gin),
-						'N' => KomaSrcPosition::Mochigoma(MochigomaKind::Kei),
-						'L' => KomaSrcPosition::Mochigoma(MochigomaKind::Kyou),
-						'P' => KomaSrcPosition::Mochigoma(MochigomaKind::Fu),
+					let mochigoma = match c {
+						'R' => MochigomaKind::Hisha,
+						'B' => MochigomaKind::Kaku,
+						'G' => MochigomaKind::Kin,
+						'S' => MochigomaKind::Gin,
+						'N' => MochigomaKind::Kei,
+						'L' => MochigomaKind::Kyou,
+						'P' => MochigomaKind::Fu,
 						_ => {
 							return Err(TypeConvertError::LogicError(String::from(
 								"Logic error in the move analysis phase of the SFEN string analysis process."
 							)));
+						}
+					};
+					match chars.next() {
+						Some(c) => match c {
+							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
+								let x = c as u32 - 1;
+
+								match chars.next() {
+									Some(c) => {
+										let y = match c {
+											'a' => 0,
+											'b' => 1,
+											'c' => 2,
+											'd' => 3,
+											'e' => 4,
+											'f' => 5,
+											'g' => 6,
+											'h' => 7,
+											'i' => 8,
+											_ => {
+												return Err(TypeConvertError::SyntaxError(
+													String::from(
+														"Invalid SFEN character string (The format of the move is illegal)"
+												)));
+											}
+										};
+
+										match chars.next() {
+											Some(_) => {
+												return Err(TypeConvertError::LogicError(String::from(
+													"Logic error in the move analysis phase of the SFEN string analysis process."
+												)));
+											},
+											None => (),
+										};
+										Move::Put(mochigoma, KomaDstPutPosition(x,y))
+									},
+									None => {
+										return Err(TypeConvertError::SyntaxError(
+											String::from(
+												"Invalid SFEN character string (The format of the move is illegal)"
+										)));
+									}
+								}
+							},
+							_ => {
+								return Err(TypeConvertError::SyntaxError(
+										String::from(
+											"Invalid SFEN character string (The format of the move is illegal)"
+										)));
+							}
+						},
+						None => {
+							return Err(TypeConvertError::SyntaxError(
+										String::from(
+											"Invalid SFEN character string (The format of the hand is illegal)"
+										)));
 						}
 					}
 				},
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
 					let x = c as u32 - 1;
 
-					match chars.next() {
+					let src = match chars.next() {
 						Some(c) => {
 							let y = match c {
 								'a' => 0,
@@ -94,7 +156,7 @@ impl<'a> TryFrom<&'a str,String> for KomaSrcPosition {
 									)));
 								}
 							};
-							KomaSrcPosition::Ban(x,y)
+							KomaSrcPosition(x,y)
 						},
 						None => {
 							return Err(TypeConvertError::SyntaxError(
@@ -102,59 +164,63 @@ impl<'a> TryFrom<&'a str,String> for KomaSrcPosition {
 									"Invalid SFEN character string (The format of the move is illegal)"
 							)));
 						}
-					}
-				},
-				_ => {
-					return Err(TypeConvertError::SyntaxError(
-							String::from(
-								"Invalid SFEN character string (The format of the move is illegal)"
-							)));
-				}
-			},
-			None => {
-				return Err(TypeConvertError::SyntaxError(
-							String::from(
-								"Invalid SFEN character string (The format of the hand is illegal)"
-							)));
-			}
-		})
-	}
-}
-impl<'a> TryFrom<&'a str, String> for KomaDstPosition {
-	fn try_from(s: &'a str) -> Result<KomaDstPosition, TypeConvertError<String>> {
-		let mut chars = s.chars();
-
-		Ok(match chars.next() {
-			Some(c) => match c {
-				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-					let x = c as u32 - 1;
-
+					};
 					match chars.next() {
-						Some(c) => {
-							let y = match c {
-								'a' => 0,
-								'b' => 1,
-								'c' => 2,
-								'd' => 3,
-								'e' => 4,
-								'f' => 5,
-								'g' => 6,
-								'h' => 7,
-								'i' => 8,
-								_ => {
-									return Err(TypeConvertError::SyntaxError(
+						Some(c) => match c {
+							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
+								let x = c as u32 - 1;
+
+								match chars.next() {
+									Some(c) => {
+										let y = match c {
+											'a' => 0,
+											'b' => 1,
+											'c' => 2,
+											'd' => 3,
+											'e' => 4,
+											'f' => 5,
+											'g' => 6,
+											'h' => 7,
+											'i' => 8,
+											_ => {
+												return Err(TypeConvertError::SyntaxError(
+													String::from(
+														"Invalid SFEN character string (The format of the move is illegal)"
+												)));
+											}
+										};
+
+										match chars.next() {
+											Some('+')  => Move::To(src, KomaDstToPosition(x,y,true)),
+											None => Move::To(src, KomaDstToPosition(x,y,false)),
+											_ => {
+												return Err(TypeConvertError::SyntaxError(
+													String::from(
+														"Invalid SFEN character string (The format of the move is illegal)"
+												)));
+											}
+										}
+									},
+									None => {
+										return Err(TypeConvertError::SyntaxError(
+											String::from(
+												"Invalid SFEN character string (The format of the move is illegal)"
+										)));
+									}
+								}
+							},
+							_ => {
+								return Err(TypeConvertError::SyntaxError(
 										String::from(
 											"Invalid SFEN character string (The format of the move is illegal)"
-									)));
-								}
-							};
-							KomaDstPosition::Ban(x,y)
+										)));
+							}
 						},
 						None => {
 							return Err(TypeConvertError::SyntaxError(
-								String::from(
-									"Invalid SFEN character string (The format of the move is illegal)"
-							)));
+										String::from(
+											"Invalid SFEN character string (The format of the hand is illegal)"
+										)));
 						}
 					}
 				},
@@ -175,18 +241,9 @@ impl<'a> TryFrom<&'a str, String> for KomaDstPosition {
 	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub struct Move(pub KomaSrcPosition, pub KomaDstPosition);
-impl<'a> TryFrom<&'a str,String> for Move {
-	fn try_from(s: &'a str) -> Result<Move, TypeConvertError<String>> {
-		Ok(match s {
-			ref s if s.len() != 4 => {
-				return Err(TypeConvertError::SyntaxError(String::from(
-					"Invalid SFEN character string (number of characters of move expression is invalid)")));
-			},
-			ref s => Move(KomaSrcPosition::try_from(&s[0..1])?,
-						KomaDstPosition::try_from(&s[2..3])?)
-		})
-	}
+pub enum Move {
+	To(KomaSrcPosition,KomaDstToPosition),
+	Put(MochigomaKind,KomaDstPutPosition),
 }
 impl TryFrom<String,String> for KomaKind {
 	fn try_from(s: String) -> Result<KomaKind, TypeConvertError<String>> {
@@ -306,22 +363,29 @@ impl<'a> TryFrom<&'a str,String> for Banmen {
 impl Validate for KomaSrcPosition {
 	fn validate(&self) -> bool {
 		match *self {
-			KomaSrcPosition::Mochigoma(_) => true,
-			KomaSrcPosition::Ban(x, y) => x < 9 && y < 9,
+			KomaSrcPosition(x, y) => x < 9 && y < 9,
 		}
 	}
 }
-impl Validate for KomaDstPosition {
+impl Validate for KomaDstToPosition {
 	fn validate(&self) -> bool {
 		match *self {
-			KomaDstPosition::Ban(x, y) => x < 9 && y < 9,
+			KomaDstToPosition(x, y, _) => x < 9 && y < 9,
+		}
+	}
+}
+impl Validate for KomaDstPutPosition {
+	fn validate(&self) -> bool {
+		match *self {
+			KomaDstPutPosition(x, y) => x < 9 && y < 9,
 		}
 	}
 }
 impl Validate for Move {
 	fn validate(&self) -> bool {
 		match *self {
-			Move(ref s, ref d) => s.validate() && d.validate()
+			Move::To(ref s, ref d) => s.validate() && d.validate(),
+			Move::Put(_, ref d) => d.validate()
 		}
 	}
 }
