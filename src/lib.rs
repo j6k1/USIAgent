@@ -16,6 +16,7 @@ use std::{thread,time};
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::marker::Send;
+use std::marker::PhantomData;
 
 use command::*;
 use event::*;
@@ -100,27 +101,36 @@ impl OnPonderHit {
 	}
 }
 #[derive(Debug)]
-pub struct UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'static {
+pub struct UsiAgent<T,E>
+	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
+			E: Error + fmt::Debug,
+			EventHandlerError<SystemEventKind, PlayerError<E>>: From<PlayerError<E>> {
+	player_error_type:PhantomData<E>,
 	player:Arc<Mutex<T>>,
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
-impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'static {
-	pub fn new<F>(player:T) -> UsiAgent<T>
-	where T: USIPlayer + fmt::Debug,
-			Arc<Mutex<T>>: Send + 'static, {
+impl<T,E> UsiAgent<T,E>
+	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
+			E: Error + fmt::Debug,
+			EventHandlerError<SystemEventKind, PlayerError<E>>: From<PlayerError<E>> {
+	pub fn new<F>(player:T) -> UsiAgent<T,E>
+	where T: USIPlayer<E> + fmt::Debug,
+			Arc<Mutex<T>>: Send + 'static,
+			E: Error + fmt::Debug {
 		UsiAgent {
+			player_error_type:PhantomData::<E>,
 			player:Arc::new(Mutex::new(player)),
 			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
 		}
 	}
 
 	pub fn start_default(&self) ->
-		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>> {
+		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>> {
 		self.start_with_log_path(String::from("logs/log.txt"))
 	}
 
 	pub fn start_with_log_path(&self,path:String) ->
-		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>> {
+		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>> {
 
 		let logger = FileLogger::new(path)
 									.or(Err(USIAgentStartupError::IOError(
@@ -133,8 +143,9 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 	}
 
 	pub fn start<R,W,L>(&self,reader:R,writer:W,logger:L) ->
-		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>>>
+		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
+			EventHandlerError<SystemEventKind, PlayerError<E>>: From<PlayerError<E>>,
 			Arc<Mutex<R>>: Send + 'static,
 			Arc<Mutex<L>>: Send + 'static,
 			Arc<Mutex<W>>: Send + 'static,
@@ -146,8 +157,8 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 
 		let system_event_queue_arc = self.system_event_queue.clone();
 
-		let system_event_dispatcher:USIEventDispatcher<SystemEventKind,SystemEvent,UsiAgent<T>,L> =
-																			USIEventDispatcher::new(&logger_arc);
+		let system_event_dispatcher:USIEventDispatcher<SystemEventKind,
+														SystemEvent,UsiAgent<T,E>,L,E> = USIEventDispatcher::new(&logger_arc);
 
 		let system_event_dispatcher_arc = Arc::new(Mutex::new(system_event_dispatcher));
 
@@ -196,7 +207,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							match ctx.player.lock() {
 								Ok(mut player) => {
 									commands.push(UsiCommand::UsiId(T::ID,T::AUTHOR));
-									for cmd in player.get_options().iter()
+									for cmd in player.get_options()?.iter()
 																	.map(|(k,v)| UsiCommand::UsiOption(k.clone(),v.clone()))
 																	.collect::<Vec<UsiCommand>>().into_iter() {
 										commands.push(cmd);
@@ -245,7 +256,13 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										player.take_ready();
+										match player.take_ready() {
+											Ok(_) => (),
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												return;
+											}
+										}
 										match UsiOutput::try_from(&UsiCommand::UsiReadyOk) {
 											Ok(cmd) => {
 												match system_event_queue.lock() {
@@ -278,7 +295,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 						&SystemEvent::SetOption(ref name, ref value) => {
 							match ctx.player.lock() {
 								Ok(mut player) => {
-									player.set_option(name.clone(), value.clone());
+									player.set_option(name.clone(), value.clone())?;
 								},
 								Err(_) => {
 									return Err(EventHandlerError::Fail(String::from(
@@ -297,7 +314,7 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 						&SystemEvent::UsiNewGame => {
 							match ctx.player.lock() {
 								Ok(mut player) => {
-									player.newgame();
+									player.newgame()?;
 								},
 								Err(_) => {
 									return Err(EventHandlerError::Fail(String::from(
@@ -342,7 +359,12 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										player.set_position(t, b, ms, mg, n, v);
+										match player.set_position(t, b, ms, mg, n, v) {
+											Ok(_) => (),
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										}
 									},
 									Err(ref e) => {
 										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -403,9 +425,15 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 												return;
 											}
 										};
-										let m = player.think(&*opt,
-																user_event_queue_inner.clone(),
-																&*info_sender,on_error_handler_inner.clone());
+										let m = match player.think(&*opt,
+														user_event_queue_inner.clone(),
+														&*info_sender,on_error_handler_inner.clone()) {
+															Ok(m) => m,
+															Err(ref e) => {
+																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																return;
+															}
+														};
 										match busy_inner.lock() {
 											Ok(mut busy) => {
 												*busy = false;
@@ -466,9 +494,15 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 												return;
 											}
 										};
-										let bm = player.think(&*opt,
-																user_event_queue_inner.clone(),
-																&*info_sender,on_error_handler_inner.clone());
+										let bm = match player.think(&*opt,
+														user_event_queue_inner.clone(),
+														&*info_sender,on_error_handler_inner.clone()) {
+															Ok(bm) => bm,
+															Err(ref e) => {
+																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																return;
+															}
+														};
 										match busy_inner.lock() {
 											Ok(mut busy) => {
 												*busy = false;
@@ -539,9 +573,15 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 												return;
 											}
 										};
-										let m = player.think_mate(&*opt,
-																user_event_queue_inner.clone(),
-																&*info_sender,on_error_handler_inner.clone());
+										let m = match player.think_mate(&*opt,
+														user_event_queue_inner.clone(),
+														&*info_sender,on_error_handler_inner.clone()) {
+															Ok(m) => m,
+															Err(ref e) => {
+																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																return;
+															}
+														};
 										match busy_inner.lock() {
 											Ok(mut busy) => {
 												*busy = false;
@@ -673,7 +713,12 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										player.quit();
+										match player.quit() {
+											Ok(_) => (),
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										}
 										match system_event_queue.lock() {
 											Ok(mut system_event_queue) => {
 												system_event_queue.push(SystemEvent::QuitReady);
@@ -706,7 +751,12 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										player.gameover(&s);
+										match player.gameover(&s) {
+											Ok(_) => (),
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										}
 									},
 									Err(ref e) => {
 										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -751,7 +801,14 @@ impl<T> UsiAgent<T> where T: USIPlayer + fmt::Debug, Arc<Mutex<T>>: Send + 'stat
 		let system_event_queue = system_event_queue_arc.clone();
 
 		player.lock().map(|mut player| {
-			interpreter.start(system_event_queue,reader,player.get_option_kinds(),&logger);
+			let option_kinds = match player.get_option_kinds() {
+				Ok(option_kinds) => option_kinds,
+				Err(ref e) => {
+					on_error_handler.lock().map(|h| h.call(e)).is_err();
+					return false;
+				}
+			};
+			interpreter.start(system_event_queue,reader,option_kinds,&logger);
 			true
 		}).or_else(|e| {
 			on_error_handler.lock().map(|h| h.call(&e))

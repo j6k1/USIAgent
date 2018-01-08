@@ -2,11 +2,13 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;
 use std::sync::Arc;
+use std::error::Error;
 
 use TryFrom;
 use error::EventDispatchError;
 use error::EventHandlerError;
 use error::TypeConvertError;
+use error::PlayerError;
 use UsiOutput;
 use Logger;
 use OnErrorHandler;
@@ -488,38 +490,49 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 		self.events.drain(0..).collect()
 	}
 }
-pub trait EventDispatcher<K,E,T> where K: MaxIndex + fmt::Debug,
+pub trait EventDispatcher<K,E,T,UE> where K: MaxIndex + fmt::Debug,
 											E: MapEventKind<K> + fmt::Debug,
+											UE: Error + fmt::Debug,
+											EventHandlerError<K,PlayerError<UE>>: From<PlayerError<UE>>,
 											usize: From<K> {
 	fn add_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-													Result<(), EventHandlerError<K>>>);
+													Result<(), EventHandlerError<K,PlayerError<UE>>>>);
 
 	fn add_once_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-													Result<(), EventHandlerError<K>>>);
+													Result<(), EventHandlerError<K,PlayerError<UE>>>>);
 
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
-										Result<(), EventDispatchError<'a,EventQueue<E,K>,E>>
-										where E: fmt::Debug, K: fmt::Debug, usize: From<K>;
+										Result<(), EventDispatchError<'a,EventQueue<E,K>,E,PlayerError<UE>>>
+										where E: fmt::Debug, K: fmt::Debug,
+												UE: Error + fmt::Debug,
+												EventHandlerError<K,PlayerError<UE>>: From<PlayerError<UE>>,
+												usize: From<K>;
 }
-pub struct USIEventDispatcher<K,E,T,L>
+pub struct USIEventDispatcher<K,E,T,L,UE>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
 			L: Logger,
+			UE: Error + fmt::Debug,
+			EventHandlerError<K,PlayerError<UE>>: From<PlayerError<UE>>,
 			usize: From<K> {
 	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>,
 	event_kind:PhantomData<K>,
-	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<K>>>>>,
-	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K>>>>>,
+	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<K,PlayerError<UE>>>>>>,
+	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K,PlayerError<UE>>>>>>,
 }
-impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
+impl<K,E,T,L,UE> USIEventDispatcher<K,E,T,L,UE>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
 			L: Logger,
+			UE: Error + fmt::Debug,
+			EventHandlerError<K,PlayerError<UE>>: From<PlayerError<UE>>,
 			usize: From<K> {
-	pub fn new(logger:&Arc<Mutex<L>>) -> USIEventDispatcher<K,E,T,L>
+	pub fn new(logger:&Arc<Mutex<L>>) -> USIEventDispatcher<K,E,T,L,UE>
 											where K: MaxIndex + fmt::Debug, usize: From<K>,
 											E: MapEventKind<K> + fmt::Debug,
-											L: Logger {
+											L: Logger,
+											UE: Error + fmt::Debug,
+											EventHandlerError<K,PlayerError<UE>>: From<PlayerError<UE>>, {
 
 		let mut o = USIEventDispatcher {
 			on_error_handler:Arc::new(Mutex::new(OnErrorHandler::new(logger.clone()))),
@@ -534,22 +547,24 @@ impl<K,E,T,L> USIEventDispatcher<K,E,T,L>
 		o
 	}
 }
-impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: MaxIndex + fmt::Debug,
+impl<K,E,T,L,UE> EventDispatcher<K,E,T,UE> for USIEventDispatcher<K,E,T,L,UE> where K: MaxIndex + fmt::Debug,
 																		E: MapEventKind<K> + fmt::Debug,
 																		L: Logger,
+																		UE: Error + fmt::Debug,
+																		EventHandlerError<K,PlayerError<UE>>: From<PlayerError<UE>>,
 																		usize: From<K> {
 	fn add_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-											Result<(), EventHandlerError<K>>>) {
+											Result<(), EventHandlerError<K,PlayerError<UE>>>>) {
 		self.handlers[usize::from(id)].push(handler);
 	}
 
 	fn add_once_handler(&mut self, id:K, handler:Box<Fn(&T,&E) ->
-											Result<(), EventHandlerError<K>>>) {
+											Result<(), EventHandlerError<K,PlayerError<UE>>>>) {
 		self.once_handlers[usize::from(id)].push(handler);
 	}
 
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
-									Result<(), EventDispatchError<'a,EventQueue<E,K>,E>>
+									Result<(), EventDispatchError<'a,EventQueue<E,K>,E,PlayerError<UE>>>
 									where E: fmt::Debug, K: fmt::Debug, usize: From<K> {
 		let events = {
 			event_queue.lock()?.drain_events()
@@ -569,7 +584,7 @@ impl<K,E,T,L> EventDispatcher<K,E,T> for USIEventDispatcher<K,E,T,L> where K: Ma
 			}
 
 			if !self.once_handlers[usize::from(e.event_kind())].is_empty() {
-				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K>>>> =
+				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K,PlayerError<UE>>>>> =
 											self.once_handlers[usize::from(e.event_kind())].drain(0..)
 																							.collect();
 				for h in &once_handlers {

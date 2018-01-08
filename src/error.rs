@@ -7,30 +7,34 @@ use std::num::ParseIntError;
 use command::UsiCommand;
 
 #[derive(Debug)]
-pub enum EventDispatchError<'a,T,E> where T: fmt::Debug + 'a, E: fmt::Debug {
-	ErrorFromHandler(EventHandlerError<E>),
+pub enum EventDispatchError<'a,T,K,E>
+	where T: fmt::Debug + 'a, K: fmt::Debug, E: Error + fmt::Debug {
+	ErrorFromHandler(EventHandlerError<K,E>),
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
 	ContainError,
 }
 #[derive(Debug)]
-pub enum EventHandlerError<E> where E: fmt::Debug {
+pub enum EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
 	Fail(String),
-	InvalidState(E),
+	InvalidState(K),
+	PlayerError(PlayerError<E>),
 }
-impl<E> fmt::Display for EventHandlerError<E> where E: fmt::Debug {
+impl<K,E> fmt::Display for EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		EventHandlerError::Fail(ref s) => write!(f,"{}",s),
 	 		EventHandlerError::InvalidState(ref e) => write!(f,
 	 			"The type of event passed and the event being processed do not match. (Event kind = {:?})", e),
+		 	EventHandlerError::PlayerError(_) => write!(f,"An error occurred while processing the player object in the event handler."),
 	 	}
 	 }
 }
-impl<E> error::Error for EventHandlerError<E> where E: fmt::Debug {
+impl<K,E> error::Error for EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		EventHandlerError::Fail(_) => "An error occurred while executing the event handler.",
 	 		EventHandlerError::InvalidState(_) => "The type of event passed and the event being processed do not match.",
+		 	EventHandlerError::PlayerError(_) => "An error occurred while processing the player object in the event handler.",
 	 	}
 	 }
 
@@ -38,10 +42,17 @@ impl<E> error::Error for EventHandlerError<E> where E: fmt::Debug {
 	 	match *self {
 	 		EventHandlerError::Fail(_) => None,
 	 		EventHandlerError::InvalidState(_) => None,
+	 		EventHandlerError::PlayerError(ref e) => Some(e),
 	 	}
 	 }
 }
-impl<'a,T,E> fmt::Display for EventDispatchError<'a,T,E> where T: fmt::Debug, E: fmt::Debug {
+impl<K,E> From<PlayerError<E>> for EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
+	fn from(err: PlayerError<E>) -> EventHandlerError<K,E> {
+		EventHandlerError::PlayerError(err)
+	}
+}
+impl<'a,T,K,E> fmt::Display for EventDispatchError<'a,T,K,E>
+	where T: fmt::Debug, K: fmt::Debug, E: Error + fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(ref e) => e.fmt(f),
@@ -50,7 +61,8 @@ impl<'a,T,E> fmt::Display for EventDispatchError<'a,T,E> where T: fmt::Debug, E:
 	 	}
 	 }
 }
-impl<'a,T,E> error::Error for EventDispatchError<'a,T,E> where T: fmt::Debug, E: fmt::Debug {
+impl<'a,T,K,E> error::Error for EventDispatchError<'a,T,K,E>
+	where T: fmt::Debug, K: fmt::Debug, E: Error + fmt::Debug {
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(ref e) => e.description(),
@@ -67,14 +79,15 @@ impl<'a,T,E> error::Error for EventDispatchError<'a,T,E> where T: fmt::Debug, E:
 	 	}
 	 }
 }
-impl<'a,T,E> From<PoisonError<MutexGuard<'a,T>>> for EventDispatchError<'a,T,E>
-	where T: fmt::Debug + 'a, E: fmt::Debug {
-	fn from(err: PoisonError<MutexGuard<'a,T>>) -> EventDispatchError<'a,T,E> {
+impl<'a,T,K,E> From<PoisonError<MutexGuard<'a,T>>> for EventDispatchError<'a,T,K,E>
+	where T: fmt::Debug + 'a, K: fmt::Debug, E: Error + fmt::Debug {
+	fn from(err: PoisonError<MutexGuard<'a,T>>) -> EventDispatchError<'a,T,K,E> {
 		EventDispatchError::MutexLockFailedError(err)
 	}
 }
-impl<'a,T,E> From<EventHandlerError<E>> for EventDispatchError<'a,T,E> where T: fmt::Debug, E: fmt::Debug {
-	fn from(err: EventHandlerError<E>) -> EventDispatchError<'a,T,E> {
+impl<'a,T,K,E> From<EventHandlerError<K,E>> for EventDispatchError<'a,T,K,E>
+	where T: fmt::Debug, K: fmt::Debug, E: Error + fmt::Debug {
+	fn from(err: EventHandlerError<K,E>) -> EventDispatchError<'a,T,K,E> {
 		EventDispatchError::ErrorFromHandler(err)
 	}
 }
@@ -184,8 +197,8 @@ impl From<ToMoveStringConvertError> for UsiOutputCreateError {
 		UsiOutputCreateError::ConvertError(err)
 	}
 }
-impl<T> From<UsiOutputCreateError> for EventHandlerError<T> where T: fmt::Debug {
-	fn from(err: UsiOutputCreateError) -> EventHandlerError<T> {
+impl<T,E> From<UsiOutputCreateError> for EventHandlerError<T,E> where T: fmt::Debug, E: Error + fmt::Debug {
+	fn from(err: UsiOutputCreateError) -> EventHandlerError<T,E> {
 		EventHandlerError::Fail(err.description().to_string())
 	}
 }
@@ -261,26 +274,29 @@ impl From<ParseIntError> for TypeConvertError<String> where String: fmt::Debug {
 	}
 }
 #[derive(Debug)]
-pub enum USIAgentStartupError<'a,T> where T: fmt::Debug + 'a {
+pub enum USIAgentStartupError<'a,T,E> where T: fmt::Debug + 'a, E: Error + fmt::Debug {
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
 	MutexLockFailedOtherError(String),
 	IOError(String),
+	PlayerError(PlayerError<E>),
 }
-impl<'a,T> fmt::Display for USIAgentStartupError<'a,T> where T: fmt::Debug {
+impl<'a,T,E> fmt::Display for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: Error + fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
 		 	USIAgentStartupError::MutexLockFailedOtherError(ref s) => write!(f, "{}",s),
 		 	USIAgentStartupError::IOError(ref s) => write!(f, "{}",s),
+		 	USIAgentStartupError::PlayerError(_) => write!(f,"An error occurred in the processing within the player object."),
 	 	}
 	 }
 }
-impl<'a,T> error::Error for USIAgentStartupError<'a,T> where T: fmt::Debug {
+impl<'a,T,E> error::Error for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: Error + fmt::Debug {
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
 	 		USIAgentStartupError::MutexLockFailedOtherError(_) => "Could not get exclusive lock on object.",
 	 		USIAgentStartupError::IOError(_) => "IO Error.",
+	 		USIAgentStartupError::PlayerError(_) => "An error occurred in the processing within the player object.",
 	 	}
 	 }
 
@@ -289,13 +305,48 @@ impl<'a,T> error::Error for USIAgentStartupError<'a,T> where T: fmt::Debug {
 	 		USIAgentStartupError::MutexLockFailedError(ref e) => Some(e),
 	 		USIAgentStartupError::MutexLockFailedOtherError(_) => None,
 	 		USIAgentStartupError::IOError(_) => None,
+	 		USIAgentStartupError::PlayerError(ref e) => Some(e),
 	 	}
 	 }
 }
-impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for USIAgentStartupError<'a,T>
-	where T: fmt::Debug + 'a {
-	fn from(err: PoisonError<MutexGuard<'a,T>>) -> USIAgentStartupError<'a,T> {
+impl<'a,K,E> From<PlayerError<E>> for USIAgentStartupError<'a,K,E> where K: fmt::Debug, E: Error + fmt::Debug {
+	fn from(err: PlayerError<E>) -> USIAgentStartupError<'a,K,E> {
+		USIAgentStartupError::PlayerError(err)
+	}
+}
+impl<'a,T,E> From<PoisonError<MutexGuard<'a,T>>> for USIAgentStartupError<'a,T,E>
+	where T: fmt::Debug + 'a, E: Error + fmt::Debug {
+	fn from(err: PoisonError<MutexGuard<'a,T>>) -> USIAgentStartupError<'a,T,E> {
 		USIAgentStartupError::MutexLockFailedError(err)
+	}
+}
+#[derive(Debug)]
+pub enum PlayerError<E> where E: fmt::Debug {
+	Fail(E),
+}
+impl<E> fmt::Display for PlayerError<E> where E: Error + fmt::Debug {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		PlayerError::Fail(_) => write!(f,"An error occurred in the processing within the player object."),
+	 	}
+	 }
+}
+impl<E> error::Error for PlayerError<E> where E: Error + fmt::Debug {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		PlayerError::Fail(_) => "An error occurred in the processing within the player object.",
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		PlayerError::Fail(ref e) => Some(e),
+	 	}
+	 }
+}
+impl<E> From<E> for PlayerError<E> where E: Error + fmt::Debug {
+	fn from(err: E) -> PlayerError<E> {
+		PlayerError::Fail(err)
 	}
 }
 
