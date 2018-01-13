@@ -262,7 +262,7 @@ impl PositionParser {
 		};
 
 		match p[0] {
-			"startpos" => self.parse_startpos(&params[1..]),
+			"startpos"=> self.parse_startpos(&params[1..]),
 			"sefn" => self.parse_sfen(&params[1..]),
 			_ => {
 				Err(TypeConvertError::SyntaxError(String::from(
@@ -275,24 +275,38 @@ impl PositionParser {
 	fn parse_startpos<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
 		let mut r:Vec<Move> = Vec::new();
 
-		for m in params {
-			r.push(Move::try_from(m)?);
-		}
+		match params[0] {
+			"moves" if params.len() >= 2 => {
+				for m in &params[1..] {
+					r.push(Move::try_from(m)?);
+				}
 
-		let t = match r.len() {
-			l if l % 2 == 0 => Teban::Sente,
-			_ => Teban::Gote,
-		};
-		Ok(SystemEvent::Position(t,UsiInitialPosition::Startpos,1,r))
+				let t = match r.len() {
+					l if l % 2 == 0 => Teban::Sente,
+					_ => Teban::Gote,
+				};
+				Ok(SystemEvent::Position(t,UsiInitialPosition::Startpos,1,r))
+			},
+			_ => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+			}
+		}
 	}
 
 	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		if params.len() >= 5 && params[4] != "moves" {
+			return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+		}
 		Ok(match params {
-			params if params.len() >= 4 => match (params[0],params[1],params[2],params[3]) {
+			params if params.len() >= 6 => match (params[0],params[1],params[2],params[3]) {
 				(p, t, m, n) => {
 					let mut mv:Vec<Move> = Vec::new();
 
-					for m in &params[4..] {
+					for m in &params[5..] {
 							mv.push(Move::try_from(m)?);
 					}
 					SystemEvent::Position(
