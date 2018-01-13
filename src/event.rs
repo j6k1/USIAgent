@@ -348,6 +348,7 @@ impl GoParser {
 		if params.len() == 0 {
 			return Ok(SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::None)));
 		}
+
 		match params[0]{
 			"mate" if params.len() == 2 => {
 				match params[1] {
@@ -360,6 +361,9 @@ impl GoParser {
 		}
 
 		let (params,f) = match params[0] {
+			"ponder" if params.len() == 1 => {
+				return Ok(SystemEvent::Go(UsiGo::Ponder(UsiGoTimeLimit::None)));
+			},
 			"ponder" => (&params[1..], UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Ponder(l))))),
 			_ => (params, UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Go(l))))),
 		};
@@ -370,9 +374,9 @@ impl GoParser {
 					return Ok(f.create(UsiGoTimeLimit::Infinite));
 				},
 				_ => {
-						return Err(TypeConvertError::SyntaxError(String::from(
-							"The format of the position command input is invalid."
-						)));
+					return Err(TypeConvertError::SyntaxError(String::from(
+						"The format of the position command input is invalid."
+					)));
 				}
 			},
 			_ => (),
