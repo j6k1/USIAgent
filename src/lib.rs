@@ -103,17 +103,17 @@ impl OnPonderResult {
 #[derive(Debug)]
 pub struct UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
-			E: Error + fmt::Debug,
-			EventHandlerError<SystemEventKind, PlayerError<E>>: From<PlayerError<E>> {
+			E: PlayerError,
+			EventHandlerError<SystemEventKind, E>: From<E> {
 	player_error_type:PhantomData<E>,
 	player:Arc<Mutex<T>>,
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
 impl<T,E> UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
-			E: Error + fmt::Debug,
-			EventHandlerError<SystemEventKind, PlayerError<E>>: From<PlayerError<E>> {
-	pub fn new<F>(player:T) -> UsiAgent<T,E>
+			E: PlayerError,
+			EventHandlerError<SystemEventKind, E>: From<E> {
+	pub fn new(player:T) -> UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug,
 			Arc<Mutex<T>>: Send + 'static,
 			E: Error + fmt::Debug {
@@ -145,7 +145,7 @@ impl<T,E> UsiAgent<T,E>
 	pub fn start<R,W,L>(&self,reader:R,writer:W,logger:L) ->
 		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
-			EventHandlerError<SystemEventKind, PlayerError<E>>: From<PlayerError<E>>,
+			EventHandlerError<SystemEventKind, E>: From<E>,
 			Arc<Mutex<R>>: Send + 'static,
 			Arc<Mutex<L>>: Send + 'static,
 			Arc<Mutex<W>>: Send + 'static,
@@ -206,7 +206,7 @@ impl<T,E> UsiAgent<T,E>
 
 							match ctx.player.lock() {
 								Ok(mut player) => {
-									commands.push(UsiCommand::UsiId(T::ID,T::AUTHOR));
+									commands.push(UsiCommand::UsiId(T::ID.to_string(),T::AUTHOR.to_string()));
 									for cmd in player.get_options()?.iter()
 																	.map(|(k,v)| UsiCommand::UsiOption(k.clone(),v.clone()))
 																	.collect::<Vec<UsiCommand>>().into_iter() {

@@ -17,7 +17,7 @@ pub enum EventDispatchError<'a,T,K,E>
 pub enum EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
 	Fail(String),
 	InvalidState(K),
-	PlayerError(PlayerError<E>),
+	PlayerError(E),
 }
 impl<K,E> fmt::Display for EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -45,11 +45,6 @@ impl<K,E> error::Error for EventHandlerError<K,E> where K: fmt::Debug, E: Error 
 	 		EventHandlerError::PlayerError(ref e) => Some(e),
 	 	}
 	 }
-}
-impl<K,E> From<PlayerError<E>> for EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
-	fn from(err: PlayerError<E>) -> EventHandlerError<K,E> {
-		EventHandlerError::PlayerError(err)
-	}
 }
 impl<'a,T,K,E> fmt::Display for EventDispatchError<'a,T,K,E>
 	where T: fmt::Debug, K: fmt::Debug, E: Error + fmt::Debug {
@@ -274,13 +269,13 @@ impl From<ParseIntError> for TypeConvertError<String> where String: fmt::Debug {
 	}
 }
 #[derive(Debug)]
-pub enum USIAgentStartupError<'a,T,E> where T: fmt::Debug + 'a, E: Error + fmt::Debug {
+pub enum USIAgentStartupError<'a,T,E> where T: fmt::Debug + 'a, E: PlayerError {
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
 	MutexLockFailedOtherError(String),
 	IOError(String),
-	PlayerError(PlayerError<E>),
+	PlayerError(E),
 }
-impl<'a,T,E> fmt::Display for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: Error + fmt::Debug {
+impl<'a,T,E> fmt::Display for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: PlayerError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
@@ -290,7 +285,7 @@ impl<'a,T,E> fmt::Display for USIAgentStartupError<'a,T,E> where T: fmt::Debug, 
 	 	}
 	 }
 }
-impl<'a,T,E> error::Error for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: Error + fmt::Debug {
+impl<'a,T,E> error::Error for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: PlayerError {
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
@@ -309,44 +304,10 @@ impl<'a,T,E> error::Error for USIAgentStartupError<'a,T,E> where T: fmt::Debug, 
 	 	}
 	 }
 }
-impl<'a,K,E> From<PlayerError<E>> for USIAgentStartupError<'a,K,E> where K: fmt::Debug, E: Error + fmt::Debug {
-	fn from(err: PlayerError<E>) -> USIAgentStartupError<'a,K,E> {
-		USIAgentStartupError::PlayerError(err)
-	}
-}
 impl<'a,T,E> From<PoisonError<MutexGuard<'a,T>>> for USIAgentStartupError<'a,T,E>
-	where T: fmt::Debug + 'a, E: Error + fmt::Debug {
+	where T: fmt::Debug + 'a, E: PlayerError {
 	fn from(err: PoisonError<MutexGuard<'a,T>>) -> USIAgentStartupError<'a,T,E> {
 		USIAgentStartupError::MutexLockFailedError(err)
 	}
 }
-#[derive(Debug)]
-pub enum PlayerError<E> where E: fmt::Debug {
-	Fail(E),
-}
-impl<E> fmt::Display for PlayerError<E> where E: Error + fmt::Debug {
-	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	 	match *self {
-	 		PlayerError::Fail(_) => write!(f,"An error occurred in the processing within the player object."),
-	 	}
-	 }
-}
-impl<E> error::Error for PlayerError<E> where E: Error + fmt::Debug {
-	 fn description(&self) -> &str {
-	 	match *self {
-	 		PlayerError::Fail(_) => "An error occurred in the processing within the player object.",
-	 	}
-	 }
-
-	fn cause(&self) -> Option<&error::Error> {
-	 	match *self {
-	 		PlayerError::Fail(ref e) => Some(e),
-	 	}
-	 }
-}
-impl<E> From<E> for PlayerError<E> where E: Error + fmt::Debug {
-	fn from(err: E) -> PlayerError<E> {
-		PlayerError::Fail(err)
-	}
-}
-
+pub trait PlayerError: Error + fmt::Debug {}

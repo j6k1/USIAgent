@@ -12,30 +12,30 @@ use Logger;
 use OnErrorHandler;
 use shogi::*;
 
-pub trait USIPlayer<E>: fmt::Debug where E: Error + fmt::Debug, PlayerError<E>: From<E> {
-	const ID: String;
-	const AUTHOR: String;
-	fn get_option_kinds(&mut self) -> Result<HashMap<String,SysEventOptionKind>,PlayerError<E>>;
-	fn get_options(&mut self) -> Result<HashMap<String,UsiOptType>,PlayerError<E>>;
-	fn take_ready(&mut self) -> Result<(),PlayerError<E>>;
-	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),PlayerError<E>>;
-	fn newgame(&mut self) -> Result<(),PlayerError<E>>;
+pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
+	const ID: &'static str;
+	const AUTHOR: &'static str;
+	fn get_option_kinds(&mut self) -> Result<HashMap<String,SysEventOptionKind>,E>;
+	fn get_options(&mut self) -> Result<HashMap<String,UsiOptType>,E>;
+	fn take_ready(&mut self) -> Result<(),E>;
+	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),E>;
+	fn newgame(&mut self) -> Result<(),E>;
 	fn set_position(&mut self,teban:Teban,ban:[KomaKind; 81],ms:Vec<MochigomaKind>,mg:Vec<MochigomaKind>,n:u32,m:Vec<Move>)
-		-> Result<(),PlayerError<E>>;
+		-> Result<(),E>;
 	fn think<L>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,PlayerError<E>> where L: Logger;
+			-> Result<BestMove,E> where L: Logger;
 	fn think_mate<L>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<CheckMate,PlayerError<E>> where L: Logger;
-	fn on_stop(&mut self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind,PlayerError<E>>>
-		where E: Error + fmt::Debug, EventHandlerError<UserEventKind,PlayerError<E>>: From<E>;
-	fn gameover(&mut self,s:&GameEndState) -> Result<(),PlayerError<E>>;
-	fn quit(&mut self) -> Result<(),PlayerError<E>>;
+			-> Result<CheckMate,E> where L: Logger;
+	fn on_stop(&mut self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind,E>>
+		where E: Error + fmt::Debug, EventHandlerError<UserEventKind,E>: From<E>;
+	fn gameover(&mut self,s:&GameEndState) -> Result<(),E>;
+	fn quit(&mut self) -> Result<(),E>;
 	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,PlayerError<E>>
-						where L: Logger, E: Error + fmt::Debug, PlayerError<E>: From<E>,
-								EventHandlerError<UserEventKind,PlayerError<E>>: From<E> {
+						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,E>
+						where L: Logger, E: Error + fmt::Debug, E: From<E>,
+								EventHandlerError<UserEventKind,E>: From<E> {
 		Ok(match self.dispatch_events(&*event_queue,&on_error_handler) {
 			Ok(_)=> true,
 			Err(ref e) => {
@@ -49,8 +49,8 @@ pub trait USIPlayer<E>: fmt::Debug where E: Error + fmt::Debug, PlayerError<E>: 
 						on_error_handler:&Mutex<OnErrorHandler<L>>) ->
 						Result<(), EventDispatchError<'a,EventQueue<UserEvent,UserEventKind>,UserEvent,E>>
 							where L: Logger, E: Error + fmt::Debug,
-									PlayerError<E>: From<E>,
-									EventHandlerError<UserEventKind,PlayerError<E>>: From<E> {
+									E: From<E>,
+									EventHandlerError<UserEventKind,E>: From<E> {
 		let events = {
 			event_queue.lock()?.drain_events()
 		};
