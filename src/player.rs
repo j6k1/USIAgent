@@ -28,8 +28,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn think_mate<L>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,E> where L: Logger;
-	fn on_stop(&mut self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind,E>>
-		where E: Error + fmt::Debug, EventHandlerError<UserEventKind,E>: From<E>;
+	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn gameover(&mut self,s:&GameEndState) -> Result<(),E>;
 	fn quit(&mut self) -> Result<(),E>;
 	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
