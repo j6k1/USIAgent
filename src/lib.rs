@@ -68,20 +68,20 @@ impl SandBox {
 		}
 	}
 }
-pub enum OnPonderHit  {
+pub enum OnPonderResult  {
 	Some(BestMove),
 	None,
 }
-impl OnPonderHit {
-	pub fn new(m:BestMove) -> OnPonderHit {
-		OnPonderHit::Some(m)
+impl OnPonderResult {
+	pub fn new(m:BestMove) -> OnPonderResult {
+		OnPonderResult::Some(m)
 	}
 
 	pub fn notify<L>(&self,
 		system_event_queue:&Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 		on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>) where L: Logger, Arc<Mutex<L>>: Send + 'static {
 		match *self {
-			OnPonderHit::Some(m) => {
+			OnPonderResult::Some(m) => {
 				match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
 					Ok(cmd) => match system_event_queue.lock() {
 						Ok(mut system_event_queue) => {
@@ -96,7 +96,7 @@ impl OnPonderHit {
 					}
 				}
 			},
-			OnPonderHit::None => (),
+			OnPonderResult::None => (),
 		};
 	}
 }
@@ -149,7 +149,7 @@ impl<T,E> UsiAgent<T,E>
 			Arc<Mutex<R>>: Send + 'static,
 			Arc<Mutex<L>>: Send + 'static,
 			Arc<Mutex<W>>: Send + 'static,
-			Arc<Mutex<OnPonderHit>>: Send + 'static {
+			Arc<Mutex<OnPonderResult>>: Send + 'static {
 		let reader_arc = Arc::new(Mutex::new(reader));
 		let writer_arc = Arc::new(Mutex::new(writer));
 		let logger_arc = Arc::new(Mutex::new(logger));
@@ -382,7 +382,7 @@ impl<T,E> UsiAgent<T,E>
 
 				let on_error_handler = on_error_handler_arc.clone();
 
-				let on_ponder_move_handler_arc:Arc<Mutex<OnPonderHit>> = Arc::new(Mutex::new(OnPonderHit::None));
+				let on_ponder_move_handler_arc:Arc<Mutex<OnPonderResult>> = Arc::new(Mutex::new(OnPonderResult::None));
 				let allow_immediate_ponder_move_arc = Arc::new(Mutex::new(false));
 				let allow_immediate_ponder_move = allow_immediate_ponder_move_arc.clone();
 				let on_ponder_move_handler = on_ponder_move_handler_arc.clone();
@@ -527,7 +527,7 @@ impl<T,E> UsiAgent<T,E>
 														} else {
 															match on_ponder_move_handler_inner.lock() {
 																Ok(mut on_ponder_move_handler_inner) => {
-																	*on_ponder_move_handler_inner = OnPonderHit::new(bm);
+																	*on_ponder_move_handler_inner = OnPonderResult::new(bm);
 																},
 																Err(ref e) => {
 																	on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -651,13 +651,13 @@ impl<T,E> UsiAgent<T,E>
 							))))? {
 								mut g => {
 									match *g {
-										ref mut n @ OnPonderHit::Some(_) => {
+										ref mut n @ OnPonderResult::Some(_) => {
 											let system_event_queue = ctx.system_event_queue.clone();
 											n.notify(&system_event_queue,&on_error_handler);
 										},
-										OnPonderHit::None => (),
+										OnPonderResult::None => (),
 									};
-									*g = OnPonderHit::None;
+									*g = OnPonderResult::None;
 								}
 							};
 							Ok(())
@@ -686,13 +686,13 @@ impl<T,E> UsiAgent<T,E>
 							))))? {
 								mut g => {
 									match *g {
-										ref mut n @ OnPonderHit::Some(_) => {
+										ref mut n @ OnPonderResult::Some(_) => {
 											let system_event_queue = ctx.system_event_queue.clone();
 											n.notify(&system_event_queue,&on_error_handler);
 										},
-										OnPonderHit::None => (),
+										OnPonderResult::None => (),
 									};
-									*g = OnPonderHit::None;
+									*g = OnPonderResult::None;
 								}
 							};
 							Ok(())
