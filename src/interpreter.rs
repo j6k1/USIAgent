@@ -100,7 +100,7 @@ impl USIInterpreter {
 												}
 											}
 										}
-										"go" if f.len() > 1 => {
+										"go" => {
 											match go_parser.parse(&f[1..]) {
 												Ok(e) => event_queue.push(e),
 												Err(ref e) => {
@@ -115,7 +115,7 @@ impl USIInterpreter {
 											break;
 										},
 										"gameover" if f.len() == 2 => {
-											match f[2] {
+											match f[1] {
 												"win" => event_queue.push(SystemEvent::GameOver(GameEndState::Win)),
 												"lose" =>event_queue.push(SystemEvent::GameOver(GameEndState::Lose)),
 												"draw" => event_queue.push(SystemEvent::GameOver(GameEndState::Draw)),

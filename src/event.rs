@@ -345,7 +345,10 @@ impl GoParser {
 	}
 
 	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent, TypeConvertError<String>> {
-		match params[0] {
+		if params.len() == 0 {
+			return Ok(SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::None)));
+		}
+		match params[0]{
 			"mate" if params.len() == 2 => {
 				match params[1] {
 					"infinite" => return Ok(SystemEvent::Go(UsiGo::Mate(UsiGoMateTimeLimit::Infinite))),
