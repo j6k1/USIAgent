@@ -20,7 +20,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: Error + fmt::Debug, PlayerError<E>: 
 	fn take_ready(&mut self) -> Result<(),PlayerError<E>>;
 	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),PlayerError<E>>;
 	fn newgame(&mut self) -> Result<(),PlayerError<E>>;
-	fn set_position(&mut self,teban:Teban,[KomaKind; 81],ms:Vec<MochigomaKind>,mg:Vec<MochigomaKind>,n:u32,m:Vec<Move>)
+	fn set_position(&mut self,teban:Teban,ban:[KomaKind; 81],ms:Vec<MochigomaKind>,mg:Vec<MochigomaKind>,n:u32,m:Vec<Move>)
 		-> Result<(),PlayerError<E>>;
 	fn think<L>(&mut self,&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
