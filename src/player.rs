@@ -20,7 +20,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: Error + fmt::Debug, PlayerError<E>: 
 	fn take_ready(&mut self) -> Result<(),PlayerError<E>>;
 	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),PlayerError<E>>;
 	fn newgame(&mut self) -> Result<(),PlayerError<E>>;
-	fn set_position(&mut self,Teban,[KomaKind; 81],Vec<MochigomaKind>,Vec<MochigomaKind>,u32,Vec<Move>)
+	fn set_position(&mut self,teban:Teban,[KomaKind; 81],ms:Vec<MochigomaKind>,mg:Vec<MochigomaKind>,n:u32,m:Vec<Move>)
 		-> Result<(),PlayerError<E>>;
 	fn think<L>(&mut self,&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
@@ -30,7 +30,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: Error + fmt::Debug, PlayerError<E>: 
 			-> Result<CheckMate,PlayerError<E>> where L: Logger;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), EventHandlerError<UserEventKind,E>>
 		where E: Error + fmt::Debug, EventHandlerError<UserEventKind,PlayerError<E>>: From<E>;
-	fn gameover(&mut self,&GameEndState) -> Result<(),PlayerError<E>>;
+	fn gameover(&mut self,s:&GameEndState) -> Result<(),PlayerError<E>>;
 	fn quit(&mut self) -> Result<(),PlayerError<E>>;
 	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,PlayerError<E>>
