@@ -44,6 +44,7 @@ impl USIInterpreter {
 							on_error_handler.lock().map(|h| h.call(e)).is_err();
 						},
 						Ok(ref line) => {
+							let line = line.trim_right();
 							let f = line.split(" ").collect::<Vec<&str>>();
 
 							match event_queue.lock() {
@@ -127,7 +128,7 @@ impl USIInterpreter {
 											}
 										},
 										_ => {
-											logger.lock().map(|mut logger| logger.logging(&String::from("The format of the command is illegal."))).map_err(|_| {
+											logger.lock().map(|mut logger| logger.logging(&format!("The format of the command is illegal. (input: {})",line))).map_err(|_| {
 												USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 												false
 											}).is_err();
