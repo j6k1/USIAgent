@@ -23,7 +23,7 @@ impl Logger for FileLogger {
 	fn logging(&mut self, msg:&String) -> bool {
 		let dt = Local::now();
 
-		let msg = format!("{}\n{}", dt.format("%Y-%m-%d %H:%M:%S").to_string(), msg.add_indent(2));
+		let msg = format!("{}\n{}\n", dt.format("%Y-%m-%d %H:%M:%S").to_string(), msg.add_indent(2));
 		match self.writer.write(msg.as_bytes()) {
 			Ok(_) => !self.writer.flush().is_err(),
 			Err(_)=> {
