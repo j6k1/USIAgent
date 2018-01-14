@@ -127,7 +127,7 @@ pub enum UsiGo {
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoTimeLimit {
 	None,
-	Limit(Option<(u32,u32)>,UsiGoByoyomiOrInc),
+	Limit(Option<(u32,u32)>,Option<UsiGoByoyomiOrInc>),
 	Infinite,
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
@@ -389,9 +389,9 @@ impl GoParser {
 		while let Some(&p) = it.next() {
 			match p {
 				"btime" => {
-					limit.map_or(Err(TypeConvertError::SyntaxError(String::from(
+					limit.map_or(Ok(()), |_| Err(TypeConvertError::SyntaxError(String::from(
 						"The input form of the go command is invalid. (Duplicate parameters)"
-					))), |_| Ok(()))?;
+					))))?;
 					let bt = it.next().ok_or(TypeConvertError::SyntaxError(String::from(
 						"The input form of the go command is invalid. (There is no value for item)"
 					))).and_then(|n| match n.parse::<u32>() {
@@ -475,17 +475,11 @@ impl GoParser {
 			limit.map_or(
 				byori.map_or(
 					Ok(f.create(UsiGoTimeLimit::None)),
-					|_| byori.map_or(Err(TypeConvertError::SyntaxError(String::from(
-							"The input form of the go command is invalid. (Insufficient parameters)"
-						))),
-						|_| Err(TypeConvertError::SyntaxError(String::from(
+					|_| Err(TypeConvertError::SyntaxError(String::from(
 							"The input form of the go command is invalid. (Insufficient parameters)"
 						)))
-				)),
-				|ref limit| Ok(f.create(UsiGoTimeLimit::Limit(Some(*limit), byori.ok_or(
-					TypeConvertError::SyntaxError(String::from(
-						"The input form of the go command is invalid. (Insufficient parameters)"
-					))).map(|ref byori| *byori)?)))
+				),
+				|ref limit| Ok(f.create(UsiGoTimeLimit::Limit(Some(*limit), byori)))
 			),
 			|_| Err(TypeConvertError::SyntaxError(String::from(
 				"The input form of the go command is invalid. (Unknown parameter)")))
