@@ -80,7 +80,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					match chars.next() {
 						Some(c) => match c {
 							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-								let x = c as u32 - 1;
+								let x = 8 - ((c as u32) - 1);
 
 								match chars.next() {
 									Some(c) => {
@@ -136,7 +136,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					}
 				},
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-					let x = c as u32 - 1;
+					let x = 8 - ((c as u32) - 1);
 
 					let src = match chars.next() {
 						Some(c) => {
@@ -168,7 +168,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					match chars.next() {
 						Some(c) => match c {
 							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-								let x = c as u32 - 1;
+								let x = 8 - ((c as u32) - 1);
 
 								match chars.next() {
 									Some(c) => {
@@ -547,10 +547,10 @@ impl fmt::Debug for Banmen {
 		}
 	}
 }
-/// 右上を(0,0)とした位置
+/// 左上を(0,0)とした位置
 pub const BANMEN_START_POS:[KomaKind; 81] = [
 	GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou,
-	Blank,GKaku,Blank,Blank,Blank,Blank,Blank,GHisha,Blank,
+	Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank,
 	GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,
 	Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,
 	Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,
