@@ -80,15 +80,18 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 #[derive(Debug)]
 pub enum UserEvent {
 	Stop,
+	Quit,
 }
 #[derive(Debug)]
 pub enum UserEventKind {
 	Stop = 0,
+	Quit,
 }
 impl MapEventKind<UserEventKind> for UserEvent {
 	fn event_kind(&self) -> UserEventKind {
 		match *self {
 			UserEvent::Stop => UserEventKind::Stop,
+			UserEvent::Quit => UserEventKind::Quit,
 		}
 	}
 }
@@ -99,7 +102,7 @@ impl From<UserEventKind> for usize {
 }
 impl MaxIndex for UserEventKind {
 	fn max_index() -> usize {
-		UserEventKind::Stop as usize
+		UserEventKind::Quit as usize
 	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]

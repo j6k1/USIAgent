@@ -29,7 +29,8 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,E> where L: Logger;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
-	fn gameover(&mut self,s:&GameEndState) -> Result<(),E>;
+	fn gameover(&mut self,s:&GameEndState,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>) -> Result<(),E>;
+	fn on_quit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn quit(&mut self) -> Result<(),E>;
 	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,E>
@@ -60,6 +61,15 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 			match e {
 				&UserEvent::Stop => {
 					match self.on_stop(e) {
+						Ok(_) => (),
+						Err(ref e) => {
+							on_error_handler.lock().map(|h| h.call(e)).is_err();
+							has_error = true;
+						}
+					};
+				},
+				&UserEvent::Quit => {
+					match self.on_quit(e) {
 						Ok(_) => (),
 						Err(ref e) => {
 							on_error_handler.lock().map(|h| h.call(e)).is_err();

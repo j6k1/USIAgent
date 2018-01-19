@@ -704,6 +704,8 @@ impl<T,E> UsiAgent<T,E>
 				}));
 
 				let on_error_handler = on_error_handler_arc.clone();
+				let busy = busy_arc.clone();
+				let user_event_queue = user_event_queue_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |ctx,e| {
 					match e {
@@ -711,8 +713,28 @@ impl<T,E> UsiAgent<T,E>
 							let system_event_queue = ctx.system_event_queue.clone();
 							let on_error_handler_inner = on_error_handler.clone();
 							let player = ctx.player.clone();
+							let user_event_queue_inner = user_event_queue.clone();
+							let busy_inner = busy.clone();
 
 							thread::spawn(move || {
+								match busy_inner.lock() {
+									Ok(busy) => {
+										if *busy {
+											match user_event_queue_inner.lock() {
+												Ok(mut user_event_queue) => {
+													user_event_queue.push(UserEvent::Quit);
+												},
+												Err(ref e) => {
+													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												}
+											}
+										}
+									},
+									Err(ref e) => {
+										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+										return;
+									}
+								}
 								match player.lock() {
 									Ok(mut player) => {
 										match player.quit() {
@@ -742,6 +764,7 @@ impl<T,E> UsiAgent<T,E>
 				}));
 
 				let on_error_handler = on_error_handler_arc.clone();
+				let user_event_queue = user_event_queue_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::GameOver, Box::new(move |ctx,e| {
 					match *e {
@@ -749,11 +772,12 @@ impl<T,E> UsiAgent<T,E>
 							let player = ctx.player.clone();
 							let on_error_handler_inner = on_error_handler.clone();
 							let s = s.clone();
+							let user_event_queue_inner = user_event_queue.clone();
 
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										match player.gameover(&s) {
+										match player.gameover(&s,user_event_queue_inner.clone()) {
 											Ok(_) => (),
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
