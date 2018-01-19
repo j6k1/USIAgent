@@ -246,10 +246,10 @@ impl MoveStringFrom for MoveStringCreator {
 	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError> {
 		match m {
 			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,false)) => {
-				Ok(format!("{}{}{}{}", sx+1, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
+				Ok(format!("{}{}{}{}", 9 - sx, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
 			},
 			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,true)) => {
-				Ok(format!("{}{}{}{}+", sx+1, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
+				Ok(format!("{}{}{}{}+", 9 - sx, DanCharCreator::char_from(sy)?, dx+1, DanCharCreator::char_from(dy)?))
 			},
 			&Move::Put(k,KomaDstPutPosition(x,y)) => {
 				Ok(format!("{}*{}{}", KomaStringCreator::str_from(k), x+1, DanCharCreator::char_from(y)?))
