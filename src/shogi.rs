@@ -398,7 +398,7 @@ impl Banmen {
 											match kinds[p] {
 												KomaKind::Blank => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind != KomaKind::SOu &&
+													if  kind < SOu &&
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy >= 6 {
 
@@ -407,7 +407,7 @@ impl Banmen {
 												},
 												dst if dst >= KomaKind::GFu => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind != KomaKind::SOu &&
+													if  kind < SOu &&
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy >= 6 {
 
@@ -432,7 +432,7 @@ impl Banmen {
 											match kinds[p] {
 												KomaKind::Blank => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind != KomaKind::SOu &&
+													if  kind < KomaKind::SOu &&
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy >= 6 {
 
@@ -441,7 +441,7 @@ impl Banmen {
 												},
 												dst if dst >= KomaKind::GFu => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind != KomaKind::SOu &&
+													if  kind < KomaKind::SOu &&
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy >= 6 {
 
@@ -473,18 +473,18 @@ impl Banmen {
 											match kinds[p] {
 												KomaKind::Blank => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind <= KomaKind::GOu &&
-														kind <= KomaKind::GKin &&
-														kind <= KomaKind::GGin && dy <= 2 {
+													if  kind < KomaKind::GOu &&
+														kind != KomaKind::GKin &&
+														kind != KomaKind::GGin && dy <= 2 {
 
 														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
 													}
 												},
 												dst if dst < KomaKind::GFu => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind <= KomaKind::GOu &&
-														kind <= KomaKind::GKin &&
-														kind <= KomaKind::GGin && dy <= 2 {
+													if  kind < KomaKind::GOu &&
+														kind != KomaKind::GKin &&
+														kind != KomaKind::GGin && dy <= 2 {
 
 														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
 													}
@@ -507,18 +507,18 @@ impl Banmen {
 											match kinds[p] {
 												KomaKind::Blank => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind <= KomaKind::GOu &&
-														kind <= KomaKind::GKin &&
-														kind <= KomaKind::GGin && dy <= 2 {
+													if  kind < KomaKind::GOu &&
+														kind != KomaKind::GKin &&
+														kind != KomaKind::GGin && dy <= 2 {
 
 														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
 													}
 												},
 												dst if dst < KomaKind::GFu => {
 													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
-													if  kind <= KomaKind::GOu &&
-														kind <= KomaKind::GKin &&
-														kind <= KomaKind::GGin && dy <= 2 {
+													if  kind < KomaKind::GOu &&
+														kind != KomaKind::GKin &&
+														kind != KomaKind::GGin && dy <= 2 {
 
 														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
 													}
