@@ -279,6 +279,99 @@ impl TryFrom<String,String> for KomaKind {
 	}
 }
 pub struct Banmen(pub [KomaKind; 81]);
+pub enum NextMove {
+	Once(i32,i32),
+	Repeat(i32,i32),
+}
+const CANDIDATE:[&[NextMove]; 13] = [
+	// 歩
+	&[NextMove::Once(0,-1)],
+	// 香車
+	&[NextMove::Repeat(0,-1)],
+	// 桂馬
+	&[NextMove::Once(-1,-2),NextMove::Once(1,-2)],
+	// 銀
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,1)
+	],
+	// 金
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 角
+	&[NextMove::Repeat(-1,-1),
+		NextMove::Repeat(1,-1),
+		NextMove::Repeat(-1,1),
+		NextMove::Repeat(1,1)
+	],
+	// 飛車
+	&[NextMove::Repeat(0,-1),
+		NextMove::Repeat(0,1),
+		NextMove::Repeat(-1,0),
+		NextMove::Repeat(1,0)
+	],
+	// 王
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,1)
+	],
+	// 成歩
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成香
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成桂
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成角
+	&[NextMove::Repeat(-1,-1),
+		NextMove::Repeat(1,-1),
+		NextMove::Repeat(-1,1),
+		NextMove::Repeat(1,1),
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0)
+	],
+	// 成飛
+	&[NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,1),
+		NextMove::Repeat(0,-1),
+		NextMove::Repeat(0,1),
+		NextMove::Repeat(-1,0),
+		NextMove::Repeat(1,0)
+	],
+];
 impl fmt::Debug for Banmen {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		match *self {
