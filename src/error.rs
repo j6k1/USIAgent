@@ -111,6 +111,7 @@ impl error::Error for DanConvertError {
 #[derive(Debug)]
 pub enum ToMoveStringConvertError {
 	CharConvert(DanConvertError),
+	AbortedError,
 }
 impl fmt::Display for ToMoveStringConvertError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -118,6 +119,9 @@ impl fmt::Display for ToMoveStringConvertError {
 	 		ToMoveStringConvertError::CharConvert(_) => {
 	 			write!(f, "Conversion of move to string representation failed.")
 	 		},
+	 		ToMoveStringConvertError::AbortedError => {
+	 			write!(f,"The command string can not be generated because the operation was interrupted.")
+	 		}
 	 	}
 	 }
 }
@@ -126,13 +130,17 @@ impl error::Error for ToMoveStringConvertError {
 	 	match *self {
 	 		ToMoveStringConvertError::CharConvert(_) => {
 	 			"Conversion of move to string representation failed."
+	 		},
+	 		ToMoveStringConvertError::AbortedError => {
+	 			"The command string can not be generated because the operation was interrupted."
 	 		}
 	 	}
 	 }
 
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
-	 		ToMoveStringConvertError::CharConvert(ref e) => Some(e)
+	 		ToMoveStringConvertError::CharConvert(ref e) => Some(e),
+	 		ToMoveStringConvertError::AbortedError => None,
 	 	}
 	 }
 }
@@ -146,6 +154,7 @@ pub enum UsiOutputCreateError {
 	ValidationError(UsiCommand),
 	InvalidStateError(String),
 	ConvertError(ToMoveStringConvertError),
+	AbortedError,
 }
 impl fmt::Display for UsiOutputCreateError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -159,7 +168,8 @@ impl fmt::Display for UsiOutputCreateError {
 	 				UsiCommand::UsiCheckMate(_) => write!(f, "The state of the object that generated the checkmate command is invalid."),
 		 			_ => write!(f,"An unexpected exception occurred in command validation."),
 	 			}
-	 		}
+	 		},
+	 		UsiOutputCreateError::AbortedError => write!(f,"The command string can not be generated because the operation was interrupted."),
 	 	}
 	 }
 }
@@ -175,7 +185,8 @@ impl error::Error for UsiOutputCreateError {
 	 				UsiCommand::UsiCheckMate(_) => "The state of the object that generated the checkmate command is invalid",
 	 				_ => "An unexpected exception occurred in command validation",
 	 			}
-	 		}
+	 		},
+	 		UsiOutputCreateError::AbortedError => "The command string can not be generated because the operation was interrupted.",
 	 	}
 	 }
 
@@ -184,6 +195,7 @@ impl error::Error for UsiOutputCreateError {
 	 		UsiOutputCreateError::ConvertError(ref e) => Some(e),
 	 		UsiOutputCreateError::InvalidStateError(_) => None,
 	 		UsiOutputCreateError::ValidationError(_) => None,
+	 		UsiOutputCreateError::AbortedError => None,
 	 	}
 	 }
 }

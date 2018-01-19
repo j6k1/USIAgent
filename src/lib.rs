@@ -447,6 +447,7 @@ impl<T,E> UsiAgent<T,E>
 																return;
 															}
 														};
+
 										match busy_inner.lock() {
 											Ok(mut busy) => {
 												*busy = false;
@@ -455,6 +456,14 @@ impl<T,E> UsiAgent<T,E>
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
 										};
+
+										match bm {
+											BestMove::Abort => {
+												return;
+											},
+											_ => (),
+										}
+
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(bm)) {
 											Ok(cmd) => {
 												match allow_immediate_move_inner.lock() {
@@ -534,6 +543,14 @@ impl<T,E> UsiAgent<T,E>
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
 										};
+
+										match m {
+											BestMove::Abort => {
+												return;
+											},
+											_ => (),
+										}
+
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
 											Ok(cmd) => {
 												match system_event_queue.lock() {
@@ -592,6 +609,14 @@ impl<T,E> UsiAgent<T,E>
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
 										};
+
+										match m {
+											CheckMate::Abort => {
+												return;
+											},
+											_ => (),
+										}
+
 										match UsiOutput::try_from(&UsiCommand::UsiCheckMate(m)) {
 											Ok(cmd) => {
 												match system_event_queue.lock() {

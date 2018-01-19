@@ -23,6 +23,7 @@ pub enum BestMove {
 	Move(Move,Option<Move>),
 	Resign,
 	Win,
+	Abort,
 }
 #[derive(Debug)]
 pub enum UsiInfoSubCommand {
@@ -71,6 +72,7 @@ pub enum CheckMate {
 	NotiImplemented,
 	Timeout,
 	Nomate,
+	Abort,
 }
 #[derive(Debug)]
 pub enum UsiOptType {
@@ -266,6 +268,9 @@ impl TryToString<ToMoveStringConvertError> for BestMove {
 						MoveStringCreator::str_from(m)?,
 						MoveStringCreator::str_from(pm)?))
 
+			},
+			BestMove::Abort => {
+				Err(ToMoveStringConvertError::AbortedError)
 			}
 		}
 	}
@@ -382,6 +387,9 @@ impl TryToString<UsiOutputCreateError> for CheckMate {
 			CheckMate::NotiImplemented => format!("notimplemented"),
 			CheckMate::Timeout => format!("timeout"),
 			CheckMate::Nomate => format!("nomate"),
+			CheckMate::Abort => {
+				return Err(UsiOutputCreateError::AbortedError);
+			}
 		})
 	}
 }
