@@ -80,20 +80,20 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					match chars.next() {
 						Some(c) => match c {
 							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-								let x = 8 - ((c as u32) - 1);
+								let x = c as u32;
 
 								match chars.next() {
 									Some(c) => {
 										let y = match c {
-											'a' => 0,
-											'b' => 1,
-											'c' => 2,
-											'd' => 3,
-											'e' => 4,
-											'f' => 5,
-											'g' => 6,
-											'h' => 7,
-											'i' => 8,
+											'a' => 1,
+											'b' => 2,
+											'c' => 3,
+											'd' => 4,
+											'e' => 5,
+											'f' => 6,
+											'g' => 7,
+											'h' => 8,
+											'i' => 9,
 											_ => {
 												return Err(TypeConvertError::SyntaxError(
 													String::from(
@@ -136,20 +136,20 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					}
 				},
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-					let x = 8 - ((c as u32) - 1);
+					let x = c as u32;
 
 					let src = match chars.next() {
 						Some(c) => {
 							let y = match c {
-								'a' => 0,
-								'b' => 1,
-								'c' => 2,
-								'd' => 3,
-								'e' => 4,
-								'f' => 5,
-								'g' => 6,
-								'h' => 7,
-								'i' => 8,
+								'a' => 1,
+								'b' => 2,
+								'c' => 3,
+								'd' => 4,
+								'e' => 5,
+								'f' => 6,
+								'g' => 7,
+								'h' => 8,
+								'i' => 9,
 								_ => {
 									return Err(TypeConvertError::SyntaxError(String::from(
 										"Invalid SFEN character string (The format of the move is illegal)"
@@ -168,20 +168,20 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					match chars.next() {
 						Some(c) => match c {
 							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-								let x = 8 - ((c as u32) - 1);
+								let x = c as u32;
 
 								match chars.next() {
 									Some(c) => {
 										let y = match c {
-											'a' => 0,
-											'b' => 1,
-											'c' => 2,
-											'd' => 3,
-											'e' => 4,
-											'f' => 5,
-											'g' => 6,
-											'h' => 7,
-											'i' => 8,
+											'a' => 1,
+											'b' => 2,
+											'c' => 3,
+											'd' => 4,
+											'e' => 5,
+											'f' => 6,
+											'g' => 7,
+											'h' => 8,
+											'i' => 9,
 											_ => {
 												return Err(TypeConvertError::SyntaxError(
 													String::from(
@@ -395,21 +395,21 @@ impl Banmen {
 											let dy = y + my;
 											match kinds[p] {
 												KomaKind::Blank => {
-													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
+													mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, false));
 													if  kind < SOu &&
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy <= 2 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 												},
 												dst if dst >= KomaKind::GFu => {
-													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
+													mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, false));
 													if  kind < SOu &&
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy <= 2 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 												},
 												_ => (),
@@ -427,12 +427,12 @@ impl Banmen {
 
 											match kinds[p] {
 												KomaKind::Blank => {
-													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
+													mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, false));
 													if  kind < KomaKind::SOu &&
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy <= 2 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 												},
 												dst if dst >= KomaKind::GFu => {
@@ -441,7 +441,7 @@ impl Banmen {
 														kind != KomaKind::SKin &&
 														kind != KomaKind::SGin && dy <= 2 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 													break;
 												},
@@ -468,21 +468,21 @@ impl Banmen {
 											let dy = y + my;
 											match kinds[p] {
 												KomaKind::Blank => {
-													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
+													mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, false));
 													if  kind < KomaKind::GOu &&
 														kind != KomaKind::GKin &&
 														kind != KomaKind::GGin && dy >= 6 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 												},
 												dst if dst < KomaKind::GFu => {
-													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
+													mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, false));
 													if  kind < KomaKind::GOu &&
 														kind != KomaKind::GKin &&
 														kind != KomaKind::GGin && dy >= 6 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 												},
 												_ => (),
@@ -502,21 +502,21 @@ impl Banmen {
 
 											match kinds[p] {
 												KomaKind::Blank => {
-													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
+													mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, false));
 													if  kind < KomaKind::GOu &&
 														kind != KomaKind::GKin &&
 														kind != KomaKind::GGin && dy >= 6 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 												},
 												dst if dst < KomaKind::GFu => {
-													mvs.push(KomaDstToPosition(dx as u32, dy as u32, false));
+													mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, false));
 													if  kind < KomaKind::GOu &&
 														kind != KomaKind::GKin &&
 														kind != KomaKind::GGin && dy >= 6 {
 
-														mvs.push(KomaDstToPosition(dx as u32, dy as u32, true));
+														mvs.push(KomaDstToPosition(dx as u32 + 1, dy as u32 + 1, true));
 													}
 													break;
 												},

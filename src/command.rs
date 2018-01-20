@@ -218,8 +218,8 @@ impl DanCharFromNum for DanCharCreator {
 		const DAN_MAP:[char; 9] = ['a','b','c','d','e','f','g','h','i'];
 
 		match n {
-			n if n >= 9 => Err(DanConvertError(n)),
-			n => Ok(DAN_MAP[n as usize]),
+			n if n > 9 => Err(DanConvertError(n)),
+			n => Ok(DAN_MAP[n as usize - 1]),
 		}
 	}
 }
@@ -246,13 +246,13 @@ impl MoveStringFrom for MoveStringCreator {
 	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError> {
 		match m {
 			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,false)) => {
-				Ok(format!("{}{}{}{}", 9 - sx, DanCharCreator::char_from(sy)?, 9 - dx, DanCharCreator::char_from(dy)?))
+				Ok(format!("{}{}{}{}", sx, DanCharCreator::char_from(sy)?, dx, DanCharCreator::char_from(dy)?))
 			},
 			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,true)) => {
-				Ok(format!("{}{}{}{}+", 9 - sx, DanCharCreator::char_from(sy)?, 9 - dx, DanCharCreator::char_from(dy)?))
+				Ok(format!("{}{}{}{}+", sx, DanCharCreator::char_from(sy)?, dx, DanCharCreator::char_from(dy)?))
 			},
 			&Move::Put(k,KomaDstPutPosition(x,y)) => {
-				Ok(format!("{}*{}{}", KomaStringCreator::str_from(k), 9 - x, DanCharCreator::char_from(y)?))
+				Ok(format!("{}*{}{}", KomaStringCreator::str_from(k), x, DanCharCreator::char_from(y)?))
 			},
 		}
 	}
