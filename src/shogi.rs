@@ -389,8 +389,6 @@ impl Banmen {
 
 								match m {
 									&NextMove::Once(mx,my) => {
-										let mx = mx as i32;
-										let my = my as i32;
 										if x + mx >= 0 && x + mx < 9 && y + my >= 0 && y + my < 9 {
 											let p = (i as i32 + mx + my * 9) as usize;
 											let dx = x + mx;
@@ -419,8 +417,6 @@ impl Banmen {
 										}
 									},
 									&NextMove::Repeat(mx,my) => {
-										let mx = mx as i32;
-										let my = my as i32;
 										let mut dx = x;
 										let mut dy = y;
 
@@ -464,8 +460,8 @@ impl Banmen {
 
 								match m {
 									&NextMove::Once(mx,my) => {
-										let mx = mx as i32;
-										let my = my as i32;
+										let mx = -mx;
+										let my = -my;
 										if x + mx >= 0 && x + mx < 9 && y + my >= 0 && y + my < 9 {
 											let p = (i as i32 + mx + my * 9) as usize;
 											let dx = x + mx;
@@ -494,8 +490,8 @@ impl Banmen {
 										}
 									},
 									&NextMove::Repeat(mx,my) => {
-										let mx = mx as i32;
-										let my = my as i32;
+										let mx = -mx;
+										let my = -my;
 										let mut dx = x;
 										let mut dy = y;
 
