@@ -373,15 +373,15 @@ const CANDIDATE:[&[NextMove]; 13] = [
 	],
 ];
 impl Banmen {
-	pub fn legal_moves(&self) -> Vec<KomaDstToPosition> {
+	pub fn legal_moves(&self,t:&Teban) -> Vec<KomaDstToPosition> {
 		let mut mvs:Vec<KomaDstToPosition> = Vec::new();
 
 		match *self {
 			Banmen(ref kinds) => {
 				for i in 0..kinds.len() {
-					match kinds[i] {
-						KomaKind::Blank => (),
-						kind if kind < KomaKind::GFu => {
+					match *t {
+						Teban::Sente if kinds[i] < KomaKind::GFu => {
+							let kind = kinds[i];
 							let mv = CANDIDATE[kind as usize];
 							for m in mv {
 								let x = (i % 9) as i32;
@@ -452,7 +452,8 @@ impl Banmen {
 								}
 							}
 						},
-						kind => {
+						Teban::Gote if kinds[i] < KomaKind::Blank => {
+							let kind = kinds[i];
 							let mv = CANDIDATE[kind as usize - KomaKind::GFu as usize];
 							for m in mv {
 								let x = (i % 9) as i32;
@@ -526,7 +527,8 @@ impl Banmen {
 									}
 								}
 							}
-						}
+						},
+						_ => (),
 					}
 				}
 			}
