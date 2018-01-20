@@ -116,11 +116,6 @@ pub enum UsiInitialPosition {
 	Sfen(Banmen, MochigomaCollections),
 	Startpos,
 }
-#[derive(Debug)]
-pub enum MochigomaCollections {
-	Empty,
-	Pair(Vec<MochigomaKind>,Vec<MochigomaKind>),
-}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGo {
 	Go(UsiGoTimeLimit),
