@@ -373,8 +373,9 @@ const CANDIDATE:[&[NextMove]; 13] = [
 	],
 ];
 impl Banmen {
-	pub fn legal_moves(&self,t:&Teban,x:u32,y:u32) -> Vec<(KomaSrcPosition,KomaDstToPosition)> {
-		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition)> = Vec::new();
+	pub fn legal_moves(&self,t:&Teban,x:u32,y:u32)
+		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> = Vec::new();
 
 		let kinds = match *self {
 			Banmen(ref kinds) => kinds,
@@ -399,7 +400,7 @@ impl Banmen {
 										mvs.push((
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < SOu &&
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
@@ -407,14 +408,19 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),None));
 										}
 									},
 									dst if dst >= KomaKind::GFu => {
+										let obtained = match ObtainKind::try_from(dst) {
+											Ok(obtained) => Some(obtained),
+											Err(_) => None,
+										};
+
 										mvs.push((
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < SOu &&
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
@@ -422,7 +428,7 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
 									},
 									_ => (),
@@ -442,7 +448,7 @@ impl Banmen {
 										mvs.push((
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::SOu &&
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
@@ -450,14 +456,19 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),None));
 										}
 									},
 									dst if dst >= KomaKind::GFu => {
+										let obtained = match ObtainKind::try_from(dst) {
+											Ok(obtained) => Some(obtained),
+											Err(_) => None,
+										};
+
 										mvs.push((
 												KomaSrcPosition(9 - (x + 1) as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::SOu &&
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
@@ -465,7 +476,7 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
 										break;
 									},
@@ -492,7 +503,7 @@ impl Banmen {
 										mvs.push((
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
@@ -500,14 +511,19 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),None));
 										}
 									},
 									dst if dst < KomaKind::GFu => {
+										let obtained = match ObtainKind::try_from(dst) {
+											Ok(obtained) => Some(obtained),
+											Err(_) => None,
+										};
+
 										mvs.push((
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
@@ -515,7 +531,7 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
 									},
 									_ => (),
@@ -537,7 +553,7 @@ impl Banmen {
 										mvs.push((
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
@@ -545,14 +561,19 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),None));
 										}
 									},
 									dst if dst < KomaKind::GFu => {
+										let obtained = match ObtainKind::try_from(dst) {
+											Ok(obtained) => Some(obtained),
+											Err(_) => None,
+										};
+
 										mvs.push((
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false)));
+													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
@@ -560,7 +581,7 @@ impl Banmen {
 											mvs.push((
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
-														9 - dx as u32, dy as u32 + 1, true)));
+														9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
 										break;
 									},
@@ -576,26 +597,30 @@ impl Banmen {
 		mvs
 	}
 
-	pub fn legal_moves_with_src(&self,t:&Teban,src:KomaSrcPosition) -> Vec<(KomaSrcPosition,KomaDstToPosition)> {
+	pub fn legal_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
+		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		match src {
 			KomaSrcPosition(x,y) => self.legal_moves(t, 9 - x, y)
 		}
 	}
 
-	pub fn legal_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition) -> Vec<(KomaSrcPosition,KomaDstToPosition)> {
+	pub fn legal_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition)
+		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		match dst {
 			KomaDstToPosition(x,y,_) => self.legal_moves(t, 9 - x, y)
 		}
 	}
 
-	pub fn legal_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition) -> Vec<(KomaSrcPosition,KomaDstToPosition)> {
+	pub fn legal_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition)
+		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		match dst {
 			KomaDstPutPosition(x,y) => self.legal_moves(t, 9 - x, y)
 		}
 	}
 
-	pub fn legal_moves_all(&self,t:&Teban) -> Vec<(KomaSrcPosition,KomaDstToPosition)> {
-		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition)> = Vec::new();
+	pub fn legal_moves_all(&self,t:&Teban)
+		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> = Vec::new();
 
 		match *self {
 			Banmen(ref kinds) => {
@@ -841,6 +866,52 @@ impl Validate for Move {
 			Move::To(ref s, ref d) => s.validate() && d.validate(),
 			Move::Put(_, ref d) => d.validate()
 		}
+	}
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum ObtainKind {
+	Fu = 0,
+	Kyou,
+	Kei,
+	Gin,
+	Kin,
+	Kaku,
+	Hisha,
+	Ou,
+}
+impl TryFrom<KomaKind,String> for ObtainKind {
+	fn try_from(kind:KomaKind) -> Result<ObtainKind,TypeConvertError<String>> {
+		Ok(match kind {
+			KomaKind::SFu => ObtainKind::Fu,
+			KomaKind::SKyou => ObtainKind::Kyou,
+			KomaKind::SKei => ObtainKind::Kei,
+			KomaKind::SGin => ObtainKind::Gin,
+			KomaKind::SKin => ObtainKind::Kin,
+			KomaKind::SKaku => ObtainKind::Kaku,
+			KomaKind::SHisha => ObtainKind::Hisha,
+			KomaKind::SOu => ObtainKind::Ou,
+			KomaKind::SFuN => ObtainKind::Fu,
+			KomaKind::SKyouN => ObtainKind::Kyou,
+			KomaKind::SKeiN => ObtainKind::Kei,
+			KomaKind::SKakuN => ObtainKind::Kaku,
+			KomaKind::SHishaN => ObtainKind::Hisha,
+			KomaKind::GFu => ObtainKind::Fu,
+			KomaKind::GKyou => ObtainKind::Kyou,
+			KomaKind::GKei => ObtainKind::Kei,
+			KomaKind::GGin => ObtainKind::Gin,
+			KomaKind::GKin => ObtainKind::Kin,
+			KomaKind::GKaku => ObtainKind::Kaku,
+			KomaKind::GHisha => ObtainKind::Hisha,
+			KomaKind::GOu => ObtainKind::Ou,
+			KomaKind::GFuN => ObtainKind::Fu,
+			KomaKind::GKyouN => ObtainKind::Kyou,
+			KomaKind::GKeiN => ObtainKind::Kei,
+			KomaKind::GKakuN => ObtainKind::Kaku,
+			KomaKind::GHishaN => ObtainKind::Hisha,
+			KomaKind::Blank => {
+				return Err(TypeConvertError::LogicError(String::from("Can not  to convert Blank to ObtainKind.")));
+			}
+		})
 	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
