@@ -18,6 +18,7 @@ pub enum KomaKind {
 	SFuN,
 	SKyouN,
 	SKeiN,
+	SGinN,
 	SKakuN,
 	SHishaN,
 	GFu,
@@ -31,6 +32,7 @@ pub enum KomaKind {
 	GFuN,
 	GKyouN,
 	GKeiN,
+	GGinN,
 	GKakuN,
 	GHishaN,
 	Blank,
@@ -259,6 +261,7 @@ impl TryFrom<String,String> for KomaKind {
 			"+R" => KomaKind::SHishaN,
 			"+B" => KomaKind::SKakuN,
 			"+N" => KomaKind::SKeiN,
+			"+S" => KomaKind::SGinN,
 			"+L" => KomaKind::SKyouN,
 			"+P" => KomaKind::SFuN,
 			"k" => KomaKind::GOu,
@@ -272,6 +275,7 @@ impl TryFrom<String,String> for KomaKind {
 			"+r" => KomaKind::GHishaN,
 			"+b" => KomaKind::GKakuN,
 			"+n" => KomaKind::GKeiN,
+			"+s" => KomaKind::GGinN,
 			"+l" => KomaKind::GKyouN,
 			"+p" => KomaKind::GFuN,
 			_ => return Err(TypeConvertError::SyntaxError(s)),
@@ -283,7 +287,7 @@ pub enum NextMove {
 	Once(i32,i32),
 	Repeat(i32,i32),
 }
-const CANDIDATE:[&[NextMove]; 13] = [
+const CANDIDATE:[&[NextMove]; 14] = [
 	// 歩
 	&[NextMove::Once(0,-1)],
 	// 香車
@@ -344,6 +348,14 @@ const CANDIDATE:[&[NextMove]; 13] = [
 		NextMove::Once(0,1)
 	],
 	// 成桂
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成銀
 	&[NextMove::Once(0,-1),
 		NextMove::Once(-1,-1),
 		NextMove::Once(1,-1),
@@ -633,11 +645,122 @@ impl Banmen {
 		}
 		mvs
 	}
+
+	pub fn apply_move_none_check(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
+		-> (Banmen,MochigomaCollections) {
+
+		let mut kinds = match *self {
+			Banmen(ref kinds) => kinds.clone(),
+		};
+
+		let nmc = match m {
+			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
+				let k = kinds[sy as usize][(9 - sx) as usize];
+
+				kinds[sy as usize][(9 - sx) as usize] = KomaKind::Blank;
+
+				match kinds[dy as usize][(9 - dx) as usize] {
+					dst => {
+						let obtained = match ObtainKind::try_from(dst) {
+							Ok(obtained) => {
+								match obtained {
+									ObtainKind::Fu => Some(MochigomaKind::Fu),
+									ObtainKind::Kyou => Some(MochigomaKind::Kyou),
+									ObtainKind::Kei => Some(MochigomaKind::Kei),
+									ObtainKind::Gin => Some(MochigomaKind::Gin),
+									ObtainKind::Kin => Some(MochigomaKind::Kin),
+									ObtainKind::Kaku => Some(MochigomaKind::Kaku),
+									ObtainKind::Hisha => Some(MochigomaKind::Hisha),
+									_ => None,
+								}
+							},
+							Err(_) => None,
+						};
+
+						kinds[dy as usize][(9 - dx) as usize] = match n {
+							true => {
+								match k {
+									KomaKind::SFu => KomaKind::SFuN,
+									KomaKind::SKyou => KomaKind::SKyouN,
+									KomaKind::SKei => KomaKind::SKeiN,
+									KomaKind::SGin => KomaKind::SGinN,
+									KomaKind::SKaku => KomaKind::SKakuN,
+									KomaKind::SHisha => KomaKind::SHishaN,
+									KomaKind::GFu => KomaKind::GFuN,
+									KomaKind::GKyou => KomaKind::GKyouN,
+									KomaKind::GKei => KomaKind::GKeiN,
+									KomaKind::GGin => KomaKind::GGinN,
+									KomaKind::GKaku => KomaKind::GKakuN,
+									KomaKind::GHisha => KomaKind::GHishaN,
+									_ => k,
+								}
+							},
+							false => k,
+						};
+
+						match obtained {
+							Some(obtained) => {
+								match mc {
+									&MochigomaCollections::Pair(ref ms, ref mg) => {
+										match *t {
+											Teban::Sente => {
+												let mut ms = ms.clone();
+												ms.push(obtained);
+												MochigomaCollections::Pair(ms,mg.clone())
+											},
+											Teban::Gote => {
+												let mut mg = mg.clone();
+												mg.push(obtained);
+												MochigomaCollections::Pair(ms.clone(),mg)
+											}
+										}
+									},
+									&MochigomaCollections::Empty => {
+										match *t {
+											Teban::Sente => {
+												let mut ms:Vec<MochigomaKind> = Vec::new();
+												ms.push(obtained);
+												MochigomaCollections::Pair(ms,Vec::new())
+											},
+											Teban::Gote => {
+												let mut mg:Vec<MochigomaKind> = Vec::new();
+												mg.push(obtained);
+												MochigomaCollections::Pair(Vec::new(),mg)
+											}
+										}
+									}
+								}
+							},
+							None => {
+								mc.clone()
+							}
+						}
+					}
+				}
+			},
+			&Move::Put(k,KomaDstPutPosition(dx,dy)) => {
+				kinds[dy as usize][(9 - dx) as usize] = KomaKind::from((*t,k));
+				mc.clone()
+			}
+		};
+
+		(Banmen(kinds),nmc)
+	}
 }
 #[derive(Debug)]
 pub enum MochigomaCollections {
 	Empty,
 	Pair(Vec<MochigomaKind>,Vec<MochigomaKind>),
+}
+impl Clone for MochigomaCollections {
+	fn clone(&self) -> MochigomaCollections {
+		match *self {
+			MochigomaCollections::Empty => MochigomaCollections::Empty,
+			MochigomaCollections::Pair(ref ms, ref mg) => {
+				MochigomaCollections::Pair(ms.clone(),mg.clone())
+			}
+		}
+	}
 }
 impl MochigomaCollections {
 	pub fn legal_moves(&self,t:&Teban,b:&Banmen) -> Vec<(MochigomaKind,KomaDstPutPosition)> {
@@ -893,6 +1016,7 @@ impl TryFrom<KomaKind,String> for ObtainKind {
 			KomaKind::SFuN => ObtainKind::Fu,
 			KomaKind::SKyouN => ObtainKind::Kyou,
 			KomaKind::SKeiN => ObtainKind::Kei,
+			KomaKind::SGinN => ObtainKind::Gin,
 			KomaKind::SKakuN => ObtainKind::Kaku,
 			KomaKind::SHishaN => ObtainKind::Hisha,
 			KomaKind::GFu => ObtainKind::Fu,
@@ -906,6 +1030,7 @@ impl TryFrom<KomaKind,String> for ObtainKind {
 			KomaKind::GFuN => ObtainKind::Fu,
 			KomaKind::GKyouN => ObtainKind::Kyou,
 			KomaKind::GKeiN => ObtainKind::Kei,
+			KomaKind::GGinN => ObtainKind::Gin,
 			KomaKind::GKakuN => ObtainKind::Kaku,
 			KomaKind::GHishaN => ObtainKind::Hisha,
 			KomaKind::Blank => {
@@ -923,6 +1048,34 @@ pub enum MochigomaKind {
 	Kin,
 	Kaku,
 	Hisha,
+}
+impl From<(Teban,MochigomaKind)> for KomaKind {
+	fn from(tk:(Teban,MochigomaKind)) -> KomaKind {
+		match tk {
+			(Teban::Sente,k) => {
+				match k {
+					MochigomaKind::Fu => KomaKind::SFu,
+					MochigomaKind::Kyou => KomaKind::SKyou,
+					MochigomaKind::Kei => KomaKind::SKei,
+					MochigomaKind::Gin => KomaKind::SGin,
+					MochigomaKind::Kin => KomaKind::SKin,
+					MochigomaKind::Kaku => KomaKind::SKaku,
+					MochigomaKind::Hisha => KomaKind::SHisha,
+				}
+			},
+			(Teban::Gote,k) => {
+				match k {
+					MochigomaKind::Fu => KomaKind::GFu,
+					MochigomaKind::Kyou => KomaKind::GKyou,
+					MochigomaKind::Kei => KomaKind::GKei,
+					MochigomaKind::Gin => KomaKind::GGin,
+					MochigomaKind::Kin => KomaKind::GKin,
+					MochigomaKind::Kaku => KomaKind::GKaku,
+					MochigomaKind::Hisha => KomaKind::GHisha,
+				}
+			}
+		}
+	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum Kyokumen {

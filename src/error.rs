@@ -322,4 +322,28 @@ impl<'a,T,E> From<PoisonError<MutexGuard<'a,T>>> for USIAgentStartupError<'a,T,E
 		USIAgentStartupError::MutexLockFailedError(err)
 	}
 }
+#[derive(Debug)]
+pub enum ShogiError {
+	InvalidState(String),
+}
+impl fmt::Display for ShogiError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+		 	ShogiError::InvalidState(ref s) => write!(f,"{}",s)
+	 	}
+	 }
+}
+impl error::Error for ShogiError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		ShogiError::InvalidState(_) => "invalid state.",
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		ShogiError::InvalidState(_) => None,
+	 	}
+	 }
+}
 pub trait PlayerError: Error + fmt::Debug {}
