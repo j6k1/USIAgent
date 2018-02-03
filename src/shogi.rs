@@ -373,7 +373,7 @@ const CANDIDATE:[&[NextMove]; 13] = [
 	],
 ];
 impl Banmen {
-	pub fn legal_moves(&self,t:&Teban,x:u32,y:u32)
+	pub fn legal_moves_with_point(&self,t:&Teban,x:u32,y:u32)
 		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> = Vec::new();
 
@@ -600,25 +600,25 @@ impl Banmen {
 	pub fn legal_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
 		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		match src {
-			KomaSrcPosition(x,y) => self.legal_moves(t, 9 - x, y)
+			KomaSrcPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y)
 		}
 	}
 
 	pub fn legal_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition)
 		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		match dst {
-			KomaDstToPosition(x,y,_) => self.legal_moves(t, 9 - x, y)
+			KomaDstToPosition(x,y,_) => self.legal_moves_with_point(t, 9 - x, y)
 		}
 	}
 
 	pub fn legal_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition)
 		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		match dst {
-			KomaDstPutPosition(x,y) => self.legal_moves(t, 9 - x, y)
+			KomaDstPutPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y)
 		}
 	}
 
-	pub fn legal_moves_all(&self,t:&Teban)
+	pub fn legal_moves(&self,t:&Teban)
 		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
 		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> = Vec::new();
 
@@ -626,7 +626,7 @@ impl Banmen {
 			Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len(){
-						mvs.append(&mut self.legal_moves(t, x as u32, y as u32));
+						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
 					}
 				}
 			}
