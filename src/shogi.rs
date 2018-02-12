@@ -637,7 +637,7 @@ impl Banmen {
 		match *self {
 			Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len(){
+					for x in 0..kinds[y].len() {
 						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
 					}
 				}
@@ -660,6 +660,29 @@ impl Banmen {
 				kinds[sy as usize][(9 - sx) as usize] = KomaKind::Blank;
 
 				match kinds[dy as usize][(9 - dx) as usize] {
+					KomaKind::Blank => {
+						kinds[dy as usize][(9 - dx) as usize] = match n {
+							true => {
+								match k {
+									KomaKind::SFu => KomaKind::SFuN,
+									KomaKind::SKyou => KomaKind::SKyouN,
+									KomaKind::SKei => KomaKind::SKeiN,
+									KomaKind::SGin => KomaKind::SGinN,
+									KomaKind::SKaku => KomaKind::SKakuN,
+									KomaKind::SHisha => KomaKind::SHishaN,
+									KomaKind::GFu => KomaKind::GFuN,
+									KomaKind::GKyou => KomaKind::GKyouN,
+									KomaKind::GKei => KomaKind::GKeiN,
+									KomaKind::GGin => KomaKind::GGinN,
+									KomaKind::GKaku => KomaKind::GKakuN,
+									KomaKind::GHisha => KomaKind::GHishaN,
+									_ => k,
+								}
+							},
+							false => k,
+						};
+						mc.clone()
+					},
 					dst => {
 						let obtained = match ObtainKind::try_from(dst) {
 							Ok(obtained) => {
