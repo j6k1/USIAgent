@@ -35,7 +35,7 @@ pub trait TryToString<E> where E: fmt::Debug + Error {
 	fn try_to_string(&self) -> Result<String,E>;
 }
 pub trait Find<Q,R> {
-	fn find(query:&Q) -> Option<R>;
+	fn find(&self,query:&Q) -> Option<R>;
 }
 pub trait Validate {
 	fn validate(&self) -> bool;

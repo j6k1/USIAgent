@@ -3,6 +3,7 @@ use std::fmt::Formatter;
 use TryFrom;
 use error::*;
 use Validate;
+use Find;
 use self::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
@@ -37,6 +38,8 @@ pub enum KomaKind {
 	GHishaN,
 	Blank,
 }
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub struct KomaPosition(pub u32,pub u32);
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaSrcPosition(pub u32,pub u32);
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
@@ -768,6 +771,125 @@ impl Banmen {
 		};
 
 		(Banmen(kinds),nmc)
+	}
+
+	pub fn apply_valid_move(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
+		-> Result<(Banmen,MochigomaCollections),ShogiError> {
+
+		match m {
+			&Move::To(s,d) => {
+				let mvs = self.legal_moves(t);
+
+				match mvs.find(&(s,d)) {
+					Some(_) => {
+						Ok(self.apply_move_none_check(t,mc,m))
+					},
+					None => {
+						Err(ShogiError::InvalidState(String::from(
+							"This is not legal move."
+						)))
+					}
+				}
+			},
+			&Move::Put(k,d) => {
+				let mvs = mc.legal_moves(t,self);
+
+				match mvs.find(&(k,d)) {
+					Some(_) => {
+						Ok(self.apply_move_none_check(t,mc,m))
+					},
+					None => {
+						Err(ShogiError::InvalidState(String::from(
+							"This is not legal move."
+						)))
+					}
+				}
+			}
+		}
+	}
+}
+impl Find<KomaPosition,Move> for Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+	fn find(&self,query:&KomaPosition) -> Option<Move> {
+		let (x,y) = match query {
+			&KomaPosition(x,y) => (x,y)
+		};
+
+		for m in self {
+			match m {
+				&(ref ms, ref md, _) => {
+					match md {
+						&KomaDstToPosition(dx,dy,_) => {
+							if x == dx && y == dy {
+								return Some(Move::To(*ms,*md));
+							}
+						}
+					}
+				}
+			}
+		}
+
+		None
+	}
+}
+impl Find<KomaKind,Vec<KomaPosition>> for Banmen {
+	fn find(&self,query:&KomaKind) -> Option<Vec<KomaPosition>> {
+		let mut r:Vec<KomaPosition> = Vec::new();
+
+		match self {
+			&Banmen(ref kinds) => {
+				for y in 0..kinds.len() {
+					for x in 0..kinds[y].len() {
+						if *query == kinds[y][x] {
+							r.push(KomaPosition(9 - x as u32, y as u32));
+						}
+					}
+				}
+			}
+		}
+
+		if r.len() > 0 {
+			Some(r)
+		} else {
+			None
+		}
+	}
+}
+impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<(MochigomaKind,KomaDstPutPosition)> {
+	fn find(&self,query:&(MochigomaKind,KomaDstPutPosition)) -> Option<Move> {
+		match query {
+			&(ref k, ref d) => {
+				for m in self {
+					match m {
+						&(ref mk, ref md) => {
+							if k == mk && d == md {
+								return Some(Move::Put(*k,*d));
+							}
+						}
+					}
+				}
+			}
+		}
+
+		None
+	}
+}
+impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+	fn find(&self,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
+		match query {
+			&(ref s, ref d) => {
+				for m in self {
+					match m {
+						&(ref ms, ref md, _) => {
+							if s == ms && d == md {
+								return Some(Move::To(*s,*d));
+							}
+						}
+					}
+				}
+			}
+		}
+
+		None
 	}
 }
 #[derive(Debug)]
