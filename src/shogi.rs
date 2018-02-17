@@ -933,6 +933,27 @@ impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
 		None
 	}
 }
+impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
+	fn find(&self,query:&ObtainKind) -> Option<Vec<Move>> {
+		let mut mvs:Vec<Move> = Vec::new();
+
+		for m in self {
+			match m {
+				&LegalMove::To(ref ms, ref md, Some(ref o)) => {
+					if *o == *query {
+						mvs.push(Move::To(*ms,*md));
+					}
+				},
+				_ => (),
+			}
+		}
+
+		match mvs.len() {
+			0 => None,
+			_ => Some(mvs),
+		}
+	}
+}
 #[derive(Debug)]
 pub enum MochigomaCollections {
 	Empty,
