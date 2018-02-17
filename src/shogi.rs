@@ -250,6 +250,19 @@ pub enum Move {
 	To(KomaSrcPosition,KomaDstToPosition),
 	Put(MochigomaKind,KomaDstPutPosition),
 }
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum LegalMove {
+	To(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>),
+	Put(MochigomaKind,KomaDstPutPosition),
+}
+impl LegalMove {
+	pub fn to_move(&self) -> Move {
+		match self  {
+			&LegalMove::To(ref ms, ref md, _) => Move::To(*ms,*md),
+			&LegalMove::Put(ref mk, ref md) => Move::Put(*mk,*md),
+		}
+	}
+}
 impl TryFrom<String,String> for KomaKind {
 	fn try_from(s: String) -> Result<KomaKind, TypeConvertError<String>> {
 		Ok(match &*s {
@@ -389,8 +402,8 @@ const CANDIDATE:[&[NextMove]; 14] = [
 ];
 impl Banmen {
 	pub fn legal_moves_with_point(&self,t:&Teban,x:u32,y:u32)
-		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
-		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> = Vec::new();
+		-> Vec<LegalMove> {
+		let mut mvs:Vec<LegalMove> = Vec::new();
 
 		let kinds = match *self {
 			Banmen(ref kinds) => kinds,
@@ -412,7 +425,7 @@ impl Banmen {
 								let dy = y + my;
 								match kinds[my as usize][mx as usize] {
 									KomaKind::Blank => {
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
@@ -420,7 +433,7 @@ impl Banmen {
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),None));
@@ -432,7 +445,7 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
@@ -440,7 +453,7 @@ impl Banmen {
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),obtained));
@@ -460,7 +473,7 @@ impl Banmen {
 
 								match kinds[my as usize][mx as usize] {
 									KomaKind::Blank => {
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
@@ -468,7 +481,7 @@ impl Banmen {
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),None));
@@ -480,7 +493,7 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - (x + 1) as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
@@ -488,7 +501,7 @@ impl Banmen {
 											kind != KomaKind::SKin &&
 											kind != KomaKind::SGin && dy >= 6 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),obtained));
@@ -515,7 +528,7 @@ impl Banmen {
 								let dy = y + my;
 								match kinds[my as usize][mx as usize] {
 									KomaKind::Blank => {
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
@@ -523,7 +536,7 @@ impl Banmen {
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),None));
@@ -535,7 +548,7 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
@@ -543,7 +556,7 @@ impl Banmen {
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),obtained));
@@ -565,7 +578,7 @@ impl Banmen {
 
 								match kinds[my as usize][mx as usize] {
 									KomaKind::Blank => {
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
@@ -573,7 +586,7 @@ impl Banmen {
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),None));
@@ -585,7 +598,7 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push((
+										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
@@ -593,7 +606,7 @@ impl Banmen {
 											kind != KomaKind::GKin &&
 											kind != KomaKind::GGin && dy <= 2 {
 
-											mvs.push((
+											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),obtained));
@@ -613,29 +626,29 @@ impl Banmen {
 	}
 
 	pub fn legal_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
-		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+		-> Vec<LegalMove> {
 		match src {
 			KomaSrcPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y)
 		}
 	}
 
 	pub fn legal_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition)
-		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+		-> Vec<LegalMove> {
 		match dst {
 			KomaDstToPosition(x,y,_) => self.legal_moves_with_point(t, 9 - x, y)
 		}
 	}
 
 	pub fn legal_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition)
-		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+		-> Vec<LegalMove> {
 		match dst {
 			KomaDstPutPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y)
 		}
 	}
 
 	pub fn legal_moves(&self,t:&Teban)
-		-> Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
-		let mut mvs:Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> = Vec::new();
+		-> Vec<LegalMove> {
+		let mut mvs:Vec<LegalMove> = Vec::new();
 
 		match *self {
 			Banmen(ref kinds) => {
@@ -646,6 +659,23 @@ impl Banmen {
 				}
 			}
 		}
+		mvs
+	}
+
+	pub fn legal_moves_all(&self,t:&Teban,mc:&MochigomaCollections)
+		-> Vec<LegalMove> {
+		let mut mvs:Vec<LegalMove> = Vec::new();
+
+		match *self {
+			Banmen(ref kinds) => {
+				for y in 0..kinds.len() {
+					for x in 0..kinds[y].len() {
+						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
+					}
+				}
+			}
+		}
+		mvs.append(&mut mc.legal_moves(t, self));
 		mvs
 	}
 
@@ -808,7 +838,7 @@ impl Banmen {
 		}
 	}
 }
-impl Find<KomaPosition,Move> for Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+impl Find<KomaPosition,Move> for Vec<LegalMove> {
 	fn find(&self,query:&KomaPosition) -> Option<Move> {
 		let (x,y) = match query {
 			&KomaPosition(x,y) => (x,y)
@@ -816,11 +846,20 @@ impl Find<KomaPosition,Move> for Vec<(KomaSrcPosition,KomaDstToPosition,Option<O
 
 		for m in self {
 			match m {
-				&(ref ms, ref md, _) => {
+				&LegalMove::To(ref ms, ref md, _) => {
 					match md {
 						&KomaDstToPosition(dx,dy,_) => {
 							if x == dx && y == dy {
 								return Some(Move::To(*ms,*md));
+							}
+						}
+					}
+				},
+				&LegalMove::Put(ref mk, ref md) => {
+					match md {
+						&KomaDstPutPosition(dx,dy) => {
+							if x == dx && y == dy {
+								return Some(Move::Put(*mk,*md));
 							}
 						}
 					}
@@ -854,17 +893,18 @@ impl Find<KomaKind,Vec<KomaPosition>> for Banmen {
 		}
 	}
 }
-impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<(MochigomaKind,KomaDstPutPosition)> {
+impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<LegalMove> {
 	fn find(&self,query:&(MochigomaKind,KomaDstPutPosition)) -> Option<Move> {
 		match query {
 			&(ref k, ref d) => {
 				for m in self {
 					match m {
-						&(ref mk, ref md) => {
+						&LegalMove::Put(ref mk, ref md) => {
 							if k == mk && d == md {
 								return Some(Move::Put(*k,*d));
 							}
-						}
+						},
+						_ => (),
 					}
 				}
 			}
@@ -873,17 +913,18 @@ impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<(MochigomaKind,KomaDs
 		None
 	}
 }
-impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>)> {
+impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
 	fn find(&self,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
 		match query {
 			&(ref s, ref d) => {
 				for m in self {
 					match m {
-						&(ref ms, ref md, _) => {
+						&LegalMove::To(ref ms, ref md, _) => {
 							if s == ms && d == md {
 								return Some(Move::To(*s,*d));
 							}
-						}
+						},
+						_ => (),
 					}
 				}
 			}
@@ -908,8 +949,8 @@ impl Clone for MochigomaCollections {
 	}
 }
 impl MochigomaCollections {
-	pub fn legal_moves(&self,t:&Teban,b:&Banmen) -> Vec<(MochigomaKind,KomaDstPutPosition)> {
-		let mut mvs:Vec<(MochigomaKind,KomaDstPutPosition)> = Vec::new();
+	pub fn legal_moves(&self,t:&Teban,b:&Banmen) -> Vec<LegalMove> {
+		let mut mvs:Vec<LegalMove> = Vec::new();
 
 		match *t {
 			Teban::Sente => {
@@ -941,8 +982,9 @@ impl MochigomaCollections {
 															}
 
 															if !nifu {
-																mvs.push((*m,KomaDstPutPosition(
-																			9 - x as u32, y as u32 + 1)));
+																mvs.push(
+																	LegalMove::Put(*m,KomaDstPutPosition(
+																	9 - x as u32, y as u32 + 1)));
 															}
 														},
 														_ => (),
@@ -951,8 +993,9 @@ impl MochigomaCollections {
 												_ => {
 													match kinds[y][x] {
 														KomaKind::Blank => {
-															mvs.push((*m,KomaDstPutPosition(
-																		9 - x as u32, y as u32 + 1)));
+															mvs.push(
+																LegalMove::Put(*m,KomaDstPutPosition(
+																9 - x as u32, y as u32 + 1)));
 														},
 														_ => (),
 													}
@@ -996,8 +1039,9 @@ impl MochigomaCollections {
 															}
 
 															if !nifu {
-																mvs.push((*m,KomaDstPutPosition(
-																			9 - x as u32, y as u32 + 1)));
+																mvs.push(LegalMove::Put(
+																		*m,KomaDstPutPosition(
+																		9 - x as u32, y as u32 + 1)));
 															}
 														},
 														_ => (),
@@ -1006,8 +1050,9 @@ impl MochigomaCollections {
 												_ => {
 													match kinds[y][x] {
 														KomaKind::Blank => {
-															mvs.push((*m,KomaDstPutPosition(
-																		9 - x as u32, y as u32 + 1)));
+															mvs.push(LegalMove::Put(
+																	*m,KomaDstPutPosition(
+																	9 - x as u32, y as u32 + 1)));
 														},
 														_ => (),
 													}
