@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::error::Error;
+use std::collections::HashMap;
 
 use TryFrom;
 use error::EventDispatchError;
@@ -162,12 +163,12 @@ pub enum SysEventOptionKind {
 impl<'a> TryFrom<&'a str,String> for MochigomaCollections {
 	fn try_from(s: &'a str) -> Result<MochigomaCollections, TypeConvertError<String>> {
 		Ok(match &*s {
-			"-" => MochigomaCollections::Pair(Vec::new(),Vec::new()),
+			"-" => MochigomaCollections::Pair(HashMap::new(),HashMap::new()),
 			_ => {
 				let mut chars = s.chars();
 
-				let mut sente:Vec<MochigomaKind> = Vec::new();
-				let mut gote:Vec<MochigomaKind> = Vec::new();
+				let mut sente:HashMap<MochigomaKind,u32> = HashMap::new();
+				let mut gote:HashMap<MochigomaKind,u32> = HashMap::new();
 
 				while let Some(c) = chars.next() {
 					let t = match c {
@@ -218,14 +219,20 @@ impl<'a> TryFrom<&'a str,String> for MochigomaCollections {
 
 							match t {
 								Teban::Sente => {
-									for _ in 0..n {
-										sente.push(k);
-									}
+									let n = match sente.get(&k) {
+										Some(count) => count+n,
+										None => n,
+									};
+
+									sente.insert(k,n);
 								},
 								Teban::Gote => {
-									for _ in 0..n {
-										gote.push(k);
-									}
+									let n = match gote.get(&k) {
+										Some(count) => count+n,
+										None => n,
+									};
+
+									gote.insert(k,n);
 								},
 							}
 						},

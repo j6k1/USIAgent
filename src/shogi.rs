@@ -1,5 +1,6 @@
 use std::fmt;
 use std::fmt::Formatter;
+use std::collections::HashMap;
 use TryFrom;
 use error::*;
 use Validate;
@@ -761,12 +762,26 @@ impl Banmen {
 										match *t {
 											Teban::Sente => {
 												let mut ms = ms.clone();
-												ms.push(obtained);
+
+												let count = match ms.get(&obtained) {
+													Some(count) => count+1,
+													None => 1,
+												};
+
+												ms.insert(obtained,count);
+
 												MochigomaCollections::Pair(ms,mg.clone())
 											},
 											Teban::Gote => {
 												let mut mg = mg.clone();
-												mg.push(obtained);
+
+												let count = match mg.get(&obtained) {
+													Some(count) => count+1,
+													None => 1,
+												};
+
+												mg.insert(obtained,count);
+
 												MochigomaCollections::Pair(ms.clone(),mg)
 											}
 										}
@@ -774,14 +789,15 @@ impl Banmen {
 									&MochigomaCollections::Empty => {
 										match *t {
 											Teban::Sente => {
-												let mut ms:Vec<MochigomaKind> = Vec::new();
-												ms.push(obtained);
-												MochigomaCollections::Pair(ms,Vec::new())
+												let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+												ms.insert(obtained,1);
+												MochigomaCollections::Pair(ms,HashMap::new())
 											},
 											Teban::Gote => {
-												let mut mg:Vec<MochigomaKind> = Vec::new();
-												mg.push(obtained);
-												MochigomaCollections::Pair(Vec::new(),mg)
+												let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+												mg.insert(obtained,1);
+												MochigomaCollections::Pair(HashMap::new(),mg)
 											}
 										}
 									}
@@ -957,7 +973,7 @@ impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
 #[derive(Debug)]
 pub enum MochigomaCollections {
 	Empty,
-	Pair(Vec<MochigomaKind>,Vec<MochigomaKind>),
+	Pair(HashMap<MochigomaKind,u32>,HashMap<MochigomaKind,u32>),
 }
 impl Clone for MochigomaCollections {
 	fn clone(&self) -> MochigomaCollections {
@@ -977,11 +993,14 @@ impl MochigomaCollections {
 			Teban::Sente => {
 				match *self {
 					MochigomaCollections::Pair(ref ms, _) => {
-						for m in ms {
-							match b {
-								&Banmen(ref kinds) => {
-									for y in 0..kinds.len() {
-										for x in 0..kinds[y].len() {
+						match b {
+							&Banmen(ref kinds) => {
+								for y in 0..kinds.len() {
+									for x in 0..kinds[y].len() {
+										for m in &MOCHIGOMA_KINDS {
+											if !ms.contains_key(&m) {
+												continue;
+											}
 											match m {
 												&MochigomaKind::Fu => {
 													match kinds[y][x] {
@@ -1034,11 +1053,14 @@ impl MochigomaCollections {
 			Teban::Gote => {
 				match *self {
 					MochigomaCollections::Pair(_, ref mg) => {
-						for m in mg {
-							match b {
-								&Banmen(ref kinds) => {
-									for y in 0..kinds.len() {
-										for x in 0..kinds[y].len() {
+						match b {
+							&Banmen(ref kinds) => {
+								for y in 0..kinds.len() {
+									for x in 0..kinds[y].len() {
+										for m in &MOCHIGOMA_KINDS {
+											if !mg.contains_key(&m) {
+												continue;
+											}
 											match m {
 												&MochigomaKind::Fu => {
 													match kinds[y][x] {
@@ -1250,7 +1272,7 @@ impl TryFrom<KomaKind,String> for ObtainKind {
 		})
 	}
 }
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum MochigomaKind {
 	Fu = 0,
 	Kyou,
@@ -1260,6 +1282,15 @@ pub enum MochigomaKind {
 	Kaku,
 	Hisha,
 }
+pub const MOCHIGOMA_KINDS:[MochigomaKind; 7] = [
+	MochigomaKind::Fu,
+	MochigomaKind::Kyou,
+	MochigomaKind::Kei,
+	MochigomaKind::Gin,
+	MochigomaKind::Kin,
+	MochigomaKind::Kaku,
+	MochigomaKind::Hisha,
+];
 impl From<(Teban,MochigomaKind)> for KomaKind {
 	fn from(tk:(Teban,MochigomaKind)) -> KomaKind {
 		match tk {

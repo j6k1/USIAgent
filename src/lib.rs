@@ -17,6 +17,7 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::marker::Send;
 use std::marker::PhantomData;
+use std::collections::HashMap;
 
 use command::*;
 use event::*;
@@ -338,19 +339,19 @@ impl<T,E> UsiAgent<T,E>
 						&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
 							let(b,m) = match p {
 								&UsiInitialPosition::Startpos => {
-									(shogi::BANMEN_START_POS, MochigomaCollections::Pair(Vec::new(),Vec::new()))
+									(shogi::BANMEN_START_POS, MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								},
 								&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Pair(ref ms,ref mg)) => {
 									(b,MochigomaCollections::Pair(ms.clone(),mg.clone()))
 								},
 								&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Empty) => {
-									(b,MochigomaCollections::Pair(Vec::new(),Vec::new()))
+									(b,MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								}
 							};
 
 							let (ms,mg) = match m {
 								MochigomaCollections::Pair(ms, mg) => (ms, mg),
-								_ => (Vec::new(), Vec::new())
+								_ => (HashMap::new(),HashMap::new())
 							};
 
 							let on_error_handler_inner = on_error_handler.clone();
