@@ -5,6 +5,7 @@ use TryFrom;
 use error::*;
 use Validate;
 use Find;
+use MaxIndex;
 use self::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
@@ -38,6 +39,11 @@ pub enum KomaKind {
 	GKakuN,
 	GHishaN,
 	Blank,
+}
+impl MaxIndex for KomaKind {
+	fn max_index() -> usize {
+		KomaKind::Blank as usize
+	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaPosition(pub u32,pub u32);
@@ -1281,6 +1287,11 @@ pub enum MochigomaKind {
 	Kin,
 	Kaku,
 	Hisha,
+}
+impl MaxIndex for MochigomaKind {
+	fn max_index() -> usize {
+		MochigomaKind::Hisha as usize
+	}
 }
 pub const MOCHIGOMA_KINDS:[MochigomaKind; 7] = [
 	MochigomaKind::Fu,
