@@ -41,6 +41,9 @@ pub trait Find<Q,R> {
 pub trait Validate {
 	fn validate(&self) -> bool;
 }
+pub trait MaxIndex {
+	fn max_index() -> usize;
+}
 pub struct OnErrorHandler<L> where L: Logger {
 	logger:Arc<Mutex<L>>,
 }

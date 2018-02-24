@@ -6,6 +6,7 @@ use std::error::Error;
 use std::collections::HashMap;
 
 use TryFrom;
+use MaxIndex;
 use error::EventDispatchError;
 use error::EventHandlerError;
 use error::TypeConvertError;
@@ -16,9 +17,6 @@ use OnErrorHandler;
 use shogi::*;
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
-}
-pub trait MaxIndex {
-	fn max_index() -> usize;
 }
 #[derive(Debug)]
 pub enum SystemEvent {
