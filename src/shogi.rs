@@ -408,20 +408,19 @@ const CANDIDATE:[&[NextMove]; 14] = [
 	],
 ];
 impl Banmen {
-	pub fn legal_moves_with_point(&self,t:&Teban,x:u32,y:u32)
+	pub fn legal_moves_with_point_and_kind(&self,t:&Teban,x:u32,y:u32,kind:KomaKind)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		let kinds = match *self {
-			Banmen(ref kinds) => kinds,
+		let kinds = match self {
+			&Banmen(ref kinds) => kinds,
 		};
 
 		let x:i32 = x as i32;
 		let y:i32 = y as i32;
 
 		match *t {
-			Teban::Sente if kinds[y as usize][x as usize] < KomaKind::GFu => {
-				let kind = kinds[y as usize][x as usize];
+			Teban::Sente if kind < KomaKind::GFu => {
 				let mv = CANDIDATE[kind as usize];
 
 				for m in mv {
@@ -522,9 +521,7 @@ impl Banmen {
 					}
 				}
 			},
-			Teban::Gote if kinds[y as usize][x as usize] >= KomaKind::GFu &&
-				kinds[y as usize][x as usize] < KomaKind::Blank => {
-				let kind = kinds[y as usize][x as usize];
+			Teban::Gote if kind >= KomaKind::GFu && kind < KomaKind::Blank => {
 				let mv = CANDIDATE[kind as usize - KomaKind::GFu as usize];
 				for m in mv {
 					match m {
@@ -633,6 +630,14 @@ impl Banmen {
 		mvs
 	}
 
+	pub fn legal_moves_with_point(&self,t:&Teban,x:u32,y:u32)
+		-> Vec<LegalMove> {
+		match self {
+			&Banmen(ref kinds) => {
+				self.legal_moves_with_point_and_kind(t,x,y,kinds[y as usize][x as usize])
+			}
+		}
+	}
 	pub fn legal_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
@@ -658,8 +663,8 @@ impl Banmen {
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match *self {
-			Banmen(ref kinds) => {
+		match self {
+			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
 						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
@@ -674,8 +679,8 @@ impl Banmen {
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match *self {
-			Banmen(ref kinds) => {
+		match self {
+			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
 						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
@@ -687,12 +692,12 @@ impl Banmen {
 		mvs
 	}
 
-	pub fn win_only_moves_with_point(&self,t:&Teban,x:u32,y:u32)
+	pub fn win_only_moves_with_point_and_kind(&self,t:&Teban,x:u32,y:u32,kind:KomaKind)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		let kinds = match *self {
-			Banmen(ref kinds) => kinds,
+		let kinds = match self {
+			&Banmen(ref kinds) => kinds,
 		};
 
 		let x:i32 = x as i32;
@@ -710,8 +715,7 @@ impl Banmen {
 		};
 
 		match *t {
-			Teban::Sente if kinds[y as usize][x as usize] < KomaKind::GFu => {
-				let kind = kinds[y as usize][x as usize];
+			Teban::Sente if kind < KomaKind::GFu => {
 
 				match kind {
 					KomaKind::SFu |
@@ -727,7 +731,7 @@ impl Banmen {
 							return mvs;
 						}
 
-						self.legal_moves_with_point(t, x as u32, y as u32)
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -753,14 +757,22 @@ impl Banmen {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - x as u32,ty as u32, (ty < 3)),
+								KomaDstToPosition(9 - x as u32,ty as u32, false),
 								Some(ObtainKind::Ou),
 						));
 
+						if ty < 3 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - x as u32,ty as u32, true),
+									Some(ObtainKind::Ou),
+							));
+						}
 						mvs
 					},
 					KomaKind::SKei => {
-						self.legal_moves_with_point(t, x as u32, y as u32)
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -815,10 +827,18 @@ impl Banmen {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,(ty < 3)),
+								KomaDstToPosition(9 - tx as u32,ty as u32,false),
 								Some(ObtainKind::Ou),
 						));
 
+						if ty < 3 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									Some(ObtainKind::Ou),
+							));
+						}
 						mvs
 					},
 					KomaKind::SHisha => {
@@ -864,10 +884,18 @@ impl Banmen {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,(ty < 3)),
+								KomaDstToPosition(9 - tx as u32,ty as u32,false),
 								Some(ObtainKind::Ou),
 						));
 
+						if ty < 3 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									Some(ObtainKind::Ou),
+							));
+						}
 						mvs
 					},
 					KomaKind::SKakuN => {
@@ -981,9 +1009,7 @@ impl Banmen {
 					_ => mvs,
 				}
 			},
-			Teban::Gote if kinds[y as usize][x as usize] >= KomaKind::GFu &&
-				kinds[y as usize][x as usize] < KomaKind::Blank => {
-				let kind = kinds[y as usize][x as usize];
+			Teban::Gote if kind >= KomaKind::GFu && kind < KomaKind::Blank => {
 				match kind {
 					KomaKind::GFu |
 						KomaKind::GGin |
@@ -998,7 +1024,7 @@ impl Banmen {
 							return mvs;
 						}
 
-						self.legal_moves_with_point(t, x as u32, y as u32)
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -1024,14 +1050,22 @@ impl Banmen {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - x as u32,ty as u32,(ty >= 6)),
+								KomaDstToPosition(9 - x as u32,ty as u32,false),
 								Some(ObtainKind::Ou),
 						));
 
+						if ty >= 6 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - x as u32,ty as u32,true),
+									Some(ObtainKind::Ou),
+							));
+						}
 						mvs
 					},
 					KomaKind::GKei => {
-						self.legal_moves_with_point(t, x as u32, y as u32)
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -1086,10 +1120,18 @@ impl Banmen {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,(ty >= 6)),
+								KomaDstToPosition(9 - tx as u32,ty as u32,false),
 								Some(ObtainKind::Ou),
 						));
 
+						if ty >= 6 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									Some(ObtainKind::Ou),
+							));
+						}
 						mvs
 					},
 					KomaKind::GHisha => {
@@ -1135,10 +1177,18 @@ impl Banmen {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,(ty >= 6)),
+								KomaDstToPosition(9 - tx as u32,ty as u32,false),
 								Some(ObtainKind::Ou),
 						));
 
+						if ty >= 6 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									Some(ObtainKind::Ou),
+							));
+						}
 						mvs
 					},
 					KomaKind::GKakuN => {
@@ -1256,6 +1306,15 @@ impl Banmen {
 		}
 	}
 
+	pub fn win_only_moves_with_point(&self,t:&Teban,x:u32,y:u32)
+		-> Vec<LegalMove> {
+		match self {
+			&Banmen(ref kinds) => {
+				self.win_only_moves_with_point_and_kind(t,x,y,kinds[y as usize][x as usize])
+			}
+		}
+	}
+
 	pub fn win_only_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
@@ -1281,8 +1340,8 @@ impl Banmen {
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match *self {
-			Banmen(ref kinds) => {
+		match self {
+			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
 						mvs.append(&mut self.win_only_moves_with_point(t, x as u32, y as u32));
@@ -1291,6 +1350,4032 @@ impl Banmen {
 			}
 		}
 		mvs
+	}
+
+	pub fn oute_only_moves_with_point(&self,t:&Teban,x:u32,y:u32)
+		-> Vec<LegalMove> {
+		let mut mvs:Vec<LegalMove> = Vec::new();
+
+		let kinds = match self {
+			&Banmen(ref kinds) => kinds
+		};
+
+		let x:i32 = x as i32;
+		let y:i32 = y as i32;
+
+		let target = match self.find(&KomaKind::GOu) {
+			Some(ref r) => r[0],
+			None => {
+				return mvs;
+			}
+		};
+
+		let (dx,dy) = match target {
+			KomaPosition(x,y) => (9-x as i32,y as i32),
+		};
+
+		let kind = kinds[y as usize][x as usize];
+
+		match *t {
+			Teban::Sente if kind < KomaKind::GFu => {
+
+				match kind {
+					KomaKind::SFu |
+						KomaKind::SGin |
+						KomaKind::SKin |
+						KomaKind::SOu |
+						KomaKind::SFuN |
+						KomaKind::SKyouN |
+						KomaKind::SKeiN |
+						KomaKind::SGinN => {
+
+						if (dx - x).abs() > 2 || (dy - y).abs() > 2 {
+							return mvs;
+						}
+
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+							.into_iter().filter(|m| {
+								match m {
+									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
+									&LegalMove::To(_,KomaDstToPosition(tx,ty,_),_) => {
+										let tx = 9 - tx as i32;
+
+										if (dx - tx).abs() > 1 || (dy - ty as i32).abs() > 1 {
+											return false;
+										} else {
+											return self.win_only_moves_with_point_and_kind(t, tx as u32, ty as u32, kind).len() > 0;
+										}
+									},
+									_ => false,
+								}
+							}).collect::<Vec<LegalMove>>()
+					},
+					KomaKind::SKyou => {
+						if dy > y || dx != x {
+							return mvs;
+						}
+
+						let mut ty:i32 = y;
+
+						while ty > dy {
+							ty = ty - 1;
+
+							if kinds[ty as usize][x as usize] != KomaKind::Blank {
+								return if kinds[ty as usize][x as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t, x as u32, ty as u32, kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][x as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - x as u32,ty as u32, false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - x as u32,ty as u32, true),
+												obtained,
+										));
+									};
+									mvs
+								} else {
+									mvs
+								}
+							}
+						}
+
+						for ty in (y..(dy+1)).rev() {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - x as u32,ty as u32, false),
+									Some(ObtainKind::Ou),
+							));
+
+							if ty < 3 {
+								mvs.push(
+								LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - x as u32,ty as u32, true),
+										Some(ObtainKind::Ou),
+								));
+							}
+						}
+
+						mvs
+					},
+					KomaKind::SKei => {
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+							.into_iter().filter(|m| {
+								match m {
+									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
+									&LegalMove::To(_,KomaDstToPosition(tx,ty,_),_) => {
+										return self.win_only_moves_with_point_and_kind(t, tx, ty, kind).len() > 0;
+									},
+									_ => false,
+								}
+							}).collect::<Vec<LegalMove>>()
+					},
+					KomaKind::SKaku => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dx - x < 0 && dx - x == dy - y {
+							while tx > dx && ty > dy {
+								tx = tx - 1;
+								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx - x == dy - y {
+							while tx > dx && ty > dy {
+								tx = tx + 1;
+								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx - x < 0 && -(dx - x) == dy - y {
+							while tx > dx && ty < dy {
+								tx = tx - 1;
+								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if -(dx - x) == dy - y {
+							while tx > dx && ty < dy {
+								tx = tx + 1;
+								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						}
+
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dx - x < 0 && dx - x == dy - y {
+							while tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+								tx = tx + 1;
+								ty = ty + 1;
+							}
+
+							if tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+								tx = tx + 1;
+								ty = ty + 1;
+							}
+
+							while tx >= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx - 1;
+								ty = ty - 1;
+							}
+						} else if dx - x == dy - y {
+							while tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+								tx = tx - 1;
+								ty = ty - 1;
+							}
+
+							if tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+								tx = tx - 1;
+								ty = ty - 1;
+							}
+
+							while tx <= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx + 1;
+								ty = ty + 1;
+							}
+						} else if dx - x < 0 && -(dx - x) == dy - y {
+							while tx < 8 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+								tx = tx + 1;
+								ty = ty - 1;
+							}
+
+							if tx < 8 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+								tx = tx + 1;
+								ty = ty - 1;
+							}
+
+							while tx >= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx - 1;
+								ty = ty + 1;
+							}
+						} else if -(dx - x) == dy - y {
+							while tx > 0 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+								tx = tx - 1;
+								ty = ty + 1;
+							}
+
+							if tx > 0 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+								tx = tx - 1;
+								ty = ty + 1;
+							}
+
+							while tx <= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx + 1;
+								ty = ty - 1;
+							}
+						} else {
+							let mx = match dx - x {
+								mx if mx > 0 => -1i32,
+								mx if mx == 0 => 0i32,
+								_ => 1i32,
+							};
+							let my = match dy - y {
+								my if my > 0 => 1i32,
+								my if my == 0 => 0i32,
+								_ => -1i32,
+							};
+
+							let mut tx = x + mx;
+							let mut ty = y + my;
+
+							while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+								tx = tx + mx;
+								ty = ty + my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] >= KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+
+							let mut tx = x + mx;
+							let mut ty = y - my;
+
+							while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+
+								tx = tx + mx;
+								ty = ty - my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] >= KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+
+							let mut tx = x - mx;
+							let mut ty = y + my;
+
+							while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[(ty + my) as usize][(tx - mx) as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+
+								tx = tx - mx;
+								ty = ty + my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] >= KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+						}
+
+						mvs
+					},
+					KomaKind::SHisha => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dy - y < 0 && dx == x {
+							while ty < dy {
+								ty = ty - 1;
+
+								if ty == 0 || kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx == x {
+							while ty > dy {
+								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx - x < 0 && dy == y {
+							while tx > dx {
+								tx = tx - 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dy == y {
+							while tx < dx {
+								tx = tx + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty < 3 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						}
+
+
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dy - y < 0 && dx == x {
+							while tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][tx as usize] == KomaKind::Blank {
+								ty = ty + 1;
+							}
+
+							if tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][tx as usize] >= KomaKind::GFu {
+								ty = ty + 1;
+							}
+
+							while tx >= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								ty = ty - 1;
+							}
+						} else if dx == x {
+							while tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][tx as usize] == KomaKind::Blank {
+								ty = ty - 1;
+							}
+
+							if tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][tx as usize] >= KomaKind::GFu {
+								ty = ty - 1;
+							}
+
+							while tx <= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								ty = ty + 1;
+							}
+						} else if dx - x < 0 && dy == y {
+							while tx < 8 && ty > 0 &&
+								kinds[ty as usize][(tx + 1) as usize] == KomaKind::Blank{
+								tx = tx + 1;
+							}
+
+							if tx < 8 && ty > 0 &&
+								kinds[ty as usize][(tx + 1) as usize] >= KomaKind::GFu {
+								tx = tx + 1;
+							}
+
+							while tx >= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx - 1;
+							}
+						} else if dy == y {
+							while tx > 0 && ty < 8 &&
+								kinds[ty as usize][(tx - 1) as usize] == KomaKind::Blank{
+								tx = tx - 1;
+							}
+
+							if tx > 0 && ty < 8 &&
+								kinds[ty as usize][(tx - 1) as usize] >= KomaKind::GFu {
+								tx = tx - 1;
+							}
+
+							while tx <= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty < 3 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx + 1;
+							}
+						} else {
+							let mx = match dx - x {
+								mx if mx > 0 => -1i32,
+								mx if mx == 0 => 0i32,
+								_ => 1i32,
+							};
+							let my = match dy - y {
+								my if my > 0 => 1i32,
+								my if my == 0=> 0i32,
+								_ => -1i32,
+							};
+
+							let mut tx = x + mx;
+							let ty = y;
+
+							while ty >= 0 && ty < 9 &&
+								kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+								tx = tx + mx;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] >= KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+
+							let tx = x;
+							let mut ty = y + my;
+
+							while tx >= 0 && tx < 9 &&
+								kinds[ty as usize][(tx + mx) as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+								ty = ty + my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] >= KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty < 3 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+						}
+
+						mvs
+					},
+					KomaKind::SKakuN => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - dx as u32,dy as u32,false),
+									Some(ObtainKind::Ou),
+							));
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dx - x < 0 && dx - x == dy - y {
+								while tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								if tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								while tx > dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+							} else if dx - x == dy - y {
+								while tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] != KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								if tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								while tx < dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && -(dx - x) == dy - y {
+								while tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] != KomaKind::Blank{
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								if tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								while tx > dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+							} else if -(dx - x) == dy - y {
+								while tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] != KomaKind::Blank{
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								if tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								while tx < dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+							}
+
+							let mx = match dx - x {
+								mx if mx > 0 => -1i32,
+								mx if mx == 0 => 0i32,
+								_ => 1i32,
+							};
+							let my = match dy - y {
+								my if my > 0 => 1i32,
+								my if my == 0 => 0i32,
+								_ => -1i32,
+							};
+
+							let mut dsts:Vec<(i32,i32)> = Vec::new();
+
+							for (tx,ty) in if x == dx {
+								dsts.extend_from_slice(&[(x+1,y),(x-1,y),(x+1,y+my),(x-1,y+my)]);
+								dsts
+							} else if y == dx {
+								dsts.extend_from_slice(&[(x,y+1),(x,y-1),(x+mx,y+1),(x+mx,y-1)]);
+								dsts
+							} else {
+								dsts.extend_from_slice(&[(x,y+my),(x+mx,y)]);
+								dsts
+							} {
+								if kinds[ty as usize][tx as usize] == KomaKind::Blank ||
+									kinds[ty as usize][tx as usize] >= KomaKind::GFu {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+								}
+							}
+						} else {
+							if dx - x < 0 && dx - x == dy - y {
+								while tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								if tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								while tx > dx && ty > dy {
+									tx = tx - 1;
+									ty = ty - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] == KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx - x == dy - y {
+								while tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								if tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								while tx > dx {
+									tx = tx + 1;
+									ty = ty + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] == KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx - x < 0 && -(dx - x) == dy - y {
+								while tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								if tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								while tx > dx {
+									tx = tx - 1;
+									ty = ty + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] == KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if -(dx - x) == dy - y {
+								while tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								if tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								while tx > dx {
+									tx = tx + 1;
+									ty = ty - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] == KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							}
+
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dx - x < 0 && dx - x == dy - y {
+								while tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								if tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								while tx >= dx && ty >= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+							} else if dx - x == dy - y {
+								while tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								if tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								while tx <= dx && ty <= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && -(dx - x) == dy - y {
+								while tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								if tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								while tx >= dx && ty <= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+							} else if -(dx - x) == dy - y {
+								while tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								if tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								while tx <= dx && ty >= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+							} else {
+								let mx = match dx - x {
+									mx if mx > 0 => -1i32,
+									mx if mx == 0 => 0i32,
+									_ => 1i32,
+								};
+								let my = match dy - y {
+									my if my > 0 => 1i32,
+									my if my == 0 => 0i32,
+									_ => -1i32,
+								};
+
+								let mut tx = x;
+								let mut ty = y;
+
+								while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										break;
+									}
+									tx = tx + mx;
+									ty = ty + my;
+								}
+
+								if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank {
+
+									if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+
+								let mut tx = x;
+								let mut ty = y;
+
+								while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										break;
+									}
+
+									tx = tx + mx;
+									ty = ty - my;
+								}
+
+								if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank {
+
+									if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+
+								let mut tx = x;
+								let mut ty = y;
+
+								while ty + my >= 0 && ty + my < 9 && tx - mx >= 0 && tx - mx < 9 &&
+									kinds[(ty + my) as usize][(tx - mx) as usize] == KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										break;
+									}
+
+									tx = tx - mx;
+									ty = ty + my;
+								}
+
+								if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank {
+
+									if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+							}
+						}
+						mvs
+					},
+					KomaKind::SHishaN => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - dx as u32,dy as u32,false),
+									Some(ObtainKind::Ou),
+							));
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dy - y < 0 && dx == x {
+								while ty < 8 &&
+									kinds[(ty - 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty + 1;
+								}
+
+								if ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] >= KomaKind::GFu {
+									ty = ty + 1;
+								}
+
+								while tx > dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									ty = ty - 1;
+								}
+							} else if dx == x {
+								while ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] != KomaKind::Blank {
+									ty = ty - 1;
+								}
+
+								if ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] >= KomaKind::GFu {
+									ty = ty - 1;
+								}
+
+								while tx < dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && dy == y {
+								while tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] != KomaKind::Blank{
+									tx = tx + 1;
+								}
+
+								if tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+								}
+
+								while tx > dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+								}
+							} else if dy == y {
+								while tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] != KomaKind::Blank{
+									tx = tx - 1;
+								}
+
+								if tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+								}
+
+								while tx < dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+								}
+							} else {
+								let mx = match dx - x {
+									mx if mx > 0 => -1i32,
+									mx if mx == 0 => 0i32,
+									_ => 1i32,
+								};
+								let my = match dy - y {
+									my if my > 0 => 1i32,
+									my if my == 0 => 0i32,
+									_ => -1i32,
+								};
+
+								let mut dsts:Vec<(i32,i32)> = Vec::new();
+
+								for (tx,ty) in if x == dx {
+									dsts.extend_from_slice(&[(x+1,y),(x-1,y),(x+1,y+my),(x-1,y+my)]);
+									dsts
+								} else if y == dx {
+									dsts.extend_from_slice(&[(x,y+1),(x,y-1),(x+mx,y+1),(x+mx,y-1)]);
+									dsts
+								} else {
+									dsts.extend_from_slice(&[(x,y+my),(x+mx,y)]);
+									dsts
+								} {
+									if kinds[ty as usize][tx as usize] == KomaKind::Blank ||
+										kinds[ty as usize][tx as usize] >= KomaKind::GFu {
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+							}
+							mvs
+						} else {
+							if dy - y < 0 && dx == x {
+								while ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty + 1;
+								}
+
+								if ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] >= KomaKind::GFu {
+									ty = ty + 1;
+								}
+
+								while tx > dx {
+									ty = ty - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx == x {
+								while ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty - 1;
+								}
+
+								if ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] >= KomaKind::GFu {
+									ty = ty - 1;
+								}
+
+								while tx > dx {
+									ty = ty + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx - x < 0 && dy == y {
+								while tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+								}
+
+								if tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+								}
+
+								while tx > dx {
+									tx = tx - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dy == y {
+								while tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+								}
+
+								if ty > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+								}
+
+								while tx > dx {
+									tx = tx + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							}
+
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dy - y < 0 && dx == x {
+								while ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty + 1;
+								}
+
+								if ty < 8 && kinds[(ty + 1) as usize][tx as usize] >= KomaKind::GFu {
+									ty = ty + 1;
+								}
+
+								while ty >= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									ty = ty - 1;
+								}
+							} else if dx == x {
+								while ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] != KomaKind::Blank {
+									ty = ty - 1;
+								}
+
+								if ty > 0 && kinds[(ty - 1) as usize][tx as usize] >= KomaKind::GFu {
+									ty = ty - 1;
+								}
+
+								while ty <= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && dy == y {
+								while tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] != KomaKind::Blank{
+									tx = tx + 1;
+								}
+
+								if tx < 8 && kinds[ty as usize][(tx + 1) as usize] >= KomaKind::GFu {
+									tx = tx + 1;
+								}
+
+								while tx >= dx && ty <= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									tx = tx - 1;
+								}
+							} else if dy == y {
+								while tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] != KomaKind::Blank{
+									tx = tx - 1;
+								}
+
+								if tx > 0 && kinds[ty as usize][(tx - 1) as usize] >= KomaKind::GFu {
+									tx = tx - 1;
+								}
+
+								while tx <= dx && ty >= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									tx = tx + 1;
+								}
+							} else {
+								let mx = match dx - x {
+									mx if mx > 0 => -1i32,
+									0 => 0i32,
+									_ => 1i32,
+								};
+								let my = match dy - y {
+									my if my > 0 => 1i32,
+									0 => 0i32,
+									_ => -1i32,
+								};
+
+								let mut tx = x + mx;
+								let ty = y;
+
+								while tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												Some(ObtainKind::Ou),
+										));
+										break;
+									}
+									tx = tx + mx;
+								}
+
+								let tx = x;
+								let mut ty = y + my;
+
+								while ty >= 0 && ty < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												Some(ObtainKind::Ou),
+										));
+										break;
+									}
+
+									ty = ty - my;
+								}
+							}
+
+							mvs
+						}
+					},
+					_ => mvs,
+				}
+			},
+			Teban::Gote if kind >= KomaKind::GFu && kind < KomaKind::Blank => {
+				match kind {
+					KomaKind::GFu |
+						KomaKind::GGin |
+						KomaKind::GKin |
+						KomaKind::GOu |
+						KomaKind::GFuN |
+						KomaKind::GKyouN |
+						KomaKind::GKeiN |
+						KomaKind::GGinN => {
+
+						if (dx - x).abs() > 2 || (dy - y).abs() > 2 {
+							return mvs;
+						}
+
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+							.into_iter().filter(|m| {
+								match m {
+									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
+									&LegalMove::To(_,KomaDstToPosition(tx,ty,_),_) => {
+										let tx = 9 - tx as i32;
+
+										if (dx - tx).abs() > 1 || (dy - ty as i32).abs() > 1 {
+											return false;
+										} else {
+											return self.win_only_moves_with_point_and_kind(t, tx as u32, ty as u32, kind).len() > 0;
+										}
+									},
+									_ => false,
+								}
+							}).collect::<Vec<LegalMove>>()
+					},
+					KomaKind::GKyou => {
+						if dy < y || dx != x {
+							return mvs;
+						}
+
+						let mut ty:i32 = y;
+
+						while ty < dy {
+							ty = ty + 1;
+
+							if kinds[ty as usize][x as usize] != KomaKind::Blank {
+								return if kinds[ty as usize][x as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t, x as u32, ty as u32, kind).len() > 0{
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][x as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - x as u32,ty as u32, false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - x as u32,ty as u32, true),
+												obtained,
+										));
+									};
+									mvs
+								} else {
+									mvs
+								}
+							}
+						}
+
+						for ty in y..(dy+1) {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - x as u32,ty as u32, false),
+									Some(ObtainKind::Ou),
+							));
+
+							if ty >= 6 {
+								mvs.push(
+								LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - x as u32,ty as u32, true),
+										Some(ObtainKind::Ou),
+								));
+							}
+						}
+
+						mvs
+					},
+					KomaKind::GKei => {
+						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+							.into_iter().filter(|m| {
+								match m {
+									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
+									&LegalMove::To(_,KomaDstToPosition(tx,ty,_),_) => {
+										return self.win_only_moves_with_point_and_kind(t, tx, ty, kind).len() > 0;
+									},
+									_ => false,
+								}
+							}).collect::<Vec<LegalMove>>()
+					},
+					KomaKind::GKaku => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dx - x < 0 && dx - x == dy - y {
+							while tx > dx && ty > dy {
+								tx = tx - 1;
+								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx - x == dy - y {
+							while tx > dx && ty > dy {
+								tx = tx + 1;
+								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx - x < 0 && -(dx - x) == dy - y {
+							while tx > dx && ty < dy {
+								tx = tx - 1;
+								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if -(dx - x) == dy - y {
+							while tx > dx && ty < dy {
+								tx = tx + 1;
+								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						}
+
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dx - x < 0 && dx - x == dy - y {
+							while tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+								tx = tx + 1;
+								ty = ty + 1;
+							}
+
+							if tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+								tx = tx + 1;
+								ty = ty + 1;
+							}
+
+							while tx >= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx - 1;
+								ty = ty - 1;
+							}
+						} else if dx - x == dy - y {
+							while tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+								tx = tx - 1;
+								ty = ty - 1;
+							}
+
+							if tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+								tx = tx - 1;
+								ty = ty - 1;
+							}
+
+							while tx <= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx + 1;
+								ty = ty + 1;
+							}
+						} else if dx - x < 0 && -(dx - x) == dy - y {
+							while tx < 8 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+								tx = tx + 1;
+								ty = ty - 1;
+							}
+
+							if tx < 8 && ty > 0 &&
+								kinds[(ty - 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+								tx = tx + 1;
+								ty = ty - 1;
+							}
+
+							while tx >= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx - 1;
+								ty = ty + 1;
+							}
+						} else if -(dx - x) == dy - y {
+							while tx > 0 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+								tx = tx - 1;
+								ty = ty + 1;
+							}
+
+							if tx > 0 && ty < 8 &&
+								kinds[(ty + 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+								tx = tx - 1;
+								ty = ty + 1;
+							}
+
+							while tx <= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx + 1;
+								ty = ty - 1;
+							}
+						} else {
+							let mx = match dx - x {
+								mx if mx > 0 => -1i32,
+								mx if mx == 0 => 0i32,
+								_ => 1i32,
+							};
+							let my = match dy - y {
+								my if my > 0 => 1i32,
+								my if my == 0 => 0i32,
+								_ => -1i32,
+							};
+
+							let mut tx = x + mx;
+							let mut ty = y + my;
+
+							while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+								tx = tx + mx;
+								ty = ty + my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+
+							let mut tx = x + mx;
+							let mut ty = y - my;
+
+							while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+
+								tx = tx + mx;
+								ty = ty - my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+
+							let mut tx = x - mx;
+							let mut ty = y + my;
+
+							while ty + my >= 0 && ty + my < 9 && tx - mx >= 0 && tx - mx < 9 &&
+								kinds[(ty + my) as usize][(tx - mx) as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+
+								tx = tx - mx;
+								ty = ty + my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+						}
+
+						mvs
+					},
+					KomaKind::GHisha => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dy - y < 0 && dx == x {
+							while ty < dy {
+								ty = ty - 1;
+
+								if ty == 0 || kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx == x {
+							while ty > dy {
+								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dx - x < 0 && dy == y {
+							while tx > dx {
+								tx = tx - 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						} else if dy == y {
+							while tx < dx {
+								tx = tx + 1;
+
+								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+									return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										if ty >= 6 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,true),
+													obtained,
+											));
+										}
+										mvs
+									} else {
+										mvs
+									};
+								}
+							}
+						}
+
+
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if dy - y < 0 && dx == x {
+							while tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][tx as usize] == KomaKind::Blank {
+								ty = ty + 1;
+							}
+
+							if tx < 8 && ty < 8 &&
+								kinds[(ty + 1) as usize][tx as usize] < KomaKind::GFu {
+								ty = ty + 1;
+							}
+
+							while tx >= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								ty = ty - 1;
+							}
+						} else if dx == x {
+							while tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][tx as usize] == KomaKind::Blank {
+								ty = ty - 1;
+							}
+
+							if tx > 0 && ty > 0 &&
+								kinds[(ty - 1) as usize][tx as usize] < KomaKind::GFu {
+								ty = ty - 1;
+							}
+
+							while tx <= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								ty = ty + 1;
+							}
+						} else if dx - x < 0 && dy == y {
+							while tx < 8 && ty > 0 &&
+								kinds[ty as usize][(tx + 1) as usize] == KomaKind::Blank{
+								tx = tx + 1;
+							}
+
+							if tx < 8 && ty > 0 &&
+								kinds[ty as usize][(tx + 1) as usize] < KomaKind::GFu {
+								tx = tx + 1;
+							}
+
+							while tx >= dx && ty <= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx - 1;
+							}
+						} else if dy == y {
+							while tx > 0 && ty < 8 &&
+								kinds[ty as usize][(tx - 1) as usize] == KomaKind::Blank{
+								tx = tx - 1;
+							}
+
+							if tx > 0 && ty < 8 &&
+								kinds[ty as usize][(tx - 1) as usize] < KomaKind::GFu {
+								tx = tx - 1;
+							}
+
+							while tx <= dx && ty >= dy {
+								let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+									Ok(obtained) => Some(obtained),
+									_ => None,
+								};
+
+								mvs.push(
+									LegalMove::To(
+										KomaSrcPosition(9 - x as u32,y as u32),
+										KomaDstToPosition(9 - tx as u32,ty as u32,false),
+										obtained,
+								));
+
+								if ty >= 6 {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,true),
+											obtained,
+									));
+								}
+								tx = tx + 1;
+							}
+						} else {
+							let mx = match dx - x {
+								mx if mx > 0 => -1i32,
+								mx if mx == 0 => 0i32,
+								_ => 1i32,
+							};
+							let my = match dy - y {
+								my if my > 0 => 1i32,
+								my if my == 0=> 0i32,
+								_ => -1i32,
+							};
+
+							let mut tx = x + mx;
+							let ty = y;
+
+							while ty >= 0 && ty < 9 &&
+								kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+								tx = tx + mx;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+
+							let tx = x;
+							let mut ty = y + my;
+
+							while tx >= 0 && tx < 9 &&
+								kinds[ty as usize][(tx + mx) as usize] == KomaKind::Blank {
+
+								if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+									break;
+								}
+								ty = ty + my;
+							}
+
+							if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+								kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+								kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+								if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+									self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+
+									if ty  >= 6 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,true),
+												obtained,
+										));
+									}
+								}
+							}
+						}
+
+						mvs
+					},
+					KomaKind::GKakuN => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - dx as u32,dy as u32,false),
+									Some(ObtainKind::Ou),
+							));
+
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dx - x < 0 && dx - x == dy - y {
+								while tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								if tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								while tx > dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+							} else if dx - x == dy - y {
+								while tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] != KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								if tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								while tx < dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && -(dx - x) == dy - y {
+								while tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] != KomaKind::Blank{
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								if tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								while tx > dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+							} else if -(dx - x) == dy - y {
+								while tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] != KomaKind::Blank{
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								if tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								while tx < dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								let mx = match dx - x {
+									mx if mx > 0 => -1i32,
+									mx if mx == 0 => 0i32,
+									_ => 1i32,
+								};
+								let my = match dy - y {
+									my if my > 0 => 1i32,
+									my if my == 0 => 0i32,
+									_ => -1i32,
+								};
+
+								let mut dsts:Vec<(i32,i32)> = Vec::new();
+
+								for (tx,ty) in if x == dx {
+									dsts.extend_from_slice(&[(x+1,y),(x-1,y),(x+1,y+my),(x-1,y+my)]);
+									dsts
+								} else if y == dx {
+									dsts.extend_from_slice(&[(x,y+1),(x,y-1),(x+mx,y+1),(x+mx,y-1)]);
+									dsts
+								} else {
+									dsts.extend_from_slice(&[(x,y+my),(x+mx,y)]);
+									dsts
+								} {
+									if kinds[ty as usize][tx as usize] == KomaKind::Blank ||
+										kinds[ty as usize][tx as usize] < KomaKind::GFu {
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+							}
+						} else {
+							if dx - x < 0 && dx - x == dy - y {
+								while tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								if tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								while tx > dx && ty > dy {
+									tx = tx - 1;
+									ty = ty - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx - x == dy - y {
+								while tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								if tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								while tx > dx {
+									tx = tx + 1;
+									ty = ty + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx - x < 0 && -(dx - x) == dy - y {
+								while tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								if tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								while tx > dx {
+									tx = tx - 1;
+									ty = ty + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if -(dx - x) == dy - y {
+								while tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								if tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								while tx > dx {
+									tx = tx + 1;
+									ty = ty - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							}
+
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dx - x < 0 && dx - x == dy - y {
+								while tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								if tx < 8 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+
+								while tx >= dx && ty >= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+							} else if dx - x == dy - y {
+								while tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								if tx > 0 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty - 1;
+								}
+
+								while tx <= dx && ty <= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && -(dx - x) == dy - y {
+								while tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								if tx < 8 && ty > 0 &&
+									kinds[(ty - 1) as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+
+								while tx >= dx && ty <= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+							} else if -(dx - x) == dy - y {
+								while tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								if tx > 0 && ty < 8 &&
+									kinds[(ty + 1) as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+									ty = ty + 1;
+								}
+
+								while tx <= dx && ty >= dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+									ty = ty - 1;
+								}
+							} else {
+								let mx = match dx - x {
+									mx if mx > 0 => -1i32,
+									mx if mx == 0 => 0i32,
+									_ => 1i32,
+								};
+								let my = match dy - y {
+									my if my > 0 => 1i32,
+									my if my == 0 => 0i32,
+									_ => -1i32,
+								};
+
+								let mut tx = x + mx;
+								let mut ty = y + my;
+
+								while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										break;
+									}
+									tx = tx + mx;
+									ty = ty + my;
+								}
+
+								if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+									kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+									if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+
+								let mut tx = x + mx;
+								let mut ty = y - my;
+
+								while ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] == KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+
+										break;
+									}
+
+									tx = tx + mx;
+									ty = ty - my;
+								}
+
+								if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+									kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+									if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+
+								let mut tx = x - mx;
+								let mut ty = y + my;
+
+								while ty + my >= 0 && ty + my < 9 && tx - mx >= 0 && tx - mx < 9 &&
+									kinds[(ty + my) as usize][(tx - mx) as usize] == KomaKind::Blank {
+
+									if self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+										break;
+									}
+
+									tx = tx - mx;
+									ty = ty + my;
+								}
+
+								if ty >= 0 && ty < 9 && tx >= 0 && tx < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank &&
+									kinds[ty as usize][tx as usize] < KomaKind::GFu {
+
+									if kinds[ty as usize][tx as usize] >= KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+							}
+						}
+						mvs
+					},
+					KomaKind::GHishaN => {
+						let mut tx:i32 = x;
+						let mut ty:i32 = y;
+
+						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
+							mvs.push(
+								LegalMove::To(
+									KomaSrcPosition(9 - x as u32,y as u32),
+									KomaDstToPosition(9 - dx as u32,dy as u32,false),
+									Some(ObtainKind::Ou),
+							));
+
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dy - y < 0 && dx == x {
+								while ty < 8 &&
+									kinds[(ty - 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty + 1;
+								}
+
+								if ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] < KomaKind::GFu {
+									ty = ty + 1;
+								}
+
+								while tx > dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									ty = ty - 1;
+								}
+							} else if dx == x {
+								while ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] != KomaKind::Blank {
+									ty = ty - 1;
+								}
+
+								if ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] < KomaKind::GFu {
+									ty = ty - 1;
+								}
+
+								while tx < dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && dy == y {
+								while tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] != KomaKind::Blank{
+									tx = tx + 1;
+								}
+
+								if tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+								}
+
+								while tx > dx && ty < dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx - 1;
+								}
+							} else if dy == y {
+								while tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] != KomaKind::Blank{
+									tx = tx - 1;
+								}
+
+								if tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+								}
+
+								while tx < dx && ty > dy {
+									let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+										Ok(obtained) => Some(obtained),
+										_ => None,
+									};
+
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											obtained,
+									));
+									tx = tx + 1;
+								}
+							} else {
+								let mx = match dx - x {
+									mx if mx > 0 => -1i32,
+									mx if mx == 0 => 0i32,
+									_ => 1i32,
+								};
+								let my = match dy - y {
+									my if my > 0 => 1i32,
+									my if my == 0 => 0i32,
+									_ => -1i32,
+								};
+
+								let mut dsts:Vec<(i32,i32)> = Vec::new();
+
+								for (tx,ty) in if x == dx {
+									dsts.extend_from_slice(&[(x+1,y),(x-1,y),(x+1,y+my),(x-1,y+my)]);
+									dsts
+								} else if y == dx {
+									dsts.extend_from_slice(&[(x,y+1),(x,y-1),(x+mx,y+1),(x+mx,y-1)]);
+									dsts
+								} else {
+									dsts.extend_from_slice(&[(x,y+my),(x+mx,y)]);
+									dsts
+								} {
+									if kinds[ty as usize][tx as usize] < KomaKind::GFu {
+										let obtained = match ObtainKind::try_from(kinds[ty as usize][tx as usize]) {
+											Ok(obtained) => Some(obtained),
+											_ => None,
+										};
+
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												obtained,
+										));
+									}
+								}
+							}
+							mvs
+						} else {
+							if dy - y < 0 && dx == x {
+								while ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty + 1;
+								}
+
+								if ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] < KomaKind::GFu {
+									ty = ty + 1;
+								}
+
+								while tx > dx {
+									ty = ty - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx == x {
+								while ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty - 1;
+								}
+
+								if ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] < KomaKind::GFu {
+									ty = ty - 1;
+								}
+
+								while tx > dx {
+									ty = ty + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dx - x < 0 && dy == y {
+								while tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] == KomaKind::Blank {
+									tx = tx + 1;
+								}
+
+								if tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+								}
+
+								while tx > dx {
+									tx = tx - 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							} else if dy == y {
+								while tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] == KomaKind::Blank {
+									tx = tx - 1;
+								}
+
+								if ty > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+								}
+
+								while tx > dx {
+									tx = tx + 1;
+
+									if kinds[ty as usize][tx as usize] != KomaKind::Blank {
+										return if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+											self.win_only_moves_with_point_and_kind(t,tx as u32,ty as u32,kind).len() > 0 {
+											mvs.push(
+												LegalMove::To(
+													KomaSrcPosition(9 - x as u32,y as u32),
+													KomaDstToPosition(9 - tx as u32,ty as u32,false),
+													Some(ObtainKind::Ou),
+											));
+											mvs
+										} else {
+											mvs
+										};
+									}
+								}
+							}
+
+							let mut tx:i32 = x;
+							let mut ty:i32 = y;
+
+							if dy - y < 0 && dx == x {
+								while ty < 8 &&
+									kinds[(ty + 1) as usize][tx as usize] == KomaKind::Blank {
+									ty = ty + 1;
+								}
+
+								if ty < 8 && kinds[(ty + 1) as usize][tx as usize] < KomaKind::GFu {
+									ty = ty + 1;
+								}
+
+								while ty >= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									ty = ty - 1;
+								}
+							} else if dx == x {
+								while ty > 0 &&
+									kinds[(ty - 1) as usize][tx as usize] != KomaKind::Blank {
+									ty = ty - 1;
+								}
+
+								if ty > 0 && kinds[(ty - 1) as usize][tx as usize] < KomaKind::GFu {
+									ty = ty - 1;
+								}
+
+								while ty <= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									ty = ty + 1;
+								}
+							} else if dx - x < 0 && dy == y {
+								while tx < 8 &&
+									kinds[ty as usize][(tx + 1) as usize] != KomaKind::Blank{
+									tx = tx + 1;
+								}
+
+								if tx < 8 && kinds[ty as usize][(tx + 1) as usize] < KomaKind::GFu {
+									tx = tx + 1;
+								}
+
+								while tx >= dx && ty <= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									tx = tx - 1;
+								}
+							} else if dy == y {
+								while tx > 0 &&
+									kinds[ty as usize][(tx - 1) as usize] != KomaKind::Blank{
+									tx = tx - 1;
+								}
+
+								if tx > 0 && kinds[ty as usize][(tx - 1) as usize] < KomaKind::GFu {
+									tx = tx - 1;
+								}
+
+								while tx <= dx && ty >= dy {
+									mvs.push(
+										LegalMove::To(
+											KomaSrcPosition(9 - x as u32,y as u32),
+											KomaDstToPosition(9 - tx as u32,ty as u32,false),
+											Some(ObtainKind::Ou),
+									));
+									tx = tx + 1;
+								}
+							} else {
+								let mx = match dx - x {
+									mx if mx > 0 => -1i32,
+									0 => 0i32,
+									_ => 1i32,
+								};
+								let my = match dy - y {
+									my if my > 0 => 1i32,
+									0 => 0i32,
+									_ => -1i32,
+								};
+
+								let mut tx = x + mx;
+								let ty = y;
+
+								while tx >= 0 && tx < 9 &&
+									kinds[ty as usize][(tx + mx) as usize] != KomaKind::Blank {
+
+									if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												Some(ObtainKind::Ou),
+										));
+										break;
+									}
+									tx = tx + mx;
+								}
+
+								let tx = x;
+								let mut ty = y - my;
+
+								while ty >= 0 && ty < 9 &&
+									kinds[ty as usize][tx as usize] != KomaKind::Blank {
+
+									if kinds[ty as usize][tx as usize] < KomaKind::GFu &&
+										self.win_only_moves_with_point_and_kind(t,x as u32,y as u32,kind).len() > 0 {
+										mvs.push(
+											LegalMove::To(
+												KomaSrcPosition(9 - x as u32,y as u32),
+												KomaDstToPosition(9 - tx as u32,ty as u32,false),
+												Some(ObtainKind::Ou),
+										));
+										break;
+									}
+
+									ty = ty - my;
+								}
+							}
+
+							mvs
+						}
+					},
+					_ => mvs,
+				}
+			},
+			_ => mvs,
+		}
 	}
 
 	pub fn apply_move_none_check(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
