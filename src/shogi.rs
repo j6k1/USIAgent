@@ -1418,7 +1418,7 @@ impl Banmen {
 	}
 
 	pub fn apply_move_none_check(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
-		-> (Banmen,MochigomaCollections,Option<ObtainKind>) {
+		-> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
 
 		let mut kinds = match *self {
 			Banmen(ref kinds) => kinds.clone(),
@@ -1455,9 +1455,7 @@ impl Banmen {
 						(mc.clone(),None)
 					},
 					dst => {
-						let ob = ObtainKind::try_from(dst);
-
-						let obtained = match ob {
+						let obtained = match ObtainKind::try_from(dst) {
 							Ok(obtained) => {
 								match obtained {
 									ObtainKind::Fu => Some(MochigomaKind::Fu),
@@ -1470,11 +1468,6 @@ impl Banmen {
 									_ => None,
 								}
 							},
-							Err(_) => None,
-						};
-
-						let ob = match ob {
-							Ok(ob) => Some(ob),
 							Err(_) => None,
 						};
 
@@ -1514,7 +1507,7 @@ impl Banmen {
 
 												ms.insert(obtained,count);
 
-												(MochigomaCollections::Pair(ms,mg.clone()),ob)
+												(MochigomaCollections::Pair(ms,mg.clone()),Some(obtained))
 											},
 											Teban::Gote => {
 												let mut mg = mg.clone();
@@ -1526,7 +1519,7 @@ impl Banmen {
 
 												mg.insert(obtained,count);
 
-												(MochigomaCollections::Pair(ms.clone(),mg),ob)
+												(MochigomaCollections::Pair(ms.clone(),mg),Some(obtained))
 											}
 										}
 									},
@@ -1536,12 +1529,12 @@ impl Banmen {
 												let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 
 												ms.insert(obtained,1);
-												(MochigomaCollections::Pair(ms,HashMap::new()),ob)
+												(MochigomaCollections::Pair(ms,HashMap::new()),Some(obtained))
 											},
 											Teban::Gote => {
 												let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
 												mg.insert(obtained,1);
-												(MochigomaCollections::Pair(HashMap::new(),mg),ob)
+												(MochigomaCollections::Pair(HashMap::new(),mg),Some(obtained))
 											}
 										}
 									}
@@ -1564,7 +1557,7 @@ impl Banmen {
 	}
 
 	pub fn apply_valid_move(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
-		-> Result<(Banmen,MochigomaCollections,Option<ObtainKind>),ShogiError> {
+		-> Result<(Banmen,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
 		match m {
 			&Move::To(s,d) => {
