@@ -1384,22 +1384,6 @@ impl Banmen {
 		mvs
 	}
 
-	pub fn respond_oute_only_moves_all(&self,t:&Teban,mc:&MochigomaCollections)
-		-> Vec<LegalMove> {
-		self.legal_moves_all(t, mc)
-			.into_iter().filter(|m| {
-					match m {
-						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
-						&LegalMove::To(ref s,ref d,_) => {
-							match self.apply_move_none_check(t,mc,&Move::To(*s,*d)) {
-								(ref b,_) => b.win_only_moves(&t.opposite()).len() == 0
-							}
-						},
-						_ => false,
-					}
-			}).collect::<Vec<LegalMove>>()
-	}
-
 	pub fn oute_only_moves_all(&self,t:&Teban,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
@@ -1415,6 +1399,22 @@ impl Banmen {
 		}
 		mvs.append(&mut mc.oute_only_moves(t, self));
 		mvs
+	}
+
+	pub fn respond_oute_only_moves_all(&self,t:&Teban,mc:&MochigomaCollections)
+		-> Vec<LegalMove> {
+		self.legal_moves_all(t, mc)
+			.into_iter().filter(|m| {
+					match m {
+						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+						&LegalMove::To(ref s,ref d,_) => {
+							match self.apply_move_none_check(t,mc,&Move::To(*s,*d)) {
+								(ref b,_) => b.win_only_moves(&t.opposite()).len() == 0
+							}
+						},
+						_ => false,
+					}
+			}).collect::<Vec<LegalMove>>()
 	}
 
 	pub fn apply_move_none_check(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
