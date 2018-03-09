@@ -1360,7 +1360,7 @@ impl Banmen {
 						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
 						&LegalMove::To(ref s,ref d,_) => {
 							match self.apply_move_none_check(t,mc,&Move::To(*s,*d)) {
-								(ref b,_) => b.win_only_moves(t).len() > 0
+								(ref b,_,_) => b.win_only_moves(t).len() > 0
 							}
 						},
 						_ => false,
@@ -1409,7 +1409,7 @@ impl Banmen {
 						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
 						&LegalMove::To(ref s,ref d,_) => {
 							match self.apply_move_none_check(t,mc,&Move::To(*s,*d)) {
-								(ref b,_) => b.win_only_moves(&t.opposite()).len() == 0
+								(ref b,_,_) => b.win_only_moves(&t.opposite()).len() == 0
 							}
 						},
 						_ => false,
@@ -1418,13 +1418,13 @@ impl Banmen {
 	}
 
 	pub fn apply_move_none_check(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
-		-> (Banmen,MochigomaCollections) {
+		-> (Banmen,MochigomaCollections,Option<ObtainKind>) {
 
 		let mut kinds = match *self {
 			Banmen(ref kinds) => kinds.clone(),
 		};
 
-		let nmc = match m {
+		let (nmc,obtained) = match m {
 			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
 				let k = kinds[sy as usize][(9 - sx) as usize];
 
@@ -1452,10 +1452,12 @@ impl Banmen {
 							},
 							false => k,
 						};
-						mc.clone()
+						(mc.clone(),None)
 					},
 					dst => {
-						let obtained = match ObtainKind::try_from(dst) {
+						let ob = ObtainKind::try_from(dst);
+
+						let obtained = match ob {
 							Ok(obtained) => {
 								match obtained {
 									ObtainKind::Fu => Some(MochigomaKind::Fu),
@@ -1468,6 +1470,11 @@ impl Banmen {
 									_ => None,
 								}
 							},
+							Err(_) => None,
+						};
+
+						let ob = match ob {
+							Ok(ob) => Some(ob),
 							Err(_) => None,
 						};
 
@@ -1507,7 +1514,7 @@ impl Banmen {
 
 												ms.insert(obtained,count);
 
-												MochigomaCollections::Pair(ms,mg.clone())
+												(MochigomaCollections::Pair(ms,mg.clone()),ob)
 											},
 											Teban::Gote => {
 												let mut mg = mg.clone();
@@ -1519,7 +1526,7 @@ impl Banmen {
 
 												mg.insert(obtained,count);
 
-												MochigomaCollections::Pair(ms.clone(),mg)
+												(MochigomaCollections::Pair(ms.clone(),mg),ob)
 											}
 										}
 									},
@@ -1529,19 +1536,19 @@ impl Banmen {
 												let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 
 												ms.insert(obtained,1);
-												MochigomaCollections::Pair(ms,HashMap::new())
+												(MochigomaCollections::Pair(ms,HashMap::new()),ob)
 											},
 											Teban::Gote => {
 												let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
 												mg.insert(obtained,1);
-												MochigomaCollections::Pair(HashMap::new(),mg)
+												(MochigomaCollections::Pair(HashMap::new(),mg),ob)
 											}
 										}
 									}
 								}
 							},
 							None => {
-								mc.clone()
+								(mc.clone(),None)
 							}
 						}
 					}
@@ -1549,15 +1556,15 @@ impl Banmen {
 			},
 			&Move::Put(k,KomaDstPutPosition(dx,dy)) => {
 				kinds[dy as usize][(9 - dx) as usize] = KomaKind::from((*t,k));
-				mc.clone()
+				(mc.clone(),None)
 			}
 		};
 
-		(Banmen(kinds),nmc)
+		(Banmen(kinds),nmc,obtained)
 	}
 
 	pub fn apply_valid_move(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
-		-> Result<(Banmen,MochigomaCollections),ShogiError> {
+		-> Result<(Banmen,MochigomaCollections,Option<ObtainKind>),ShogiError> {
 
 		match m {
 			&Move::To(s,d) => {
