@@ -366,7 +366,7 @@ impl<T,E> UsiAgent<T,E>
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										match player.set_position(t, b, ms, mg, n, v) {
+										match player.set_position(t, Banmen(b), ms, mg, n, v) {
 											Ok(_) => (),
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
