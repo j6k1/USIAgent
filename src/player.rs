@@ -32,11 +32,11 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn gameover(&mut self,s:&GameEndState,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>) -> Result<(),E>;
 	fn on_quit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn quit(&mut self) -> Result<(),E>;
-	fn handle_events<L>(&mut self,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+	fn handle_events<'a,L>(&mut self,event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,E>
 						where L: Logger, E: Error + fmt::Debug, E: From<E>,
 								EventHandlerError<UserEventKind,E>: From<E> {
-		Ok(match self.dispatch_events(&*event_queue,&on_error_handler) {
+		Ok(match self.dispatch_events(event_queue,&on_error_handler) {
 			Ok(_)=> true,
 			Err(ref e) => {
 				on_error_handler.lock().map(|h| h.call(e)).is_err();
