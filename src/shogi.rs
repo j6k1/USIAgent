@@ -1457,14 +1457,8 @@ impl Banmen {
 					dst => {
 						let obtained = match ObtainKind::try_from(dst) {
 							Ok(obtained) => {
-								match obtained {
-									ObtainKind::Fu => Some(MochigomaKind::Fu),
-									ObtainKind::Kyou => Some(MochigomaKind::Kyou),
-									ObtainKind::Kei => Some(MochigomaKind::Kei),
-									ObtainKind::Gin => Some(MochigomaKind::Gin),
-									ObtainKind::Kin => Some(MochigomaKind::Kin),
-									ObtainKind::Kaku => Some(MochigomaKind::Kaku),
-									ObtainKind::Hisha => Some(MochigomaKind::Hisha),
+								match MochigomaKind::try_from(obtained) {
+									Ok(obtained) => Some(obtained),
 									_ => None,
 								}
 							},
@@ -2030,6 +2024,22 @@ pub enum MochigomaKind {
 	Kin,
 	Kaku,
 	Hisha,
+}
+impl TryFrom<ObtainKind,String> for MochigomaKind {
+	fn try_from(o:ObtainKind) -> Result<MochigomaKind,TypeConvertError<String>> {
+		Ok(match o {
+			ObtainKind::Fu => MochigomaKind::Fu,
+			ObtainKind::Kyou => MochigomaKind::Kyou,
+			ObtainKind::Kei => MochigomaKind::Kei,
+			ObtainKind::Gin => MochigomaKind::Gin,
+			ObtainKind::Kin => MochigomaKind::Kin,
+			ObtainKind::Kaku => MochigomaKind::Kaku,
+			ObtainKind::Hisha => MochigomaKind::Hisha,
+			ObtainKind::Ou => {
+				return Err(TypeConvertError::LogicError(String::from("Can not  to convert Ou to MochigomaKind.")));
+			}
+		})
+	}
 }
 impl MaxIndex for MochigomaKind {
 	fn max_index() -> usize {
