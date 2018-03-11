@@ -92,7 +92,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					match chars.next() {
 						Some(c) => match c {
 							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-								let x = c as u32;
+								let x = c as u32 - '0' as u32;
 
 								match chars.next() {
 									Some(c) => {
@@ -148,7 +148,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					}
 				},
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-					let x = (c as u32 - '1' as u32) + 1;
+					let x = c as u32 - '0' as u32;
 
 					let src = match chars.next() {
 						Some(c) => {
@@ -180,7 +180,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					match chars.next() {
 						Some(c) => match c {
 							'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-								let x = c as u32;
+								let x = c as u32 - '0' as u32;
 
 								match chars.next() {
 									Some(c) => {
