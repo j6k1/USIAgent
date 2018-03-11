@@ -1556,7 +1556,41 @@ impl Banmen {
 			},
 			&Move::Put(k,KomaDstPutPosition(dx,dy)) => {
 				kinds[(dy - 1) as usize][(9 - dx) as usize] = KomaKind::from((*t,k));
-				(mc.clone(),None)
+
+				let mut mc = mc.clone();
+
+				match t {
+					&Teban::Sente => {
+						match mc {
+							MochigomaCollections::Pair(ref mut mc,_) => {
+								let c =match mc.get(&k) {
+									Some(c) => {
+										c-1
+									},
+									None => 0,
+								};
+								mc.insert(k,c);
+							},
+							_ => (),
+						}
+					},
+					&Teban::Gote => {
+						match mc {
+							MochigomaCollections::Pair(_,ref mut mc) => {
+								let c = match mc.get(&k) {
+									Some(c) => {
+										c-1
+									},
+									None => 0
+								};
+								mc.insert(k,c);
+							},
+							_ => (),
+						}
+					}
+				};
+
+				(mc,None)
 			}
 		};
 
