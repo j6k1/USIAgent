@@ -306,6 +306,13 @@ impl TryFrom<String,String> for KomaKind {
 	}
 }
 pub struct Banmen(pub [[KomaKind; 9]; 9]);
+impl Clone for Banmen {
+	fn clone(&self) -> Banmen {
+		match self {
+			&Banmen(ref kinds) => Banmen(kinds.clone())
+		}
+	}
+}
 pub enum NextMove {
 	Once(i32,i32),
 	Repeat(i32,i32),
