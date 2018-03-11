@@ -809,7 +809,8 @@ impl<T,E> UsiAgent<T,E>
 							thread::spawn(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										match player.gameover(&s,user_event_queue_inner.clone()) {
+										match player.gameover(&s,user_event_queue_inner.clone(),
+																		&on_error_handler_inner) {
 											Ok(_) => (),
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
