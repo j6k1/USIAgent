@@ -168,7 +168,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 									)));
 								}
 							};
-							KomaSrcPosition(x,y)
+							KomaSrcPosition(9 - x,y)
 						},
 						None => {
 							return Err(TypeConvertError::SyntaxError(
