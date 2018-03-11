@@ -436,7 +436,7 @@ impl Banmen {
 							if x + mx >= 0 && x + mx < 9 && y + my >= 0 && y + my < 9 {
 								let dx = x + mx;
 								let dy = y + my;
-								match kinds[my as usize][mx as usize] {
+								match kinds[dy as usize][dx as usize] {
 									KomaKind::Blank => {
 										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -484,7 +484,7 @@ impl Banmen {
 								dx = dx + mx;
 								dy = dy + my;
 
-								match kinds[my as usize][mx as usize] {
+								match kinds[dy as usize][dx as usize] {
 									KomaKind::Blank => {
 										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -538,7 +538,7 @@ impl Banmen {
 							if x + mx >= 0 && x + mx < 9 && y + my >= 0 && y + my < 9 {
 								let dx = x + mx;
 								let dy = y + my;
-								match kinds[my as usize][mx as usize] {
+								match kinds[dy as usize][dx as usize] {
 									KomaKind::Blank => {
 										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -588,7 +588,7 @@ impl Banmen {
 								dx = dx + mx;
 								dy = dy + my;
 
-								match kinds[my as usize][mx as usize] {
+								match kinds[dy as usize][dx as usize] {
 									KomaKind::Blank => {
 										mvs.push(LegalMove::To(
 												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
