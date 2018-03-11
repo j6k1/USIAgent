@@ -278,6 +278,10 @@ impl PositionParser {
 	fn parse_startpos<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
 		let mut r:Vec<Move> = Vec::new();
 
+		if params.len() == 0 {
+			return Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r));
+		}
+
 		match params[0] {
 			"moves" if params.len() >= 2 => {
 				for m in &params[1..] {
