@@ -500,6 +500,9 @@ impl Banmen {
 														9 - dx as u32, dy as u32 + 1, true),None));
 										}
 									},
+									dst if dst < KomaKind::GFu => {
+										break;
+									},
 									dst if dst >= KomaKind::GFu => {
 										let obtained = match ObtainKind::try_from(dst) {
 											Ok(obtained) => Some(obtained),
@@ -603,6 +606,9 @@ impl Banmen {
 													KomaDstToPosition(
 														9 - dx as u32, dy as u32 + 1, true),None));
 										}
+									},
+									dst if dst >= KomaKind::GFu => {
+										break;
 									},
 									dst if dst < KomaKind::GFu => {
 										let obtained = match ObtainKind::try_from(dst) {
