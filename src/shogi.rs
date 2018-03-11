@@ -507,7 +507,7 @@ impl Banmen {
 										};
 
 										mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - (x + 1) as u32, (y + 1) as u32),
+												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::SOu &&
