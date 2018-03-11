@@ -648,21 +648,21 @@ impl Banmen {
 	pub fn legal_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
-			KomaSrcPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y)
+			KomaSrcPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y - 1)
 		}
 	}
 
 	pub fn legal_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstToPosition(x,y,_) => self.legal_moves_with_point(t, 9 - x, y)
+			KomaDstToPosition(x,y,_) => self.legal_moves_with_point(t, 9 - x, y - 1)
 		}
 	}
 
 	pub fn legal_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstPutPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y)
+			KomaDstPutPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y - 1)
 		}
 	}
 
@@ -763,16 +763,16 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - x as u32,ty as u32, false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - x as u32, ty as u32 + 1, false),
 								Some(ObtainKind::Ou),
 						));
 
 						if ty < 3 {
 							mvs.push(
 								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32),
-									KomaDstToPosition(9 - x as u32,ty as u32, true),
+									KomaSrcPosition(9 - x as u32,y as u32 + 1),
+									KomaDstToPosition(9 - x as u32,ty as u32 + 1, true),
 									Some(ObtainKind::Ou),
 							));
 						}
@@ -833,16 +833,16 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
 						if ty < 3 {
 							mvs.push(
 								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32),
-									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									KomaSrcPosition(9 - x as u32,y as u32 + 1),
+									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
 									Some(ObtainKind::Ou),
 							));
 						}
@@ -890,16 +890,16 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
 						if ty < 3 {
 							mvs.push(
 								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32),
-									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									KomaSrcPosition(9 - x as u32,y as u32 + 1),
+									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
 									Some(ObtainKind::Ou),
 							));
 						}
@@ -954,8 +954,8 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
@@ -1006,8 +1006,8 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
@@ -1056,16 +1056,16 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - x as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - x as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
 						if ty >= 6 {
 							mvs.push(
 								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32),
-									KomaDstToPosition(9 - x as u32,ty as u32,true),
+									KomaSrcPosition(9 - x as u32,y as u32 + 1),
+									KomaDstToPosition(9 - x as u32,ty as u32 + 1,true),
 									Some(ObtainKind::Ou),
 							));
 						}
@@ -1126,16 +1126,16 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
 						if ty >= 6 {
 							mvs.push(
 								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32),
-									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									KomaSrcPosition(9 - x as u32,y as u32 + 1),
+									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
 									Some(ObtainKind::Ou),
 							));
 						}
@@ -1183,16 +1183,16 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
 						if ty >= 6 {
 							mvs.push(
 								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32),
-									KomaDstToPosition(9 - tx as u32,ty as u32,true),
+									KomaSrcPosition(9 - x as u32,y as u32 + 1),
+									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
 									Some(ObtainKind::Ou),
 							));
 						}
@@ -1247,8 +1247,8 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
@@ -1299,8 +1299,8 @@ impl Banmen {
 
 						mvs.push(
 							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32),
-								KomaDstToPosition(9 - tx as u32,ty as u32,false),
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
 								Some(ObtainKind::Ou),
 						));
 
@@ -1325,21 +1325,21 @@ impl Banmen {
 	pub fn win_only_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
-			KomaSrcPosition(x,y) => self.win_only_moves_with_point(t, 9 - x, y)
+			KomaSrcPosition(x,y) => self.win_only_moves_with_point(t, 9 - x, y - 1)
 		}
 	}
 
 	pub fn win_only_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstToPosition(x,y,_) => self.win_only_moves_with_point(t, 9 - x, y)
+			KomaDstToPosition(x,y,_) => self.win_only_moves_with_point(t, 9 - x, y - 1)
 		}
 	}
 
 	pub fn win_only_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstPutPosition(x,y) => self.win_only_moves_with_point(t, 9 - x, y)
+			KomaDstPutPosition(x,y) => self.win_only_moves_with_point(t, 9 - x, y - 1)
 		}
 	}
 
@@ -1433,13 +1433,13 @@ impl Banmen {
 
 		let (nmc,obtained) = match m {
 			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
-				let k = kinds[sy as usize][(9 - sx) as usize];
+				let k = kinds[(sy - 1) as usize][(9 - sx) as usize];
 
-				kinds[sy as usize][(9 - sx) as usize] = KomaKind::Blank;
+				kinds[(sy - 1) as usize][(9 - sx) as usize] = KomaKind::Blank;
 
-				match kinds[dy as usize][(9 - dx) as usize] {
+				match kinds[(dy - 1) as usize][(9 - dx) as usize] {
 					KomaKind::Blank => {
-						kinds[dy as usize][(9 - dx) as usize] = match n {
+						kinds[(dy - 1) as usize][(9 - dx) as usize] = match n {
 							true => {
 								match k {
 									KomaKind::SFu => KomaKind::SFuN,
@@ -1472,7 +1472,7 @@ impl Banmen {
 							Err(_) => None,
 						};
 
-						kinds[dy as usize][(9 - dx) as usize] = match n {
+						kinds[(dy - 1) as usize][(9 - dx) as usize] = match n {
 							true => {
 								match k {
 									KomaKind::SFu => KomaKind::SFuN,
@@ -1549,7 +1549,7 @@ impl Banmen {
 				}
 			},
 			&Move::Put(k,KomaDstPutPosition(dx,dy)) => {
-				kinds[dy as usize][(9 - dx) as usize] = KomaKind::from((*t,k));
+				kinds[(dy - 1) as usize][(9 - dx) as usize] = KomaKind::from((*t,k));
 				(mc.clone(),None)
 			}
 		};
@@ -1857,7 +1857,7 @@ impl MochigomaCollections {
 			.into_iter().filter(|m| {
 				match m {
 					&LegalMove::Put(k,KomaDstPutPosition(x,y)) => {
-						b.win_only_moves_with_point_and_kind(t, x, y, KomaKind::from((*t,k))).len() > 0
+						b.win_only_moves_with_point_and_kind(t, 9 - x, y - 1, KomaKind::from((*t,k))).len() > 0
 					},
 					_ => false,
 				}
@@ -1948,21 +1948,21 @@ impl<'a> TryFrom<&'a str,String> for Banmen {
 impl Validate for KomaSrcPosition {
 	fn validate(&self) -> bool {
 		match *self {
-			KomaSrcPosition(x, y) => x < 9 && y < 9,
+			KomaSrcPosition(x, y) => x > 0 && x <= 9 && y > 0 && y <= 9,
 		}
 	}
 }
 impl Validate for KomaDstToPosition {
 	fn validate(&self) -> bool {
 		match *self {
-			KomaDstToPosition(x, y, _) => x < 9 && y < 9,
+			KomaDstToPosition(x, y, _) => x > 0 && x <= 9 && y > 0 && y <= 9,
 		}
 	}
 }
 impl Validate for KomaDstPutPosition {
 	fn validate(&self) -> bool {
 		match *self {
-			KomaDstPutPosition(x, y) => x < 9 && y < 9,
+			KomaDstPutPosition(x, y) => x > 0 && x <= 9 && y > 0 && y <= 9,
 		}
 	}
 }
