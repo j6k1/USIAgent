@@ -148,7 +148,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 					}
 				},
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-					let x = c as u32;
+					let x = (c as u32 - '1' as u32) + 1;
 
 					let src = match chars.next() {
 						Some(c) => {
@@ -168,7 +168,7 @@ impl<'a> TryFrom<&'a str,String> for Move {
 									)));
 								}
 							};
-							KomaSrcPosition(9 - x,y)
+							KomaSrcPosition(x,y)
 						},
 						None => {
 							return Err(TypeConvertError::SyntaxError(
