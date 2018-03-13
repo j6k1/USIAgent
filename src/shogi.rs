@@ -56,7 +56,7 @@ pub struct KomaDstPutPosition(pub u32,pub u32);
 impl<'a> TryFrom<&'a str,String> for Move {
 	fn try_from(s: &'a str) -> Result<Move, TypeConvertError<String>> {
 		match s {
-			s if s.len() != 4 => {
+			s if s.len() < 4 => {
 				return Err(TypeConvertError::SyntaxError(String::from(
 					"Invalid SFEN character string (number of characters of move expression is invalid)")));
 			},
@@ -443,8 +443,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < SOu &&
-											kind != KomaKind::SKin &&
-											kind != KomaKind::SGin && dy >= 6 {
+											kind != KomaKind::SKin && dy <= 2 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -463,8 +462,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < SOu &&
-											kind != KomaKind::SKin &&
-											kind != KomaKind::SGin && dy >= 6 {
+											kind != KomaKind::SKin && dy <= 2 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -491,8 +489,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::SOu &&
-											kind != KomaKind::SKin &&
-											kind != KomaKind::SGin && dy >= 6 {
+											kind != KomaKind::SKin && dy <= 2 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -514,8 +511,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::SOu &&
-											kind != KomaKind::SKin &&
-											kind != KomaKind::SGin && dy >= 6 {
+											kind != KomaKind::SKin && dy <= 2 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -548,8 +544,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin &&
-											kind != KomaKind::GGin && dy <= 2 {
+											kind != KomaKind::GKin && dy >= 6 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -568,8 +563,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin &&
-											kind != KomaKind::GGin && dy <= 2 {
+											kind != KomaKind::GKin && dy >= 6 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -598,8 +592,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin &&
-											kind != KomaKind::GGin && dy <= 2 {
+											kind != KomaKind::GKin && dy >= 6 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -621,8 +614,7 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin &&
-											kind != KomaKind::GGin && dy <= 2 {
+											kind != KomaKind::GKin && dy >= 6 {
 
 											mvs.push(LegalMove::To(
 													KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -1776,8 +1768,11 @@ impl MochigomaCollections {
 								for y in 0..kinds.len() {
 									for x in 0..kinds[y].len() {
 										for m in &MOCHIGOMA_KINDS {
-											if !ms.contains_key(&m) {
-												continue;
+											match ms.get(&m) {
+												None | Some(&0) => {
+													continue;
+												},
+												Some(_) => (),
 											}
 											match m {
 												&MochigomaKind::Fu => {
@@ -1836,8 +1831,11 @@ impl MochigomaCollections {
 								for y in 0..kinds.len() {
 									for x in 0..kinds[y].len() {
 										for m in &MOCHIGOMA_KINDS {
-											if !mg.contains_key(&m) {
-												continue;
+											match mg.get(&m) {
+												None | Some(&0) => {
+													continue;
+												},
+												Some(_) => (),
 											}
 											match m {
 												&MochigomaKind::Fu => {
