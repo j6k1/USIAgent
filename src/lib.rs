@@ -1,4 +1,5 @@
 extern crate chrono;
+extern crate queuingtask;
 
 pub mod event;
 pub mod error;
@@ -18,6 +19,8 @@ use std::sync::Arc;
 use std::marker::Send;
 use std::marker::PhantomData;
 use std::collections::HashMap;
+
+use queuingtask::ThreadQueue;
 
 use command::*;
 use event::*;
@@ -173,6 +176,7 @@ impl<T,E> UsiAgent<T,E>
 
 		let user_event_queue:EventQueue<UserEvent,UserEventKind> = EventQueue::new();
 		let user_event_queue_arc = Arc::new(Mutex::new(user_event_queue));
+		let thread_queue_arc = Arc::new(Mutex::new(ThreadQueue::new()));
 
 		let quit_ready_arc = Arc::new(Mutex::new(false));
 
@@ -252,6 +256,7 @@ impl<T,E> UsiAgent<T,E>
 				}));
 
 				let on_error_handler = on_error_handler_arc.clone();
+				let thread_queue = thread_queue_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::IsReady, Box::new(move |ctx,e| {
 					match e {
@@ -260,38 +265,50 @@ impl<T,E> UsiAgent<T,E>
 							let on_error_handler_inner = on_error_handler.clone();
 							let player = ctx.player.clone();
 
-							thread::spawn(move || {
-								match player.lock() {
-									Ok(mut player) => {
-										match player.take_ready() {
-											Ok(_) => (),
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-												return;
-											}
-										}
-										match UsiOutput::try_from(&UsiCommand::UsiReadyOk) {
-											Ok(cmd) => {
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => {
-														system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
+										match player.lock() {
+											Ok(mut player) => {
+												match player.take_ready() {
+													Ok(_) => (),
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														return;
+													}
+												}
+												match UsiOutput::try_from(&UsiCommand::UsiReadyOk) {
+													Ok(cmd) => {
+														match system_event_queue.lock() {
+															Ok(mut system_event_queue) => {
+																system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+															},
+															Err(ref e) => {
+																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+															}
+														};
 													},
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													}
-												};
+												}
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-									}
-								};
-							});
-							Ok(())
+										};
+									}).map(|_| {
+										()
+									}).map_err(|_| {
+										EventHandlerError::Fail(
+											String::from("An error occurred while starting the user thread."))
+									})
+								},
+								Err(_) => {
+									Err(EventHandlerError::Fail(
+											String::from("Could not get exclusive lock on thread queue object.")))
+								}
+							}
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
@@ -336,6 +353,7 @@ impl<T,E> UsiAgent<T,E>
 				}));
 
 				let on_error_handler = on_error_handler_arc.clone();
+				let thread_queue = thread_queue_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Position, Box::new(move |ctx,e| {
 					match e {
@@ -363,22 +381,34 @@ impl<T,E> UsiAgent<T,E>
 							let n = n.clone();
 							let t = t.clone();
 
-							thread::spawn(move || {
-								match player.lock() {
-									Ok(mut player) => {
-										match player.set_position(t, Banmen(b), ms, mg, n, v) {
-											Ok(_) => (),
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
+										match player.lock() {
+											Ok(mut player) => {
+												match player.set_position(t, Banmen(b), ms, mg, n, v) {
+													Ok(_) => (),
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												}
+											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-									}
-								};
-							});
-							Ok(())
+										};
+									}).map(|_| {
+										()
+									}).map_err(|_| {
+										EventHandlerError::Fail(
+											String::from("An error occurred while starting the user thread."))
+									})
+								},
+								Err(_) => {
+									Err(EventHandlerError::Fail(
+											String::from("Could not get exclusive lock on thread queue object.")))
+								}
+							}
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
@@ -399,6 +429,8 @@ impl<T,E> UsiAgent<T,E>
 
 				let info_sender_arc = Arc::new(Mutex::new(USIInfoSender::new(system_event_queue)));
 				let busy = busy_arc.clone();
+
+				let thread_queue = thread_queue_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Go, Box::new(move |ctx,e| {
 					match busy.lock() {
@@ -435,83 +467,95 @@ impl<T,E> UsiAgent<T,E>
 								Ok(mut allow_immediate_move) => *allow_immediate_move = false,
 							};
 
-							thread::spawn(move || {
-								match player.lock() {
-									Ok(mut player) => {
-										let info_sender = match info_sender.lock() {
-											Ok(info_sender) => info_sender,
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-												return;
-											}
-										};
-										let bm = match player.think(&*opt,
-														user_event_queue_inner.clone(),
-														&*info_sender,on_error_handler_inner.clone()) {
-															Ok(bm) => bm,
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
+										match player.lock() {
+											Ok(mut player) => {
+												let info_sender = match info_sender.lock() {
+													Ok(info_sender) => info_sender,
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														return;
+													}
+												};
+												let bm = match player.think(&*opt,
+																user_event_queue_inner.clone(),
+																&*info_sender,on_error_handler_inner.clone()) {
+																	Ok(bm) => bm,
+																	Err(ref e) => {
+																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		return;
+																	}
+																};
+
+												match busy_inner.lock() {
+													Ok(mut busy) => {
+														*busy = false;
+													},
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												};
+
+												match bm {
+													BestMove::Abort => {
+														return;
+													},
+													_ => (),
+												}
+
+												match UsiOutput::try_from(&UsiCommand::UsiBestMove(bm)) {
+													Ok(cmd) => {
+														match allow_immediate_move_inner.lock() {
+															Ok(allow_immediate_move) => {
+																if *allow_immediate_move {
+																	match system_event_queue.lock() {
+																		Ok(mut system_event_queue) => {
+																			system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
+																		},
+																		Err(ref e) => {
+																			on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		}
+																	}
+																} else {
+																	match on_delay_move_handler_inner.lock() {
+																		Ok(mut on_delay_move_handler_inner) => {
+																			*on_delay_move_handler_inner = OnAcceptMove::new(bm);
+																		},
+																		Err(ref e) => {
+																			on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		}
+																	}
+																}
+															},
 															Err(ref e) => {
 																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 																return;
-															}
-														};
-
-										match busy_inner.lock() {
-											Ok(mut busy) => {
-												*busy = false;
-											},
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-											}
-										};
-
-										match bm {
-											BestMove::Abort => {
-												return;
-											},
-											_ => (),
-										}
-
-										match UsiOutput::try_from(&UsiCommand::UsiBestMove(bm)) {
-											Ok(cmd) => {
-												match allow_immediate_move_inner.lock() {
-													Ok(allow_immediate_move) => {
-														if *allow_immediate_move {
-															match system_event_queue.lock() {
-																Ok(mut system_event_queue) => {
-																	system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-																},
-																Err(ref e) => {
-																	on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-																}
-															}
-														} else {
-															match on_delay_move_handler_inner.lock() {
-																Ok(mut on_delay_move_handler_inner) => {
-																	*on_delay_move_handler_inner = OnAcceptMove::new(bm);
-																},
-																Err(ref e) => {
-																	on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-																}
 															}
 														}
 													},
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-														return;
 													}
 												}
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-									}
-								};
-							});
-							Ok(())
+										};
+									}).map(|_| {
+										()
+									}).map_err(|_| {
+										EventHandlerError::Fail(
+											String::from("An error occurred while starting the user thread."))
+									})
+								},
+								Err(_) => {
+									Err(EventHandlerError::Fail(
+											String::from("Could not get exclusive lock on thread queue object.")))
+								}
+							}
 						},
 						SystemEvent::Go(UsiGo::Go(ref opt)) => {
 							let system_event_queue = ctx.system_event_queue.clone();
@@ -523,61 +567,73 @@ impl<T,E> UsiAgent<T,E>
 							let opt = opt.clone();
 							let busy_inner = busy.clone();
 
-							thread::spawn(move || {
-								match player.lock() {
-									Ok(mut player) => {
-										let info_sender = match info_sender.lock() {
-											Ok(info_sender) => info_sender,
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-												return;
-											}
-										};
-										let m = match player.think(&*opt,
-														user_event_queue_inner.clone(),
-														&*info_sender,on_error_handler_inner.clone()) {
-															Ok(m) => m,
-															Err(ref e) => {
-																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-																return;
-															}
-														};
-										match busy_inner.lock() {
-											Ok(mut busy) => {
-												*busy = false;
-											},
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-											}
-										};
-
-										match m {
-											BestMove::Abort => {
-												return;
-											},
-											_ => (),
-										}
-
-										match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
-											Ok(cmd) => {
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
+										match player.lock() {
+											Ok(mut player) => {
+												let info_sender = match info_sender.lock() {
+													Ok(info_sender) => info_sender,
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														return;
+													}
+												};
+												let m = match player.think(&*opt,
+																user_event_queue_inner.clone(),
+																&*info_sender,on_error_handler_inner.clone()) {
+																	Ok(m) => m,
+																	Err(ref e) => {
+																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		return;
+																	}
+																};
+												match busy_inner.lock() {
+													Ok(mut busy) => {
+														*busy = false;
+													},
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													}
 												};
+
+												match m {
+													BestMove::Abort => {
+														return;
+													},
+													_ => (),
+												}
+
+												match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
+													Ok(cmd) => {
+														match system_event_queue.lock() {
+															Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
+															Err(ref e) => {
+																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+															}
+														};
+													},
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												}
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-									}
-								};
-							});
-							Ok(())
+										};
+									}).map(|_| {
+										()
+									}).map_err(|_| {
+										EventHandlerError::Fail(
+											String::from("An error occurred while starting the user thread."))
+									})
+								},
+								Err(_) => {
+									Err(EventHandlerError::Fail(
+											String::from("Could not get exclusive lock on thread queue object.")))
+								}
+							}
 						},
 						SystemEvent::Go(UsiGo::Mate(opt)) => {
 							let system_event_queue = ctx.system_event_queue.clone();
@@ -589,61 +645,73 @@ impl<T,E> UsiAgent<T,E>
 							let opt = opt.clone();
 							let busy_inner = busy.clone();
 
-							thread::spawn(move || {
-								match player.lock() {
-									Ok(mut player) => {
-										let info_sender = match info_sender.lock() {
-											Ok(info_sender) => info_sender,
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-												return;
-											}
-										};
-										let m = match player.think_mate(&*opt,
-														user_event_queue_inner.clone(),
-														&*info_sender,on_error_handler_inner.clone()) {
-															Ok(m) => m,
-															Err(ref e) => {
-																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-																return;
-															}
-														};
-										match busy_inner.lock() {
-											Ok(mut busy) => {
-												*busy = false;
-											},
-											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-											}
-										};
-
-										match m {
-											CheckMate::Abort => {
-												return;
-											},
-											_ => (),
-										}
-
-										match UsiOutput::try_from(&UsiCommand::UsiCheckMate(m)) {
-											Ok(cmd) => {
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
+										match player.lock() {
+											Ok(mut player) => {
+												let info_sender = match info_sender.lock() {
+													Ok(info_sender) => info_sender,
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														return;
+													}
+												};
+												let m = match player.think_mate(&*opt,
+																user_event_queue_inner.clone(),
+																&*info_sender,on_error_handler_inner.clone()) {
+																	Ok(m) => m,
+																	Err(ref e) => {
+																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		return;
+																	}
+																};
+												match busy_inner.lock() {
+													Ok(mut busy) => {
+														*busy = false;
+													},
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													}
 												};
+
+												match m {
+													CheckMate::Abort => {
+														return;
+													},
+													_ => (),
+												}
+
+												match UsiOutput::try_from(&UsiCommand::UsiCheckMate(m)) {
+													Ok(cmd) => {
+														match system_event_queue.lock() {
+															Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
+															Err(ref e) => {
+																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+															}
+														};
+													},
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												}
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-									}
-								};
-							});
-							Ok(())
+										};
+									}).map(|_| {
+										()
+									}).map_err(|_| {
+										EventHandlerError::Fail(
+											String::from("An error occurred while starting the user thread."))
+									})
+								},
+								Err(_) => {
+									Err(EventHandlerError::Fail(
+											String::from("Could not get exclusive lock on thread queue object.")))
+								}
+							}
 						},
 						ref e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
@@ -738,6 +806,7 @@ impl<T,E> UsiAgent<T,E>
 				let on_error_handler = on_error_handler_arc.clone();
 				let busy = busy_arc.clone();
 				let user_event_queue = user_event_queue_arc.clone();
+				let thread_queue = thread_queue_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |ctx,e| {
 					match e {
@@ -748,48 +817,60 @@ impl<T,E> UsiAgent<T,E>
 							let user_event_queue_inner = user_event_queue.clone();
 							let busy_inner = busy.clone();
 
-							thread::spawn(move || {
-								match busy_inner.lock() {
-									Ok(busy) => {
-										if *busy {
-											match user_event_queue_inner.lock() {
-												Ok(mut user_event_queue) => {
-													user_event_queue.push(UserEvent::Quit);
-												},
-												Err(ref e) => {
-													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
+										match busy_inner.lock() {
+											Ok(busy) => {
+												if *busy {
+													match user_event_queue_inner.lock() {
+														Ok(mut user_event_queue) => {
+															user_event_queue.push(UserEvent::Quit);
+														},
+														Err(ref e) => {
+															on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														}
+													}
 												}
-											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-										return;
-									}
-								}
-								match player.lock() {
-									Ok(mut player) => {
-										match player.quit() {
-											Ok(_) => (),
+											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												return;
 											}
 										}
-										match system_event_queue.lock() {
-											Ok(mut system_event_queue) => {
-												system_event_queue.push(SystemEvent::QuitReady);
+										match player.lock() {
+											Ok(mut player) => {
+												match player.quit() {
+													Ok(_) => (),
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												}
+												match system_event_queue.lock() {
+													Ok(mut system_event_queue) => {
+														system_event_queue.push(SystemEvent::QuitReady);
+													},
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												};
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
 										};
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-									}
-								};
-							});
-							Ok(())
+									}).map(|_| {
+										()
+									}).map_err(|_| {
+										EventHandlerError::Fail(
+											String::from("An error occurred while starting the user thread."))
+									})
+								},
+								Err(_) => {
+									Err(EventHandlerError::Fail(
+											String::from("Could not get exclusive lock on thread queue object.")))
+								}
+							}
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
@@ -797,6 +878,8 @@ impl<T,E> UsiAgent<T,E>
 
 				let on_error_handler = on_error_handler_arc.clone();
 				let user_event_queue = user_event_queue_arc.clone();
+
+				let thread_queue = thread_queue_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::GameOver, Box::new(move |ctx,e| {
 					match *e {
@@ -806,23 +889,35 @@ impl<T,E> UsiAgent<T,E>
 							let s = s.clone();
 							let user_event_queue_inner = user_event_queue.clone();
 
-							thread::spawn(move || {
-								match player.lock() {
-									Ok(mut player) => {
-										match player.gameover(&s,user_event_queue_inner.clone(),
-																		&on_error_handler_inner) {
-											Ok(_) => (),
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
+										match player.lock() {
+											Ok(mut player) => {
+												match player.gameover(&s,user_event_queue_inner.clone(),
+																				&on_error_handler_inner) {
+													Ok(_) => (),
+													Err(ref e) => {
+														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													}
+												}
+											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-									}
-								};
-							});
-							Ok(())
+										};
+									}).map(|_| {
+										()
+									}).map_err(|_| {
+										EventHandlerError::Fail(
+											String::from("An error occurred while starting the user thread."))
+									})
+								},
+								Err(_) => {
+									Err(EventHandlerError::Fail(
+											String::from("Could not get exclusive lock on thread queue object.")))
+								}
+							}
 						},
 						ref e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
