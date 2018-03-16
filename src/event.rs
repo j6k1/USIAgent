@@ -288,11 +288,7 @@ impl PositionParser {
 					r.push(Move::try_from(m)?);
 				}
 
-				let t = match r.len() {
-					l if l % 2 == 0 => Teban::Sente,
-					_ => Teban::Gote,
-				};
-				Ok(SystemEvent::Position(t,UsiInitialPosition::Startpos,1,r))
+				Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r))
 			},
 			_ => {
 				return Err(TypeConvertError::SyntaxError(String::from(
