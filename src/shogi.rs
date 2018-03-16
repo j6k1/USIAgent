@@ -672,6 +672,10 @@ impl Banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8 - y),
+						};
 						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
 					}
 				}
@@ -688,6 +692,10 @@ impl Banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8- y),
+						};
 						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
 					}
 				}
@@ -1490,6 +1498,10 @@ impl Banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8 - y),
+						};
 						mvs.append(&mut self.win_only_moves_with_point(t, x as u32, y as u32));
 					}
 				}
@@ -1522,6 +1534,10 @@ impl Banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8- y),
+						};
 						mvs.append(&mut self.oute_only_moves_with_point(t, mc, x as u32, y as u32));
 					}
 				}
@@ -1538,6 +1554,10 @@ impl Banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8- y),
+						};
 						mvs.append(&mut self.oute_only_moves_with_point(t, mc, x as u32, y as u32));
 					}
 				}
@@ -1971,6 +1991,7 @@ impl MochigomaCollections {
 							&Banmen(ref kinds) => {
 								for y in 0..kinds.len() {
 									for x in 0..kinds[y].len() {
+										let (x,y) = (8 - x, 8 - y);
 										for m in &MOCHIGOMA_KINDS {
 											match mg.get(&m) {
 												None | Some(&0) => {
