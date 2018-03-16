@@ -716,7 +716,7 @@ impl Banmen {
 		};
 
 		let (dx,dy) = match target {
-			KomaPosition(x,y) => (9-x as i32,y as i32),
+			KomaPosition(x,y) => ((9 - x) as i32,(y - 1) as i32),
 		};
 
 		match *t {
@@ -799,7 +799,7 @@ impl Banmen {
 								}
 							}
 						} else if dx - x == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
 
@@ -817,7 +817,7 @@ impl Banmen {
 								}
 							}
 						} else if -(dx - x) == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
 
@@ -851,7 +851,7 @@ impl Banmen {
 						let mut ty:i32 = y;
 
 						if dy - y < 0 && dx == x {
-							while ty < dy {
+							while ty > dy {
 								ty = ty - 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -859,7 +859,7 @@ impl Banmen {
 								}
 							}
 						} else if dx == x {
-							while ty > dy {
+							while ty < dy {
 								ty = ty + 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -920,7 +920,7 @@ impl Banmen {
 								}
 							}
 						} else if dx - x == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
 
@@ -938,7 +938,7 @@ impl Banmen {
 								}
 							}
 						} else if -(dx - x) == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
 
@@ -967,7 +967,7 @@ impl Banmen {
 							tx = dx;
 							ty = dy;
 						} else if dy - y < 0 && dx == x {
-							while ty < dy {
+							while ty > dy {
 								ty = ty - 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -975,7 +975,7 @@ impl Banmen {
 								}
 							}
 						} else if dx == x {
-							while ty > dy {
+							while ty < dy {
 								ty = ty + 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -1092,7 +1092,7 @@ impl Banmen {
 								}
 							}
 						} else if dx - x == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
 
@@ -1110,7 +1110,7 @@ impl Banmen {
 								}
 							}
 						} else if -(dx - x) == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
 
@@ -1144,7 +1144,7 @@ impl Banmen {
 						let mut ty:i32 = y;
 
 						if dy - y < 0 && dx == x {
-							while ty < dy {
+							while ty > dy {
 								ty = ty - 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -1152,7 +1152,7 @@ impl Banmen {
 								}
 							}
 						} else if dx == x {
-							while ty > dy {
+							while ty < dy {
 								ty = ty + 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -1213,7 +1213,7 @@ impl Banmen {
 								}
 							}
 						} else if dx - x == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
 
@@ -1231,7 +1231,7 @@ impl Banmen {
 								}
 							}
 						} else if -(dx - x) == dy - y {
-							while tx > dx {
+							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
 
@@ -1260,7 +1260,7 @@ impl Banmen {
 							tx = dx;
 							ty = dy;
 						} else if dy - y < 0 && dx == x {
-							while ty < dy {
+							while ty > dy {
 								ty = ty - 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -1268,7 +1268,7 @@ impl Banmen {
 								}
 							}
 						} else if dx == x {
-							while ty > dy {
+							while ty < dy {
 								ty = ty + 1;
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
@@ -1665,7 +1665,7 @@ impl Find<KomaKind,Vec<KomaPosition>> for Banmen {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
 						if *query == kinds[y][x] {
-							r.push(KomaPosition(9 - x as u32, y as u32));
+							r.push(KomaPosition(9 - x as u32, y as u32 + 1));
 						}
 					}
 				}
