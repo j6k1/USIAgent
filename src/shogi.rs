@@ -759,6 +759,10 @@ impl Banmen {
 						while ty > dy {
 							ty = ty - 1;
 
+							if kinds[ty as usize][x as usize] == ou {
+								break;
+							}
+
 							if kinds[ty as usize][x as usize] != KomaKind::Blank {
 								return mvs;
 							}
@@ -799,6 +803,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty - 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -807,6 +815,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -817,6 +829,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty + 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -825,6 +841,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -859,6 +879,10 @@ impl Banmen {
 							while ty > dy {
 								ty = ty - 1;
 
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -866,6 +890,10 @@ impl Banmen {
 						} else if dx == x {
 							while ty < dy {
 								ty = ty + 1;
+
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -875,6 +903,10 @@ impl Banmen {
 							while tx > dx {
 								tx = tx - 1;
 
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -882,6 +914,10 @@ impl Banmen {
 						} else if dy == y {
 							while tx < dx {
 								tx = tx + 1;
+
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -920,6 +956,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty - 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -928,6 +968,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -938,6 +982,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty + 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -946,6 +994,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -975,6 +1027,10 @@ impl Banmen {
 							while ty > dy {
 								ty = ty - 1;
 
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -982,6 +1038,10 @@ impl Banmen {
 						} else if dx == x {
 							while ty < dy {
 								ty = ty + 1;
+
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -991,6 +1051,10 @@ impl Banmen {
 							while tx > dx {
 								tx = tx - 1;
 
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -998,6 +1062,10 @@ impl Banmen {
 						} else if dy == y {
 							while tx < dx {
 								tx = tx + 1;
+
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1052,6 +1120,10 @@ impl Banmen {
 						while ty < dy {
 							ty = ty + 1;
 
+							if kinds[ty as usize][x as usize] == ou {
+								break;
+							}
+
 							if kinds[ty as usize][x as usize] != KomaKind::Blank {
 								return mvs;
 							}
@@ -1092,6 +1164,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty - 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1100,6 +1176,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1110,6 +1190,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty + 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1118,6 +1202,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1152,6 +1240,10 @@ impl Banmen {
 							while ty > dy {
 								ty = ty - 1;
 
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1159,6 +1251,10 @@ impl Banmen {
 						} else if dx == x {
 							while ty < dy {
 								ty = ty + 1;
+
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1168,6 +1264,10 @@ impl Banmen {
 							while tx > dx {
 								tx = tx - 1;
 
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1175,6 +1275,10 @@ impl Banmen {
 						} else if dy == y {
 							while tx < dx {
 								tx = tx + 1;
+
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1213,6 +1317,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty - 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1221,6 +1329,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty + 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1231,6 +1343,10 @@ impl Banmen {
 								tx = tx - 1;
 								ty = ty + 1;
 
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1239,6 +1355,10 @@ impl Banmen {
 							while tx < dx {
 								tx = tx + 1;
 								ty = ty - 1;
+
+								if kinds[ty as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1268,6 +1388,10 @@ impl Banmen {
 							while ty > dy {
 								ty = ty - 1;
 
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1275,6 +1399,10 @@ impl Banmen {
 						} else if dx == x {
 							while ty < dy {
 								ty = ty + 1;
+
+								if kinds[ty as usize][x as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
@@ -1284,6 +1412,10 @@ impl Banmen {
 							while tx > dx {
 								tx = tx - 1;
 
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
+
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
 								}
@@ -1291,6 +1423,10 @@ impl Banmen {
 						} else if dy == y {
 							while tx < dx {
 								tx = tx + 1;
+
+								if kinds[y as usize][tx as usize] == ou {
+									break;
+								}
 
 								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
 									return mvs;
