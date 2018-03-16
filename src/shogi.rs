@@ -708,7 +708,12 @@ impl Banmen {
 		let x:i32 = x as i32;
 		let y:i32 = y as i32;
 
-		let target = match self.find(&KomaKind::GOu) {
+		let ou = match *t {
+			Teban::Sente => KomaKind::GOu,
+			Teban::Gote => KomaKind::SOu,
+		};
+
+		let target = match self.find(&ou) {
 			Some(ref r) => r[0],
 			None => {
 				return mvs;
