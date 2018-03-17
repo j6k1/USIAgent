@@ -877,6 +877,7 @@ impl<T,E> UsiAgent<T,E>
 				}));
 
 				let on_error_handler = on_error_handler_arc.clone();
+				let busy = busy_arc.clone();
 				let user_event_queue = user_event_queue_arc.clone();
 
 				let thread_queue = thread_queue_arc.clone();
@@ -888,6 +889,21 @@ impl<T,E> UsiAgent<T,E>
 							let on_error_handler_inner = on_error_handler.clone();
 							let s = s.clone();
 							let user_event_queue_inner = user_event_queue.clone();
+
+							if *busy.lock().or(Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on busy flag object."
+							))))? {
+								match user_event_queue.lock() {
+									Ok(mut user_event_queue) => {
+										user_event_queue.push(UserEvent::Stop);
+									},
+									Err(_) => {
+										return Err(EventHandlerError::Fail(String::from(
+											"Could not get exclusive lock on user event queue object."
+										)));
+									}
+								}
+							}
 
 							match thread_queue.lock() {
 								Ok(mut thread_queue) => {
