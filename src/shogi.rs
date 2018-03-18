@@ -445,10 +445,6 @@ impl Banmen {
 												9 - dx as u32, dy as u32 + 1, true),None));
 									},
 									KomaKind::Blank => {
-										mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < SOu &&
 											kind != KomaKind::SKin && dy <= 2 {
 
@@ -457,6 +453,10 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),None));
 										}
+										mvs.push(LegalMove::To(
+												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+												KomaDstToPosition(
+													9 - dx as u32, dy as u32 + 1, false),None));
 									},
 									dst if dst >= KomaKind::GFu &&
 										((kind == SFu && dy == 0) || (kind == SKei && dy <= 1)) => {
@@ -476,10 +476,6 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < SOu &&
 											kind != KomaKind::SKin && dy <= 2 {
 
@@ -488,6 +484,11 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
+
+										mvs.push(LegalMove::To(
+												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+												KomaDstToPosition(
+													9 - dx as u32, dy as u32 + 1, false),obtained));
 									},
 									_ => (),
 								}
@@ -509,10 +510,6 @@ impl Banmen {
 												9 - dx as u32, dy as u32 + 1, true),None));
 									},
 									KomaKind::Blank => {
-										mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::SOu &&
 											kind != KomaKind::SKin && dy <= 2 {
 
@@ -521,6 +518,10 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),None));
 										}
+										mvs.push(LegalMove::To(
+												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+												KomaDstToPosition(
+													9 - dx as u32, dy as u32 + 1, false),None));
 									},
 									dst if dst < KomaKind::GFu => {
 										break;
@@ -542,10 +543,6 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::SOu &&
 											kind != KomaKind::SKin && dy <= 2 {
 
@@ -554,6 +551,11 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
+
+										mvs.push(LegalMove::To(
+											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+											KomaDstToPosition(
+												9 - dx as u32, dy as u32 + 1, false),obtained));
 										break;
 									},
 									_ => (),
@@ -582,10 +584,6 @@ impl Banmen {
 												9 - dx as u32, dy as u32 + 1, true),None));
 									},
 									KomaKind::Blank => {
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin && dy >= 6 {
 
@@ -594,6 +592,10 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),None));
 										}
+										mvs.push(LegalMove::To(
+											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+											KomaDstToPosition(
+												9 - dx as u32, dy as u32 + 1, false),None));
 									},
 									dst if dst < KomaKind::GFu &&
 										((kind == GFu && dy == 8) || (kind == GKei && dy >= 7)) => {
@@ -613,10 +615,6 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin && dy >= 6 {
 
@@ -625,6 +623,11 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
+
+										mvs.push(LegalMove::To(
+											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+											KomaDstToPosition(
+												9 - dx as u32, dy as u32 + 1, false),obtained));
 									},
 									_ => (),
 								}
@@ -648,10 +651,6 @@ impl Banmen {
 												9 - dx as u32, dy as u32 + 1, true),None));
 									},
 									KomaKind::Blank => {
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),None));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin && dy >= 6 {
 
@@ -660,6 +659,10 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),None));
 										}
+										mvs.push(LegalMove::To(
+											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+											KomaDstToPosition(
+												9 - dx as u32, dy as u32 + 1, false),None));
 									},
 									dst if dst >= KomaKind::GFu => {
 										break;
@@ -682,10 +685,6 @@ impl Banmen {
 											Err(_) => None,
 										};
 
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),obtained));
 										if  kind < KomaKind::GOu &&
 											kind != KomaKind::GKin && dy >= 6 {
 
@@ -694,6 +693,11 @@ impl Banmen {
 												KomaDstToPosition(
 													9 - dx as u32, dy as u32 + 1, true),obtained));
 										}
+
+										mvs.push(LegalMove::To(
+											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
+											KomaDstToPosition(
+												9 - dx as u32, dy as u32 + 1, false),obtained));
 										break;
 									},
 									_ => (),
