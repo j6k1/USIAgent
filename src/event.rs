@@ -4,6 +4,7 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::error::Error;
 use std::collections::HashMap;
+use std::time::{Instant,Duration};
 
 use TryFrom;
 use MaxIndex;
@@ -127,10 +128,79 @@ pub enum UsiGoTimeLimit {
 	Limit(Option<(u32,u32)>,Option<UsiGoByoyomiOrInc>),
 	Infinite,
 }
+impl UsiGoTimeLimit {
+	pub fn to_instant(&self,teban:Teban,tinc:u32) -> (Option<Instant>,u32) {
+		let now = Instant::now();
+		let mut tinc = tinc;
+		(match self {
+			&UsiGoTimeLimit::None => None,
+			&UsiGoTimeLimit::Infinite => None,
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),None) => {
+				Some(match teban {
+					Teban::Sente => {
+						now + Duration::from_millis(ms as u64)
+					},
+					Teban::Gote => {
+						now + Duration::from_millis(mg as u64)
+					}
+				})
+			},
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Byoyomi(b))) => {
+				Some(match teban {
+					Teban::Sente => {
+						now + Duration::from_millis(ms as u64 + b as u64)
+					},
+					Teban::Gote => {
+						now + Duration::from_millis(mg as u64 + b as u64)
+					}
+				})
+			}
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Inc(bs,bg))) => {
+				Some(match teban {
+					Teban::Sente => {
+						tinc = tinc + bs as u32;
+						now + Duration::from_millis(ms as u64 + tinc as u64)
+					},
+					Teban::Gote => {
+						tinc = tinc + bg as u32;
+						now + Duration::from_millis(mg as u64 + tinc as u64)
+					}
+				})
+			},
+			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(b))) => {
+				Some(now + Duration::from_millis(b as u64))
+			}
+			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(bs,bg))) => {
+				Some(match teban {
+					Teban::Sente => {
+						now + Duration::from_millis(bs as u64)
+					},
+					Teban::Gote => {
+						now + Duration::from_millis(bg as u64)
+					}
+				})
+			},
+			&UsiGoTimeLimit::Limit(None,None) => {
+				Some(now)
+			}
+		}, tinc)
+	}
+}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoMateTimeLimit {
 	Limit(u32),
 	Infinite,
+}
+impl UsiGoMateTimeLimit {
+	pub fn to_instant(&self) -> Option<Instant> {
+		match *self {
+			UsiGoMateTimeLimit::Infinite => None,
+			UsiGoMateTimeLimit::Limit(limit) => {
+				let now = Instant::now();
+				Some(now + Duration::from_millis(limit as u64))
+			}
+		}
+	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoByoyomiOrInc {
