@@ -1917,6 +1917,13 @@ impl Clone for MochigomaCollections {
 	}
 }
 impl MochigomaCollections {
+	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
+		if ms.len() == 0 && mg.len() == 0 {
+			MochigomaCollections::Empty
+		} else {
+			MochigomaCollections::Pair(ms,mg)
+		}
+	}
 	pub fn legal_moves(&self,t:&Teban,b:&Banmen) -> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 

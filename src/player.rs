@@ -110,6 +110,29 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 						String::from("Position information is not initialized."))),
 		}
 	}
+
+	fn apply_moves<T,F>(&self,mut teban:Teban,
+						mut banmen:Banmen,
+						mut mc:MochigomaCollections,
+						m:Vec<Move>,mut r:T,mut f:F)
+		-> (Teban,Banmen,MochigomaCollections,T)
+		where F: FnMut(&Self,&Teban,&Banmen,
+						&MochigomaCollections,&Move,
+						&Option<MochigomaKind>,T) -> T {
+
+		for m in &m {
+			match banmen.apply_move_none_check(&teban,&mc,&m) {
+				(next,nmc,o) => {
+					banmen = next;
+					mc = nmc;
+					teban = teban.opposite();
+					r = f(self,&teban,&banmen,&mc,&m,&o,r);
+				}
+			}
+		}
+
+		(teban,banmen,mc,r)
+	}
 }
 pub struct USIInfoSender {
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
