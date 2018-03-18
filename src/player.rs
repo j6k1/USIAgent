@@ -135,7 +135,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		(teban,banmen,mc,r)
 	}
 
-	fn update_inc(&self,tinc:&u32,limit:&Option<Instant>) -> Option<u32> {
+	fn get_update_inc(&self,tinc:&u32,limit:&Option<Instant>) -> Option<u32> {
 		match limit {
 			&Some(limit) => {
 				Some(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
