@@ -346,4 +346,28 @@ impl error::Error for ShogiError {
 	 	}
 	 }
 }
+#[derive(Debug)]
+pub enum UsiProtocolError {
+	InvalidState(String),
+}
+impl fmt::Display for UsiProtocolError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+		 	UsiProtocolError::InvalidState(ref s) => write!(f,"{}",s)
+	 	}
+	 }
+}
+impl error::Error for UsiProtocolError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		UsiProtocolError::InvalidState(_) => "invalid state.(protocol was not processed proper)",
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		UsiProtocolError::InvalidState(_) => None,
+	 	}
+	 }
+}
 pub trait PlayerError: Error + fmt::Debug {}

@@ -36,7 +36,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn quit(&mut self) -> Result<(),E>;
 	fn handle_events<'a,L>(&mut self,event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,E>
-						where L: Logger, E: Error + fmt::Debug, E: From<E>,
+						where L: Logger, E: Error + fmt::Debug,
 								EventHandlerError<UserEventKind,E>: From<E> {
 		Ok(match self.dispatch_events(event_queue,&on_error_handler) {
 			Ok(_)=> true,
@@ -51,7 +51,6 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 						on_error_handler:&Mutex<OnErrorHandler<L>>) ->
 						Result<(), EventDispatchError<'a,EventQueue<UserEvent,UserEventKind>,UserEvent,E>>
 							where L: Logger, E: Error + fmt::Debug,
-									E: From<E>,
 									EventHandlerError<UserEventKind,E>: From<E> {
 		let events = {
 			event_queue.lock()?.drain_events()
@@ -85,6 +84,30 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		match has_error {
 			true => Err(EventDispatchError::ContainError),
 			false => Ok(()),
+		}
+	}
+
+	fn extract_kyokumen(&self,teban:&Option<Teban>,
+						banmen:&Option<Banmen>,
+						mc:&Option<MochigomaCollections>)
+		-> Result<(Teban,Banmen,MochigomaCollections),UsiProtocolError>
+		where E: Error + fmt::Debug + From<UsiProtocolError> {
+
+		let r = match teban {
+			&Some(ref teban) => match banmen {
+				&Some(ref banmen) => match mc {
+					&Some(ref mc) => Some((teban.clone(),banmen.clone(),mc.clone())),
+					&None => None,
+				},
+				&None => None,
+			},
+			&None => None,
+		};
+
+		match r {
+			Some(r) => Ok(r),
+			None => Err(UsiProtocolError::InvalidState(
+						String::from("Position information is not initialized."))),
 		}
 	}
 }
