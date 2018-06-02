@@ -105,6 +105,50 @@ impl MaxIndex for UserEventKind {
 		UserEventKind::Quit as usize
 	}
 }
+#[derive(Debug)]
+pub enum SelfMatchEvent {
+	GameStart(u32,String),
+	Moved(Teban,Move),
+	GameEnd(SelfMatchGameEndState),
+	Abort,
+}
+#[derive(Debug)]
+pub enum SelfMatchGameEndState {
+	Win(Teban),
+	Resign(Teban),
+	NyuGyokuWin(Teban),
+	NyuGyokuLose(Teban),
+	Draw,
+	Foul(Teban),
+	Timeover(Teban),
+}
+#[derive(Debug)]
+pub enum SelfMatchEventKind {
+	GameStart = 0,
+	Moved,
+	GameEnd,
+	Abort,
+}
+impl MapEventKind<SelfMatchEventKind> for SelfMatchEvent {
+	fn event_kind(&self) -> SelfMatchEventKind {
+		match *self {
+			SelfMatchEvent::GameStart(_,_) => SelfMatchEventKind::GameStart,
+			SelfMatchEvent::Moved(_,_) => SelfMatchEventKind::Moved,
+			SelfMatchEvent::GameEnd(_) => SelfMatchEventKind::GameEnd,
+			SelfMatchEvent::Abort => SelfMatchEventKind::Abort,
+		}
+	}
+}
+impl From<SelfMatchEventKind> for usize {
+	fn from(kind: SelfMatchEventKind) -> usize {
+		kind as usize
+	}
+}
+impl MaxIndex for SelfMatchEventKind {
+	fn max_index() -> usize {
+		SelfMatchEventKind::Abort as usize
+	}
+}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum GameEndState {
 	Win,

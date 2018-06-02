@@ -3,6 +3,8 @@ use std::fmt::Formatter;
 use std::collections::HashMap;
 use TryFrom;
 use error::*;
+use hash::*;
+
 use Validate;
 use Find;
 use MaxIndex;
@@ -1860,6 +1862,45 @@ impl Banmen {
 				}
 			}
 		}
+	}
+
+	pub fn apply_moves(&self,mut teban:Teban,
+						mut mc:MochigomaCollections,
+						m:&Vec<Move>,mut mhash:u64,mut shash:u64,
+						mut kyokumen_hash_map:TwoKeyHashMap<u32>,
+						mut hasher:KyokumenHash)
+		-> (Teban,Banmen,MochigomaCollections,u64,u64,TwoKeyHashMap<u32>) {
+
+		let mut banmen = self.clone();
+
+		for m in m {
+			match banmen.apply_move_none_check(&teban,&mc,&m) {
+				(next,nmc,o) => {
+					mc = nmc;
+					teban = teban.opposite();
+
+					mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
+					shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
+
+					banmen = next;
+
+					match kyokumen_hash_map.get(&mhash,&shash) {
+						Some(c) => {
+							kyokumen_hash_map.insert(mhash,shash,c+1);
+						},
+						None => {
+							kyokumen_hash_map.insert(mhash,shash,1);
+						}
+					}
+				}
+			}
+		}
+
+		(teban,banmen,mc,mhash,shash,kyokumen_hash_map)
+	}
+
+	pub fn is_nyugyoku_win(&self,t:&Teban) -> bool {
+		false
 	}
 }
 impl Find<KomaPosition,Move> for Vec<LegalMove> {

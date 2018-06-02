@@ -209,6 +209,11 @@ impl<T,E> From<UsiOutputCreateError> for EventHandlerError<T,E> where T: fmt::De
 		EventHandlerError::Fail(err.description().to_string())
 	}
 }
+impl<T,E> From<E> for EventHandlerError<T,E> where T: fmt::Debug, E: PlayerError {
+	fn from(err: E) -> EventHandlerError<T,E> {
+		EventHandlerError::PlayerError(err)
+	}
+}
 #[derive(Debug)]
 pub enum UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
 	FailCreateOutput(UsiOutputCreateError),
@@ -246,6 +251,40 @@ impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for UsiEventSendError<'a,T> where
 	fn from(err: PoisonError<MutexGuard<'a,T>>) -> UsiEventSendError<'a,T> {
 		UsiEventSendError::MutexLockFailedError(err)
 	}
+}
+pub trait InfoSendErrorCause: Error + fmt::Debug {}
+#[derive(Debug)]
+pub enum InfoSendError<E> where E: InfoSendErrorCause {
+	Fail(E)
+}
+impl<E> fmt::Display for InfoSendError<E> where E: InfoSendErrorCause {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		InfoSendError::Fail(ref e) => fmt::Display::fmt(&e, f),
+	 	}
+	 }
+}
+impl<E> error::Error for InfoSendError<E> where E: InfoSendErrorCause {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		InfoSendError::Fail(ref e) => e.description()
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		InfoSendError::Fail(ref e) => Some(e),
+	 	}
+	 }
+}
+impl<'a,T> From<UsiEventSendError<'a,T>> for InfoSendError<UsiEventSendError<'a,T>>
+	where T: fmt::Debug + 'a, UsiEventSendError<'a,T>: InfoSendErrorCause {
+	fn from(err: UsiEventSendError<'a,T>) -> InfoSendError<UsiEventSendError<'a,T>> {
+		InfoSendError::Fail(err)
+	}
+}
+impl<'a,T> InfoSendErrorCause for UsiEventSendError<'a,T> where T: fmt::Debug {
+
 }
 #[derive(Debug)]
 pub enum TypeConvertError<T> where T: fmt::Debug {

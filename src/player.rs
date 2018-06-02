@@ -23,16 +23,16 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn newgame(&mut self) -> Result<(),E>;
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
-	fn think<L>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,E> where L: Logger;
-	fn think_mate<L>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:&USIInfoSender,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<CheckMate,E> where L: Logger;
+	fn think<'a,L,S,SE>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+			info_sender:&S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,E> where L: Logger, S: InfoSender<'a,SE>, SE: InfoSendErrorCause;
+	fn think_mate<'a,L,S,SE>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+			info_sender:&S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<CheckMate,E> where L: Logger, S: InfoSender<'a,SE>, SE: InfoSendErrorCause;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn gameover<L>(&mut self,s:&GameEndState,
 			event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E> where L: Logger;
+			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E> where L: Logger;
 	fn on_quit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn quit(&mut self) -> Result<(),E>;
 	fn handle_events<'a,L>(&mut self,event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
@@ -144,6 +144,9 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		}
 	}
 }
+pub trait InfoSender<'a,E> where E: Error + fmt::Debug {
+	fn send(&'a self,commands:Vec<UsiInfoSubCommand>) -> Result<(), E>;
+}
 pub struct USIInfoSender {
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
@@ -153,8 +156,11 @@ impl USIInfoSender {
 			system_event_queue:system_event_queue
 		}
 	}
-	pub fn send(&self,commands:Vec<UsiInfoSubCommand>) ->
-		Result<(), UsiEventSendError<EventQueue<SystemEvent,SystemEventKind>>> {
+}
+impl<'a> InfoSender<'a,UsiEventSendError<'a,EventQueue<SystemEvent,SystemEventKind>>> for USIInfoSender
+	where UsiEventSendError<'a,EventQueue<SystemEvent,SystemEventKind>>: InfoSendErrorCause + 'a {
+	fn send(&'a self,commands:Vec<UsiInfoSubCommand>) ->
+		Result<(), UsiEventSendError<'a,EventQueue<SystemEvent,SystemEventKind>>> {
 		self.system_event_queue.lock()?.push(
 			SystemEvent::SendUsiCommand(UsiOutput::try_from(&UsiCommand::UsiInfo(commands))?));
 		Ok(())
