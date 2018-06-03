@@ -23,12 +23,12 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn newgame(&mut self) -> Result<(),E>;
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
-	fn think<'a,L,S,SE>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,E> where L: Logger, S: InfoSender<'a,SE>, SE: InfoSendErrorCause;
-	fn think_mate<'a,L,S,SE>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+			-> Result<BestMove,E> where L: Logger, S: InfoSender;
+	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			info_sender:&S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<CheckMate,E> where L: Logger, S: InfoSender<'a,SE>, SE: InfoSendErrorCause;
+			-> Result<CheckMate,E> where L: Logger, S: InfoSender;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn gameover<L>(&mut self,s:&GameEndState,
 			event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
@@ -144,8 +144,8 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		}
 	}
 }
-pub trait InfoSender<'a,E> where E: Error + fmt::Debug {
-	fn send(&'a self,commands:Vec<UsiInfoSubCommand>) -> Result<(), E>;
+pub trait InfoSender {
+	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError>;
 }
 pub struct USIInfoSender {
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
@@ -157,12 +157,18 @@ impl USIInfoSender {
 		}
 	}
 }
-impl<'a> InfoSender<'a,UsiEventSendError<'a,EventQueue<SystemEvent,SystemEventKind>>> for USIInfoSender
-	where UsiEventSendError<'a,EventQueue<SystemEvent,SystemEventKind>>: InfoSendErrorCause + 'a {
-	fn send(&'a self,commands:Vec<UsiInfoSubCommand>) ->
-		Result<(), UsiEventSendError<'a,EventQueue<SystemEvent,SystemEventKind>>> {
-		self.system_event_queue.lock()?.push(
-			SystemEvent::SendUsiCommand(UsiOutput::try_from(&UsiCommand::UsiInfo(commands))?));
-		Ok(())
+impl InfoSender for USIInfoSender {
+	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
+		match self.system_event_queue.lock() {
+			Ok(mut system_event_queue) => {
+				system_event_queue.push(
+				SystemEvent::SendUsiCommand(UsiOutput::try_from(&UsiCommand::UsiInfo(commands))?));
+				Ok(())
+			},
+			Err(_) => {
+				Err(InfoSendError::Fail(String::from(
+					"I attempted to lock the event queue for info command transmission, but it failed.")))
+			}
+		}
 	}
 }

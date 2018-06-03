@@ -252,39 +252,34 @@ impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for UsiEventSendError<'a,T> where
 		UsiEventSendError::MutexLockFailedError(err)
 	}
 }
-pub trait InfoSendErrorCause: Error + fmt::Debug {}
 #[derive(Debug)]
-pub enum InfoSendError<E> where E: InfoSendErrorCause {
-	Fail(E)
+pub enum InfoSendError {
+	Fail(String)
 }
-impl<E> fmt::Display for InfoSendError<E> where E: InfoSendErrorCause {
+impl fmt::Display for InfoSendError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		InfoSendError::Fail(ref e) => fmt::Display::fmt(&e, f),
+	 		InfoSendError::Fail(ref e) => e.fmt(f),
 	 	}
 	 }
 }
-impl<E> error::Error for InfoSendError<E> where E: InfoSendErrorCause {
+impl error::Error for InfoSendError {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		InfoSendError::Fail(ref e) => e.description()
+	 		InfoSendError::Fail(_) => "An error occurred when sending the info command.",
 	 	}
 	 }
 
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
-	 		InfoSendError::Fail(ref e) => Some(e),
+	 		InfoSendError::Fail(_) => None,
 	 	}
 	 }
 }
-impl<'a,T> From<UsiEventSendError<'a,T>> for InfoSendError<UsiEventSendError<'a,T>>
-	where T: fmt::Debug + 'a, UsiEventSendError<'a,T>: InfoSendErrorCause {
-	fn from(err: UsiEventSendError<'a,T>) -> InfoSendError<UsiEventSendError<'a,T>> {
-		InfoSendError::Fail(err)
+impl From<UsiOutputCreateError> for InfoSendError {
+	fn from(e: UsiOutputCreateError) -> InfoSendError {
+		InfoSendError::Fail(format!("{}",e))
 	}
-}
-impl<'a,T> InfoSendErrorCause for UsiEventSendError<'a,T> where T: fmt::Debug {
-
 }
 #[derive(Debug)]
 pub enum TypeConvertError<T> where T: fmt::Debug {
