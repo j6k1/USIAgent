@@ -1868,7 +1868,7 @@ impl Banmen {
 						mut mc:MochigomaCollections,
 						m:&Vec<Move>,mut mhash:u64,mut shash:u64,
 						mut kyokumen_hash_map:TwoKeyHashMap<u32>,
-						mut hasher:KyokumenHash)
+						hasher:&KyokumenHash)
 		-> (Teban,Banmen,MochigomaCollections,u64,u64,TwoKeyHashMap<u32>) {
 
 		let mut banmen = self.clone();
