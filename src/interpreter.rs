@@ -44,7 +44,6 @@ impl USIInterpreter {
 							on_error_handler.lock().map(|h| h.call(e)).is_err();
 						},
 						Ok(ref line) => {
-							let line = line.trim_right();
 							let f = line.split(" ").collect::<Vec<&str>>();
 
 							match event_queue.lock() {

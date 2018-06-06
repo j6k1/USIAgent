@@ -20,6 +20,9 @@ impl USIInputReader for USIStdInputReader {
 		let mut lock = stdin.lock();
 		let mut buf = String::new();
 		lock.read_line(&mut buf)?;
-		Ok(buf)
+
+		let ptn:&[_] = &['\r','\n'];
+
+		Ok(buf.as_str().trim_right_matches(ptn).to_string())
 	}
 }

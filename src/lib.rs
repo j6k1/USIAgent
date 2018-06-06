@@ -1046,7 +1046,7 @@ pub trait Logger {
 	fn logging_error<E: Error>(&mut self, e:&E) -> bool;
 }
 pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
-	fn write(s:&str) -> Result<(),OE>;
+	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),OE>;
 }
 #[derive(Debug)]
 pub enum SelfMatchMessage {
@@ -1107,10 +1107,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		}
 	}
 
-	pub fn start<F,R,C,OE,KW,L>(&mut self,mut on_before_newgame:F,
+	pub fn start<F,R,RH,C,OE,KW,L>(&mut self,mut on_before_newgame:F,
 						initial_position_creator:Option<C>,
 						kifu_writer:Option<KW>,
-						input_handler:R,
+						mut input_reader:R,
+						mut input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						mut self_match_event_dispatcher:USIEventDispatcher<
@@ -1119,10 +1120,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																SelfMatchEngine<T, E, S>,L,E>,
 						logger:L)
 		where F: FnMut() -> bool + Send + 'static,
-				R: FnMut(String) + Send + 'static,
+				R: USIInputReader + Send + 'static,
+				RH: FnMut(String) + Send + 'static,
 				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
-				KW:SelfMatchKifuWriter<OE>,
+				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static {
 		let logger_arc = Arc::new(Mutex::new(logger));
@@ -1140,6 +1142,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			initial_position_creator.map_or(Box::new(|| String::from("startpos")), |f| {
 				Box::new(f)
 			});
+
+		let on_error_handler = on_error_handler_arc.clone();
+
+		let mut kifu_writer:Box<FnMut(&String,&Vec<Move>) +Send + 'static> =
+			kifu_writer.map_or(Box::new(|_,_| ()), |mut w| Box::new(move |sfen,m| {
+				w.write(sfen,m).map_err(|e| {
+					on_error_handler.lock().map(|h| h.call(&e)).is_err();
+				}).is_err();
+			}));
 
 		let quit_ready_arc = Arc::new(Mutex::new(false));
 		let quit_ready = quit_ready_arc.clone();
@@ -1230,7 +1241,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let on_error_handler = on_error_handler_arc.clone();
 		let logger = logger_arc.clone();
 
-		let main_h = std::thread::spawn(move || {
+		let bridge_h = std::thread::spawn(move || {
 			let cs = [cs1,cs2];
 			let mut prev_move:Option<Move> = None;
 			let mut ponders:[Option<Move>; 2] = [None,None];
@@ -1347,16 +1358,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					 mut kyokumen_hash_map) = banmen.apply_moves(teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
 
 				loop {
-					match quit_ready.lock() {
-						Ok(quit_ready) => {
-							if *quit_ready {
-								return;
-							}
-						},
-						Err(ref e) => {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
-						}
-					}
 					match ponders[cs_index] {
 						Some(_) if ponders[cs_index] == prev_move => {
 							cs[cs_index].send(SelfMatchMessage::PonderHit).unwrap();
@@ -1400,9 +1401,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												_ => false,
 											};
 
+											mvs.push(*m);
+
 											if is_win {
 												cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
 												cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+												kifu_writer(&sfen,&mvs);
 												break;
 											}
 
@@ -1419,10 +1423,13 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											cs_index = (cs_index + 1) % 2;
 										},
 										Err(_) => {
+											mvs.push(*m);
 											cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
 											cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+											kifu_writer(&sfen,&mvs);
 										}
 									}
+
 									prev_move = Some(*m);
 
 									match pm {
@@ -1430,7 +1437,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											ponders[cs_index] = Some(pm);
 											match mvs.clone() {
 												mut mvs => {
-													mvs.push(*m);
 													mvs.push(pm);
 													cs[cs_index].send(
 														SelfMatchMessage::StartPonderThink(
@@ -1448,8 +1454,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									return;
 								},
 								SelfMatchMessage::Quit => {
-									cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-									cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+									cs[0].send(SelfMatchMessage::Quit).unwrap();;
+									cs[1].send(SelfMatchMessage::Quit).unwrap();;
 
 									quit_notification();
 									return;
@@ -1521,11 +1527,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														_  => false,
 													};
 
+													mvs.push(m);
+
 													if is_win {
 														cs[cs_index].send(
 																SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
 														cs[(cs_index+1) % 2].send(
 																SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+														kifu_writer(&sfen,&mvs);
 														match self_match_event_queue.lock() {
 															Ok(mut self_match_event_queue) => {
 																self_match_event_queue.push(SelfMatchEvent::GameEnd(
@@ -1560,7 +1569,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														Some(pm) => {
 															match mvs.clone() {
 																mut mvs => {
-																	mvs.push(m);
 																	mvs.push(pm);
 																	cs[cs_index].send(
 																		SelfMatchMessage::StartPonderThink(
@@ -1572,14 +1580,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														None => (),
 													}
 
-													mvs.push(m);
 													cs_index = (cs_index + 1) % 2;
 												},
 												Err(_) => {
+													mvs.push(m);
 													cs[cs_index].send(
 															SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
 													cs[(cs_index+1) % 2].send(
 															SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+													kifu_writer(&sfen,&mvs);
 												}
 											}
 											Some(m)
@@ -1587,6 +1596,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										BestMove::Resign => {
 											cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
 											cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+											kifu_writer(&sfen,&mvs);
 											match self_match_event_queue.lock() {
 												Ok(mut self_match_event_queue) => {
 													self_match_event_queue.push(SelfMatchEvent::GameEnd(
@@ -1625,6 +1635,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
 											cs[(cs_index+1) % 2].send(
 													SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+											kifu_writer(&sfen,&mvs);
 											match self_match_event_queue.lock() {
 												Ok(mut self_match_event_queue) => {
 													self_match_event_queue.push(SelfMatchEvent::GameEnd(
@@ -1647,6 +1658,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
 											cs[(cs_index+1) % 2].send(
 														SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+											kifu_writer(&sfen,&mvs);
 											match self_match_event_queue.lock() {
 												Ok(mut self_match_event_queue) => {
 													self_match_event_queue.push(SelfMatchEvent::GameEnd(
@@ -1672,8 +1684,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									return;
 								},
 								SelfMatchMessage::Quit => {
-									cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-									cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+									cs[0].send(SelfMatchMessage::Quit).unwrap();;
+									cs[1].send(SelfMatchMessage::Quit).unwrap();;
 
 									quit_notification();
 									return;
@@ -1832,6 +1844,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														return;
 													}
 												};
+
 												match cr.recv().unwrap() {
 													SelfMatchMessage::PonderHit => {
 														ss.send(SelfMatchMessage::NotifyMove(m)).unwrap();
@@ -1920,6 +1933,30 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let quit_ready = quit_ready_arc.clone();
 		let logger = logger_arc.clone();
 
+		let input_reader_h = std::thread::spawn(move || {
+			while !(match quit_ready.lock() {
+				Ok(quit_ready) => *quit_ready,
+				Err(ref e) => {
+					on_error_handler.lock().map(|h| h.call(e)).is_err();
+					true
+				}
+			}) {
+				match input_reader.read() {
+					Ok(line) => {
+						input_handler(line);
+					},
+					Err(ref e) => {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						return;
+					}
+				}
+			}
+		});
+
+		let on_error_handler = on_error_handler_arc.clone();
+
+		let quit_ready = quit_ready_arc.clone();
+
 		while !(match quit_ready.lock() {
 			Ok(quit_ready) => *quit_ready,
 			Err(ref e) => {
@@ -1942,7 +1979,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			thread::sleep(delay);
 		}
 
-		main_h.join().map_err(|_| {
+		bridge_h.join().map_err(|_| {
 			logger.lock().map(|mut logger| {
 				logger.logging(&format!("Main thread join failed."))
 			}).map_err(|_| {
@@ -1961,5 +1998,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				}).is_err();
 			}).is_err();
 		}
+
+		input_reader_h.join().map_err(|_| {
+			logger.lock().map(|mut logger| {
+				logger.logging(&format!("Main thread join failed."))
+			}).map_err(|_| {
+				USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+				false
+			}).is_err();
+		}).is_err();
 	}
 }
