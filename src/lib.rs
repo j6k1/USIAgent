@@ -2001,7 +2001,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		input_reader_h.join().map_err(|_| {
 			logger.lock().map(|mut logger| {
-				logger.logging(&format!("Main thread join failed."))
+				logger.logging(&format!("Input reader thread join failed."))
 			}).map_err(|_| {
 				USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 				false
