@@ -478,7 +478,7 @@ impl<T,E> UsiAgent<T,E>
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
-												let info_sender = match info_sender.lock() {
+												let mut info_sender = match info_sender.lock() {
 													Ok(info_sender) => info_sender,
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -487,7 +487,7 @@ impl<T,E> UsiAgent<T,E>
 												};
 												let bm = match player.think(&*opt,
 																user_event_queue_inner.clone(),
-																&*info_sender,on_error_handler_inner.clone()) {
+																&mut *info_sender,on_error_handler_inner.clone()) {
 																	Ok(bm) => bm,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -578,7 +578,7 @@ impl<T,E> UsiAgent<T,E>
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
-												let info_sender = match info_sender.lock() {
+												let mut info_sender = match info_sender.lock() {
 													Ok(info_sender) => info_sender,
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -587,7 +587,7 @@ impl<T,E> UsiAgent<T,E>
 												};
 												let m = match player.think(&*opt,
 																user_event_queue_inner.clone(),
-																&*info_sender,on_error_handler_inner.clone()) {
+																&mut *info_sender,on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -656,7 +656,7 @@ impl<T,E> UsiAgent<T,E>
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
-												let info_sender = match info_sender.lock() {
+												let mut info_sender = match info_sender.lock() {
 													Ok(info_sender) => info_sender,
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -665,7 +665,7 @@ impl<T,E> UsiAgent<T,E>
 												};
 												let m = match player.think_mate(&*opt,
 																user_event_queue_inner.clone(),
-																&*info_sender,on_error_handler_inner.clone()) {
+																&mut *info_sender,on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -1779,7 +1779,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														return;
 													}
 												}
-												let info_sender = match info_sender.lock() {
+												let mut info_sender = match info_sender.lock() {
 													Ok(info_sender) => info_sender,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -1789,7 +1789,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												};
 												let m = match player.think(&limit,
 															user_event_queue.clone(),
-															&*info_sender,on_error_handler.clone()) {
+															&mut *info_sender,on_error_handler.clone()) {
 													Ok(m) => m,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -1826,7 +1826,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														return;
 													}
 												}
-												let info_sender = match info_sender.lock() {
+												let mut info_sender = match info_sender.lock() {
 													Ok(info_sender) => info_sender,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -1836,7 +1836,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												};
 												let m = match player.think(&limit,
 															user_event_queue.clone(),
-															&*info_sender,on_error_handler.clone()) {
+															&mut *info_sender,on_error_handler.clone()) {
 													Ok(m) => m,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
