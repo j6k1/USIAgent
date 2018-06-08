@@ -1118,7 +1118,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																SelfMatchEventKind,
 																SelfMatchEvent,
 																SelfMatchEngine<T, E, S>,L,E>,
-						logger:L)
+						logger:L) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) + Send + 'static,
@@ -1204,14 +1204,17 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						Ok(()) => (),
 						Err(ref e) => {
 							on_error_handler.lock().map(|h| h.call(e)).is_err();
-							return;
+							return Err(SelfMatchRunningError::Fail(String::from(
+								"An error occurred while executing a self match. Please see the log for details ..."
+							)));
 						}
 					}
 				}
 			},
-			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
-				return;
+			Err(_) => {
+				return Err(SelfMatchRunningError::InvalidState(String::from(
+					"Failed to secure exclusive lock of player object."
+				)));
 			}
 		}
 
@@ -1222,14 +1225,17 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						Ok(()) => (),
 						Err(ref e) => {
 							on_error_handler.lock().map(|h| h.call(e)).is_err();
-							return;
+							return Err(SelfMatchRunningError::Fail(String::from(
+								"An error occurred while executing a self match. Please see the log for details ..."
+							)));
 						}
 					}
 				}
 			},
-			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
-				return;
+			Err(_) => {
+				return Err(SelfMatchRunningError::InvalidState(String::from(
+					"Failed to secure exclusive lock of player object."
+				)));
 			}
 		}
 
@@ -1992,7 +1998,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			thread::sleep(delay);
 		}
 
+		let mut has_error = false;
+
 		bridge_h.join().map_err(|_| {
+			has_error = true;
 			logger.lock().map(|mut logger| {
 				logger.logging(&format!("Main thread join failed."))
 			}).map_err(|_| {
@@ -2001,6 +2010,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			}).is_err();
 		}).map(|r| {
 			r.map_err(|e| {
+				has_error = true;
 				on_error_handler.lock().map(|h| h.call(&e)).is_err();
 				e
 			}).is_err()
@@ -2008,6 +2018,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		for h in handlers {
 			h.join().map_err(|_| {
+				has_error = true;
 				logger.lock().map(|mut logger| {
 					logger.logging(&format!("Sub thread join failed."))
 				}).map_err(|_| {
@@ -2015,6 +2026,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					false
 				}).is_err();
 			}).is_err();
+		}
+
+		if has_error {
+			Err(SelfMatchRunningError::Fail(String::from(
+				"An error occurred while executing a self match. Please see the log for details ..."
+			)))
+		} else {
+			Ok(())
 		}
 	}
 }

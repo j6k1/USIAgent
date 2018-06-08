@@ -407,24 +407,28 @@ impl error::Error for UsiProtocolError {
 #[derive(Debug)]
 pub enum SelfMatchRunningError {
 	InvalidState(String),
+	Fail(String),
 }
 impl fmt::Display for SelfMatchRunningError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s)
+		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s),
+		 	SelfMatchRunningError::Fail(ref s) => write!(f,"{}",s),
 	 	}
 	 }
 }
 impl error::Error for SelfMatchRunningError {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		SelfMatchRunningError::InvalidState(_) => "invalid state.(protocol was not processed proper)",
+	 		SelfMatchRunningError::InvalidState(_) => "invalid state.",
+	 		SelfMatchRunningError::Fail(_) => "An error occurred while running the self-match.",
 	 	}
 	 }
 
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => None,
+	 		SelfMatchRunningError::Fail(_) => None,
 	 	}
 	 }
 }
