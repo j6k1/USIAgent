@@ -128,6 +128,7 @@ pub enum FoulKind {
 	PutFuAndMate,
 	Sennichite,
 	SennichiteOu,
+	NotRespondedOute,
 }
 #[derive(Debug)]
 pub enum SelfMatchEventKind {
