@@ -352,6 +352,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					 mut shash,
 					 mut kyokumen_hash_map) = banmen.apply_moves(teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
 
+				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u32>>; 2] = [None,None];
+
 				loop {
 					match ponders[cs_index] {
 						Some(_) if ponders[cs_index] == prev_move => {
@@ -407,7 +409,105 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 											banmen = next;
 
+											match m {
+												&Move::Put(MochigomaKind::Fu,_) if banmen.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
+													match m {
+														&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+														m @ _ => {
+															match banmen.apply_move_none_check(&teban,&mc,&m.to_move()) {
+																(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+															}
+														},
+													}
+												}).count() == 0 => {
+													cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+													cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+													kifu_writer(&sfen,&mvs);
+													match self_match_event_queue.lock() {
+														Ok(mut self_match_event_queue) => {
+															self_match_event_queue.push(SelfMatchEvent::GameEnd(
+																	SelfMatchGameEndState::Foul(teban,FoulKind::PutFuAndMate)
+																));
+														},
+														Err(ref e) => {
+															on_error_handler.lock().map(|h| h.call(e)).is_err();
+															cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+															cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+															quit_notification();
+
+															return Err(SelfMatchRunningError::InvalidState(String::from(
+																"Exclusive lock on self_match_event_queue failed."
+															)));
+														}
+													}
+													break;
+												},
+												_ => (),
+											}
+
+											match oute_kyokumen_hash_maps[cs_index] {
+												None if banmen.win_only_moves(&teban).len() > 0 => {
+													let mut m = TwoKeyHashMap::new();
+													m.insert(mhash,shash,1);
+													oute_kyokumen_hash_maps[cs_index] = Some(m);
+												},
+												Some(ref mut m) if banmen.win_only_moves(&teban).len() > 0 => {
+													if let Some(_) = m.get(&mhash,&shash) {
+														cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+														cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+														kifu_writer(&sfen,&mvs);
+														match self_match_event_queue.lock() {
+															Ok(mut self_match_event_queue) => {
+																self_match_event_queue.push(SelfMatchEvent::GameEnd(
+																		SelfMatchGameEndState::Foul(teban,FoulKind::SennichiteOu)
+																	));
+															},
+															Err(ref e) => {
+																on_error_handler.lock().map(|h| h.call(e)).is_err();
+																cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+																cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+																quit_notification();
+
+																return Err(SelfMatchRunningError::InvalidState(String::from(
+																	"Exclusive lock on self_match_event_queue failed."
+																)));
+															}
+														}
+														break;
+													}
+
+													m.insert(mhash,shash,1);
+												},
+												_ => (),
+											};
+
 											match kyokumen_hash_map.get(&mhash,&shash) {
+												Some(c) if c == 3 => {
+													cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+													cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+													kifu_writer(&sfen,&mvs);
+													match self_match_event_queue.lock() {
+														Ok(mut self_match_event_queue) => {
+															self_match_event_queue.push(SelfMatchEvent::GameEnd(
+																	SelfMatchGameEndState::Foul(teban,FoulKind::Sennichite)
+																));
+														},
+														Err(ref e) => {
+															on_error_handler.lock().map(|h| h.call(e)).is_err();
+															cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+															cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+															quit_notification();
+
+															return Err(SelfMatchRunningError::InvalidState(String::from(
+																"Exclusive lock on self_match_event_queue failed."
+															)));
+														}
+													}
+													break;
+												},
 												Some(c) => {
 													kyokumen_hash_map.insert(mhash,shash,c+1);
 												},
@@ -422,6 +522,25 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
 											cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
 											kifu_writer(&sfen,&mvs);
+											match self_match_event_queue.lock() {
+												Ok(mut self_match_event_queue) => {
+													self_match_event_queue.push(SelfMatchEvent::GameEnd(
+															SelfMatchGameEndState::Foul(teban,FoulKind::InvalidMove)
+														));
+												},
+												Err(ref e) => {
+													on_error_handler.lock().map(|h| h.call(e)).is_err();
+													cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+													quit_notification();
+
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"Exclusive lock on self_match_event_queue failed."
+													)));
+												}
+											}
+											break;
 										}
 									}
 
@@ -555,7 +674,105 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 													banmen = next;
 
+													match m {
+														Move::Put(MochigomaKind::Fu,_) if banmen.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
+															match m {
+																&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+																m @ _ => {
+																	match banmen.apply_move_none_check(&teban,&mc,&m.to_move()) {
+																		(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+																	}
+																},
+															}
+														}).count() == 0 => {
+															cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+															cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+															kifu_writer(&sfen,&mvs);
+															match self_match_event_queue.lock() {
+																Ok(mut self_match_event_queue) => {
+																	self_match_event_queue.push(SelfMatchEvent::GameEnd(
+																			SelfMatchGameEndState::Foul(teban,FoulKind::PutFuAndMate)
+																		));
+																},
+																Err(ref e) => {
+																	on_error_handler.lock().map(|h| h.call(e)).is_err();
+																	cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+																	cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+																	quit_notification();
+
+																	return Err(SelfMatchRunningError::InvalidState(String::from(
+																		"Exclusive lock on self_match_event_queue failed."
+																	)));
+																}
+															}
+															break;
+														},
+														_ => (),
+													}
+
+													match oute_kyokumen_hash_maps[cs_index] {
+														None if banmen.win_only_moves(&teban).len() > 0 => {
+															let mut m = TwoKeyHashMap::new();
+															m.insert(mhash,shash,1);
+															oute_kyokumen_hash_maps[cs_index] = Some(m);
+														},
+														Some(ref mut m) if banmen.win_only_moves(&teban).len() > 0 => {
+															if let Some(_) = m.get(&mhash,&shash) {
+																cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+																cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+																kifu_writer(&sfen,&mvs);
+																match self_match_event_queue.lock() {
+																	Ok(mut self_match_event_queue) => {
+																		self_match_event_queue.push(SelfMatchEvent::GameEnd(
+																				SelfMatchGameEndState::Foul(teban,FoulKind::SennichiteOu)
+																			));
+																	},
+																	Err(ref e) => {
+																		on_error_handler.lock().map(|h| h.call(e)).is_err();
+																		cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+																		cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+																		quit_notification();
+
+																		return Err(SelfMatchRunningError::InvalidState(String::from(
+																			"Exclusive lock on self_match_event_queue failed."
+																		)));
+																	}
+																}
+																break;
+															}
+
+															m.insert(mhash,shash,1);
+														},
+														_ => (),
+													};
+
 													match kyokumen_hash_map.get(&mhash,&shash) {
+														Some(c) if c == 3 => {
+															cs[cs_index].send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+															cs[(cs_index+1) % 2].send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+															kifu_writer(&sfen,&mvs);
+															match self_match_event_queue.lock() {
+																Ok(mut self_match_event_queue) => {
+																	self_match_event_queue.push(SelfMatchEvent::GameEnd(
+																			SelfMatchGameEndState::Foul(teban,FoulKind::Sennichite)
+																		));
+																},
+																Err(ref e) => {
+																	on_error_handler.lock().map(|h| h.call(e)).is_err();
+																	cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+																	cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+																	quit_notification();
+
+																	return Err(SelfMatchRunningError::InvalidState(String::from(
+																		"Exclusive lock on self_match_event_queue failed."
+																	)));
+																}
+															}
+															break;
+														},
 														Some(c) => {
 															kyokumen_hash_map.insert(mhash,shash,c+1);
 														},
@@ -589,6 +806,25 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													cs[(cs_index+1) % 2].send(
 															SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
 													kifu_writer(&sfen,&mvs);
+													match self_match_event_queue.lock() {
+														Ok(mut self_match_event_queue) => {
+															self_match_event_queue.push(SelfMatchEvent::GameEnd(
+																	SelfMatchGameEndState::Foul(teban,FoulKind::InvalidMove)
+																));
+														},
+														Err(ref e) => {
+															on_error_handler.lock().map(|h| h.call(e)).is_err();
+															cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
+															cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+
+															quit_notification();
+
+															return Err(SelfMatchRunningError::InvalidState(String::from(
+																"Exclusive lock on self_match_event_queue failed."
+															)));
+														}
+													}
+													break;
 												}
 											}
 											Some(m)

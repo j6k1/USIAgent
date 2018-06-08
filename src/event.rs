@@ -119,8 +119,15 @@ pub enum SelfMatchGameEndState {
 	NyuGyokuWin(Teban),
 	NyuGyokuLose(Teban),
 	Draw,
-	Foul(Teban),
+	Foul(Teban,FoulKind),
 	Timeover(Teban),
+}
+#[derive(Debug)]
+pub enum FoulKind {
+	InvalidMove,
+	PutFuAndMate,
+	Sennichite,
+	SennichiteOu,
 }
 #[derive(Debug)]
 pub enum SelfMatchEventKind {
