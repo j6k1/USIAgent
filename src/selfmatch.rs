@@ -49,7 +49,7 @@ pub struct SelfMatchEngine<T,E,S>
 	player2:Arc<Mutex<T>>,
 	info_sender:Arc<Mutex<S>>,
 	game_time_limit:UsiGoTimeLimit,
-	end_time:Option<Instant>,
+	end_time:Option<Duration>,
 	number_of_games:Option<u32>,
 	silent:bool,
 	pub system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
@@ -63,7 +63,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 	pub fn new(player1:T,player2:T,
 				info_sender:Arc<Mutex<S>>,
 				game_time_limit:UsiGoTimeLimit,
-				end_time:Option<Instant>,number_of_games:Option<u32>,
+				end_time:Option<Duration>,number_of_games:Option<u32>,
 				silent:bool)
 	-> SelfMatchEngine<T,E,S>
 	where T: USIPlayer<E> + fmt::Debug,
@@ -104,6 +104,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static {
+		let start_time = Instant::now();
 		let logger_arc = Arc::new(Mutex::new(logger));
 		let on_error_handler_arc = Arc::new(Mutex::new(OnErrorHandler::new(logger_arc.clone())));
 
@@ -223,6 +224,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let on_error_handler = on_error_handler_arc.clone();
 
+		let end_time = self.end_time.map(|t| t);
+		let number_of_games = self.number_of_games.map(|n| n);
+
 		let bridge_h = thread::spawn(move || {
 			let cs = [cs1,cs2];
 			let mut prev_move:Option<Move> = None;
@@ -242,9 +246,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				};
 			};
 
-			loop {
+			let mut game_count = 0;
+
+			while number_of_games.map_or(true, |n| game_count < n) &&
+				  end_time.map_or(true, |t| Instant::now() - start_time < t){
 				cs[0].send(SelfMatchMessage::GameStart).unwrap();
 				cs[1].send(SelfMatchMessage::GameStart).unwrap();
+
+				game_count += 1;
 
 				let mut cs_index = if on_before_newgame() {
 					1
