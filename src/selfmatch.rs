@@ -480,7 +480,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 													m.insert(mhash,shash,1);
 												},
-												_ => (),
+												_ => {
+													oute_kyokumen_hash_maps[cs_index] = None;
+												}
 											};
 
 											match kyokumen_hash_map.get(&mhash,&shash) {
@@ -745,7 +747,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 															m.insert(mhash,shash,1);
 														},
-														_ => (),
+														_ => {
+															oute_kyokumen_hash_maps[cs_index] = None;
+														}
 													};
 
 													match kyokumen_hash_map.get(&mhash,&shash) {
