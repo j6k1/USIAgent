@@ -1239,7 +1239,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let quit_ready = quit_ready_arc.clone();
 
 		let on_error_handler = on_error_handler_arc.clone();
-		let logger = logger_arc.clone();
 
 		let bridge_h = std::thread::spawn(move || {
 			let cs = [cs1,cs2];
@@ -1288,7 +1287,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 						quit_notification();
 
-						return;
+						return Err(SelfMatchRunningError::InvalidState(String::from(
+							"Exclusive lock on self_match_event_queue failed."
+						)));
 					}
 				}
 
@@ -1310,15 +1311,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							(teban,Banmen(banmen),mc,n,m)
 						},
 						e => {
-							let e = EventHandlerError::InvalidState(e.event_kind());
-							on_error_handler.lock().map(|h| h.call(&e)).is_err();
-
 							cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
 							cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 							quit_notification();
 
-							return;
+							return Err(SelfMatchRunningError::InvalidState(format!(
+								"The type of event passed and the event being processed do not match. (Event kind = {:?})",
+								 e.event_kind()
+							)));
 						}
 					},
 					Err(ref e) => {
@@ -1329,7 +1330,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 						quit_notification();
 
-						return;
+						return Err(SelfMatchRunningError::InvalidState(String::from(
+							"An error occurred parsing the sfen string."
+						)));
 					}
 				};
 
@@ -1451,28 +1454,27 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								SelfMatchMessage::Error(n) => {
 									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();;
 									quit_notification();
-									return;
+									return Err(SelfMatchRunningError::InvalidState(String::from(
+										"An error occurred while executing the player thread."
+									)));
 								},
 								SelfMatchMessage::Quit => {
 									cs[0].send(SelfMatchMessage::Quit).unwrap();;
 									cs[1].send(SelfMatchMessage::Quit).unwrap();;
 
 									quit_notification();
-									return;
+
+									return Ok(());
 								},
 								_ => {
-									logger.lock().map(|mut logger| {
-										logger.logging(&format!("Invalid message."))
-									}).map_err(|_| {
-										USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-										false
-									}).is_err();
-
 									cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
 									cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 									quit_notification();
-									return;
+
+									return Err(SelfMatchRunningError::InvalidState(String::from(
+										"An invalid message was sent to the self-match management thread."
+									)));
 								}
 							}
 						},
@@ -1497,7 +1499,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 													quit_notification();
-													return;
+
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"Exclusive lock on self_match_event_queue failed."
+													)));
 												}
 											}
 
@@ -1547,7 +1552,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 																quit_notification();
-																return;
+
+																return Err(SelfMatchRunningError::InvalidState(String::from(
+																	"Exclusive lock on self_match_event_queue failed."
+																)));
 															}
 														}
 														break;
@@ -1609,7 +1617,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 													quit_notification();
-													return;
+
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"Exclusive lock on self_match_event_queue failed."
+													)));
 												}
 											}
 											break;
@@ -1625,7 +1636,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 													quit_notification();
-													return;
+
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"Exclusive lock on self_match_event_queue failed."
+													)));
 												}
 											}
 											break;
@@ -1648,7 +1662,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 													quit_notification();
-													return;
+
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"Exclusive lock on self_match_event_queue failed."
+													)));
 												}
 											}
 											break;
@@ -1671,7 +1688,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 													quit_notification();
-													return;
+
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"Exclusive lock on self_match_event_queue failed."
+													)));
 												}
 											}
 											break;
@@ -1681,34 +1701,34 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								SelfMatchMessage::Error(n) => {
 									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();;
 									quit_notification();
-									return;
+									return Err(SelfMatchRunningError::InvalidState(String::from(
+										"An error occurred while executing the player thread."
+									)));
 								},
 								SelfMatchMessage::Quit => {
 									cs[0].send(SelfMatchMessage::Quit).unwrap();;
 									cs[1].send(SelfMatchMessage::Quit).unwrap();;
 
 									quit_notification();
-									return;
+
+									return Ok(());
 								},
 								_ => {
-									logger.lock().map(|mut logger| {
-										logger.logging(&format!("Invalid message."))
-									}).map_err(|_| {
-										USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-										false
-									}).is_err();
-
 									cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
 									cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
 
 									quit_notification();
-									return;
+									return Err(SelfMatchRunningError::InvalidState(String::from(
+										"An invalid message was sent to the self-match management thread."
+									)));
 								}
 							}
 						}
 					}
 				}
 			}
+
+			Ok(())
 		});
 
 		let players = [self.player1.clone(),self.player2.clone()];
@@ -1930,17 +1950,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let delay = Duration::from_millis(50);
 		let on_error_handler = on_error_handler_arc.clone();
 		let self_match_event_queue = self_match_event_queue_arc.clone();
-		let quit_ready = quit_ready_arc.clone();
 		let logger = logger_arc.clone();
 
-		let input_reader_h = std::thread::spawn(move || {
-			while !(match quit_ready.lock() {
-				Ok(quit_ready) => *quit_ready,
-				Err(ref e) => {
-					on_error_handler.lock().map(|h| h.call(e)).is_err();
-					true
-				}
-			}) {
+		std::thread::spawn(move || {
+			loop {
 				match input_reader.read() {
 					Ok(line) => {
 						input_handler(line);
@@ -1986,6 +1999,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 				false
 			}).is_err();
+		}).map(|r| {
+			r.map_err(|e| {
+				on_error_handler.lock().map(|h| h.call(&e)).is_err();
+				e
+			}).is_err()
 		}).is_err();
 
 		for h in handlers {
@@ -1998,14 +2016,5 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				}).is_err();
 			}).is_err();
 		}
-
-		input_reader_h.join().map_err(|_| {
-			logger.lock().map(|mut logger| {
-				logger.logging(&format!("Input reader thread join failed."))
-			}).map_err(|_| {
-				USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-				false
-			}).is_err();
-		}).is_err();
 	}
 }
