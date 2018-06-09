@@ -1902,6 +1902,200 @@ impl Banmen {
 	pub fn is_nyugyoku_win(&self,t:&Teban) -> bool {
 		false
 	}
+
+	pub fn responded_oute(&self,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
+		-> Result<bool,SelfMatchRunningError> {
+
+		let o = t.opposite();
+
+		if !match m {
+			&Move::To(_,ref dst) if self.win_only_moves_with_dst_to(&o, *dst).len() == 0 => false,
+			&Move::Put(_,ref dst) if self.win_only_moves_with_dst_put(&o, *dst).len() == 0 => false,
+			_ => true,
+		} {
+			return Err(SelfMatchRunningError::InvalidState(String::from(
+				"The argument m is not Move of oute."
+			)));
+		}
+
+		let (kind,x,y) = match m {
+			&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
+				match self {
+					&Banmen(ref kinds) => {
+						let (dx,dy) = ((9 - dx) as usize,(dy - 1) as usize);
+						(kinds[dy][dx],dx,dy)
+					}
+				}
+			},
+			&Move::Put(k,KomaDstPutPosition(dx,dy)) => {
+				(KomaKind::from((*t,k)),(9 - dx) as usize, (dy - 1) as usize)
+			}
+		};
+
+		let mvs = match kind {
+			KomaKind::SKyou | KomaKind::GKyou |
+			KomaKind::SHisha | KomaKind::GHisha |
+			KomaKind::SHishaN | KomaKind::GHishaN |
+			KomaKind::SKaku | KomaKind::GKaku |
+			KomaKind::SKakuN | KomaKind::GKakuN => {
+				self.legal_moves_all(t, mc).into_iter().filter(|m| {
+					match m {
+						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+						&LegalMove::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,_),_) => {
+							let (sx,sy) = ((9 - sx) as usize, (sy - 1) as usize);
+							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
+
+							let ou = match *t {
+								Teban::Sente => KomaKind::SOu,
+								Teban::Gote => KomaKind::GOu,
+							};
+
+							match self {
+								&Banmen(ref kinds) => {
+									if kinds[sy][sx] == ou {
+										let (tx,ty) = (sx,sy);
+
+										if dx == x && dy == y {
+											true
+										} else if tx - x == 0 {
+											dx != x
+										} else if ty - y == 0 {
+											dy != y
+										} else {
+											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs()
+										}
+									} else {
+										let (tx,ty) = match self.find(&ou) {
+											Some(ref v) if v.len() > 0 => {
+												match v[0] {
+													KomaPosition(ox,oy) => {
+														((9 - ox) as usize, (oy - 1) as usize)
+													},
+												}
+											},
+											_ => {
+												return false;
+											}
+										};
+
+										if dx == x && dy == y {
+											true
+										} else if tx - x == 0 && ty < y {
+											dx == x && dy <= y && dy > ty
+										} else if tx - x == 0 {
+											dx == x && dy >= y && dy < ty
+										} else if ty - y == 0 && tx < x {
+											dy == y && dx <= x && dx > tx
+										} else if ty - y == 0 {
+											dy == y && dx >= x && dx < tx
+										} else if tx < x && ty < y {
+											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+													dx <= x && dx > tx &&
+													dy <= y && dy > ty
+										} else if tx > x && ty < y {
+											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+													dx >= x && dx < tx &&
+													dy <= y && dy < ty
+										} else if tx < x && ty > y {
+											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+													dx <= x && dx > tx &&
+													dy >= y && dy < ty
+										} else if tx > x && ty > y{
+											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+													dx >= x && dx < tx &&
+													dy >= y && dy < ty
+										} else {
+											false
+										}
+									}
+								}
+							}
+						},
+						&LegalMove::Put(_,KomaDstPutPosition(dx,dy)) => {
+							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
+							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
+
+							let ou = match *t {
+								Teban::Sente => KomaKind::SOu,
+								Teban::Gote => KomaKind::GOu,
+							};
+
+							let (tx,ty) = match self.find(&ou) {
+								Some(ref v) if v.len() > 0 => {
+									match v[0] {
+										KomaPosition(ox,oy) => {
+											((9 - ox) as usize, (oy - 1) as usize)
+										}
+									}
+								},
+								_ => {
+									return false;
+								}
+							};
+
+							if tx - x == 0 && ty < y {
+								dx == x && dy <= y && dy > ty
+							} else if tx - x == 0 {
+								dx == x && dy >= y && dy < ty
+							} else if ty - y == 0 && tx < x {
+								dy == y && dx <= x && dx > tx
+							} else if ty - y == 0 {
+								dy == y && dx >= x && dx < tx
+							} else if tx < x && ty < y {
+								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+										dx <= x && dx > tx &&
+										dy <= y && dy > ty
+							} else if tx > x && ty < y {
+								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+										dx >= x && dx < tx &&
+										dy <= y && dy < ty
+							} else if tx < x && ty > y {
+								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+										dx <= x && dx > tx &&
+										dy >= y && dy < ty
+							} else if tx > x && ty > y{
+								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+										dx >= x && dx < tx &&
+										dy >= y && dy < ty
+							} else {
+								false
+							}
+						}
+					}
+				}).collect::<Vec<LegalMove>>()
+			},
+			_ => {
+				self.legal_moves_all(t, mc).into_iter().filter(|m| {
+					match m {
+						&LegalMove::To(_,KomaDstToPosition(dx,dy,_),_) => {
+							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
+
+							let ou = match *t {
+								Teban::Sente => KomaKind::SOu,
+								Teban::Gote => KomaKind::GOu,
+							};
+
+							match self {
+								&Banmen(ref kinds) => {
+									kinds[dx][dy] == ou || (dx == x && dy == y)
+								}
+							}
+						},
+						_ => false
+					}
+				}).collect::<Vec<LegalMove>>()
+			}
+		};
+
+		Ok(match nm {
+			&Move::To(s,d) => {
+				mvs.find(&(s,d)).is_some()
+			},
+			&Move::Put(k,d) => {
+				mvs.find(&(k,d)).is_some()
+			}
+		})
+	}
 }
 impl Find<KomaPosition,Move> for Vec<LegalMove> {
 	fn find(&self,query:&KomaPosition) -> Option<Move> {
