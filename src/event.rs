@@ -82,7 +82,7 @@ pub enum UserEvent {
 	Stop,
 	Quit,
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UserEventKind {
 	Stop = 0,
 	Quit,
@@ -112,7 +112,7 @@ pub enum SelfMatchEvent {
 	GameEnd(SelfMatchGameEndState),
 	Abort,
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum SelfMatchGameEndState {
 	Win(Teban),
 	Resign(Teban),
@@ -122,7 +122,7 @@ pub enum SelfMatchGameEndState {
 	Foul(Teban,FoulKind),
 	Timeover(Teban),
 }
-#[derive(Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum FoulKind {
 	InvalidMove,
 	PutFuAndMate,
