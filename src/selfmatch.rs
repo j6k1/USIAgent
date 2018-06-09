@@ -407,8 +407,22 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											quit_notification();
 										}
 									}
-									match banmen.apply_valid_move(&teban,&mc,&m) {
+									match banmen.apply_valid_move(&teban,&mc,m) {
 										Ok((next,nmc,o)) => {
+											if let Some(pm) = prev_move{
+												if next.win_only_moves(&teban.opposite()).len() > 0 {
+													if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
+														on_gameend(
+															cs[(cs_index+1) % 2].clone(),
+															cs[cs_index].clone(),
+															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::NotRespondedOute)
+														)?;
+														mvs.push(*m);
+														kifu_writer(&sfen,&mvs);
+														break;
+													}
+												}
+											}
 											mc = nmc;
 											teban = teban.opposite();
 
@@ -644,6 +658,20 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 											match banmen.apply_valid_move(&teban,&mc,&m) {
 												Ok((next,nmc,o)) => {
+													if let Some(pm) = prev_move{
+														if next.win_only_moves(&teban.opposite()).len() > 0 {
+															if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
+																on_gameend(
+																	cs[(cs_index+1) % 2].clone(),
+																	cs[cs_index].clone(),
+																	SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::NotRespondedOute)
+																)?;
+																mvs.push(m);
+																kifu_writer(&sfen,&mvs);
+																break;
+															}
+														}
+													}
 													mc = nmc;
 													teban = teban.opposite();
 
