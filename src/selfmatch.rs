@@ -69,7 +69,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 	-> SelfMatchEngine<T,E,S>
 	where T: USIPlayer<E> + fmt::Debug,
 			Arc<Mutex<T>>: Send + 'static,
-			E: Error + fmt::Debug,
+			E: PlayerError,
 			S: InfoSender,
 			Arc<Mutex<S>>: Send + 'static {
 		SelfMatchEngine {
@@ -227,6 +227,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let end_time = self.end_time.map(|t| t);
 		let number_of_games = self.number_of_games.map(|n| n);
+		let game_time_limit = self.game_time_limit;
 
 		let bridge_h = thread::spawn(move || {
 			let cs = [cs1,cs2];
@@ -363,6 +364,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					}
 				};
 
+				let mut current_time_limit = game_time_limit.to_instant(teban,0);
+
 				let kyokumen_hash_map:TwoKeyHashMap<u32> = TwoKeyHashMap::new();
 				let hasher = KyokumenHash::new();
 
@@ -407,6 +410,29 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											quit_notification();
 										}
 									}
+
+									if let (Some(limit),inc) = current_time_limit {
+										if limit + Duration::from_millis(inc as u64) > Instant::now() {
+											kifu_writer(&sfen,&mvs);
+											on_gameend(
+												cs[(cs_index+1) % 2].clone(),
+												cs[cs_index].clone(),
+												SelfMatchGameEndState::Timeover(teban.opposite()))?;
+											break;
+										}
+									}
+
+									let tinc = match current_time_limit {
+										(Some(limit),tinc) => {
+											(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
+										},
+										(_,tinc) => {
+											tinc
+										}
+									};
+
+									current_time_limit = game_time_limit.to_instant(teban,tinc);
+
 									match banmen.apply_valid_move(&teban,&mc,m) {
 										Ok((next,nmc,o)) => {
 											if let Some(pm) = prev_move{
@@ -583,7 +609,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 									break;
 								},
-								SelfMatchMessage::NotifyMove(BestMove::Win) if banmen.is_nyugyoku_win(&teban)=> {
+								SelfMatchMessage::NotifyMove(BestMove::Win) if banmen.is_nyugyoku_win(&teban,&mc,&current_time_limit)=> {
 									kifu_writer(&sfen,&mvs);
 									on_gameend(
 										cs[cs_index].clone(),
@@ -655,6 +681,28 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													)));
 												}
 											}
+
+											if let (Some(limit),inc) = current_time_limit {
+												if limit + Duration::from_millis(inc as u64) > Instant::now() {
+													kifu_writer(&sfen,&mvs);
+													on_gameend(
+														cs[(cs_index+1) % 2].clone(),
+														cs[cs_index].clone(),
+														SelfMatchGameEndState::Timeover(teban.opposite()))?;
+													break;
+												}
+											}
+
+											let tinc = match current_time_limit {
+												(Some(limit),tinc) => {
+													(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
+												},
+												(_,tinc) => {
+													tinc
+												}
+											};
+
+											current_time_limit = game_time_limit.to_instant(teban,tinc);
 
 											match banmen.apply_valid_move(&teban,&mc,&m) {
 												Ok((next,nmc,o)) => {
@@ -833,7 +881,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											}
 											break;
 										},
-										BestMove::Win if banmen.is_nyugyoku_win(&teban)=> {
+										BestMove::Win if banmen.is_nyugyoku_win(&teban,&mc,&current_time_limit)=> {
 											kifu_writer(&sfen,&mvs);
 											on_gameend(
 												cs[cs_index].clone(),
