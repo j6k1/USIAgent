@@ -118,19 +118,21 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 						m:Vec<Move>,mut r:T,mut f:F)
 		-> (Teban,Banmen,MochigomaCollections,T)
 		where F: FnMut(&Self,&Teban,&Banmen,
-						&MochigomaCollections,&Move,
+						&MochigomaCollections,&Option<Move>,
 						&Option<MochigomaKind>,T) -> T {
 
 		for m in &m {
 			match banmen.apply_move_none_check(&teban,&mc,&m) {
 				(next,nmc,o) => {
+					r = f(self,&teban,&banmen,&mc,&Some(*m),&o,r);
 					banmen = next;
 					mc = nmc;
 					teban = teban.opposite();
-					r = f(self,&teban,&banmen,&mc,&m,&o,r);
 				}
 			}
 		}
+
+		r = f(self,&teban,&banmen,&mc,&None,&None,r);
 
 		(teban,banmen,mc,r)
 	}

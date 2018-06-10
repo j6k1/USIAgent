@@ -432,4 +432,45 @@ impl error::Error for SelfMatchRunningError {
 	 	}
 	 }
 }
+#[derive(Debug)]
+pub enum SfenStringConvertError {
+	ToMoveString(ToMoveStringConvertError),
+	InvalidFormat(String),
+}
+impl fmt::Display for SfenStringConvertError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		SfenStringConvertError::ToMoveString(ref e) => {
+	 			e.fmt(f)
+	 		},
+	 		SfenStringConvertError::InvalidFormat(ref sfen) => {
+	 			write!(f,"The sfen string format is invalid. (passed value: {})", sfen)
+	 		}
+	 	}
+	 }
+}
+impl error::Error for SfenStringConvertError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		SfenStringConvertError::ToMoveString(_) => {
+	 			"Conversion of move to string representation failed."
+	 		},
+	 		SfenStringConvertError::InvalidFormat(_) => {
+	 			"The sfen string format is invalid."
+	 		}
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		SfenStringConvertError::ToMoveString(ref e) => Some(e),
+	 		SfenStringConvertError::InvalidFormat(_) => None,
+	 	}
+	 }
+}
+impl From<ToMoveStringConvertError> for SfenStringConvertError {
+	fn from(err: ToMoveStringConvertError) -> SfenStringConvertError {
+		SfenStringConvertError::ToMoveString(err)
+	}
+}
 pub trait PlayerError: Error + fmt::Debug {}

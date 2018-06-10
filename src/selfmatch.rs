@@ -8,6 +8,7 @@ use shogi::*;
 use hash::*;
 use Logger;
 use OnErrorHandler;
+use TryToString;
 use shogi;
 
 use std::error::Error;
@@ -25,6 +26,29 @@ use std::collections::HashMap;
 
 pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),OE>;
+	fn to_sfen(&self,initial_sfen:&String,m:&Vec<Move>)
+		-> Result<String, SfenStringConvertError> {
+
+		let sfen = initial_sfen.split(" ").collect::<Vec<&str>>();
+
+		if sfen.len() >= 5 {
+			match (sfen[0],sfen[1],sfen[2],sfen[3],sfen[4]) {
+				("sfen",p1,p2,p3,p4) => {
+					Ok(format!("sfen {} {} {} {} moves {}",p1,p2,p3,p4,m.try_to_string()?))
+				},
+				("startpos",_,_,_,_) => {
+					Ok(format!("startpos moves {}",m.try_to_string()?))
+				},
+				_ => {
+					Err(SfenStringConvertError::InvalidFormat(initial_sfen.clone()))
+				}
+			}
+		} else if sfen.len() >= 1 && sfen[0] == "startpos" {
+			Ok(format!("startpos moves {}",m.try_to_string()?))
+		} else {
+			Err(SfenStringConvertError::InvalidFormat(initial_sfen.clone()))
+		}
+	}
 }
 #[derive(Debug)]
 pub enum SelfMatchMessage {

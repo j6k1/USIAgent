@@ -236,10 +236,10 @@ impl KomaStrFromKind<MochigomaKind> for KomaStringCreator {
 		format!("{}",MOCHIGOMA_MAP[k as usize])
 	}
 }
-trait MoveStringFrom {
+pub trait MoveStringFrom {
 	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError>;
 }
-struct MoveStringCreator {
+pub struct MoveStringCreator {
 
 }
 impl MoveStringFrom for MoveStringCreator {

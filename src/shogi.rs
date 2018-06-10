@@ -4,8 +4,10 @@ use std::collections::HashMap;
 use std::time::{Instant,Duration};
 
 use TryFrom;
+use TryToString;
 use error::*;
 use hash::*;
+use command::*;
 
 use Validate;
 use Find;
@@ -260,6 +262,17 @@ impl<'a> TryFrom<&'a str,String> for Move {
 pub enum Move {
 	To(KomaSrcPosition,KomaDstToPosition),
 	Put(MochigomaKind,KomaDstPutPosition),
+}
+impl TryToString<ToMoveStringConvertError> for Vec<Move> {
+	fn try_to_string(&self) -> Result<String, ToMoveStringConvertError> {
+		let mut strs:Vec<String> = Vec::with_capacity(self.len());
+
+		for m in self {
+			strs.push(MoveStringCreator::str_from(m)?);
+		}
+
+		Ok(strs.join(" "))
+	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum LegalMove {
