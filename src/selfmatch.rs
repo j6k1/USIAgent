@@ -287,8 +287,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					},
 					Err(ref e) => {
 						on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-						win_cs.send(SelfMatchMessage::Error(0)).unwrap();;
-						lose_cs.send(SelfMatchMessage::Error(1)).unwrap();;
+						win_cs.send(SelfMatchMessage::Error(0)).unwrap();
+						lose_cs.send(SelfMatchMessage::Error(1)).unwrap();
 
 						match quit_ready_inner.lock() {
 							Ok(mut quit_ready) => {
@@ -334,8 +334,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					},
 					Err(ref e) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
-						cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-						cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+						cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+						cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 						quit_notification();
 
@@ -363,8 +363,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							(teban,Banmen(banmen),mc,n,m)
 						},
 						e => {
-							cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-							cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+							cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+							cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 							quit_notification();
 
@@ -377,8 +377,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					Err(ref e) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
 
-						cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-						cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+						cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+						cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 						quit_notification();
 
@@ -416,7 +416,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u32>>; 2] = [None,None];
 
-				loop {
+				while end_time.map_or(true, |t| Instant::now() - start_time < t) {
 					match ponders[cs_index] {
 						Some(_) if ponders[cs_index] == prev_move => {
 							cs[cs_index].send(SelfMatchMessage::PonderHit).unwrap();
@@ -428,8 +428,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										},
 										Err(ref e) => {
 											on_error_handler.lock().map(|h| h.call(e)).is_err();
-											cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-											cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+											cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+											cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 											quit_notification();
 										}
@@ -621,8 +621,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										},
 										Err(ref e) => {
 											on_error_handler.lock().map(|h| h.call(e)).is_err();
-											cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-											cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+											cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+											cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 											quit_notification();
 
@@ -652,23 +652,23 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									break;
 								},
 								SelfMatchMessage::Error(n) => {
-									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();;
+									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();
 									quit_notification();
 									return Err(SelfMatchRunningError::InvalidState(String::from(
 										"An error occurred while executing the player thread."
 									)));
 								},
 								SelfMatchMessage::Quit => {
-									cs[0].send(SelfMatchMessage::Quit).unwrap();;
-									cs[1].send(SelfMatchMessage::Quit).unwrap();;
+									cs[0].send(SelfMatchMessage::Quit).unwrap();
+									cs[1].send(SelfMatchMessage::Quit).unwrap();
 
 									quit_notification();
 
 									return Ok(());
 								},
 								_ => {
-									cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-									cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+									cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+									cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 									quit_notification();
 
@@ -695,8 +695,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												},
 												Err(ref e) => {
 													on_error_handler.lock().map(|h| h.call(e)).is_err();
-													cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+													cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+													cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 													quit_notification();
 
@@ -893,8 +893,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												},
 												Err(ref e) => {
 													on_error_handler.lock().map(|h| h.call(e)).is_err();
-													cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-													cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+													cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+													cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 													quit_notification();
 
@@ -926,23 +926,23 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 								},
 								SelfMatchMessage::Error(n) => {
-									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();;
+									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();
 									quit_notification();
 									return Err(SelfMatchRunningError::InvalidState(String::from(
 										"An error occurred while executing the player thread."
 									)));
 								},
 								SelfMatchMessage::Quit => {
-									cs[0].send(SelfMatchMessage::Quit).unwrap();;
-									cs[1].send(SelfMatchMessage::Quit).unwrap();;
+									cs[0].send(SelfMatchMessage::Quit).unwrap();
+									cs[1].send(SelfMatchMessage::Quit).unwrap();
 
 									quit_notification();
 
 									return Ok(());
 								},
 								_ => {
-									cs[0].send(SelfMatchMessage::Error(0)).unwrap();;
-									cs[1].send(SelfMatchMessage::Error(1)).unwrap();;
+									cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+									cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 									quit_notification();
 									return Err(SelfMatchRunningError::InvalidState(String::from(
@@ -954,6 +954,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					}
 				}
 			}
+
+			cs[0].send(SelfMatchMessage::Quit).unwrap();
+			cs[1].send(SelfMatchMessage::Quit).unwrap();
+
+			quit_notification();
 
 			Ok(())
 		});
@@ -985,7 +990,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											Ok(_) => (),
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 												return;
 											}
 										}
@@ -993,14 +998,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											Ok(_) => (),
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 												return;
 											}
 										}
 									},
 									Err(ref e) => {
 										on_error_handler.lock().map(|h| h.call(e)).is_err();
-										ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+										ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 										return;
 									}
 								}
@@ -1022,7 +1027,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Ok(_) => (),
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												}
@@ -1030,7 +1035,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Ok(info_sender) => info_sender,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												};
@@ -1040,7 +1045,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Ok(m) => m,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												};
@@ -1048,7 +1053,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											},
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 												return;
 											}
 										};
@@ -1069,7 +1074,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Ok(_) => (),
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												}
@@ -1077,7 +1082,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Ok(info_sender) => info_sender,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												};
@@ -1087,7 +1092,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Ok(m) => m,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												};
@@ -1107,14 +1112,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 															false
 														}).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												}
 											},
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 												return;
 											}
 										};
@@ -1127,14 +1132,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Ok(()) => (),
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 														return;
 													}
 												};
 											},
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 												return;
 											}
 										}
@@ -1150,7 +1155,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 											false
 										}).is_err();
-										ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+										ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 										return;
 									}
 								}
@@ -1166,7 +1171,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 								false
 							}).is_err();
-							ss.send(SelfMatchMessage::Error(player_i)).unwrap();;
+							ss.send(SelfMatchMessage::Error(player_i)).unwrap();
 							return;
 						}
 					}
