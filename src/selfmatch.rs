@@ -7,6 +7,7 @@ use player::*;
 use shogi::*;
 use hash::*;
 use Logger;
+use logger::FileLogger;
 use OnErrorHandler;
 use TryToString;
 use shogi;
@@ -107,6 +108,75 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			silent:silent,
 			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
 		}
+	}
+
+	pub fn start_default<F,R,RH,C,OE,KW,EH>(&mut self,on_before_newgame:F,
+						initial_position_creator:Option<C>,
+						kifu_writer:Option<KW>,
+						input_reader:R,
+						input_handler:RH,
+						player1_options:Vec<(String,SysEventOption)>,
+						player2_options:Vec<(String,SysEventOption)>,
+						self_match_event_dispatcher:USIEventDispatcher<
+																SelfMatchEventKind,
+																SelfMatchEvent,
+																SelfMatchEngine<T, E, S>,FileLogger,E>,
+						on_error:EH) -> Result<(),SelfMatchRunningError>
+		where F: FnMut() -> bool + Send + 'static,
+				R: USIInputReader + Send + 'static,
+				RH: FnMut(String) + Send + 'static,
+				C: FnMut() -> String + Send + 'static,
+				OE: Error + fmt::Debug,
+				KW:SelfMatchKifuWriter<OE> + Send + 'static,
+				Arc<Mutex<FileLogger>>: Send + 'static,
+				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
+					&SelfMatchRunningError) {
+		self.start_with_log_path(String::from("logs/log.txt"),
+								on_before_newgame,
+								initial_position_creator,
+								kifu_writer, input_reader, input_handler,
+								player1_options, player2_options,
+								self_match_event_dispatcher, on_error)
+	}
+
+	pub fn start_with_log_path<F,R,RH,C,OE,KW,EH>(&mut self,path:String,
+						on_before_newgame:F,
+						initial_position_creator:Option<C>,
+						kifu_writer:Option<KW>,
+						input_reader:R,
+						input_handler:RH,
+						player1_options:Vec<(String,SysEventOption)>,
+						player2_options:Vec<(String,SysEventOption)>,
+						self_match_event_dispatcher:USIEventDispatcher<
+																SelfMatchEventKind,
+																SelfMatchEvent,
+																SelfMatchEngine<T, E, S>,FileLogger,E>,
+						mut on_error:EH) -> Result<(),SelfMatchRunningError>
+		where F: FnMut() -> bool + Send + 'static,
+				R: USIInputReader + Send + 'static,
+				RH: FnMut(String) + Send + 'static,
+				C: FnMut() -> String + Send + 'static,
+				OE: Error + fmt::Debug,
+				KW:SelfMatchKifuWriter<OE> + Send + 'static,
+				Arc<Mutex<FileLogger>>: Send + 'static,
+				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
+					&SelfMatchRunningError) {
+		let logger = match FileLogger::new(path) {
+			Err(_) => {
+				let e = SelfMatchRunningError::IOError(String::from(
+					"The log output destination file could not be opened."
+				));
+				on_error(None,&e);
+				return Err(e);
+			},
+			Ok(logger) => logger,
+		};
+
+		self.start(on_before_newgame,
+					initial_position_creator,
+					kifu_writer, input_reader, input_handler,
+					player1_options, player2_options,
+					self_match_event_dispatcher, logger, on_error)
 	}
 
 	pub fn start<F,R,RH,C,OE,KW,L,EH>(&mut self,on_before_newgame:F,
