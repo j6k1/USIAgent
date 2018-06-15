@@ -110,10 +110,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		}
 	}
 
-	pub fn start_default<F,R,RH,C,OE,KW,EH>(&mut self,on_before_newgame:F,
+	pub fn start_default<F,RH,C,OE,KW,EH>(&mut self,on_before_newgame:F,
 						initial_position_creator:Option<C>,
 						kifu_writer:Option<KW>,
-						input_reader:R,
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
@@ -123,7 +122,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																SelfMatchEngine<T, E, S>,FileLogger,E>,
 						on_error:EH) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
-				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) + Send + 'static,
 				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
@@ -134,16 +132,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		self.start_with_log_path(String::from("logs/log.txt"),
 								on_before_newgame,
 								initial_position_creator,
-								kifu_writer, input_reader, input_handler,
+								kifu_writer, input_handler,
 								player1_options, player2_options,
 								self_match_event_dispatcher, on_error)
 	}
 
-	pub fn start_with_log_path<F,R,RH,C,OE,KW,EH>(&mut self,path:String,
+	pub fn start_with_log_path<F,RH,C,OE,KW,EH>(&mut self,path:String,
 						on_before_newgame:F,
 						initial_position_creator:Option<C>,
 						kifu_writer:Option<KW>,
-						input_reader:R,
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
@@ -153,7 +150,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																SelfMatchEngine<T, E, S>,FileLogger,E>,
 						mut on_error:EH) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
-				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) + Send + 'static,
 				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
@@ -171,6 +167,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			},
 			Ok(logger) => logger,
 		};
+
+		let input_reader = USIStdInputReader::new();
 
 		self.start(on_before_newgame,
 					initial_position_creator,
