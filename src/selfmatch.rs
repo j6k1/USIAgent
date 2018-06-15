@@ -107,9 +107,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		}
 	}
 
-	pub fn start_default<I,F,RH,C,OE,KW,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start_default<I,F,RH,OE,KW,EH>(&mut self, on_init_event_dispatcher:I,
 						on_before_newgame:F,
-						initial_position_creator:Option<C>,
+						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<KW>,
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
@@ -117,7 +117,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						on_error:EH) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
@@ -135,10 +134,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								player1_options, player2_options, on_error)
 	}
 
-	pub fn start_with_log_path<I,F,RH,C,OE,KW,EH>(&mut self,path:String,
+	pub fn start_with_log_path<I,F,RH,OE,KW,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
 						on_before_newgame:F,
-						initial_position_creator:Option<C>,
+						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<KW>,
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
@@ -146,7 +145,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						mut on_error:EH) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
@@ -176,9 +174,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					player1_options, player2_options, logger, on_error)
 	}
 
-	pub fn start<I,F,R,RH,C,OE,KW,L,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start<I,F,R,RH,OE,KW,L,EH>(&mut self, on_init_event_dispatcher:I,
 						on_before_newgame:F,
-						initial_position_creator:Option<C>,
+						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<KW>,
 						input_reader:R,
 						input_handler:RH,
@@ -188,7 +186,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
@@ -217,9 +214,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		r
 	}
 
-	fn run<I,F,R,RH,C,OE,KW,L>(&mut self, mut on_init_event_dispatcher:I,
+	fn run<I,F,R,RH,OE,KW,L>(&mut self, mut on_init_event_dispatcher:I,
 						mut on_before_newgame:F,
-						initial_position_creator:Option<C>,
+						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<KW>,
 						mut input_reader:R,
 						mut input_handler:RH,
@@ -230,7 +227,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
@@ -258,7 +254,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let mut initial_position_creator:Box<FnMut() -> String + Send + 'static> =
 			initial_position_creator.map_or(Box::new(|| String::from("startpos")), |f| {
-				Box::new(f)
+				f
 			});
 
 		let on_error_handler = on_error_handler_arc.clone();
