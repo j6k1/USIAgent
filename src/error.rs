@@ -315,26 +315,23 @@ impl From<ParseIntError> for TypeConvertError<String> where String: fmt::Debug {
 	}
 }
 #[derive(Debug)]
-pub enum USIAgentStartupError<'a,T,E> where T: fmt::Debug + 'a, E: PlayerError {
-	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+pub enum USIAgentStartupError<E> where E: PlayerError {
 	MutexLockFailedOtherError(String),
 	IOError(String),
 	PlayerError(E),
 }
-impl<'a,T,E> fmt::Display for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: PlayerError {
+impl<E> fmt::Display for USIAgentStartupError<E> where E: PlayerError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		USIAgentStartupError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
 		 	USIAgentStartupError::MutexLockFailedOtherError(ref s) => write!(f, "{}",s),
 		 	USIAgentStartupError::IOError(ref s) => write!(f, "{}",s),
 		 	USIAgentStartupError::PlayerError(_) => write!(f,"An error occurred in the processing within the player object."),
 	 	}
 	 }
 }
-impl<'a,T,E> error::Error for USIAgentStartupError<'a,T,E> where T: fmt::Debug, E: PlayerError {
+impl<E> error::Error for USIAgentStartupError<E> where E: PlayerError {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		USIAgentStartupError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
 	 		USIAgentStartupError::MutexLockFailedOtherError(_) => "Could not get exclusive lock on object.",
 	 		USIAgentStartupError::IOError(_) => "IO Error.",
 	 		USIAgentStartupError::PlayerError(_) => "An error occurred in the processing within the player object.",
@@ -343,17 +340,50 @@ impl<'a,T,E> error::Error for USIAgentStartupError<'a,T,E> where T: fmt::Debug, 
 
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
-	 		USIAgentStartupError::MutexLockFailedError(ref e) => Some(e),
 	 		USIAgentStartupError::MutexLockFailedOtherError(_) => None,
 	 		USIAgentStartupError::IOError(_) => None,
 	 		USIAgentStartupError::PlayerError(ref e) => Some(e),
 	 	}
 	 }
 }
-impl<'a,T,E> From<PoisonError<MutexGuard<'a,T>>> for USIAgentStartupError<'a,T,E>
+#[derive(Debug)]
+pub enum USIAgentRunningError<'a,T,E> where T: fmt::Debug + 'a, E: PlayerError {
+	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+	StartupError(USIAgentStartupError<E>),
+}
+impl<'a,T,E> fmt::Display for USIAgentRunningError<'a,T,E> where T: fmt::Debug, E: PlayerError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		USIAgentRunningError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
+		 	USIAgentRunningError::StartupError(ref e) => write!(f,"{}",e),
+	 	}
+	 }
+}
+impl<'a,T,E> error::Error for USIAgentRunningError<'a,T,E> where T: fmt::Debug, E: PlayerError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		USIAgentRunningError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
+	 		USIAgentRunningError::StartupError(_) => "An error occurred during the startup process of USIAgent.",
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		USIAgentRunningError::MutexLockFailedError(ref e) => Some(e),
+	 		USIAgentRunningError::StartupError(ref e) => Some(e),
+	 	}
+	 }
+}
+impl<'a,T,E> From<PoisonError<MutexGuard<'a,T>>> for USIAgentRunningError<'a,T,E>
 	where T: fmt::Debug + 'a, E: PlayerError {
-	fn from(err: PoisonError<MutexGuard<'a,T>>) -> USIAgentStartupError<'a,T,E> {
-		USIAgentStartupError::MutexLockFailedError(err)
+	fn from(err: PoisonError<MutexGuard<'a,T>>) -> USIAgentRunningError<'a,T,E> {
+		USIAgentRunningError::MutexLockFailedError(err)
+	}
+}
+impl<'a,T,E> From<USIAgentStartupError<E>> for USIAgentRunningError<'a,T,E>
+	where T: fmt::Debug + 'a, E: PlayerError {
+	fn from(err: USIAgentStartupError<E>) -> USIAgentRunningError<'a,T,E> {
+		USIAgentRunningError::StartupError(err)
 	}
 }
 #[derive(Debug)]

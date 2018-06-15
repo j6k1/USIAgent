@@ -109,7 +109,47 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		}
 	}
 
-	pub fn start<F,R,RH,C,OE,KW,L>(&mut self,mut on_before_newgame:F,
+	pub fn start<F,R,RH,C,OE,KW,L,EH>(&mut self,on_before_newgame:F,
+						initial_position_creator:Option<C>,
+						kifu_writer:Option<KW>,
+						input_reader:R,
+						input_handler:RH,
+						player1_options:Vec<(String,SysEventOption)>,
+						player2_options:Vec<(String,SysEventOption)>,
+						self_match_event_dispatcher:USIEventDispatcher<
+																SelfMatchEventKind,
+																SelfMatchEvent,
+																SelfMatchEngine<T, E, S>,L,E>,
+						logger:L, mut on_error:EH) -> Result<(),SelfMatchRunningError>
+		where F: FnMut() -> bool + Send + 'static,
+				R: USIInputReader + Send + 'static,
+				RH: FnMut(String) + Send + 'static,
+				C: FnMut() -> String + Send + 'static,
+				OE: Error + fmt::Debug,
+				KW:SelfMatchKifuWriter<OE> + Send + 'static,
+				L: Logger + fmt::Debug,
+				Arc<Mutex<L>>: Send + 'static,
+				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
+					&SelfMatchRunningError) {
+		let logger_arc = Arc::new(Mutex::new(logger));
+		let on_error_handler_arc = Arc::new(Mutex::new(OnErrorHandler::new(logger_arc.clone())));
+		let on_error_handler = on_error_handler_arc.clone();
+
+		let r = self.run(on_before_newgame,
+							initial_position_creator,
+							kifu_writer, input_reader, input_handler,
+							player1_options, player2_options,
+							self_match_event_dispatcher,
+							logger_arc, on_error_handler_arc);
+
+		if let Err(ref e) = r {
+			on_error(Some(on_error_handler),e);
+		}
+
+		r
+	}
+
+	fn run<F,R,RH,C,OE,KW,L>(&mut self,mut on_before_newgame:F,
 						initial_position_creator:Option<C>,
 						kifu_writer:Option<KW>,
 						mut input_reader:R,
@@ -120,7 +160,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																SelfMatchEventKind,
 																SelfMatchEvent,
 																SelfMatchEngine<T, E, S>,L,E>,
-						logger:L) -> Result<(),SelfMatchRunningError>
+						logger_arc:Arc<Mutex<L>>,
+						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) + Send + 'static,
@@ -130,8 +171,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static {
 		let start_time = Instant::now();
-		let logger_arc = Arc::new(Mutex::new(logger));
-		let on_error_handler_arc = Arc::new(Mutex::new(OnErrorHandler::new(logger_arc.clone())));
 
 		let mut system_event_dispatcher:USIEventDispatcher<SystemEventKind,
 														SystemEvent,SelfMatchEngine<T, E, S>,L,E> = USIEventDispatcher::new(&logger_arc);

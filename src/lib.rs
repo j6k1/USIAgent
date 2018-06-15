@@ -137,28 +137,26 @@ impl<T,E> UsiAgent<T,E>
 		}
 	}
 
-	pub fn start_default<F,AE>(&self,on_error:F) ->
-		Result<(),AE>
+	pub fn start_default<F>(&self,on_error:F) ->
+		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
-					&USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>)
-					-> Result<(),AE>,
-			AE: Error + fmt::Debug {
+					&USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>) {
 		self.start_with_log_path(String::from("logs/log.txt"),on_error)
 	}
 
-	pub fn start_with_log_path<F,AE>(&self,path:String,mut on_error:F) ->
-		Result<(),AE>
+	pub fn start_with_log_path<F>(&self,path:String,mut on_error:F) ->
+		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
-					&USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>)
-					-> Result<(),AE>,
-			AE: Error + fmt::Debug {
+					&USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>) {
 
 		let logger = match FileLogger::new(path) {
 			Err(_) => {
 				let e = USIAgentStartupError::IOError(String::from(
 					"The log output destination file could not be opened."
 				));
-				return on_error(None,&e)
+				let e = USIAgentRunningError::from(e);
+				on_error(None,&e);
+				return Err(e);
 			},
 			Ok(logger) => logger,
 		};
@@ -166,16 +164,14 @@ impl<T,E> UsiAgent<T,E>
 		let input_reader = USIStdInputReader::new();
 		let output_writer = USIStdOutputWriter::new();
 
-		self.start::<USIStdInputReader,USIStdOutputWriter,FileLogger,F,AE>(input_reader,output_writer,logger,on_error)
+		self.start::<USIStdInputReader,USIStdOutputWriter,FileLogger,F>(input_reader,output_writer,logger,on_error)
 	}
 
-	pub fn start<R,W,L,F,AE>(&self,reader:R,writer:W,logger:L,mut on_error:F) ->
-		Result<(),AE>
+	pub fn start<R,W,L,F>(&self,reader:R,writer:W,logger:L,mut on_error:F) ->
+		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
 			F: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
-					&USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>)
-					-> Result<(),AE>,
-			AE: Error + fmt::Debug,
+					&USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>),
 			EventHandlerError<SystemEventKind, E>: From<E>,
 			Arc<Mutex<R>>: Send + 'static,
 			Arc<Mutex<L>>: Send + 'static,
@@ -186,17 +182,18 @@ impl<T,E> UsiAgent<T,E>
 		let on_error_handler_arc = Arc::new(Mutex::new(OnErrorHandler::new(logger_arc.clone())));
 		let on_error_handler = on_error_handler_arc.clone();
 
-		match self.run(reader,writer,logger_arc,on_error_handler_arc) {
-			Err(ref e) => {
-				on_error(Some(on_error_handler),e)
-			},
-			Ok(()) => Ok(())
+		let r = self.run(reader,writer,logger_arc,on_error_handler_arc);
+
+		if let Err(ref e) = r {
+			on_error(Some(on_error_handler),e);
 		}
+
+		r
 	}
 
 	fn run<R,W,L>(&self,reader:R,writer:W,logger_arc:Arc<Mutex<L>>,
 								on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) ->
-		Result<(),USIAgentStartupError<EventQueue<SystemEvent,SystemEventKind>,E>>
+		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
 			EventHandlerError<SystemEventKind, E>: From<E>,
 			Arc<Mutex<R>>: Send + 'static,
@@ -223,8 +220,9 @@ impl<T,E> UsiAgent<T,E>
 
 		match system_event_dispatcher.lock() {
 			Err(_) => {
-				return Err(USIAgentStartupError::MutexLockFailedOtherError(
-					String::from("Failed to get exclusive lock of system event queue.")));
+				return Err(USIAgentRunningError::from(
+					USIAgentStartupError::MutexLockFailedOtherError(
+						String::from("Failed to get exclusive lock of system event queue."))));
 			},
 			Ok(mut system_event_dispatcher) => {
 
