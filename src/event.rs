@@ -656,6 +656,7 @@ pub struct USIEventDispatcher<K,E,T,L,UE>
 			EventHandlerError<K,UE>: From<UE>,
 			usize: From<K> {
 	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>,
+	context_type:PhantomData<T>,
 	event_kind:PhantomData<K>,
 	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<K,UE>>>>>,
 	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K,UE>>>>>,
@@ -676,6 +677,7 @@ impl<K,E,T,L,UE> USIEventDispatcher<K,E,T,L,UE>
 
 		let mut o = USIEventDispatcher {
 			on_error_handler:Arc::new(Mutex::new(OnErrorHandler::new(logger.clone()))),
+			context_type:PhantomData::<T>,
 			event_kind:PhantomData::<K>,
 			handlers:Vec::with_capacity(K::max_index()+1),
 			once_handlers:Vec::with_capacity(K::max_index()+1),
