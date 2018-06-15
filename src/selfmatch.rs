@@ -122,7 +122,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																SelfMatchEngine<T, E, S>,FileLogger,E>,
 						on_error:EH) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
-				RH: FnMut(String) + Send + 'static,
+				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
 				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
@@ -150,7 +150,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																SelfMatchEngine<T, E, S>,FileLogger,E>,
 						mut on_error:EH) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
-				RH: FnMut(String) + Send + 'static,
+				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
 				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
@@ -191,7 +191,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						logger:L, mut on_error:EH) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
-				RH: FnMut(String) + Send + 'static,
+				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
 				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
@@ -232,7 +232,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
-				RH: FnMut(String) + Send + 'static,
+				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
 				C: FnMut() -> String + Send + 'static,
 				OE: Error + fmt::Debug,
 				KW:SelfMatchKifuWriter<OE> + Send + 'static,
@@ -1295,7 +1295,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			loop {
 				match input_reader.read() {
 					Ok(line) => {
-						input_handler(line);
+						if let Err(ref e) = input_handler(line) {
+							on_error_handler.lock().map(|h| h.call(e)).is_err();
+							return;
+						}
 					},
 					Err(ref e) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
