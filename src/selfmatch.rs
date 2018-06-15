@@ -77,7 +77,6 @@ pub struct SelfMatchEngine<T,E,S>
 	game_time_limit:UsiGoTimeLimit,
 	end_time:Option<Duration>,
 	number_of_games:Option<u32>,
-	silent:bool,
 	pub system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
 impl<T,E,S> SelfMatchEngine<T,E,S>
@@ -89,8 +88,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 	pub fn new(player1:T,player2:T,
 				info_sender:Arc<Mutex<S>>,
 				game_time_limit:UsiGoTimeLimit,
-				end_time:Option<Duration>,number_of_games:Option<u32>,
-				silent:bool)
+				end_time:Option<Duration>,number_of_games:Option<u32>)
 	-> SelfMatchEngine<T,E,S>
 	where T: USIPlayer<E> + fmt::Debug,
 			Arc<Mutex<T>>: Send + 'static,
@@ -105,7 +103,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			game_time_limit:game_time_limit,
 			end_time:end_time,
 			number_of_games:number_of_games,
-			silent:silent,
 			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
 		}
 	}
