@@ -549,6 +549,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 				let banmen_at_start = banmen.clone();
 				let mc_at_start = mc.clone();
+				let teban_at_start = teban.clone();
 
 				let mut current_time_limit = game_time_limit.to_instant(teban,0);
 
@@ -773,7 +774,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													mvs.push(pm);
 													cs[cs_index].send(
 														SelfMatchMessage::StartPonderThink(
-															teban,banmen_at_start.clone(),mc_at_start.clone(),n,mvs
+															teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs
 														)).unwrap();
 												}
 											}
@@ -866,7 +867,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						},
 						None => {
 							cs[cs_index].send(SelfMatchMessage::StartThink(
-										teban,banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone())).unwrap();
+										teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone())).unwrap();
 							match sr.recv().unwrap() {
 								SelfMatchMessage::NotifyMove(m) => {
 									prev_move = match m {
@@ -1048,7 +1049,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																	mvs.push(pm);
 																	cs[cs_index].send(
 																		SelfMatchMessage::StartPonderThink(
-																			teban,banmen_at_start.clone(),
+																			teban_at_start.clone(),banmen_at_start.clone(),
 																			mc_at_start.clone(),n,mvs)).unwrap();
 																}
 															}
