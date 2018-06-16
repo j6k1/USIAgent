@@ -597,7 +597,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 
 									if let (Some(limit),inc) = current_time_limit {
-										if limit + Duration::from_millis(inc as u64) > Instant::now() {
+										if limit + Duration::from_millis(inc as u64) < Instant::now() {
 											kifu_writer(&sfen,&mvs);
 											on_gameend(
 												cs[(cs_index+1) % 2].clone(),
@@ -888,7 +888,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											}
 
 											if let (Some(limit),inc) = current_time_limit {
-												if limit + Duration::from_millis(inc as u64) > Instant::now() {
+												if limit + Duration::from_millis(inc as u64) < Instant::now() {
 													kifu_writer(&sfen,&mvs);
 													on_gameend(
 														cs[(cs_index+1) % 2].clone(),
