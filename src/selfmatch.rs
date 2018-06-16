@@ -277,6 +277,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |_,e| {
 			match e {
 				&SystemEvent::Quit => {
+					match notify_quit.lock() {
+						Ok(mut notify_quit) => {
+							*notify_quit = true;
+						},
+						Err(ref e) => {
+							on_error_handler.lock().map(|h| h.call(e)).is_err();
+						}
+					};
 					for i in 0..2 {
 						match user_event_queue[i].lock() {
 							Ok(mut user_event_queue) => {
@@ -286,14 +294,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								on_error_handler.lock().map(|h| h.call(e)).is_err();
 							}
 						};
-					};
-					match notify_quit.lock() {
-						Ok(mut notify_quit) => {
-							*notify_quit = true;
-						},
-						Err(ref e) => {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
-						}
 					};
 					Ok(())
 				},
