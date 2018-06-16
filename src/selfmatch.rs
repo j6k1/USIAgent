@@ -547,6 +547,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					}
 				};
 
+				let banmen_at_start = banmen.clone();
+				let mc_at_start = mc.clone();
+
 				let mut current_time_limit = game_time_limit.to_instant(teban,0);
 
 				let kyokumen_hash_map:TwoKeyHashMap<u32> = TwoKeyHashMap::new();
@@ -770,7 +773,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													mvs.push(pm);
 													cs[cs_index].send(
 														SelfMatchMessage::StartPonderThink(
-															teban,banmen.clone(),mc.clone(),n,mvs
+															teban,banmen_at_start.clone(),mc_at_start.clone(),n,mvs
 														)).unwrap();
 												}
 											}
@@ -863,7 +866,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						},
 						None => {
 							cs[cs_index].send(SelfMatchMessage::StartThink(
-										teban,banmen.clone(),mc.clone(),n,mvs.clone())).unwrap();
+										teban,banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone())).unwrap();
 							match sr.recv().unwrap() {
 								SelfMatchMessage::NotifyMove(m) => {
 									prev_move = match m {
@@ -1045,8 +1048,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																	mvs.push(pm);
 																	cs[cs_index].send(
 																		SelfMatchMessage::StartPonderThink(
-																			teban,banmen.clone(),
-																			mc.clone(),n,mvs)).unwrap();
+																			teban,banmen_at_start.clone(),
+																			mc_at_start.clone(),n,mvs)).unwrap();
 																}
 															}
 														},
