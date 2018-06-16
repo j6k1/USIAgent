@@ -440,8 +440,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					}
 					message_state = GameEndState::Lose;
 				}
-				//win_cs.send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
-				//lose_cs.send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
 				Ok(match self_match_event_queue_inner.lock() {
 					Ok(mut self_match_event_queue) => {
 						self_match_event_queue.push(SelfMatchEvent::GameEnd(s));
