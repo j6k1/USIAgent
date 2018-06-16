@@ -629,6 +629,9 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 	pub fn drain_events(&mut self) -> Vec<E> {
 		self.events.drain(0..).collect()
 	}
+	pub fn has_event(&self) -> bool {
+		self.events.len() > 0
+	}
 }
 pub trait EventDispatcher<K,E,T,UE> where K: MaxIndex + fmt::Debug,
 											E: MapEventKind<K> + fmt::Debug,

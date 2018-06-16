@@ -249,10 +249,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let mut system_event_dispatcher:USIEventDispatcher<SystemEventKind,
 														SystemEvent,SelfMatchEngine<T, E, S>,L,E> = USIEventDispatcher::new(&logger_arc);
 
-		let user_event_queue:EventQueue<UserEvent,UserEventKind> = EventQueue::new();
-		let user_event_queue_arc = Arc::new(Mutex::new(user_event_queue));
+		let user_event_queue_arc:[Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>; 2] = [Arc::new(Mutex::new(EventQueue::new())),Arc::new(Mutex::new(EventQueue::new()))];
 
-		let user_event_queue = user_event_queue_arc.clone();
+		let user_event_queue = [user_event_queue_arc[0].clone(),user_event_queue_arc[1].clone()];
 
 		let mut initial_position_creator:Box<FnMut() -> String + Send + 'static> =
 			initial_position_creator.map_or(Box::new(|| String::from("startpos")), |f| {
@@ -269,24 +268,28 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			}));
 
 		let quit_ready_arc = Arc::new(Mutex::new(false));
-		let quit_ready = quit_ready_arc.clone();
+
+		let notify_quit_arc = Arc::new(Mutex::new(false));
+		let notify_quit = notify_quit_arc.clone();
 
 		let on_error_handler = on_error_handler_arc.clone();
 
 		system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |_,e| {
 			match e {
 				&SystemEvent::Quit => {
-					match user_event_queue.lock() {
-						Ok(mut user_event_queue) => {
-							user_event_queue.push(UserEvent::Quit);
-							match quit_ready.lock() {
-								Ok(mut quit_ready) => {
-									*quit_ready = true;
-								},
-								Err(ref e) => {
-									on_error_handler.lock().map(|h| h.call(e)).is_err();
-								}
+					for i in 0..2 {
+						match user_event_queue[i].lock() {
+							Ok(mut user_event_queue) => {
+								user_event_queue.push(UserEvent::Quit);
+							},
+							Err(ref e) => {
+								on_error_handler.lock().map(|h| h.call(e)).is_err();
 							}
+						};
+					};
+					match notify_quit.lock() {
+						Ok(mut notify_quit) => {
+							*notify_quit = true;
 						},
 						Err(ref e) => {
 							on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -358,6 +361,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let position_parser = PositionParser::new();
 
 		let self_match_event_queue = self_match_event_queue_arc.clone();
+		let notify_quit = notify_quit_arc.clone();
 		let quit_ready = quit_ready_arc.clone();
 
 		let on_error_handler = on_error_handler_arc.clone();
@@ -396,6 +400,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									sr:&Receiver<SelfMatchMessage>,
 									s:SelfMatchGameEndState| {
 				let mut message_state = GameEndState::Win;
+
 				let quit_notification =  || {
 					match quit_ready_inner.lock() {
 						Ok(mut quit_ready) => {
@@ -468,7 +473,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			let mut game_count = 0;
 
 			while number_of_games.map_or(true, |n| game_count < n) &&
-				  end_time.map_or(true, |t| Instant::now() - start_time < t){
+			  end_time.map_or(true, |t| Instant::now() - start_time < t) && !(match notify_quit.lock() {
+				Ok(notify_quit) => {
+					*notify_quit
+				},
+				Err(ref e) => {
+					on_error_handler.lock().map(|h| h.call(e)).is_err();
+					true
+				}
+			}) {
 
 				cs[0].send(SelfMatchMessage::GameStart).unwrap();
 				cs[1].send(SelfMatchMessage::GameStart).unwrap();
@@ -579,7 +592,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u32>>; 2] = [None,None];
 
-				while end_time.map_or(true, |t| Instant::now() - start_time < t) {
+				while end_time.map_or(true, |t| Instant::now() - start_time < t)  && !(match notify_quit.lock() {
+					Ok(notify_quit) => {
+						*notify_quit
+					},
+					Err(ref e) => {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						true
+					}
+				}) {
 					match ponders[cs_index] {
 						Some(_) if ponders[cs_index] == prev_move => {
 							cs[cs_index].send(SelfMatchMessage::PonderHit).unwrap();
@@ -595,6 +616,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											cs[1].send(SelfMatchMessage::Error(1)).unwrap();
 
 											quit_notification();
+
+											return Err(SelfMatchRunningError::InvalidState(String::from(
+												"Exclusive lock on self_match_event_queue failed."
+											)));
 										}
 									}
 
@@ -1175,7 +1200,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			let player = players[i].clone();
 			let on_error_handler = on_error_handler_arc.clone();
 			let logger = logger_arc.clone();
-			let user_event_queue = user_event_queue_arc.clone();
+			let user_event_queue = [user_event_queue_arc[0].clone(),user_event_queue_arc[1].clone()];
 			let info_sender = info_sender_arc.clone();
 			let limit = self.game_time_limit;
 
@@ -1244,7 +1269,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													}
 												};
 												let m = match player.think(&limit,
-															user_event_queue.clone(),
+															user_event_queue[player_i].clone(),
 															&mut *info_sender,on_error_handler.clone()) {
 													Ok(m) => m,
 													Err(ref e) => {
@@ -1291,7 +1316,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													}
 												};
 												let m = match player.think(&limit,
-															user_event_queue.clone(),
+															user_event_queue[player_i].clone(),
 															&mut *info_sender,on_error_handler.clone()) {
 													Ok(m) => m,
 													Err(ref e) => {
@@ -1331,7 +1356,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									SelfMatchMessage::GameEnd(s) => {
 										match player.lock() {
 											Ok(mut player) => {
-												match player.gameover(&s,user_event_queue.clone(),
+												match player.gameover(&s,user_event_queue[player_i].clone(),
 																on_error_handler.clone()) {
 													Ok(()) => (),
 													Err(ref e) => {
@@ -1414,6 +1439,18 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			Err(ref e) => {
 				on_error_handler.lock().map(|h| h.call(e)).is_err();
 				true
+			}
+		}) || (match self.system_event_queue.lock() {
+			Ok(system_event_queue) => system_event_queue.has_event(),
+			Err(ref e) => {
+				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				false
+			}
+		}) || (match self_match_event_queue.lock() {
+			Ok(self_match_event_queue) => self_match_event_queue.has_event(),
+			Err(ref e) => {
+				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				false
 			}
 		}) {
 			match system_event_dispatcher.dispatch_events(self, &*self.system_event_queue) {
