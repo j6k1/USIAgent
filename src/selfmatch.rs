@@ -650,10 +650,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														Banmen(ref kinds) => {
 															match teban {
 																Teban::Sente => {
-																	kinds[dy as usize+1][9-dx as usize] == KomaKind::GOu
+																	kinds[dy as usize - 1][9 - dx as usize] == KomaKind::GOu
 																},
 																Teban::Gote => {
-																	kinds[dy as usize+1][9-dx as usize] == KomaKind::SOu
+																	kinds[dy as usize - 1][9 - dx as usize] == KomaKind::SOu
 																}
 															}
 														}
@@ -941,10 +941,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																Banmen(ref kinds) => {
 																	match teban {
 																		Teban::Sente => {
-																			kinds[dy as usize+1][9-dx as usize] == KomaKind::GOu
+																			kinds[dy as usize - 1][9 - dx as usize] == KomaKind::GOu
 																		},
 																		Teban::Gote => {
-																			kinds[dy as usize+1][9-dx as usize] == KomaKind::SOu
+																			kinds[dy as usize - 1][9 - dx as usize] == KomaKind::SOu
 																		}
 																	}
 																}
