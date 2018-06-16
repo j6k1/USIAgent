@@ -18,6 +18,7 @@ use std::{thread};
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::mpsc::Sender;
+use std::sync::mpsc::Receiver;
 use std::thread::JoinHandle;
 use std::marker::Send;
 use std::marker::PhantomData;
@@ -53,6 +54,7 @@ pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
 }
 #[derive(Debug)]
 pub enum SelfMatchMessage {
+	Ready,
 	GameStart,
 	StartThink(Teban,Banmen,MochigomaCollections,u32,Vec<Move>),
 	StartPonderThink(Teban,Banmen,MochigomaCollections,u32,Vec<Move>),
@@ -385,13 +387,61 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 			let self_match_event_queue_inner = self_match_event_queue.clone();
 			let on_error_handler_inner = on_error_handler.clone();
+
 			let quit_ready_inner = quit_ready.clone();
 
 			let on_gameend = move |win_cs:Sender<SelfMatchMessage>,
 									lose_cs:Sender<SelfMatchMessage>,
+									cs:[Sender<SelfMatchMessage>; 2],
+									sr:&Receiver<SelfMatchMessage>,
 									s:SelfMatchGameEndState| {
-				win_cs.send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
-				lose_cs.send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
+				let mut message_state = GameEndState::Win;
+				let quit_notification =  || {
+					match quit_ready_inner.lock() {
+						Ok(mut quit_ready) => {
+							*quit_ready = true;
+						},
+						Err(ref e) => {
+							on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+						}
+					};
+				};
+
+				for current_cs in &[win_cs.clone(),lose_cs.clone()] {
+					current_cs.send(SelfMatchMessage::GameEnd(message_state)).unwrap();
+					match sr.recv().unwrap() {
+						SelfMatchMessage::Ready => (),
+						SelfMatchMessage::Error(n) => {
+							cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();
+							cs[n].send(SelfMatchMessage::Error(n)).unwrap();
+							quit_notification();
+							return Err(SelfMatchRunningError::InvalidState(String::from(
+								"An error occurred while executing the player thread."
+							)));
+						},
+						SelfMatchMessage::Quit => {
+							cs[0].send(SelfMatchMessage::Quit).unwrap();
+							cs[1].send(SelfMatchMessage::Quit).unwrap();
+
+							quit_notification();
+
+							return Ok(());
+						},
+						_ => {
+							cs[0].send(SelfMatchMessage::Error(0)).unwrap();
+							cs[1].send(SelfMatchMessage::Error(1)).unwrap();
+
+							quit_notification();
+
+							return Err(SelfMatchRunningError::InvalidState(String::from(
+								"An invalid message was sent to the self-match management thread."
+							)));
+						}
+					}
+					message_state = GameEndState::Lose;
+				}
+				//win_cs.send(SelfMatchMessage::GameEnd(GameEndState::Win)).unwrap();
+				//lose_cs.send(SelfMatchMessage::GameEnd(GameEndState::Lose)).unwrap();
 				Ok(match self_match_event_queue_inner.lock() {
 					Ok(mut self_match_event_queue) => {
 						self_match_event_queue.push(SelfMatchEvent::GameEnd(s));
@@ -421,6 +471,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 			while number_of_games.map_or(true, |n| game_count < n) &&
 				  end_time.map_or(true, |t| Instant::now() - start_time < t){
+
 				cs[0].send(SelfMatchMessage::GameStart).unwrap();
 				cs[1].send(SelfMatchMessage::GameStart).unwrap();
 
@@ -470,7 +521,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									(b,MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								}
 							};
-
 							(teban,Banmen(banmen),mc,n,m)
 						},
 						e => {
@@ -552,6 +602,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											on_gameend(
 												cs[(cs_index+1) % 2].clone(),
 												cs[cs_index].clone(),
+												[cs[0].clone(),cs[1].clone()],
+												&sr,
 												SelfMatchGameEndState::Timeover(teban.opposite()))?;
 											break;
 										}
@@ -576,6 +628,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														on_gameend(
 															cs[(cs_index+1) % 2].clone(),
 															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
 															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::NotRespondedOute)
 														)?;
 														mvs.push(*m);
@@ -615,6 +669,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												on_gameend(
 													cs[cs_index].clone(),
 													cs[(cs_index+1) % 2].clone(),
+													[cs[0].clone(),cs[1].clone()],
+													&sr,
 													SelfMatchGameEndState::Win(teban.opposite()))?;
 												break;
 											}
@@ -635,6 +691,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													on_gameend(
 														cs[(cs_index+1) % 2].clone(),
 														cs[cs_index].clone(),
+														[cs[0].clone(),cs[1].clone()],
+														&sr,
 														SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
 													)?;
 													kifu_writer(&sfen,&mvs);
@@ -655,6 +713,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														on_gameend(
 															cs[(cs_index+1) % 2].clone(),
 															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
 															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
 														)?;
 														break;
@@ -673,6 +733,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													on_gameend(
 														cs[(cs_index+1) % 2].clone(),
 														cs[cs_index].clone(),
+														[cs[0].clone(),cs[1].clone()],
+														&sr,
 														SelfMatchGameEndState::Foul(teban,FoulKind::Sennichite)
 													)?;
 													break;
@@ -692,6 +754,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											on_gameend(
 												cs[(cs_index+1) % 2].clone(),
 												cs[cs_index].clone(),
+												[cs[0].clone(),cs[1].clone()],
+												&sr,
 												SelfMatchGameEndState::Foul(teban,FoulKind::InvalidMove)
 											)?;
 											break;
@@ -721,6 +785,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									on_gameend(
 										cs[(cs_index+1) % 2].clone(),
 										cs[cs_index].clone(),
+										[cs[0].clone(),cs[1].clone()],
+										&sr,
 										SelfMatchGameEndState::Resign(teban)
 									)?;
 									break;
@@ -749,6 +815,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									on_gameend(
 										cs[cs_index].clone(),
 										cs[(cs_index+1) % 2].clone(),
+										[cs[0].clone(),cs[1].clone()],
+										&sr,
 										SelfMatchGameEndState::NyuGyokuWin(teban)
 									)?;
 									break;
@@ -758,12 +826,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									on_gameend(
 										cs[(cs_index+1) % 2].clone(),
 										cs[cs_index].clone(),
+										[cs[0].clone(),cs[1].clone()],
+										&sr,
 										SelfMatchGameEndState::NyuGyokuLose(teban)
 									)?;
 									break;
 								},
 								SelfMatchMessage::Error(n) => {
 									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();
+									cs[n].send(SelfMatchMessage::Error(n)).unwrap();
 									quit_notification();
 									return Err(SelfMatchRunningError::InvalidState(String::from(
 										"An error occurred while executing the player thread."
@@ -795,7 +866,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						None => {
 							cs[cs_index].send(SelfMatchMessage::StartThink(
 										teban,banmen.clone(),mc.clone(),n,mvs.clone())).unwrap();
-
 							match sr.recv().unwrap() {
 								SelfMatchMessage::NotifyMove(m) => {
 									prev_move = match m {
@@ -823,6 +893,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													on_gameend(
 														cs[(cs_index+1) % 2].clone(),
 														cs[cs_index].clone(),
+														[cs[0].clone(),cs[1].clone()],
+														&sr,
 														SelfMatchGameEndState::Timeover(teban.opposite()))?;
 													break;
 												}
@@ -847,6 +919,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																on_gameend(
 																	cs[(cs_index+1) % 2].clone(),
 																	cs[cs_index].clone(),
+																	[cs[0].clone(),cs[1].clone()],
+																	&sr,
 																	SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::NotRespondedOute)
 																)?;
 																mvs.push(m);
@@ -886,6 +960,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														on_gameend(
 															cs[cs_index].clone(),
 															cs[(cs_index+1) % 2].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
 															SelfMatchGameEndState::Win(teban.opposite())
 														)?;
 														break;
@@ -908,6 +984,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 															on_gameend(
 																cs[(cs_index+1) % 2].clone(),
 																cs[cs_index].clone(),
+																[cs[0].clone(),cs[1].clone()],
+																&sr,
 																SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
 															)?;
 															break;
@@ -927,6 +1005,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 																on_gameend(
 																	cs[(cs_index+1) % 2].clone(),
 																	cs[cs_index].clone(),
+																	[cs[0].clone(),cs[1].clone()],
+																	&sr,
 																	SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
 																)?;
 																break;
@@ -945,6 +1025,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 															on_gameend(
 																cs[(cs_index+1) % 2].clone(),
 																cs[cs_index].clone(),
+																[cs[0].clone(),cs[1].clone()],
+																&sr,
 																SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
 															)?;
 															break;
@@ -981,6 +1063,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													on_gameend(
 														cs[(cs_index+1) % 2].clone(),
 														cs[cs_index].clone(),
+														[cs[0].clone(),cs[1].clone()],
+														&sr,
 														SelfMatchGameEndState::Foul(teban,FoulKind::InvalidMove)
 													)?;
 													break;
@@ -993,6 +1077,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											on_gameend(
 												cs[(cs_index+1) % 2].clone(),
 												cs[cs_index].clone(),
+												[cs[0].clone(),cs[1].clone()],
+												&sr,
 												SelfMatchGameEndState::Resign(teban)
 											)?;
 											break;
@@ -1021,6 +1107,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											on_gameend(
 												cs[cs_index].clone(),
 												cs[(cs_index+1) % 2].clone(),
+												[cs[0].clone(),cs[1].clone()],
+												&sr,
 												SelfMatchGameEndState::NyuGyokuWin(teban)
 											)?;
 											break;
@@ -1030,6 +1118,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											on_gameend(
 												cs[(cs_index+1) % 2].clone(),
 												cs[cs_index].clone(),
+												[cs[0].clone(),cs[1].clone()],
+												&sr,
 												SelfMatchGameEndState::NyuGyokuLose(teban)
 											)?;
 											break;
@@ -1038,6 +1128,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								},
 								SelfMatchMessage::Error(n) => {
 									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2)).unwrap();
+									cs[n].send(SelfMatchMessage::Error(n)).unwrap();
 									quit_notification();
 									return Err(SelfMatchRunningError::InvalidState(String::from(
 										"An error occurred while executing the player thread."
@@ -1094,33 +1185,33 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				loop {
 					match cr.recv().unwrap() {
 						SelfMatchMessage::GameStart => {
-							loop {
-								match player.lock() {
-									Ok(mut player) => {
-										match player.take_ready() {
-											Ok(_) => (),
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-												return;
-											}
+							match player.lock() {
+								Ok(mut player) => {
+									match player.take_ready() {
+										Ok(_) => (),
+										Err(ref e) => {
+											on_error_handler.lock().map(|h| h.call(e)).is_err();
+											ss.send(SelfMatchMessage::Error(player_i)).unwrap();
+											continue;
 										}
-										match player.newgame() {
-											Ok(_) => (),
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-												return;
-											}
-										}
-									},
-									Err(ref e) => {
-										on_error_handler.lock().map(|h| h.call(e)).is_err();
-										ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-										return;
 									}
+									match player.newgame() {
+										Ok(_) => (),
+										Err(ref e) => {
+											on_error_handler.lock().map(|h| h.call(e)).is_err();
+											ss.send(SelfMatchMessage::Error(player_i)).unwrap();
+											continue;
+										}
+									}
+								},
+								Err(ref e) => {
+									on_error_handler.lock().map(|h| h.call(e)).is_err();
+									ss.send(SelfMatchMessage::Error(player_i)).unwrap();
+									continue;
 								}
+							}
 
+							loop {
 								match cr.recv().unwrap() {
 									SelfMatchMessage::StartThink(t,b,mc,n,m) => {
 										let (mut ms, mut mg) = match mc {
@@ -1139,7 +1230,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												}
 												let mut info_sender = match info_sender.lock() {
@@ -1147,7 +1238,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												};
 												let m = match player.think(&limit,
@@ -1157,7 +1248,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												};
 												ss.send(SelfMatchMessage::NotifyMove(m)).unwrap();
@@ -1165,7 +1256,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
 												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-												return;
+												break;
 											}
 										};
 									},
@@ -1186,7 +1277,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												}
 												let mut info_sender = match info_sender.lock() {
@@ -1194,7 +1285,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												};
 												let m = match player.think(&limit,
@@ -1204,7 +1295,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												};
 
@@ -1214,7 +1305,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													},
 													SelfMatchMessage::PonderNG => (),
 													SelfMatchMessage::Quit | SelfMatchMessage::Error(_) => {
-														return;
+														break;
 													},
 													_ => {
 														logger.lock().map(|mut logger| {
@@ -1224,14 +1315,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 															false
 														}).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												}
 											},
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
 												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-												return;
+												break;
 											}
 										};
 									},
@@ -1244,17 +1335,18 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
 														ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-														return;
+														break;
 													}
 												};
 											},
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
 												ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-												return;
+												break;
 											}
 										}
-
+										ss.send(SelfMatchMessage::Ready).unwrap();
+										break;
 									},
 									SelfMatchMessage::Quit | SelfMatchMessage::Error(_) => {
 										return;
@@ -1267,7 +1359,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											false
 										}).is_err();
 										ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-										return;
+										break;
 									}
 								}
 							}
@@ -1283,7 +1375,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								false
 							}).is_err();
 							ss.send(SelfMatchMessage::Error(player_i)).unwrap();
-							return;
 						}
 					}
 				}
