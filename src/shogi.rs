@@ -1891,10 +1891,10 @@ impl Banmen {
 		for m in m {
 			match banmen.apply_move_none_check(&teban,&mc,&m) {
 				(next,nmc,o) => {
-					mc = nmc;
 					mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
 					shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
 
+					mc = nmc;
 					teban = teban.opposite();
 					banmen = next;
 
