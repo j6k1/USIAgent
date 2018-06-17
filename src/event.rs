@@ -107,7 +107,7 @@ impl MaxIndex for UserEventKind {
 }
 #[derive(Debug)]
 pub enum SelfMatchEvent {
-	GameStart(u32,String),
+	GameStart(u32,Teban,String),
 	Moved(Teban,Moved),
 	GameEnd(SelfMatchGameEndState),
 	Abort,
@@ -310,7 +310,7 @@ pub enum SelfMatchEventKind {
 impl MapEventKind<SelfMatchEventKind> for SelfMatchEvent {
 	fn event_kind(&self) -> SelfMatchEventKind {
 		match *self {
-			SelfMatchEvent::GameStart(_,_) => SelfMatchEventKind::GameStart,
+			SelfMatchEvent::GameStart(_,_,_) => SelfMatchEventKind::GameStart,
 			SelfMatchEvent::Moved(_,_) => SelfMatchEventKind::Moved,
 			SelfMatchEvent::GameEnd(_) => SelfMatchEventKind::GameEnd,
 			SelfMatchEvent::Abort => SelfMatchEventKind::Abort,
