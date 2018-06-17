@@ -38,9 +38,14 @@ impl<T> TwoKeyHashMap<T> where T: Clone {
 	pub fn insert(&mut self,k:u64,sk:u64,nv:T) -> Option<T> {
 		match self.map.get_mut(&k) {
 			Some(ref mut v) if v.len() == 1 => {
-				let old = v[0].1.clone();
-				v[0] = (sk,nv);
-				return Some(old);
+				if v[0].0 == sk {
+					let old = v[0].1.clone();
+					v[0] = (sk,nv);
+					return Some(old);
+				} else {
+					v.push((sk,nv));
+					return None;
+				}
 			},
 			Some(ref mut v) if v.len() > 1 => {
 				for i in 0..v.len() {
