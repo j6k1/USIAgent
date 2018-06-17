@@ -1892,11 +1892,10 @@ impl Banmen {
 			match banmen.apply_move_none_check(&teban,&mc,&m) {
 				(next,nmc,o) => {
 					mc = nmc;
-					teban = teban.opposite();
-
 					mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
 					shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
 
+					teban = teban.opposite();
 					banmen = next;
 
 					match kyokumen_hash_map.get(&mhash,&shash) {
