@@ -10,6 +10,7 @@ use Logger;
 use logger::FileLogger;
 use OnErrorHandler;
 use TryToString;
+use TryFrom;
 use shogi;
 
 use std::error::Error;
@@ -35,18 +36,28 @@ pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
 
 		if sfen.len() >= 5 {
 			match (sfen[0],sfen[1],sfen[2],sfen[3],sfen[4]) {
-				("sfen",p1,p2,p3,p4) => {
+				("sfen",p1,p2,p3,p4) if m.len() > 0 => {
 					Ok(format!("sfen {} {} {} {} moves {}",p1,p2,p3,p4,m.try_to_string()?))
 				},
-				("startpos",_,_,_,_) => {
+				("sfen",p1,p2,p3,p4) => {
+					Ok(format!("sfen {} {} {} {}",p1,p2,p3,p4))
+				},
+				("startpos",_,_,_,_) if m.len() > 0=> {
 					Ok(format!("startpos moves {}",m.try_to_string()?))
+				},
+				("startpos",_,_,_,_)=> {
+					Ok(format!("startpos"))
 				},
 				_ => {
 					Err(SfenStringConvertError::InvalidFormat(initial_sfen.clone()))
 				}
 			}
 		} else if sfen.len() >= 1 && sfen[0] == "startpos" {
-			Ok(format!("startpos moves {}",m.try_to_string()?))
+			if m.len() > 0 {
+				Ok(format!("startpos moves {}",m.try_to_string()?))
+			} else {
+				Ok(format!("startpos"))
+			}
 		} else {
 			Err(SfenStringConvertError::InvalidFormat(initial_sfen.clone()))
 		}
@@ -608,7 +619,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								SelfMatchMessage::NotifyMove(BestMove::Move(ref m,pm)) => {
 									match self_match_event_queue.lock() {
 										Ok(mut self_match_event_queue) => {
-											self_match_event_queue.push(SelfMatchEvent::Moved(teban,m.clone()));
+											self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&banmen,&m))?));
 										},
 										Err(ref e) => {
 											on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -899,7 +910,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										BestMove::Move(m,pm) => {
 											match self_match_event_queue.lock() {
 												Ok(mut self_match_event_queue) => {
-													self_match_event_queue.push(SelfMatchEvent::Moved(teban,m.clone()));
+													self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&banmen,&m))?));
 												},
 												Err(ref e) => {
 													on_error_handler.lock().map(|h| h.call(e)).is_err();

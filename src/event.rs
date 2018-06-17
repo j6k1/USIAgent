@@ -108,7 +108,7 @@ impl MaxIndex for UserEventKind {
 #[derive(Debug)]
 pub enum SelfMatchEvent {
 	GameStart(u32,String),
-	Moved(Teban,Move),
+	Moved(Teban,Moved),
 	GameEnd(SelfMatchGameEndState),
 	Abort,
 }
@@ -121,6 +121,176 @@ pub enum SelfMatchGameEndState {
 	Draw,
 	Foul(Teban,FoulKind),
 	Timeover(Teban),
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum Moved {
+	To(MovedKind,(u32,u32),(u32,u32),bool),
+	Put(MochigomaKind,(u32,u32)),
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum MovedKind {
+	Fu = 0,
+	Kyou,
+	Kei,
+	Gin,
+	Kin,
+	Kaku,
+	Hisha,
+	SOu,
+	GOu,
+	FuN,
+	KyouN,
+	KeiN,
+	GinN,
+	KakuN,
+	HishaN,
+}
+impl<'a> TryFrom<(&'a Banmen,&'a Move),String> for Moved {
+	fn try_from(s:(&'a Banmen,&'a Move)) -> Result<Moved, TypeConvertError<String>> {
+		Ok(match s {
+			(&Banmen(ref kinds),&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n))) => {
+				match kinds[sy as usize - 1][9 - sx as usize] {
+					KomaKind::SFu => Moved::To(MovedKind::Fu,(sx,sy),(dx,dy),n),
+					KomaKind::SKyou => Moved::To(MovedKind::Kyou,(sx,sy),(dx,dy),n),
+					KomaKind::SKei => Moved::To(MovedKind::Kei,(sx,sy),(dx,dy),n),
+					KomaKind::SGin => Moved::To(MovedKind::Gin,(sx,sy),(dx,dy),n),
+					KomaKind::SKin => Moved::To(MovedKind::Kin,(sx,sy),(dx,dy),n),
+					KomaKind::SKaku => Moved::To(MovedKind::Kaku,(sx,sy),(dx,dy),n),
+					KomaKind::SHisha => Moved::To(MovedKind::Hisha,(sx,sy),(dx,dy),n),
+					KomaKind::SOu => Moved::To(MovedKind::SOu,(sx,sy),(dx,dy),n),
+					KomaKind::SFuN => Moved::To(MovedKind::FuN,(sx,sy),(dx,dy),n),
+					KomaKind::SKyouN => Moved::To(MovedKind::KyouN,(sx,sy),(dx,dy),n),
+					KomaKind::SKeiN => Moved::To(MovedKind::KeiN,(sx,sy),(dx,dy),n),
+					KomaKind::SGinN => Moved::To(MovedKind::GinN,(sx,sy),(dx,dy),n),
+					KomaKind::SKakuN => Moved::To(MovedKind::KakuN,(sx,sy),(dx,dy),n),
+					KomaKind::SHishaN => Moved::To(MovedKind::HishaN,(sx,sy),(dx,dy),n),
+					KomaKind::GFu => Moved::To(MovedKind::Fu,(sx,sy),(dx,dy),n),
+					KomaKind::GKyou => Moved::To(MovedKind::Kyou,(sx,sy),(dx,dy),n),
+					KomaKind::GKei => Moved::To(MovedKind::Kei,(sx,sy),(dx,dy),n),
+					KomaKind::GGin => Moved::To(MovedKind::Gin,(sx,sy),(dx,dy),n),
+					KomaKind::GKin => Moved::To(MovedKind::Kin,(sx,sy),(dx,dy),n),
+					KomaKind::GKaku => Moved::To(MovedKind::Kaku,(sx,sy),(dx,dy),n),
+					KomaKind::GHisha => Moved::To(MovedKind::Hisha,(sx,sy),(dx,dy),n),
+					KomaKind::GOu => Moved::To(MovedKind::GOu,(sx,sy),(dx,dy),n),
+					KomaKind::GFuN => Moved::To(MovedKind::FuN,(sx,sy),(dx,dy),n),
+					KomaKind::GKyouN => Moved::To(MovedKind::KyouN,(sx,sy),(dx,dy),n),
+					KomaKind::GKeiN => Moved::To(MovedKind::KeiN,(sx,sy),(dx,dy),n),
+					KomaKind::GGinN => Moved::To(MovedKind::GinN,(sx,sy),(dx,dy),n),
+					KomaKind::GKakuN => Moved::To(MovedKind::KakuN,(sx,sy),(dx,dy),n),
+					KomaKind::GHishaN => Moved::To(MovedKind::HishaN,(sx,sy),(dx,dy),n),
+					KomaKind::Blank => {
+						return Err(TypeConvertError::SyntaxError(String::from(
+							"There is no koma in the coordinates of the move source position."
+						)));
+					}
+				}
+			},
+			(_,&Move::Put(k,KomaDstPutPosition(x,y))) => {
+				match k {
+					MochigomaKind::Fu => Moved::Put(MochigomaKind::Fu,(x,y)),
+					MochigomaKind::Kyou => Moved::Put(MochigomaKind::Kyou,(x,y)),
+					MochigomaKind::Kei => Moved::Put(MochigomaKind::Kei,(x,y)),
+					MochigomaKind::Gin => Moved::Put(MochigomaKind::Gin,(x,y)),
+					MochigomaKind::Kin => Moved::Put(MochigomaKind::Kin,(x,y)),
+					MochigomaKind::Hisha => Moved::Put(MochigomaKind::Kaku,(x,y)),
+					MochigomaKind::Kaku => Moved::Put(MochigomaKind::Hisha,(x,y)),
+				}
+			}
+		})
+	}
+}
+const KANSUJI_MAP:[char; 10] = ['零','一','二','三','四','五','六','七','八','九'];
+
+impl fmt::Display for Moved {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		Moved::To(MovedKind::Fu,(sx,sy),(dx,dy),true) => {
+				write!(f,"{}{}歩 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Kyou,(sx,sy),(dx,dy),true) => {
+				write!(f,"{}{}香 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Kei,(sx,sy),(dx,dy),true) => {
+				write!(f,"{}{}桂 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Gin,(sx,sy),(dx,dy),true) => {
+				write!(f,"{}{}銀 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Kaku,(sx,sy),(dx,dy),true) => {
+				write!(f,"{}{}角 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Hisha,(sx,sy),(dx,dy),true) => {
+				write!(f,"{}{}飛 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::FuN,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}成歩 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::KyouN,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}成香 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::KeiN,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}成桂 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::GinN,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}成銀 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::KakuN,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}馬 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::HishaN,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}龍 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Fu,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}歩 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Kyou,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}香 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Kei,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}桂 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Gin,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}銀 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Kin,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}金 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Kaku,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}角 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Hisha,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}飛 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::SOu,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}王 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::GOu,(sx,sy),(dx,dy),false) => {
+				write!(f,"{}{}玉 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::Put(MochigomaKind::Fu,(x,y)) => {
+	 			write!(f,"{}{}歩",x,KANSUJI_MAP[y as usize])
+	 		},
+	 		Moved::Put(MochigomaKind::Kyou,(x,y)) => {
+	 			write!(f,"{}{}香",x,KANSUJI_MAP[y as usize])
+	 		},
+	 		Moved::Put(MochigomaKind::Kei,(x,y)) => {
+	 			write!(f,"{}{}桂",x,KANSUJI_MAP[y as usize])
+	 		},
+	 		Moved::Put(MochigomaKind::Gin,(x,y)) => {
+	 			write!(f,"{}{}銀",x,KANSUJI_MAP[y as usize])
+	 		},
+	 		Moved::Put(MochigomaKind::Kin,(x,y)) => {
+	 			write!(f,"{}{}金",x,KANSUJI_MAP[y as usize])
+	 		},
+	 		Moved::Put(MochigomaKind::Kaku,(x,y)) => {
+	 			write!(f,"{}{}角",x,KANSUJI_MAP[y as usize])
+	 		},
+	 		Moved::Put(MochigomaKind::Hisha,(x,y)) => {
+	 			write!(f,"{}{}飛",x,KANSUJI_MAP[y as usize])
+	 		},
+	 		_ => write!(f,"UNKNOWN.")
+	 	}
+	 }
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum FoulKind {

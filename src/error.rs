@@ -466,6 +466,11 @@ impl error::Error for SelfMatchRunningError {
 	 	}
 	 }
 }
+impl From<TypeConvertError<String>> for SelfMatchRunningError where String: fmt::Debug {
+	fn from(_: TypeConvertError<String>) -> SelfMatchRunningError {
+		SelfMatchRunningError::Fail(String::from("An error occurred during type conversion from Move to Moved."))
+	}
+}
 #[derive(Debug)]
 pub enum SfenStringConvertError {
 	ToMoveString(ToMoveStringConvertError),
