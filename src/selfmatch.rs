@@ -285,7 +285,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let on_error_handler = on_error_handler_arc.clone();
 
-		system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |_,e| {
+		system_event_dispatcher.add_handler(SystemEventKind::Quit, move |_,e| {
 			match e {
 				&SystemEvent::Quit => {
 					match notify_quit.lock() {
@@ -310,7 +310,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				},
 				e => Err(EventHandlerError::InvalidState(e.event_kind())),
 			}
-		}));
+		});
 
 		let on_error_handler = on_error_handler_arc.clone();
 

@@ -230,7 +230,7 @@ impl<T,E> UsiAgent<T,E>
 
 				let on_error_handler = on_error_handler_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::SendUsiCommand, Box::new(move |_,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::SendUsiCommand, move |_,e| {
 					match e {
 						&SystemEvent::SendUsiCommand(UsiOutput::Command(ref s)) => {
 							match writer.lock() {
@@ -245,11 +245,11 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let on_error_handler = on_error_handler_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::Usi, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::Usi, move |ctx,e| {
 					match e {
 						&SystemEvent::Usi => {
 							let mut commands:Vec<UsiCommand> = Vec::new();
@@ -292,12 +292,12 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let on_error_handler = on_error_handler_arc.clone();
 				let thread_queue = thread_queue_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::IsReady, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::IsReady, move |ctx,e| {
 					match e {
 						&SystemEvent::IsReady => {
 							let system_event_queue = ctx.system_event_queue.clone();
@@ -351,9 +351,9 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
-				system_event_dispatcher.add_handler(SystemEventKind::SetOption, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::SetOption, move |ctx,e| {
 					match e {
 						&SystemEvent::SetOption(ref name, ref value) => {
 							match ctx.player.lock() {
@@ -370,9 +370,9 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
-				system_event_dispatcher.add_handler(SystemEventKind::UsiNewGame, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::UsiNewGame, move |ctx,e| {
 					match e {
 						&SystemEvent::UsiNewGame => {
 							match ctx.player.lock() {
@@ -389,12 +389,12 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let on_error_handler = on_error_handler_arc.clone();
 				let thread_queue = thread_queue_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::Position, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::Position, move |ctx,e| {
 					match e {
 						&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
 							let(b,m) = match p {
@@ -451,7 +451,7 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let busy = false;
 				let busy_arc = Arc::new(Mutex::new(busy));
@@ -471,7 +471,7 @@ impl<T,E> UsiAgent<T,E>
 
 				let thread_queue = thread_queue_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::Go, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::Go, move |ctx,e| {
 					match busy.lock() {
 						Ok(mut busy) => {
 							*busy = true;
@@ -754,7 +754,7 @@ impl<T,E> UsiAgent<T,E>
 						},
 						ref e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let busy = busy_arc.clone();
 				let user_event_queue = user_event_queue_arc.clone();
@@ -762,7 +762,7 @@ impl<T,E> UsiAgent<T,E>
 				let on_delay_move_handler = on_delay_move_handler_arc.clone();
 				let on_error_handler = on_error_handler_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::Stop, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::Stop, move |ctx,e| {
 					match e {
 						&SystemEvent::Stop => {
 							if *busy.lock().or(Err(EventHandlerError::Fail(String::from(
@@ -805,13 +805,13 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let allow_immediate_move = allow_immediate_move_arc.clone();
 				let on_delay_move_handler = on_delay_move_handler_arc.clone();
 				let on_error_handler = on_error_handler_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::PonderHit, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::PonderHit, move |ctx,e| {
 					match e {
 						&SystemEvent::PonderHit => {
 							match allow_immediate_move.lock() {
@@ -840,14 +840,14 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let on_error_handler = on_error_handler_arc.clone();
 				let busy = busy_arc.clone();
 				let user_event_queue = user_event_queue_arc.clone();
 				let thread_queue = thread_queue_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::Quit, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::Quit, move |ctx,e| {
 					match e {
 						&SystemEvent::Quit => {
 							let system_event_queue = ctx.system_event_queue.clone();
@@ -913,7 +913,7 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let on_error_handler = on_error_handler_arc.clone();
 				let busy = busy_arc.clone();
@@ -921,7 +921,7 @@ impl<T,E> UsiAgent<T,E>
 
 				let thread_queue = thread_queue_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::GameOver, Box::new(move |ctx,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::GameOver, move |ctx,e| {
 					match *e {
 						SystemEvent::GameOver(ref s) => {
 							let player = ctx.player.clone();
@@ -976,11 +976,11 @@ impl<T,E> UsiAgent<T,E>
 						},
 						ref e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 
 				let quit_ready = quit_ready_arc.clone();
 
-				system_event_dispatcher.add_handler(SystemEventKind::QuitReady, Box::new(move |_,e| {
+				system_event_dispatcher.add_handler(SystemEventKind::QuitReady, move |_,e| {
 					match e {
 						&SystemEvent::QuitReady => {
 							match quit_ready.lock() {
@@ -995,7 +995,7 @@ impl<T,E> UsiAgent<T,E>
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
 					}
-				}));
+				});
 			}
 		}
 
