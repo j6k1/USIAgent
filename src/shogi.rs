@@ -2288,8 +2288,9 @@ impl Banmen {
 			_ => {
 				self.legal_moves_all(t, mc).into_iter().filter(|m| {
 					match m {
-						&LegalMove::To(_,KomaDstToPosition(dx,dy,_),_) => {
+						&LegalMove::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,_),_) => {
 							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
+							let (sx,sy) = ((9 - sx) as usize, (sy - 1) as usize);
 
 							let ou = match *t {
 								Teban::Sente => KomaKind::SOu,
@@ -2298,7 +2299,7 @@ impl Banmen {
 
 							match self {
 								&Banmen(ref kinds) => {
-									kinds[dx][dy] == ou || (dx == x && dy == y)
+									kinds[sy][sx] == ou || (dx == x && dy == y)
 								}
 							}
 						},
