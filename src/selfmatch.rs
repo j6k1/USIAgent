@@ -641,7 +641,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												cs[cs_index].clone(),
 												[cs[0].clone(),cs[1].clone()],
 												&sr,
-												SelfMatchGameEndState::Timeover(teban.opposite()))?;
+												SelfMatchGameEndState::Timeover(teban))?;
 											break;
 										}
 									}
@@ -657,25 +657,25 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									current_time_limit = game_time_limit.to_instant(teban,tinc);
 
+									if banmen.win_only_moves(&teban.opposite()).len() > 0 {
+										if let Some(pm) = prev_move {
+											if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
+												on_gameend(
+													cs[(cs_index+1) % 2].clone(),
+													cs[cs_index].clone(),
+													[cs[0].clone(),cs[1].clone()],
+													&sr,
+													SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
+												)?;
+												mvs.push(*m);
+												kifu_writer(&sfen,&mvs);
+												break;
+											}
+										}
+									}
+
 									match banmen.apply_valid_move(&teban,&mc,m) {
 										Ok((next,nmc,o)) => {
-											if let Some(pm) = prev_move{
-												if next.win_only_moves(&teban.opposite()).len() > 0 {
-													if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
-														on_gameend(
-															cs[(cs_index+1) % 2].clone(),
-															cs[cs_index].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::NotRespondedOute)
-														)?;
-														mvs.push(*m);
-														kifu_writer(&sfen,&mvs);
-														break;
-													}
-												}
-											}
-
 											mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
 											shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
 
@@ -773,7 +773,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														cs[cs_index].clone(),
 														[cs[0].clone(),cs[1].clone()],
 														&sr,
-														SelfMatchGameEndState::Foul(teban,FoulKind::Sennichite)
+														SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
 													)?;
 													break;
 												},
@@ -933,7 +933,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														cs[cs_index].clone(),
 														[cs[0].clone(),cs[1].clone()],
 														&sr,
-														SelfMatchGameEndState::Timeover(teban.opposite()))?;
+														SelfMatchGameEndState::Timeover(teban))?;
 													break;
 												}
 											}
@@ -949,25 +949,25 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 											current_time_limit = game_time_limit.to_instant(teban,tinc);
 
+											if let Some(pm) = prev_move {
+												if banmen.win_only_moves(&teban.opposite()).len() > 0 {
+													if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
+														on_gameend(
+															cs[(cs_index+1) % 2].clone(),
+															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
+															SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
+														)?;
+														mvs.push(m);
+														kifu_writer(&sfen,&mvs);
+														break;
+													}
+												}
+											}
+
 											match banmen.apply_valid_move(&teban,&mc,&m) {
 												Ok((next,nmc,o)) => {
-													if let Some(pm) = prev_move{
-														if next.win_only_moves(&teban.opposite()).len() > 0 {
-															if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
-																on_gameend(
-																	cs[(cs_index+1) % 2].clone(),
-																	cs[cs_index].clone(),
-																	[cs[0].clone(),cs[1].clone()],
-																	&sr,
-																	SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::NotRespondedOute)
-																)?;
-																mvs.push(m);
-																kifu_writer(&sfen,&mvs);
-																break;
-															}
-														}
-													}
-
 													mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,&m,&o);
 													shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,&m,&o);
 
