@@ -2210,19 +2210,19 @@ impl Banmen {
 										} else if ty - y == 0 {
 											dy == y && dx >= x && dx < tx
 										} else if tx < x && ty < y {
-											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 													dx <= x && dx > tx &&
 													dy <= y && dy > ty
 										} else if tx > x && ty < y {
-											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 													dx >= x && dx < tx &&
 													dy <= y && dy < ty
 										} else if tx < x && ty > y {
-											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 													dx <= x && dx > tx &&
 													dy >= y && dy < ty
 										} else if tx > x && ty > y{
-											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 													dx >= x && dx < tx &&
 													dy >= y && dy < ty
 										} else {
@@ -2263,19 +2263,19 @@ impl Banmen {
 							} else if ty - y == 0 {
 								dy == y && dx >= x && dx < tx
 							} else if tx < x && ty < y {
-								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 										dx <= x && dx > tx &&
 										dy <= y && dy > ty
 							} else if tx > x && ty < y {
-								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 										dx >= x && dx < tx &&
 										dy <= y && dy < ty
 							} else if tx < x && ty > y {
-								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 										dx <= x && dx > tx &&
 										dy >= y && dy < ty
 							} else if tx > x && ty > y{
-								(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs() &&
+								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
 										dx >= x && dx < tx &&
 										dy >= y && dy < ty
 							} else {
