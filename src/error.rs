@@ -1,6 +1,7 @@
 use std::error;
 use std::error::Error;
 use std::fmt;
+use std::io;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
 use std::num::ParseIntError;
@@ -437,14 +438,14 @@ impl error::Error for UsiProtocolError {
 #[derive(Debug)]
 pub enum SelfMatchRunningError {
 	InvalidState(String),
-	IOError(String),
+	IOError(io::Error),
 	Fail(String),
 }
 impl fmt::Display for SelfMatchRunningError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s),
-		 	SelfMatchRunningError::IOError(ref s) => write!(f,"{}",s),
+		 	SelfMatchRunningError::IOError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::Fail(ref s) => write!(f,"{}",s),
 	 	}
 	 }
@@ -461,7 +462,7 @@ impl error::Error for SelfMatchRunningError {
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => None,
-	 		SelfMatchRunningError::IOError(_) => None,
+	 		SelfMatchRunningError::IOError(ref e) => Some(e),
 	 		SelfMatchRunningError::Fail(_) => None,
 	 	}
 	 }
@@ -469,6 +470,11 @@ impl error::Error for SelfMatchRunningError {
 impl From<TypeConvertError<String>> for SelfMatchRunningError where String: fmt::Debug {
 	fn from(_: TypeConvertError<String>) -> SelfMatchRunningError {
 		SelfMatchRunningError::Fail(String::from("An error occurred during type conversion from Move to Moved."))
+	}
+}
+impl From<io::Error> for SelfMatchRunningError {
+	fn from(err: io::Error) -> SelfMatchRunningError {
+		SelfMatchRunningError::IOError(err)
 	}
 }
 #[derive(Debug)]

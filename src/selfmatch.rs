@@ -26,6 +26,10 @@ use std::marker::PhantomData;
 use std::sync::mpsc;
 use std::time::{Instant,Duration};
 use std::collections::HashMap;
+use std::io::Write;
+use std::io::BufWriter;
+use std::fs;
+use std::fs::OpenOptions;
 
 pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),OE>;
@@ -60,6 +64,34 @@ pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
 			}
 		} else {
 			Err(SfenStringConvertError::InvalidFormat(initial_sfen.clone()))
+		}
+	}
+}
+#[derive(Debug)]
+pub struct FileSfenKifuWriter {
+	writer:BufWriter<fs::File>,
+}
+impl FileSfenKifuWriter {
+	pub fn new(file:String) -> Result<FileSfenKifuWriter,SelfMatchRunningError> {
+		Ok(FileSfenKifuWriter {
+			writer:BufWriter::new(OpenOptions::new().append(true).create(true).open(file)?),
+		})
+	}
+}
+impl SelfMatchKifuWriter<SelfMatchRunningError> for FileSfenKifuWriter {
+	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),SelfMatchRunningError> {
+		let sfen = match self.to_sfen(initial_sfen,m) {
+			Err(ref e) => {
+				return Err(SelfMatchRunningError::InvalidState(e.to_string()));
+			},
+			Ok(sfen) => sfen,
+		};
+
+		match self.writer.write(format!("{}\n",sfen).as_bytes()) {
+			Err(ref e) => {
+				Err(SelfMatchRunningError::InvalidState(e.to_string()))
+			},
+			Ok(_) => Ok(()),
 		}
 	}
 }
@@ -168,10 +200,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&SelfMatchRunningError) {
 		let logger = match FileLogger::new(path) {
-			Err(_) => {
-				let e = SelfMatchRunningError::IOError(String::from(
-					"The log output destination file could not be opened."
-				));
+			Err(e) => {
+				let e = SelfMatchRunningError::IOError(e);
 				on_error(None,&e);
 				return Err(e);
 			},
