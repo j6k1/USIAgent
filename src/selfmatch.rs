@@ -706,9 +706,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									match banmen.apply_valid_move(&teban,&mc,m) {
 										Ok((next,nmc,o)) => {
-											mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
-											shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
-
 											let is_win = match m {
 												&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
 													match banmen {
@@ -727,9 +724,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												_ => false,
 											};
 
-											mc = nmc;
-											teban = teban.opposite();
-
 											mvs.push(*m);
 
 											if is_win {
@@ -742,6 +736,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													SelfMatchGameEndState::Win(teban.opposite()))?;
 												break;
 											}
+
+											mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
+											shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
+
+											mc = nmc;
+											teban = teban.opposite();
 
 											banmen = next;
 
@@ -998,9 +998,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 											match banmen.apply_valid_move(&teban,&mc,&m) {
 												Ok((next,nmc,o)) => {
-													mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,&m,&o);
-													shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,&m,&o);
-
 													let is_win = match m {
 														Move::To(_,KomaDstToPosition(dx,dy,_)) => {
 															match banmen {
@@ -1019,9 +1016,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														_  => false,
 													};
 
-													mc = nmc;
-													teban = teban.opposite();
-
 													mvs.push(m);
 
 													if is_win {
@@ -1035,6 +1029,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														)?;
 														break;
 													}
+
+													mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,&m,&o);
+													shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,&m,&o);
+
+													mc = nmc;
+													teban = teban.opposite();
 
 													banmen = next;
 
