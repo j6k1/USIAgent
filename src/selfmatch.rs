@@ -1537,6 +1537,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 					false
 				}).is_err();
+			}).map(|r| {
+				r.map_err(|e| {
+					has_error = true;
+					on_error_handler.lock().map(|h| h.call(&e)).is_err();
+					e
+				}).is_err()
 			}).is_err();
 		}
 
