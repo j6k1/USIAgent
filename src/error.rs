@@ -5,7 +5,10 @@ use std::io;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
 use std::num::ParseIntError;
+use std::sync::mpsc::SendError;
+use std::sync::mpsc::RecvError;
 use command::UsiCommand;
+use selfmatch::SelfMatchMessage;
 
 #[derive(Debug)]
 pub enum EventDispatchError<'a,T,K,E>
@@ -439,6 +442,8 @@ impl error::Error for UsiProtocolError {
 pub enum SelfMatchRunningError {
 	InvalidState(String),
 	IOError(io::Error),
+	RecvError(RecvError),
+	SendError(SendError<SelfMatchMessage>),
 	Fail(String),
 }
 impl fmt::Display for SelfMatchRunningError {
@@ -446,6 +451,8 @@ impl fmt::Display for SelfMatchRunningError {
 	 	match *self {
 		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s),
 		 	SelfMatchRunningError::IOError(ref e) => write!(f,"{}",e),
+		 	SelfMatchRunningError::RecvError(ref e) => write!(f,"{}",e),
+		 	SelfMatchRunningError::SendError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::Fail(ref s) => write!(f,"{}",s),
 	 	}
 	 }
@@ -455,6 +462,8 @@ impl error::Error for SelfMatchRunningError {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => "invalid state.",
 		 	SelfMatchRunningError::IOError(_) => "IO Error.",
+		 	SelfMatchRunningError::RecvError(_) => "An error occurred when receiving the message.",
+		 	SelfMatchRunningError::SendError(_) => "An error occurred while sending the message.",
 	 		SelfMatchRunningError::Fail(_) => "An error occurred while running the self-match.",
 	 	}
 	 }
@@ -463,6 +472,8 @@ impl error::Error for SelfMatchRunningError {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => None,
 	 		SelfMatchRunningError::IOError(ref e) => Some(e),
+	 		SelfMatchRunningError::RecvError(ref e) => Some(e),
+	 		SelfMatchRunningError::SendError(ref e) => Some(e),
 	 		SelfMatchRunningError::Fail(_) => None,
 	 	}
 	 }
@@ -470,6 +481,16 @@ impl error::Error for SelfMatchRunningError {
 impl From<TypeConvertError<String>> for SelfMatchRunningError where String: fmt::Debug {
 	fn from(_: TypeConvertError<String>) -> SelfMatchRunningError {
 		SelfMatchRunningError::Fail(String::from("An error occurred during type conversion from Move to Moved."))
+	}
+}
+impl From<RecvError> for SelfMatchRunningError {
+	fn from(err: RecvError) -> SelfMatchRunningError {
+		SelfMatchRunningError::RecvError(err)
+	}
+}
+impl From<SendError<SelfMatchMessage>> for SelfMatchRunningError {
+	fn from(err: SendError<SelfMatchMessage>) -> SelfMatchRunningError {
+		SelfMatchRunningError::SendError(err)
 	}
 }
 impl From<io::Error> for SelfMatchRunningError {
