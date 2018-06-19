@@ -2174,17 +2174,7 @@ impl Banmen {
 							match self {
 								&Banmen(ref kinds) => {
 									if kinds[sy][sx] == ou {
-										let (tx,ty) = (sx,sy);
-
-										if dx == x && dy == y {
-											true
-										} else if tx - x == 0 {
-											dx != x
-										} else if ty - y == 0 {
-											dy != y
-										} else {
-											(tx as i32 - dx as i32).abs() != (ty as i32 - dy as i32).abs()
-										}
+										true
 									} else {
 										let (tx,ty) = match self.find(&ou) {
 											Some(ref v) if v.len() > 0 => {

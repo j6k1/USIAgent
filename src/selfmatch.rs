@@ -709,9 +709,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
 											shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
 
-											mc = nmc;
-											teban = teban.opposite();
-
 											let is_win = match m {
 												&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
 													match banmen {
@@ -729,6 +726,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												},
 												_ => false,
 											};
+
+											mc = nmc;
+											teban = teban.opposite();
 
 											mvs.push(*m);
 
@@ -1001,9 +1001,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,&m,&o);
 													shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,&m,&o);
 
-													mc = nmc;
-													teban = teban.opposite();
-
 													let is_win = match m {
 														Move::To(_,KomaDstToPosition(dx,dy,_)) => {
 															match banmen {
@@ -1021,6 +1018,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														},
 														_  => false,
 													};
+
+													mc = nmc;
+													teban = teban.opposite();
 
 													mvs.push(m);
 
