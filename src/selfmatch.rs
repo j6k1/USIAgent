@@ -11,6 +11,7 @@ use logger::FileLogger;
 use OnErrorHandler;
 use TryToString;
 use TryFrom;
+use SandBox;
 use shogi;
 
 use std::error::Error;
@@ -411,7 +412,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let number_of_games = self.number_of_games.map(|n| n);
 		let game_time_limit = self.game_time_limit;
 
-		let bridge_h = thread::spawn(move || {
+		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
 			let cs = [cs1,cs2];
 			let mut prev_move:Option<Move> = None;
 			let mut ponders:[Option<Move>; 2] = [None,None];
@@ -1232,7 +1233,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			quit_notification();
 
 			Ok(())
-		});
+		}, on_error_handler.clone()));
 
 		let players = [self.player1.clone(),self.player2.clone()];
 		let mut handlers:Vec<JoinHandle<Result<(),SelfMatchRunningError>>> = Vec::with_capacity(2);
@@ -1250,7 +1251,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 			let player_i = i;
 
-			handlers.push(thread::spawn(move || {
+			handlers.push(thread::spawn(move || SandBox::immediate(|| {
 				loop {
 					match cr.recv()? {
 						SelfMatchMessage::GameStart => {
@@ -1447,7 +1448,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						}
 					}
 				}
-			}));
+			}, on_error_handler.clone())));
 		}
 
 		let delay = Duration::from_millis(50);

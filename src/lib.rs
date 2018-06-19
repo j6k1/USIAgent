@@ -71,14 +71,16 @@ pub struct SandBox {
 
 }
 impl SandBox {
-	pub fn immediate<F,E,L>(f:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-	where E: Error, F: Fn() -> Result<(),E>, L: Logger {
-		match f() {
+	pub fn immediate<F,E,L>(f:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E>
+	where E: Error, F: FnOnce() -> Result<(),E>, L: Logger {
+		let r = f();
+		match r {
 			Ok(_) => (),
 			Err(ref e) => {
 				on_error_handler.lock().map(|h| h.call(e)).is_err();
 			}
 		}
+		r
 	}
 }
 pub enum OnAcceptMove  {
