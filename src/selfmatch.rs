@@ -689,25 +689,25 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									current_time_limit = game_time_limit.to_instant(teban,tinc);
 
-									if banmen.win_only_moves(&teban.opposite()).len() > 0 {
-										if let Some(pm) = prev_move {
-											if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
-												on_gameend(
-													cs[(cs_index+1) % 2].clone(),
-													cs[cs_index].clone(),
-													[cs[0].clone(),cs[1].clone()],
-													&sr,
-													SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
-												)?;
-												mvs.push(*m);
-												kifu_writer(&sfen,&mvs);
-												break;
-											}
-										}
-									}
-
 									match banmen.apply_valid_move(&teban,&mc,m) {
 										Ok((next,nmc,o)) => {
+											if let Some(_) = prev_move {
+												if banmen.win_only_moves(&teban.opposite()).len() > 0 {
+													if next.win_only_moves(&teban.opposite()).len() > 0 {
+														on_gameend(
+															cs[(cs_index+1) % 2].clone(),
+															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
+															SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
+														)?;
+														mvs.push(*m);
+														kifu_writer(&sfen,&mvs);
+														break;
+													}
+												}
+											}
+
 											let is_win = match m {
 												&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
 													match banmen {
@@ -981,25 +981,26 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 											current_time_limit = game_time_limit.to_instant(teban,tinc);
 
-											if let Some(pm) = prev_move {
-												if banmen.win_only_moves(&teban.opposite()).len() > 0 {
-													if !banmen.responded_oute(&teban,&mc,&pm,&m)? {
-														on_gameend(
-															cs[(cs_index+1) % 2].clone(),
-															cs[cs_index].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
-														)?;
-														mvs.push(m);
-														kifu_writer(&sfen,&mvs);
-														break;
-													}
-												}
-											}
-
 											match banmen.apply_valid_move(&teban,&mc,&m) {
 												Ok((next,nmc,o)) => {
+
+													if let Some(_) = prev_move {
+														if banmen.win_only_moves(&teban.opposite()).len() > 0 {
+															if next.win_only_moves(&teban.opposite()).len() > 0 {
+																on_gameend(
+																	cs[(cs_index+1) % 2].clone(),
+																	cs[cs_index].clone(),
+																	[cs[0].clone(),cs[1].clone()],
+																	&sr,
+																	SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
+																)?;
+																mvs.push(m);
+																kifu_writer(&sfen,&mvs);
+																break;
+															}
+														}
+													}
+
 													let is_win = match m {
 														Move::To(_,KomaDstToPosition(dx,dy,_)) => {
 															match banmen {
