@@ -330,6 +330,109 @@ impl Clone for Banmen {
 		}
 	}
 }
+pub trait ToSfen {
+	fn to_sfen(&self) -> String;
+}
+impl ToSfen for Banmen {
+	fn to_sfen(&self) -> String {
+		let mut s = String::new();
+
+		match self {
+			&Banmen(ref kinds) => {
+				for y in 0..9 {
+					let mut n = 0;
+					for x in 0..9 {
+						match kinds[y][x] {
+							KomaKind::Blank => {
+								n += 1;
+							},
+							k => {
+								if n > 0 {
+									s.push((n + '0' as u8) as char);
+									n = 0;
+								}
+
+								match k {
+									KomaKind::SOu => s.push('K'),
+									KomaKind::SHisha => s.push('R'),
+									KomaKind::SKaku => s.push('B'),
+									KomaKind::SKin => s.push('G'),
+									KomaKind::SGin => s.push('S'),
+									KomaKind::SKei => s.push('N'),
+									KomaKind::SKyou => s.push('L'),
+									KomaKind::SFu => s.push('P'),
+									KomaKind::SHishaN => {
+										s.push('+');
+										s.push('R');
+									},
+									KomaKind::SKakuN => {
+										s.push('+');
+										s.push('B');
+									},
+									KomaKind::SGinN => {
+										s.push('+');
+										s.push('S');
+									},
+									KomaKind::SKeiN => {
+										s.push('+');
+										s.push('N');
+									},
+									KomaKind::SKyouN => {
+										s.push('+');
+										s.push('L');
+									},
+									KomaKind::SFuN => {
+										s.push('+');
+										s.push('P');
+									},
+									KomaKind::GOu => s.push('k'),
+									KomaKind::GHisha => s.push('r'),
+									KomaKind::GKaku => s.push('b'),
+									KomaKind::GKin => s.push('g'),
+									KomaKind::GGin => s.push('s'),
+									KomaKind::GKei => s.push('n'),
+									KomaKind::GKyou => s.push('l'),
+									KomaKind::GFu => s.push('p'),
+									KomaKind::GHishaN => {
+										s.push('+');
+										s.push('r');
+									},
+									KomaKind::GKakuN => {
+										s.push('+');
+										s.push('b');
+									},
+									KomaKind::GGinN => {
+										s.push('+');
+										s.push('s');
+									},
+									KomaKind::GKeiN => {
+										s.push('+');
+										s.push('n');
+									},
+									KomaKind::GKyouN => {
+										s.push('+');
+										s.push('l');
+									},
+									KomaKind::GFuN => {
+										s.push('+');
+										s.push('p');
+									},
+									KomaKind::Blank => (),
+								}
+							}
+						}
+					}
+					if n > 0 {
+						s.push((n + '0' as u8) as char);
+					}
+					s.push('/');
+				}
+				s.pop();
+			}
+		}
+		s
+	}
+}
 pub enum NextMove {
 	Once(i32,i32),
 	Repeat(i32,i32),
