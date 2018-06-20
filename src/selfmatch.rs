@@ -21,6 +21,7 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::mpsc::Sender;
 use std::sync::mpsc::Receiver;
+use std::sync::mpsc::SendError;
 use std::thread::JoinHandle;
 use std::marker::Send;
 use std::marker::PhantomData;
@@ -413,7 +414,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let game_time_limit = self.game_time_limit;
 
 		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
-			let cs = [cs1,cs2];
+			let cs = [cs1.clone(),cs2.clone()];
 			let mut prev_move:Option<Move> = None;
 			let mut ponders:[Option<Move>; 2] = [None,None];
 
@@ -1233,7 +1234,37 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			quit_notification();
 
 			Ok(())
-		}, on_error_handler.clone()));
+		}, on_error_handler.clone()).map_err(|e| {
+			match e {
+				SelfMatchRunningError::SendError(SendError(SelfMatchMessage::Error(n))) => {
+					let r = if n == 0 {
+						cs1.send(SelfMatchMessage::Error(0))
+					} else {
+						cs2.send(SelfMatchMessage::Error(1))
+					};
+					if let Err(ref e) = r {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+					}
+				},
+				_ => {
+					if let Err(ref e) = cs1.send(SelfMatchMessage::Error(0)) {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+					}
+					if let Err(ref e) = cs2.send(SelfMatchMessage::Error(1)) {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+					}
+				}
+			}
+			match quit_ready.lock() {
+				Ok(mut quit_ready) => {
+					*quit_ready = true;
+				},
+				Err(ref e) => {
+					on_error_handler.lock().map(|h| h.call(e)).is_err();
+				}
+			};
+			e
+		}));
 
 		let players = [self.player1.clone(),self.player2.clone()];
 		let mut handlers:Vec<JoinHandle<Result<(),SelfMatchRunningError>>> = Vec::with_capacity(2);
@@ -1448,7 +1479,18 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						}
 					}
 				}
-			}, on_error_handler.clone())));
+			}, on_error_handler.clone()).map_err(|e| {
+				match e {
+					SelfMatchRunningError::SendError(SendError(_)) |
+						SelfMatchRunningError::RecvError(_) => (),
+					_ => {
+						if let Err(ref e) = ss.send(SelfMatchMessage::Error(player_i)) {
+							on_error_handler.lock().map(|h| h.call(e)).is_err();
+						}
+					}
+				}
+				e
+			})));
 		}
 
 		let delay = Duration::from_millis(50);
