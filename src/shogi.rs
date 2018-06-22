@@ -322,6 +322,7 @@ impl TryFrom<String,String> for KomaKind {
 		})
 	}
 }
+#[derive(PartialEq, Eq)]
 pub struct Banmen(pub [[KomaKind; 9]; 9]);
 impl Clone for Banmen {
 	fn clone(&self) -> Banmen {
@@ -336,6 +337,10 @@ pub trait ToSfen<E> where E: Error + fmt::Display {
 impl ToSfen<TypeConvertError<String>> for Banmen {
 	fn to_sfen(&self) -> Result<String,TypeConvertError<String>> {
 		let mut s = String::new();
+
+		if Banmen(BANMEN_START_POS) == *self {
+			return Ok(String::from("startpos"));
+		}
 
 		match self {
 			&Banmen(ref kinds) => {
