@@ -338,7 +338,7 @@ impl ToSfen<TypeConvertError<String>> for Banmen {
 	fn to_sfen(&self) -> Result<String,TypeConvertError<String>> {
 		let mut s = String::new();
 
-		if Banmen(BANMEN_START_POS) == *self {
+		if BANMEN_START_POS == *self {
 			return Ok(String::from("startpos"));
 		}
 
@@ -2717,7 +2717,7 @@ impl fmt::Debug for Banmen {
 	}
 }
 /// 左上を(0,0)とした位置
-pub const BANMEN_START_POS:[[KomaKind; 9]; 9] = [
+pub const BANMEN_START_POS:Banmen = Banmen([
 	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
 	[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
 	[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
@@ -2727,7 +2727,7 @@ pub const BANMEN_START_POS:[[KomaKind; 9]; 9] = [
 	[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 	[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 	[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-];
+]);
 impl<'a> TryFrom<&'a str,String> for Banmen {
 	fn try_from(s: &'a str) -> Result<Banmen, TypeConvertError<String>> {
 		let mut chars = s.chars();

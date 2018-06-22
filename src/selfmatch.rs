@@ -542,16 +542,16 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						SystemEvent::Position(teban, p, n, m) => {
 							let(banmen,mc) = match p {
 								UsiInitialPosition::Startpos => {
-									(shogi::BANMEN_START_POS, MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+									(shogi::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								},
-								UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Pair(ref ms,ref mg)) => {
-									(b,MochigomaCollections::Pair(ms.clone(),mg.clone()))
+								UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
+									(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
 								},
-								UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Empty) => {
-									(b,MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+								UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
+									(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								}
 							};
-							(teban,Banmen(banmen),mc,n,m)
+							(teban,banmen,mc,n,m)
 						},
 						e => {
 							cs[0].send(SelfMatchMessage::Error(0))?;

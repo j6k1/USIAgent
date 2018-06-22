@@ -401,13 +401,13 @@ impl<T,E> UsiAgent<T,E>
 						&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
 							let(b,m) = match p {
 								&UsiInitialPosition::Startpos => {
-									(shogi::BANMEN_START_POS, MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+									(shogi::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								},
-								&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Pair(ref ms,ref mg)) => {
-									(b,MochigomaCollections::Pair(ms.clone(),mg.clone()))
+								&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
+									(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
 								},
-								&UsiInitialPosition::Sfen(Banmen(b),MochigomaCollections::Empty) => {
-									(b,MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+								&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
+									(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								}
 							};
 
@@ -427,7 +427,7 @@ impl<T,E> UsiAgent<T,E>
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
-												match player.set_position(t, Banmen(b), ms, mg, n, v) {
+												match player.set_position(t, b, ms, mg, n, v) {
 													Ok(_) => (),
 													Err(ref e) => {
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
