@@ -2991,7 +2991,7 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 					if let Some(n) = ms.get(&k) {
 						if *n > 0 {
 							sfen.push(c);
-							sfen.push(('0' as u8 + *n as u8) as char);
+							sfen.push_str(&n.to_string());
 						}
 					}
 				}
@@ -3010,7 +3010,7 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 					if let Some(n) = mg.get(&k) {
 						if *n > 0 {
 							sfen.push(c);
-							sfen.push(('0' as u8 + *n as u8) as char);
+							sfen.push_str(&n.to_string());
 						}
 					}
 				}
