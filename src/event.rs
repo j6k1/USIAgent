@@ -558,7 +558,7 @@ impl PositionParser {
 
 		match p[0] {
 			"startpos"=> self.parse_startpos(&params[1..]),
-			"sefn" => self.parse_sfen(&params[1..]),
+			"sfen" => self.parse_sfen(&params[1..]),
 			_ => {
 				Err(TypeConvertError::SyntaxError(String::from(
 					"The input form of the go command is invalid. (Insufficient parameters)"
@@ -591,19 +591,22 @@ impl PositionParser {
 	}
 
 	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
-		if params.len() >= 5 && params[4] != "moves" {
+		if params.len() > 5 && params[4] != "moves" {
 			return Err(TypeConvertError::SyntaxError(String::from(
 					"The format of the position command input is invalid."
 				)));
 		}
 		Ok(match params {
-			params if params.len() >= 6 => match (params[0],params[1],params[2],params[3]) {
+			params if params.len() > 3 => match (params[0],params[1],params[2],params[3]) {
 				(p, t, m, n) => {
 					let mut mv:Vec<Move> = Vec::new();
 
-					for m in &params[5..] {
-							mv.push(Move::try_from(m)?);
+					if params.len() > 5 {
+						for m in &params[5..] {
+								mv.push(Move::try_from(m)?);
+						}
 					}
+
 					SystemEvent::Position(
 						Teban::try_from(t)?,
 						UsiInitialPosition::Sfen(Banmen::try_from(p)?,MochigomaCollections::try_from(m)?),
