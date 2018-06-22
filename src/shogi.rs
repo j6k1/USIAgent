@@ -3024,3 +3024,27 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 		}
 	}
 }
+impl ToSfen<SfenStringConvertError> for (Teban,Banmen,MochigomaCollections,Vec<Move>) {
+	fn to_sfen(&self) -> Result<String,SfenStringConvertError> {
+		Ok(match self {
+			&(ref t, ref b, ref mc, ref m) if m.len() > 0 => {
+				let mc = mc.to_sfen()?;
+
+				if *t == Teban::Sente && mc == "-" && *b == BANMEN_START_POS {
+					format!("startpos moves {}", m.to_sfen()?)
+				} else {
+					format!("sfen {} {} {} 1 moves {}", b.to_sfen()?, t.to_sfen()?, mc, m.to_sfen()?)
+				}
+			},
+			&(ref t, ref b, ref mc, _) => {
+				let mc = mc.to_sfen()?;
+
+				if *t == Teban::Sente && mc == "-" && *b == BANMEN_START_POS {
+					format!("startpos")
+				} else {
+					format!("sfen {} {} {} 1", b.to_sfen()?, t.to_sfen()?, mc)
+				}
+			}
+		})
+	}
+}

@@ -501,12 +501,16 @@ impl From<io::Error> for SelfMatchRunningError {
 #[derive(Debug)]
 pub enum SfenStringConvertError {
 	ToMoveString(ToMoveStringConvertError),
+	TypeConvertError(TypeConvertError<String>),
 	InvalidFormat(String),
 }
 impl fmt::Display for SfenStringConvertError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		SfenStringConvertError::ToMoveString(ref e) => {
+	 			e.fmt(f)
+	 		},
+	 		SfenStringConvertError::TypeConvertError(ref e) => {
 	 			e.fmt(f)
 	 		},
 	 		SfenStringConvertError::InvalidFormat(ref sfen) => {
@@ -521,6 +525,9 @@ impl error::Error for SfenStringConvertError {
 	 		SfenStringConvertError::ToMoveString(_) => {
 	 			"Conversion of move to string representation failed."
 	 		},
+	 		SfenStringConvertError::TypeConvertError(_) => {
+	 			"An error occurred during conversion to sfen string."
+	 		},
 	 		SfenStringConvertError::InvalidFormat(_) => {
 	 			"The sfen string format is invalid."
 	 		}
@@ -530,6 +537,7 @@ impl error::Error for SfenStringConvertError {
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
 	 		SfenStringConvertError::ToMoveString(ref e) => Some(e),
+	 		SfenStringConvertError::TypeConvertError(ref e) => Some(e),
 	 		SfenStringConvertError::InvalidFormat(_) => None,
 	 	}
 	 }
@@ -537,6 +545,11 @@ impl error::Error for SfenStringConvertError {
 impl From<ToMoveStringConvertError> for SfenStringConvertError {
 	fn from(err: ToMoveStringConvertError) -> SfenStringConvertError {
 		SfenStringConvertError::ToMoveString(err)
+	}
+}
+impl From<TypeConvertError<String>> for SfenStringConvertError {
+	fn from(err: TypeConvertError<String>) -> SfenStringConvertError {
+		SfenStringConvertError::TypeConvertError(err)
 	}
 }
 pub trait PlayerError: Error + fmt::Debug {}
