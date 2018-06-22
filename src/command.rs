@@ -257,8 +257,8 @@ impl MoveStringFrom for MoveStringCreator {
 		}
 	}
 }
-impl TryToString<ToMoveStringConvertError> for BestMove {
-	fn try_to_string(&self) -> Result<String, ToMoveStringConvertError> {
+impl ToSfen<ToMoveStringConvertError> for BestMove {
+	fn to_sfen(&self) -> Result<String, ToMoveStringConvertError> {
 		match *self {
 			BestMove::Resign => Ok(String::from("resign")),
 			BestMove::Win => Ok(String::from("win")),
@@ -364,8 +364,8 @@ impl TryToString<UsiOutputCreateError> for UsiOptType {
 		})
 	}
 }
-impl TryToString<UsiOutputCreateError> for CheckMate {
-	fn try_to_string(&self) -> Result<String, UsiOutputCreateError> {
+impl ToSfen<UsiOutputCreateError> for CheckMate {
+	fn to_sfen(&self) -> Result<String, UsiOutputCreateError> {
 		Ok(match *self {
 			CheckMate::Moves(ref v) if v.len() < 1 => {
 				return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))

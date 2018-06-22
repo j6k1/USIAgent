@@ -1,10 +1,10 @@
 use std::fmt;
 use std::fmt::Formatter;
+use std::error::Error;
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
 
 use TryFrom;
-use TryToString;
 use error::*;
 use hash::*;
 use command::*;
@@ -263,8 +263,8 @@ pub enum Move {
 	To(KomaSrcPosition,KomaDstToPosition),
 	Put(MochigomaKind,KomaDstPutPosition),
 }
-impl TryToString<ToMoveStringConvertError> for Vec<Move> {
-	fn try_to_string(&self) -> Result<String, ToMoveStringConvertError> {
+impl ToSfen<ToMoveStringConvertError> for Vec<Move> {
+	fn to_sfen(&self) -> Result<String, ToMoveStringConvertError> {
 		let mut strs:Vec<String> = Vec::with_capacity(self.len());
 
 		for m in self {
@@ -330,11 +330,11 @@ impl Clone for Banmen {
 		}
 	}
 }
-pub trait ToSfen {
-	fn to_sfen(&self) -> String;
+pub trait ToSfen<E> where E: Error + fmt::Display {
+	fn to_sfen(&self) -> Result<String,E>;
 }
-impl ToSfen for Banmen {
-	fn to_sfen(&self) -> String {
+impl ToSfen<TypeConvertError<String>> for Banmen {
+	fn to_sfen(&self) -> Result<String,TypeConvertError<String>> {
 		let mut s = String::new();
 
 		match self {
@@ -430,7 +430,7 @@ impl ToSfen for Banmen {
 				s.pop();
 			}
 		}
-		s
+		Ok(s)
 	}
 }
 pub enum NextMove {

@@ -9,7 +9,6 @@ use hash::*;
 use Logger;
 use logger::FileLogger;
 use OnErrorHandler;
-use TryToString;
 use TryFrom;
 use SandBox;
 use shogi;
@@ -43,13 +42,13 @@ pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
 		if sfen.len() >= 5 {
 			match (sfen[0],sfen[1],sfen[2],sfen[3],sfen[4]) {
 				("sfen",p1,p2,p3,p4) if m.len() > 0 => {
-					Ok(format!("sfen {} {} {} {} moves {}",p1,p2,p3,p4,m.try_to_string()?))
+					Ok(format!("sfen {} {} {} {} moves {}",p1,p2,p3,p4,m.to_sfen()?))
 				},
 				("sfen",p1,p2,p3,p4) => {
 					Ok(format!("sfen {} {} {} {}",p1,p2,p3,p4))
 				},
 				("startpos",_,_,_,_) if m.len() > 0=> {
-					Ok(format!("startpos moves {}",m.try_to_string()?))
+					Ok(format!("startpos moves {}",m.to_sfen()?))
 				},
 				("startpos",_,_,_,_)=> {
 					Ok(format!("startpos"))
@@ -60,7 +59,7 @@ pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
 			}
 		} else if sfen.len() >= 1 && sfen[0] == "startpos" {
 			if m.len() > 0 {
-				Ok(format!("startpos moves {}",m.try_to_string()?))
+				Ok(format!("startpos moves {}",m.to_sfen()?))
 			} else {
 				Ok(format!("startpos"))
 			}
