@@ -338,10 +338,6 @@ impl ToSfen<TypeConvertError<String>> for Banmen {
 	fn to_sfen(&self) -> Result<String,TypeConvertError<String>> {
 		let mut s = String::new();
 
-		if BANMEN_START_POS == *self {
-			return Ok(String::from("startpos"));
-		}
-
 		match self {
 			&Banmen(ref kinds) => {
 				for y in 0..9 {
