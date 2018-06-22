@@ -2968,3 +2968,59 @@ impl ToSfen<TypeConvertError<String>> for Teban {
 		})
 	}
 }
+impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
+	fn to_sfen(&self) -> Result<String, TypeConvertError<String>> {
+		let mut sfen = String::new();
+
+		match self {
+			&MochigomaCollections::Empty => {
+				Ok(String::from("-"))
+			},
+			&MochigomaCollections::Pair(ref ms, ref mg) => {
+				const SFEN_MOCHIGOMA_KINDS_SENTE:[(char,MochigomaKind); 7] = [
+					('R', MochigomaKind::Hisha),
+					('B', MochigomaKind::Kaku),
+					('G', MochigomaKind::Kin),
+					('S', MochigomaKind::Gin),
+					('N', MochigomaKind::Kei),
+					('L', MochigomaKind::Kyou),
+					('P', MochigomaKind::Fu),
+				];
+
+				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_SENTE {
+					if let Some(n) = ms.get(&k) {
+						if *n > 0 {
+							sfen.push(c);
+							sfen.push(('0' as u8 + *n as u8) as char);
+						}
+					}
+				}
+
+				const SFEN_MOCHIGOMA_KINDS_GOTE:[(char,MochigomaKind); 7] = [
+					('r', MochigomaKind::Hisha),
+					('b', MochigomaKind::Kaku),
+					('g', MochigomaKind::Kin),
+					('s', MochigomaKind::Gin),
+					('n', MochigomaKind::Kei),
+					('l', MochigomaKind::Kyou),
+					('p', MochigomaKind::Fu),
+				];
+
+				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_GOTE {
+					if let Some(n) = mg.get(&k) {
+						if *n > 0 {
+							sfen.push(c);
+							sfen.push(('0' as u8 + *n as u8) as char);
+						}
+					}
+				}
+
+				if sfen.len() == 0 {
+					Ok(String::from("-"))
+				} else {
+					Ok(sfen)
+				}
+			}
+		}
+	}
+}
