@@ -591,7 +591,7 @@ impl PositionParser {
 	}
 
 	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
-		if params.len() > 5 && params[4] != "moves" {
+		if params.len() > 4 && (params[4] != "moves" || params.len() <= 5) {
 			return Err(TypeConvertError::SyntaxError(String::from(
 					"The format of the position command input is invalid."
 				)));
