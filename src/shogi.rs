@@ -2959,3 +2959,11 @@ impl<'a> TryFrom<&'a str,String> for Teban {
 		})
 	}
 }
+impl ToSfen<TypeConvertError<String>> for Teban {
+	fn to_sfen(&self) -> Result<String, TypeConvertError<String>> {
+		Ok(match *self {
+			Teban::Sente => String::from("b"),
+			Teban::Gote => String::from("w"),
+		})
+	}
+}
