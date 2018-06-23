@@ -10,6 +10,7 @@ use Logger;
 use logger::FileLogger;
 use OnErrorHandler;
 use TryFrom;
+use Find;
 use SandBox;
 use shogi;
 
@@ -747,25 +748,53 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											banmen = next;
 
 											match m {
-												&Move::Put(MochigomaKind::Fu,_) if banmen.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
-													match m {
-														&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
-														m @ _ => {
-															match banmen.apply_move_none_check(&teban,&mc,&m.to_move()) {
-																(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+												&Move::Put(MochigomaKind::Fu,KomaDstPutPosition(_,dy)) => {
+													let dy = dy - 1;
+
+													let ou = match teban.opposite() {
+														Teban::Sente => KomaKind::GOu,
+														Teban::Gote => KomaKind::SOu,
+													};
+
+													let oy = match banmen.find(&ou) {
+														Some(ref v) if v.len() > 0 => {
+															match v[0] {
+																KomaPosition(_,oy) => {
+																	(oy - 1) as i32
+																}
 															}
 														},
+														_ => {
+															-1
+														}
+													};
+
+													let is_oute = match teban.opposite() {
+														Teban::Sente if oy != -1 => dy == (oy + 1) as u32,
+														Teban::Gote if oy != -1 => dy == (oy - 1) as u32,
+														_ => false,
+													};
+
+													if is_oute && banmen.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
+														match m {
+															&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+															m @ _ => {
+																match banmen.apply_move_none_check(&teban,&mc,&m.to_move()) {
+																	(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+																}
+															},
+														}
+													}).count() == 0 {
+														on_gameend(
+															cs[(cs_index+1) % 2].clone(),
+															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
+															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
+														)?;
+														kifu_writer(&sfen,&mvs);
+														break;
 													}
-												}).count() == 0 => {
-													on_gameend(
-														cs[(cs_index+1) % 2].clone(),
-														cs[cs_index].clone(),
-														[cs[0].clone(),cs[1].clone()],
-														&sr,
-														SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
-													)?;
-													kifu_writer(&sfen,&mvs);
-													break;
 												},
 												_ => (),
 											}
@@ -1041,25 +1070,53 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													banmen = next;
 
 													match m {
-														Move::Put(MochigomaKind::Fu,_) if banmen.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
-															match m {
-																&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
-																m @ _ => {
-																	match banmen.apply_move_none_check(&teban,&mc,&m.to_move()) {
-																		(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+														Move::Put(MochigomaKind::Fu,KomaDstPutPosition(_,dy)) => {
+															let dy = dy - 1;
+
+															let ou = match teban.opposite() {
+																Teban::Sente => KomaKind::GOu,
+																Teban::Gote => KomaKind::SOu,
+															};
+
+															let oy = match banmen.find(&ou) {
+																Some(ref v) if v.len() > 0 => {
+																	match v[0] {
+																		KomaPosition(_,oy) => {
+																			(oy - 1) as i32
+																		}
 																	}
 																},
+																_ => {
+																	-1
+																}
+															};
+
+															let is_oute = match teban.opposite() {
+																Teban::Sente if oy != -1 => dy == (oy + 1) as u32,
+																Teban::Gote if oy != -1 => dy == (oy - 1) as u32,
+																_ => false,
+															};
+
+															if is_oute && banmen.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
+																match m {
+																	&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+																	m @ _ => {
+																		match banmen.apply_move_none_check(&teban,&mc,&m.to_move()) {
+																			(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+																		}
+																	},
+																}
+															}).count() == 0 {
+																kifu_writer(&sfen,&mvs);
+																on_gameend(
+																	cs[(cs_index+1) % 2].clone(),
+																	cs[cs_index].clone(),
+																	[cs[0].clone(),cs[1].clone()],
+																	&sr,
+																	SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
+																)?;
+																break;
 															}
-														}).count() == 0 => {
-															kifu_writer(&sfen,&mvs);
-															on_gameend(
-																cs[(cs_index+1) % 2].clone(),
-																cs[cs_index].clone(),
-																[cs[0].clone(),cs[1].clone()],
-																&sr,
-																SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
-															)?;
-															break;
 														},
 														_ => (),
 													}
