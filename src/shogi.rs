@@ -2413,7 +2413,7 @@ impl Banmen {
 		})
 	}
 
-	pub fn is_put_and_fu_mate(&self,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
+	pub fn is_put_fu_and_mate(&self,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
 		match *m {
 			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(_,dy)) => {
 				let dy = dy - 1;

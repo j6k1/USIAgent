@@ -746,7 +746,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 											banmen = next;
 
-											if banmen.is_put_and_fu_mate(&teban.opposite(),&mc,m) {
+											if banmen.is_put_fu_and_mate(&teban.opposite(),&mc,m) {
 												on_gameend(
 													cs[(cs_index+1) % 2].clone(),
 													cs[cs_index].clone(),
@@ -1028,7 +1028,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 													banmen = next;
 
-													if banmen.is_put_and_fu_mate(&teban.opposite(),&mc,&m) {
+													if banmen.is_put_fu_and_mate(&teban.opposite(),&mc,&m) {
 														kifu_writer(&sfen,&mvs);
 														on_gameend(
 															cs[(cs_index+1) % 2].clone(),
