@@ -251,6 +251,9 @@ impl KyokumenHash {
 						let dx = 9 - md.0 as usize;
 						let dy = md.1 as usize - 1;
 
+						let dk = kinds[dy][dx] as usize;
+
+						hash = pull(hash,self.kyokumen_hash_seeds[dk as usize][dy * 8 + dx]);
 						hash = add(hash,self.kyokumen_hash_seeds[k as usize][dy * 8 + dx]);
 						hash
 					}
