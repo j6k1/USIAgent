@@ -797,7 +797,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											};
 
 											match kyokumen_hash_map.get(&mhash,&shash) {
-												Some(c) if c == 3 => {
+												Some(c) if c >= 3 => {
 													kifu_writer(&sfen,&mvs);
 													on_gameend(
 														cs[(cs_index+1) % 2].clone(),
@@ -1091,7 +1091,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													};
 
 													match kyokumen_hash_map.get(&mhash,&shash) {
-														Some(c) if c == 3 => {
+														Some(c) if c >= 3 => {
 															kifu_writer(&sfen,&mvs);
 															on_gameend(
 																cs[(cs_index+1) % 2].clone(),
