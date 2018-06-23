@@ -1334,17 +1334,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														break;
 													}
 												}
-												let mut info_sender = match info_sender.lock() {
-													Ok(info_sender) => info_sender,
-													Err(ref e) => {
-														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i))?;
-														break;
-													}
-												};
 												let m = match player.think(&limit,
 															user_event_queue[player_i].clone(),
-															&mut *info_sender,on_error_handler.clone()) {
+															info_sender.clone(),on_error_handler.clone()) {
 													Ok(m) => m,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -1381,17 +1373,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														break;
 													}
 												}
-												let mut info_sender = match info_sender.lock() {
-													Ok(info_sender) => info_sender,
-													Err(ref e) => {
-														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i))?;
-														break;
-													}
-												};
 												let m = match player.think(&limit,
 															user_event_queue[player_i].clone(),
-															&mut *info_sender,on_error_handler.clone()) {
+															info_sender.clone(),on_error_handler.clone()) {
 													Ok(m) => m,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();

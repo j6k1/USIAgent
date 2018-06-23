@@ -513,16 +513,9 @@ impl<T,E> UsiAgent<T,E>
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
-												let mut info_sender = match info_sender.lock() {
-													Ok(info_sender) => info_sender,
-													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-														return;
-													}
-												};
 												let bm = match player.think(&*opt,
 																user_event_queue_inner.clone(),
-																&mut *info_sender,on_error_handler_inner.clone()) {
+																info_sender.clone(),on_error_handler_inner.clone()) {
 																	Ok(bm) => bm,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -613,16 +606,9 @@ impl<T,E> UsiAgent<T,E>
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
-												let mut info_sender = match info_sender.lock() {
-													Ok(info_sender) => info_sender,
-													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-														return;
-													}
-												};
 												let m = match player.think(&*opt,
 																user_event_queue_inner.clone(),
-																&mut *info_sender,on_error_handler_inner.clone()) {
+																info_sender.clone(),on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -691,16 +677,9 @@ impl<T,E> UsiAgent<T,E>
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
-												let mut info_sender = match info_sender.lock() {
-													Ok(info_sender) => info_sender,
-													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-														return;
-													}
-												};
 												let m = match player.think_mate(&*opt,
 																user_event_queue_inner.clone(),
-																&mut *info_sender,on_error_handler_inner.clone()) {
+																info_sender.clone(),on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();

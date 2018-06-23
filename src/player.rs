@@ -24,10 +24,10 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
 	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:&mut S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			info_sender:Arc<Mutex<S>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,E> where L: Logger, S: InfoSender;
 	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:&mut S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			info_sender:Arc<Mutex<S>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,E> where L: Logger, S: InfoSender;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn gameover<L>(&mut self,s:&GameEndState,
