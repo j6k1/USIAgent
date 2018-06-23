@@ -254,6 +254,9 @@ impl KyokumenHash {
 						let dk = kinds[dy][dx] as usize;
 
 						hash = pull(hash,self.kyokumen_hash_seeds[dk as usize][dy * 8 + dx]);
+
+						let k = KomaKind::from((*t,*mk)) as usize;
+
 						hash = add(hash,self.kyokumen_hash_seeds[k as usize][dy * 8 + dx]);
 						hash
 					}
