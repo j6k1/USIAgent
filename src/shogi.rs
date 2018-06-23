@@ -2412,6 +2412,50 @@ impl Banmen {
 			}
 		})
 	}
+
+	pub fn is_put_and_fu_mate(&self,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
+		match *m {
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(_,dy)) => {
+				let dy = dy - 1;
+
+				let ou = match teban {
+					&Teban::Sente => KomaKind::GOu,
+					&Teban::Gote => KomaKind::SOu,
+				};
+
+				let oy = match self.find(&ou) {
+					Some(ref v) if v.len() > 0 => {
+						match v[0] {
+							KomaPosition(_,oy) => {
+								(oy - 1) as i32
+							}
+						}
+					},
+					_ => {
+						-1
+					}
+				};
+
+				let is_oute = match teban {
+					&Teban::Sente if oy != -1 => dy == (oy + 1) as u32,
+					&Teban::Gote if oy != -1 => dy == (oy - 1) as u32,
+					_ => false,
+				};
+
+				is_oute && self.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
+					match m {
+						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+						m @ _ => {
+							match self.apply_move_none_check(&teban,&mc,&m.to_move()) {
+								(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+							}
+						},
+					}
+				}).count() == 0
+			},
+			_ => false,
+		}
+	}
 }
 impl Find<KomaPosition,Move> for Vec<LegalMove> {
 	fn find(&self,query:&KomaPosition) -> Option<Move> {
