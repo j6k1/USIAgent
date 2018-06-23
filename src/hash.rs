@@ -241,10 +241,10 @@ impl KyokumenHash {
 
 						match t {
 							&Teban::Sente => {
-								hash = pull(hash,self.mochigoma_hash_seeds[0][c][k]);
+								hash = pull(hash,self.mochigoma_hash_seeds[0][c-1][k]);
 							},
 							&Teban::Gote => {
-								hash = pull(hash,self.mochigoma_hash_seeds[1][c][k]);
+								hash = pull(hash,self.mochigoma_hash_seeds[1][c-1][k]);
 							}
 						}
 
