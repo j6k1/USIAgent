@@ -734,7 +734,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													cs[(cs_index+1) % 2].clone(),
 													[cs[0].clone(),cs[1].clone()],
 													&sr,
-													SelfMatchGameEndState::Win(teban.opposite()))?;
+													SelfMatchGameEndState::Win(teban))?;
 												break;
 											}
 
@@ -1027,7 +1027,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 															cs[(cs_index+1) % 2].clone(),
 															[cs[0].clone(),cs[1].clone()],
 															&sr,
-															SelfMatchGameEndState::Win(teban.opposite())
+															SelfMatchGameEndState::Win(teban)
 														)?;
 														break;
 													}

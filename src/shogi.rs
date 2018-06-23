@@ -1914,7 +1914,7 @@ impl Banmen {
 					&Teban::Sente => {
 						match mc {
 							MochigomaCollections::Pair(ref mut mc,_) => {
-								let c =match mc.get(&k) {
+								let c = match mc.get(&k) {
 									Some(c) => {
 										c-1
 									},
