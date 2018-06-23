@@ -2456,6 +2456,70 @@ impl Banmen {
 			_ => false,
 		}
 	}
+
+	pub fn is_win(&self,teban:&Teban,m:&Move) -> bool {
+		match m {
+			&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
+				match self {
+					&Banmen(ref kinds) => {
+						match teban {
+							&Teban::Sente => {
+								kinds[dy as usize - 1][9 - dx as usize] == KomaKind::GOu
+							},
+							&Teban::Gote => {
+								kinds[dy as usize - 1][9 - dx as usize] == KomaKind::SOu
+							}
+						}
+					}
+				}
+			},
+			_ => false,
+		}
+	}
+
+	pub fn check_sennichite(&self,mhash:u64,shash:u64,
+									kyokumen_hash_map:&mut TwoKeyHashMap<u32>) -> bool {
+		match kyokumen_hash_map.get(&mhash,&shash) {
+			Some(c) if c >= 3 => {
+				return false;
+			},
+			Some(c) => {
+				kyokumen_hash_map.insert(mhash,shash,c+1);
+			},
+			None => {
+				kyokumen_hash_map.insert(mhash,shash,1);
+			}
+		}
+
+		return true;
+	}
+
+	pub fn check_sennichite_by_oute(&self,teban:&Teban,mhash:u64,shash:u64,
+									oute_kyokumen_hash_map:&mut Option<TwoKeyHashMap<u32>>)
+		-> bool {
+
+		match *oute_kyokumen_hash_map {
+			None if self.win_only_moves(&teban).len() > 0 => {
+				let mut m = TwoKeyHashMap::new();
+				m.insert(mhash,shash,1);
+				*oute_kyokumen_hash_map = Some(m);
+			},
+			Some(ref mut m) => {
+				if self.win_only_moves(&teban).len() > 0 {
+					if let Some(_) = m.get(&mhash,&shash) {
+						return false;
+					}
+
+					m.insert(mhash,shash,1);
+				}
+			},
+			ref mut m => {
+				*m = None;
+			}
+		}
+
+		true
+	}
 }
 impl Find<KomaPosition,Move> for Vec<LegalMove> {
 	fn find(&self,query:&KomaPosition) -> Option<Move> {

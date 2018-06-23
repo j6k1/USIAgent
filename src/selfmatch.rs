@@ -707,23 +707,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												}
 											}
 
-											let is_win = match m {
-												&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
-													match banmen {
-														Banmen(ref kinds) => {
-															match teban {
-																Teban::Sente => {
-																	kinds[dy as usize - 1][9 - dx as usize] == KomaKind::GOu
-																},
-																Teban::Gote => {
-																	kinds[dy as usize - 1][9 - dx as usize] == KomaKind::SOu
-																}
-															}
-														}
-													}
-												},
-												_ => false,
-											};
+											let is_win = banmen.is_win(&teban,m);
 
 											mvs.push(*m);
 
@@ -758,50 +742,33 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												break;
 											}
 
-											match oute_kyokumen_hash_maps[cs_index] {
-												None if banmen.win_only_moves(&teban).len() > 0 => {
-													let mut m = TwoKeyHashMap::new();
-													m.insert(mhash,shash,1);
-													oute_kyokumen_hash_maps[cs_index] = Some(m);
-												},
-												Some(ref mut m) if banmen.win_only_moves(&teban).len() > 0 => {
-													if let Some(_) = m.get(&mhash,&shash) {
-														kifu_writer(&sfen,&mvs);
-														on_gameend(
-															cs[(cs_index+1) % 2].clone(),
-															cs[cs_index].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
-														)?;
-														break;
-													}
+											if !banmen.check_sennichite_by_oute(
+												&teban.opposite(),mhash,shash,
+												&mut oute_kyokumen_hash_maps[cs_index]
+											) {
+												kifu_writer(&sfen,&mvs);
+												on_gameend(
+													cs[(cs_index+1) % 2].clone(),
+													cs[cs_index].clone(),
+													[cs[0].clone(),cs[1].clone()],
+													&sr,
+													SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
+												)?;
+												break;
+											}
 
-													m.insert(mhash,shash,1);
-												},
-												_ => {
-													oute_kyokumen_hash_maps[cs_index] = None;
-												}
-											};
-
-											match kyokumen_hash_map.get(&mhash,&shash) {
-												Some(c) if c >= 3 => {
-													kifu_writer(&sfen,&mvs);
-													on_gameend(
-														cs[(cs_index+1) % 2].clone(),
-														cs[cs_index].clone(),
-														[cs[0].clone(),cs[1].clone()],
-														&sr,
-														SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
-													)?;
-													break;
-												},
-												Some(c) => {
-													kyokumen_hash_map.insert(mhash,shash,c+1);
-												},
-												None => {
-													kyokumen_hash_map.insert(mhash,shash,1);
-												}
+											if !banmen.check_sennichite(
+												mhash,shash,&mut kyokumen_hash_map
+											) {
+												kifu_writer(&sfen,&mvs);
+												on_gameend(
+													cs[(cs_index+1) % 2].clone(),
+													cs[cs_index].clone(),
+													[cs[0].clone(),cs[1].clone()],
+													&sr,
+													SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
+												)?;
+												break;
 											}
 											cs_index = (cs_index + 1) % 2;
 										},
@@ -988,23 +955,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														}
 													}
 
-													let is_win = match m {
-														Move::To(_,KomaDstToPosition(dx,dy,_)) => {
-															match banmen {
-																Banmen(ref kinds) => {
-																	match teban {
-																		Teban::Sente => {
-																			kinds[dy as usize - 1][9 - dx as usize] == KomaKind::GOu
-																		},
-																		Teban::Gote => {
-																			kinds[dy as usize - 1][9 - dx as usize] == KomaKind::SOu
-																		}
-																	}
-																}
-															}
-														},
-														_  => false,
-													};
+													let is_win = banmen.is_win(&teban,&m);
 
 													mvs.push(m);
 
@@ -1040,51 +991,35 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														break;
 													}
 
-													match oute_kyokumen_hash_maps[cs_index] {
-														None if banmen.win_only_moves(&teban).len() > 0 => {
-															let mut m = TwoKeyHashMap::new();
-															m.insert(mhash,shash,1);
-															oute_kyokumen_hash_maps[cs_index] = Some(m);
-														},
-														Some(ref mut m) if banmen.win_only_moves(&teban).len() > 0 => {
-															if let Some(_) = m.get(&mhash,&shash) {
-																kifu_writer(&sfen,&mvs);
-																on_gameend(
-																	cs[(cs_index+1) % 2].clone(),
-																	cs[cs_index].clone(),
-																	[cs[0].clone(),cs[1].clone()],
-																	&sr,
-																	SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
-																)?;
-																break;
-															}
-
-															m.insert(mhash,shash,1);
-														},
-														_ => {
-															oute_kyokumen_hash_maps[cs_index] = None;
-														}
-													};
-
-													match kyokumen_hash_map.get(&mhash,&shash) {
-														Some(c) if c >= 3 => {
-															kifu_writer(&sfen,&mvs);
-															on_gameend(
-																cs[(cs_index+1) % 2].clone(),
-																cs[cs_index].clone(),
-																[cs[0].clone(),cs[1].clone()],
-																&sr,
-																SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
-															)?;
-															break;
-														},
-														Some(c) => {
-															kyokumen_hash_map.insert(mhash,shash,c+1);
-														},
-														None => {
-															kyokumen_hash_map.insert(mhash,shash,1);
-														}
+													if !banmen.check_sennichite_by_oute(
+														&teban.opposite(),mhash,shash,
+														&mut oute_kyokumen_hash_maps[cs_index]
+													) {
+														kifu_writer(&sfen,&mvs);
+														on_gameend(
+															cs[(cs_index+1) % 2].clone(),
+															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
+															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
+														)?;
+														break;
 													}
+
+													if !banmen.check_sennichite(
+														mhash,shash,&mut kyokumen_hash_map
+													) {
+														kifu_writer(&sfen,&mvs);
+														on_gameend(
+															cs[(cs_index+1) % 2].clone(),
+															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
+															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
+														)?;
+														break;
+													}
+
 													ponders[cs_index] = pm;
 
 													match pm {
