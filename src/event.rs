@@ -192,8 +192,8 @@ impl<'a> TryFrom<(&'a Banmen,&'a Move),String> for Moved {
 					MochigomaKind::Kei => Moved::Put(MochigomaKind::Kei,(x,y)),
 					MochigomaKind::Gin => Moved::Put(MochigomaKind::Gin,(x,y)),
 					MochigomaKind::Kin => Moved::Put(MochigomaKind::Kin,(x,y)),
-					MochigomaKind::Hisha => Moved::Put(MochigomaKind::Kaku,(x,y)),
-					MochigomaKind::Kaku => Moved::Put(MochigomaKind::Hisha,(x,y)),
+					MochigomaKind::Hisha => Moved::Put(MochigomaKind::Hisha,(x,y)),
+					MochigomaKind::Kaku => Moved::Put(MochigomaKind::Kaku,(x,y)),
 				}
 			}
 		})
