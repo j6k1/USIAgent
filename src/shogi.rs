@@ -1784,8 +1784,8 @@ impl Banmen {
 	pub fn apply_move_none_check(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
 		-> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
 
-		let mut kinds = match *self {
-			Banmen(ref kinds) => kinds.clone(),
+		let mut kinds = match self {
+			&Banmen(ref kinds) => kinds.clone(),
 		};
 
 		let (nmc,obtained) = match m {
