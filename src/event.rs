@@ -407,6 +407,39 @@ impl UsiGoTimeLimit {
 			}
 		}, tinc)
 	}
+
+	pub fn consumed(&self,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
+		match teban {
+			Teban::Sente => {
+				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = self {
+					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
+					let ls = if ls >= diff {
+						ls - diff
+					} else {
+						0
+					};
+
+					UsiGoTimeLimit::Limit(Some((ls as u32,lg)),byoyomi_of_inc)
+				} else {
+					self.clone()
+				}
+			},
+			Teban::Gote => {
+				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = self {
+					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
+					let lg = if lg >= diff {
+						lg - diff
+					} else {
+						0
+					};
+
+					UsiGoTimeLimit::Limit(Some((ls, lg as u32)),byoyomi_of_inc)
+				} else {
+					self.clone()
+				}
+			}
+		}
+	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoMateTimeLimit {

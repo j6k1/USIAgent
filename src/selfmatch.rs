@@ -605,7 +605,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				let mc_at_start = mc.clone();
 				let teban_at_start = teban.clone();
 
-				let mut current_time_limit = game_time_limit.to_instant(teban,0);
+				let mut current_game_time_limit = [game_time_limit,game_time_limit];
+				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban,0);
 
 				let kyokumen_hash_map:TwoKeyHashMap<u32> = TwoKeyHashMap::new();
 				let hasher = KyokumenHash::new();
@@ -645,6 +646,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					match ponders[cs_index] {
 						Some(_) if ponders[cs_index] == prev_move => {
 							cs[cs_index].send(SelfMatchMessage::PonderHit)?;
+							let think_start_time = Instant::now();
 							match sr.recv()? {
 								SelfMatchMessage::NotifyMove(BestMove::Move(ref m,pm)) => {
 									match self_match_event_queue.lock() {
@@ -678,15 +680,21 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 
 									let tinc = match current_time_limit {
-										(Some(limit),tinc) => {
+										(Some(limit),tinc) if limit > Instant::now() => {
 											(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
+										},
+										(Some(_),_) => {
+											0
 										},
 										(_,tinc) => {
 											tinc
 										}
 									};
 
-									current_time_limit = game_time_limit.to_instant(teban,tinc);
+									current_game_time_limit[cs_index] = current_game_time_limit[cs_index].consumed(
+										teban,think_start_time.elapsed()
+									);
+									current_time_limit = current_game_time_limit[cs_index].to_instant(teban,tinc);
 
 									match banmen.apply_valid_move(&teban,&mc,m) {
 										Ok((next,nmc,o)) => {
@@ -890,6 +898,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						None => {
 							cs[cs_index].send(SelfMatchMessage::StartThink(
 										teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
+							let think_start_time = Instant::now();
 							match sr.recv()? {
 								SelfMatchMessage::NotifyMove(m) => {
 									prev_move = match m {
@@ -925,15 +934,21 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											}
 
 											let tinc = match current_time_limit {
-												(Some(limit),tinc) => {
+												(Some(limit),tinc) if limit > Instant::now() => {
 													(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
+												},
+												(Some(_),_) => {
+													0
 												},
 												(_,tinc) => {
 													tinc
 												}
 											};
 
-											current_time_limit = game_time_limit.to_instant(teban,tinc);
+											current_game_time_limit[cs_index] = current_game_time_limit[cs_index].consumed(
+												teban,think_start_time.elapsed()
+											);
+											current_time_limit = current_game_time_limit[cs_index].to_instant(teban,tinc);
 
 											match banmen.apply_valid_move(&teban,&mc,&m) {
 												Ok((next,nmc,o)) => {
