@@ -653,7 +653,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						},
 						_ => {
 							cs[cs_index].send(SelfMatchMessage::PonderNG)?;
-							continue;
+							cs[cs_index].send(SelfMatchMessage::StartThink(
+								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
 						}
 					}
 
