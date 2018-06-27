@@ -5,9 +5,12 @@ use std::fs::OpenOptions;
 use chrono::prelude::*;
 
 use output::USIStdErrorWriter;
-use Logger;
 use string::AddIndent;
 
+pub trait Logger {
+	fn logging(&mut self, msg:&String) -> bool;
+	fn logging_error<E: Error>(&mut self, e:&E) -> bool;
+}
 #[derive(Debug)]
 pub struct FileLogger {
 	writer:BufWriter<fs::File>,

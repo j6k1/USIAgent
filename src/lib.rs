@@ -14,6 +14,7 @@ pub mod shogi;
 pub mod interpreter;
 pub mod hash;
 pub mod selfmatch;
+pub mod protocol;
 use std::error::Error;
 use std::fmt;
 use std::{thread,time};
@@ -34,6 +35,7 @@ use output::*;
 use interpreter::*;
 use player::*;
 use shogi::*;
+use protocol::*;
 
 pub trait TryFrom<T,E> where Self: Sized {
 	fn try_from(s:T) -> Result<Self, TypeConvertError<E>> where E: fmt::Debug;
@@ -1035,27 +1037,4 @@ impl<T,E> UsiAgent<T,E>
 
 		Ok(())
 	}
-}
-#[derive(Debug)]
-pub enum UsiOutput {
-	Command(Vec<String>),
-}
-impl UsiOutput {
-	fn try_from(cmd: &UsiCommand) -> Result<UsiOutput, UsiOutputCreateError> {
-		Ok(UsiOutput::Command(match *cmd {
-			UsiCommand::UsiOk => vec![String::from("usiok")],
-			UsiCommand::UsiId(ref name, ref author) => {
-				vec![format!("id name {}", name), format!("id author {}", author)]
-			},
-			UsiCommand::UsiReadyOk => vec![String::from("readyok")],
-			UsiCommand::UsiBestMove(ref m) => vec![format!("bestmove {}", m.to_sfen()?)],
-			UsiCommand::UsiInfo(ref i) => vec![format!("info {}", i.try_to_string()?)],
-			UsiCommand::UsiOption(ref s,ref opt) => vec![format!("option name {} type {}",s,opt.try_to_string()?)],
-			UsiCommand::UsiCheckMate(ref c) => vec![format!("checkmate {}", c.to_sfen()?)],
-		}))
-	}
-}
-pub trait Logger {
-	fn logging(&mut self, msg:&String) -> bool;
-	fn logging_error<E: Error>(&mut self, e:&E) -> bool;
 }

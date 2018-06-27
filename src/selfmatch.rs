@@ -12,6 +12,7 @@ use OnErrorHandler;
 use TryFrom;
 use SandBox;
 use shogi;
+use protocol::*;
 
 use std::error::Error;
 use std::fmt;
