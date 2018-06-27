@@ -2,6 +2,7 @@ use std::fmt;
 use std::error::Error;
 
 use shogi::*;
+use rule::*;
 use command::*;
 use error::*;
 use TryFrom;

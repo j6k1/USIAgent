@@ -11,7 +11,7 @@ use logger::FileLogger;
 use OnErrorHandler;
 use TryFrom;
 use SandBox;
-use shogi;
+use rule;
 use protocol::*;
 
 use std::error::Error;
@@ -543,7 +543,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						SystemEvent::Position(teban, p, n, m) => {
 							let(banmen,mc) = match p {
 								UsiInitialPosition::Startpos => {
-									(shogi::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+									(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								},
 								UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
 									(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))

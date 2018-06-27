@@ -5,7 +5,7 @@ use shogi::*;
 use hash::*;
 use error::*;
 
-use shogi::KomaKind::{SFu,SKyou,SKei,SOu,GFu,GKyou,GKei};
+use shogi::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 use TryFrom;
 use Find;
 
@@ -125,6 +125,18 @@ pub const CANDIDATE:[&[NextMove]; 14] = [
 		NextMove::Repeat(1,0)
 	],
 ];
+/// 左上を(0,0)とした位置
+pub const BANMEN_START_POS:Banmen = Banmen([
+	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+	[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+	[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+	[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+	[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+	[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+]);
 pub struct Rule {
 
 }

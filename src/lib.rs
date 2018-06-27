@@ -406,7 +406,7 @@ impl<T,E> UsiAgent<T,E>
 						&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
 							let(b,m) = match p {
 								&UsiInitialPosition::Startpos => {
-									(shogi::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+									(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 								},
 								&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
 									(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))

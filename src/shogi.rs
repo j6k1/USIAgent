@@ -2357,18 +2357,6 @@ impl fmt::Debug for Banmen {
 		}
 	}
 }
-/// 左上を(0,0)とした位置
-pub const BANMEN_START_POS:Banmen = Banmen([
-	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
-	[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
-	[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
-	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
-	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
-	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
-	[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
-	[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
-	[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-]);
 impl Validate for KomaSrcPosition {
 	fn validate(&self) -> bool {
 		match *self {
