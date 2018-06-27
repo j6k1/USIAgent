@@ -15,6 +15,8 @@ pub mod interpreter;
 pub mod hash;
 pub mod selfmatch;
 pub mod protocol;
+pub mod rule;
+
 use std::error::Error;
 use std::fmt;
 use std::{thread,time};
@@ -36,6 +38,7 @@ use interpreter::*;
 use player::*;
 use shogi::*;
 use protocol::*;
+use rule::*;
 
 pub trait TryFrom<T,E> where Self: Sized {
 	fn try_from(s:T) -> Result<Self, TypeConvertError<E>> where E: fmt::Debug;

@@ -1,83 +1,139 @@
-use std::fmt;
-use std::fmt::Formatter;
 use std::collections::HashMap;
 use std::time::{Instant};
 
-use TryFrom;
-use error::*;
+use shogi::*;
 use hash::*;
-use rule::*;
+use error::*;
 
-use Validate;
+use shogi::KomaKind::{SFu,SKyou,SKei,SOu,GFu,GKyou,GKei};
+use TryFrom;
 use Find;
-use MaxIndex;
-use self::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum KomaKind {
-	SFu = 0,
-	SKyou,
-	SKei,
-	SGin,
-	SKin,
-	SKaku,
-	SHisha,
-	SOu,
-	SFuN,
-	SKyouN,
-	SKeiN,
-	SGinN,
-	SKakuN,
-	SHishaN,
-	GFu,
-	GKyou,
-	GKei,
-	GGin,
-	GKin,
-	GKaku,
-	GHisha,
-	GOu,
-	GFuN,
-	GKyouN,
-	GKeiN,
-	GGinN,
-	GKakuN,
-	GHishaN,
-	Blank,
-}
-impl MaxIndex for KomaKind {
-	fn max_index() -> usize {
-		KomaKind::Blank as usize
-	}
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub struct KomaPosition(pub u32,pub u32);
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub struct KomaSrcPosition(pub u32,pub u32);
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub struct KomaDstToPosition(pub u32,pub u32,pub bool);
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub struct KomaDstPutPosition(pub u32,pub u32);
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum Move {
-	To(KomaSrcPosition,KomaDstToPosition),
+pub enum LegalMove {
+	To(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>),
 	Put(MochigomaKind,KomaDstPutPosition),
 }
-#[derive(PartialEq, Eq)]
-pub struct Banmen(pub [[KomaKind; 9]; 9]);
-impl Clone for Banmen {
-	fn clone(&self) -> Banmen {
-		match self {
-			&Banmen(ref kinds) => Banmen(kinds.clone())
+impl LegalMove {
+	pub fn to_move(&self) -> Move {
+		match self  {
+			&LegalMove::To(ref ms, ref md, _) => Move::To(*ms,*md),
+			&LegalMove::Put(ref mk, ref md) => Move::Put(*mk,*md),
 		}
 	}
 }
-impl Banmen {
-	pub fn legal_moves_with_point_and_kind(&self,t:&Teban,x:u32,y:u32,kind:KomaKind)
+// 可能であれば後でpubを外す
+pub enum NextMove {
+	Once(i32,i32),
+	Repeat(i32,i32),
+}
+// 後でpubを外す
+pub const CANDIDATE:[&[NextMove]; 14] = [
+	// 歩
+	&[NextMove::Once(0,-1)],
+	// 香車
+	&[NextMove::Repeat(0,-1)],
+	// 桂馬
+	&[NextMove::Once(-1,-2),NextMove::Once(1,-2)],
+	// 銀
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,1)
+	],
+	// 金
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 角
+	&[NextMove::Repeat(-1,-1),
+		NextMove::Repeat(1,-1),
+		NextMove::Repeat(-1,1),
+		NextMove::Repeat(1,1)
+	],
+	// 飛車
+	&[NextMove::Repeat(0,-1),
+		NextMove::Repeat(0,1),
+		NextMove::Repeat(-1,0),
+		NextMove::Repeat(1,0)
+	],
+	// 王
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,1)
+	],
+	// 成歩
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成香
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成桂
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成銀
+	&[NextMove::Once(0,-1),
+		NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0),
+		NextMove::Once(0,1)
+	],
+	// 成角
+	&[NextMove::Repeat(-1,-1),
+		NextMove::Repeat(1,-1),
+		NextMove::Repeat(-1,1),
+		NextMove::Repeat(1,1),
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(-1,0),
+		NextMove::Once(1,0)
+	],
+	// 成飛
+	&[NextMove::Once(-1,-1),
+		NextMove::Once(1,-1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,1),
+		NextMove::Repeat(0,-1),
+		NextMove::Repeat(0,1),
+		NextMove::Repeat(-1,0),
+		NextMove::Repeat(1,0)
+	],
+];
+pub struct Rule {
+
+}
+impl Rule {
+	pub fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:KomaKind)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		let kinds = match self {
+		let kinds = match banmen {
 			&Banmen(ref kinds) => kinds,
 		};
 
@@ -370,40 +426,40 @@ impl Banmen {
 		mvs
 	}
 
-	pub fn legal_moves_with_point(&self,t:&Teban,x:u32,y:u32)
+	pub fn legal_moves_with_point(t:&Teban,banmen:&Banmen,x:u32,y:u32)
 		-> Vec<LegalMove> {
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
-				self.legal_moves_with_point_and_kind(t,x,y,kinds[y as usize][x as usize])
+				Rule::legal_moves_with_point_and_kind(t,banmen,x,y,kinds[y as usize][x as usize])
 			}
 		}
 	}
-	pub fn legal_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
+	pub fn legal_moves_with_src(t:&Teban,banmen:&Banmen,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
-			KomaSrcPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y - 1)
+			KomaSrcPosition(x,y) => Rule::legal_moves_with_point(t, banmen, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition)
+	pub fn legal_moves_with_dst_to(t:&Teban,banmen:&Banmen,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstToPosition(x,y,_) => self.legal_moves_with_point(t, 9 - x, y - 1)
+			KomaDstToPosition(x,y,_) => Rule::legal_moves_with_point(t, banmen, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition)
+	pub fn legal_moves_with_dst_put(t:&Teban,banmen:&Banmen,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstPutPosition(x,y) => self.legal_moves_with_point(t, 9 - x, y - 1)
+			KomaDstPutPosition(x,y) => Rule::legal_moves_with_point(t, banmen, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves(&self,t:&Teban)
+	pub fn legal_moves_from_banmen(t:&Teban,banmen:&Banmen)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
@@ -411,7 +467,7 @@ impl Banmen {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8 - y),
 						};
-						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
+						mvs.append(&mut Rule::legal_moves_with_point(t, banmen, x as u32, y as u32));
 					}
 				}
 			}
@@ -419,11 +475,11 @@ impl Banmen {
 		mvs
 	}
 
-	pub fn legal_moves_all(&self,t:&Teban,mc:&MochigomaCollections)
+	pub fn legal_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
@@ -431,20 +487,21 @@ impl Banmen {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8- y),
 						};
-						mvs.append(&mut self.legal_moves_with_point(t, x as u32, y as u32));
+						mvs.append(&mut Rule::legal_moves_with_point(t, banmen, x as u32, y as u32));
 					}
 				}
 			}
 		}
-		mvs.append(&mut mc.legal_moves(t, self));
+		mvs.append(&mut Rule::legal_moves_from_mochigoma(t, mc, banmen));
 		mvs
 	}
 
-	pub fn win_only_moves_with_point_and_kind(&self,t:&Teban,x:u32,y:u32,kind:KomaKind)
+
+	pub fn win_only_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:KomaKind)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		let kinds = match self {
+		let kinds = match banmen {
 			&Banmen(ref kinds) => kinds,
 		};
 
@@ -456,7 +513,7 @@ impl Banmen {
 			Teban::Gote => KomaKind::SOu,
 		};
 
-		let target = match self.find(&ou) {
+		let target = match banmen.find(&ou) {
 			Some(ref r) => r[0],
 			None => {
 				return mvs;
@@ -484,7 +541,7 @@ impl Banmen {
 							return mvs;
 						}
 
-						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -529,7 +586,7 @@ impl Banmen {
 						mvs
 					},
 					KomaKind::SKei => {
-						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -845,7 +902,7 @@ impl Banmen {
 							return mvs;
 						}
 
-						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -890,7 +947,7 @@ impl Banmen {
 						mvs
 					},
 					KomaKind::GKei => {
-						self.legal_moves_with_point_and_kind(t, x as u32, y as u32, kind)
+						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
 							.into_iter().filter(|m| {
 								match m {
 									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
@@ -1195,41 +1252,41 @@ impl Banmen {
 		}
 	}
 
-	pub fn win_only_moves_with_point(&self,t:&Teban,x:u32,y:u32)
+	pub fn win_only_moves_with_point(t:&Teban,banmen:&Banmen,x:u32,y:u32)
 		-> Vec<LegalMove> {
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
-				self.win_only_moves_with_point_and_kind(t,x,y,kinds[y as usize][x as usize])
+				Rule::win_only_moves_with_point_and_kind(t,banmen,x,y,kinds[y as usize][x as usize])
 			}
 		}
 	}
 
-	pub fn win_only_moves_with_src(&self,t:&Teban,src:KomaSrcPosition)
+	pub fn win_only_moves_with_src(t:&Teban,banmen:&Banmen,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
-			KomaSrcPosition(x,y) => self.win_only_moves_with_point(t, 9 - x, y - 1)
+			KomaSrcPosition(x,y) => Rule::win_only_moves_with_point(t,banmen, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves_with_dst_to(&self,t:&Teban,dst:KomaDstToPosition)
+	pub fn win_only_moves_with_dst_to(t:&Teban,banmen:&Banmen,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstToPosition(x,y,_) => self.win_only_moves_with_point(t, 9 - x, y - 1)
+			KomaDstToPosition(x,y,_) => Rule::win_only_moves_with_point(t, banmen, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves_with_dst_put(&self,t:&Teban,dst:KomaDstPutPosition)
+	pub fn win_only_moves_with_dst_put(t:&Teban,banmen:&Banmen,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstPutPosition(x,y) => self.win_only_moves_with_point(t, 9 - x, y - 1)
+			KomaDstPutPosition(x,y) => Rule::win_only_moves_with_point(t, banmen, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves(&self,t:&Teban)
+	pub fn win_only_moves(t:&Teban,banmen:&Banmen)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
@@ -1237,7 +1294,7 @@ impl Banmen {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8 - y),
 						};
-						mvs.append(&mut self.win_only_moves_with_point(t, x as u32, y as u32));
+						mvs.append(&mut Rule::win_only_moves_with_point(t, banmen, x as u32, y as u32));
 					}
 				}
 			}
@@ -1245,15 +1302,16 @@ impl Banmen {
 		mvs
 	}
 
-	pub fn oute_only_moves_with_point(&self,t:&Teban,mc:&MochigomaCollections,x:u32,y:u32)
+
+	pub fn oute_only_moves_with_point(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections,x:u32,y:u32)
 		-> Vec<LegalMove> {
-		self.legal_moves_with_point(t, x, y)
+		Rule::legal_moves_with_point(t, banmen, x, y)
 			.into_iter().filter(|m| {
 					match m {
 						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
 						&LegalMove::To(ref s,ref d,_) => {
-							match self.apply_move_none_check(t,mc,&Move::To(*s,*d)) {
-								(ref b,_,_) => b.win_only_moves(t).len() > 0
+							match Rule::apply_move_none_check(banmen, t, mc,&Move::To(*s,*d)) {
+								(ref b,_,_) => Rule::win_only_moves(t,b).len() > 0
 							}
 						},
 						_ => false,
@@ -1261,11 +1319,11 @@ impl Banmen {
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn oute_only_moves(&self,t:&Teban,mc:&MochigomaCollections)
+	pub fn oute_only_moves_from_banmen(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
@@ -1273,7 +1331,7 @@ impl Banmen {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8- y),
 						};
-						mvs.append(&mut self.oute_only_moves_with_point(t, mc, x as u32, y as u32));
+						mvs.append(&mut Rule::oute_only_moves_with_point(t, banmen, mc, x as u32, y as u32));
 					}
 				}
 			}
@@ -1281,11 +1339,11 @@ impl Banmen {
 		mvs
 	}
 
-	pub fn oute_only_moves_all(&self,t:&Teban,mc:&MochigomaCollections)
+	pub fn oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
@@ -1293,24 +1351,24 @@ impl Banmen {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8- y),
 						};
-						mvs.append(&mut self.oute_only_moves_with_point(t, mc, x as u32, y as u32));
+						mvs.append(&mut Rule::oute_only_moves_with_point(t, banmen, mc, x as u32, y as u32));
 					}
 				}
 			}
 		}
-		mvs.append(&mut mc.oute_only_moves(t, self));
+		mvs.append(&mut Rule::oute_only_moves_from_mochigoma(t, mc, banmen));
 		mvs
 	}
 
-	pub fn respond_oute_only_moves_all(&self,t:&Teban,mc:&MochigomaCollections)
+	pub fn respond_oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
-		self.legal_moves_all(t, mc)
+		Rule::legal_moves_all(t, banmen, mc)
 			.into_iter().filter(|m| {
 					match m {
 						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
 						&LegalMove::To(ref s,ref d,_) => {
-							match self.apply_move_none_check(t,mc,&Move::To(*s,*d)) {
-								(ref b,_,_) => b.win_only_moves(&t.opposite()).len() == 0
+							match Rule::apply_move_none_check(banmen,t,mc,&Move::To(*s,*d)) {
+								(ref b,_,_) => Rule::win_only_moves(&t.opposite(),b).len() == 0
 							}
 						},
 						_ => false,
@@ -1318,10 +1376,10 @@ impl Banmen {
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn apply_move_none_check(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
+	pub fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move)
 		-> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
 
-		let mut kinds = match self {
+		let mut kinds = match banmen {
 			&Banmen(ref kinds) => kinds.clone(),
 		};
 
@@ -1485,16 +1543,16 @@ impl Banmen {
 		(Banmen(kinds),nmc,obtained)
 	}
 
-	pub fn apply_valid_move(&self,t:&Teban,mc:&MochigomaCollections,m:&Move)
+	pub fn apply_valid_move(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move)
 		-> Result<(Banmen,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
 		match m {
 			&Move::To(s,d) => {
-				let mvs = self.legal_moves(t);
+				let mvs = Rule::legal_moves_from_banmen(t,banmen);
 
 				match mvs.find(&(s,d)) {
 					Some(_) => {
-						Ok(self.apply_move_none_check(t,mc,m))
+						Ok(Rule::apply_move_none_check(banmen,t,mc,m))
 					},
 					None => {
 						Err(ShogiError::InvalidState(String::from(
@@ -1504,11 +1562,11 @@ impl Banmen {
 				}
 			},
 			&Move::Put(k,d) => {
-				let mvs = mc.legal_moves(t,self);
+				let mvs = Rule::legal_moves_from_mochigoma(t,mc,banmen);
 
 				match mvs.find(&(k,d)) {
 					Some(_) => {
-						Ok(self.apply_move_none_check(t,mc,m))
+						Ok(Rule::apply_move_none_check(banmen,t,mc,m))
 					},
 					None => {
 						Err(ShogiError::InvalidState(String::from(
@@ -1520,17 +1578,17 @@ impl Banmen {
 		}
 	}
 
-	pub fn apply_moves(&self,mut teban:Teban,
+	pub fn apply_moves(banmen:&Banmen,mut teban:Teban,
 						mut mc:MochigomaCollections,
 						m:&Vec<Move>,mut mhash:u64,mut shash:u64,
 						mut kyokumen_hash_map:TwoKeyHashMap<u32>,
 						hasher:&KyokumenHash)
 		-> (Teban,Banmen,MochigomaCollections,u64,u64,TwoKeyHashMap<u32>) {
 
-		let mut banmen = self.clone();
+		let mut banmen = banmen.clone();
 
 		for m in m {
-			match banmen.apply_move_none_check(&teban,&mc,&m) {
+			match Rule::apply_move_none_check(&banmen,&teban,&mc,&m) {
 				(next,nmc,o) => {
 					mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
 					shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
@@ -1554,8 +1612,8 @@ impl Banmen {
 		(teban,banmen,mc,mhash,shash,kyokumen_hash_map)
 	}
 
-	pub fn is_nyugyoku_win(&self,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
-		if self.win_only_moves(&t.opposite()).len() > 0 {
+	pub fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
+		if Rule::win_only_moves(&t.opposite(),banmen).len() > 0 {
 			return false
 		}
 
@@ -1570,7 +1628,7 @@ impl Banmen {
 			Teban::Gote => KomaKind::GOu,
 		};
 
-		let oy = match self.find(&ou) {
+		let oy = match banmen.find(&ou) {
 			Some(ref v) if v.len() > 0 => {
 				match v[0] {
 					KomaPosition(_,oy) => {
@@ -1583,7 +1641,7 @@ impl Banmen {
 			}
 		};
 
-		match self {
+		match banmen {
 			&Banmen(ref kinds) => {
 				match *t {
 					Teban::Sente => {
@@ -1765,14 +1823,14 @@ impl Banmen {
 		}
 	}
 
-	pub fn responded_oute(&self,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
+	pub fn responded_oute(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
 		-> Result<bool,SelfMatchRunningError> {
 
 		let o = t.opposite();
 
 		if !match m {
-			&Move::To(_,ref dst) if self.win_only_moves_with_dst_to(&o, *dst).len() == 0 => false,
-			&Move::Put(_,ref dst) if self.win_only_moves_with_dst_put(&o, *dst).len() == 0 => false,
+			&Move::To(_,ref dst) if Rule::win_only_moves_with_dst_to(&o, banmen, *dst).len() == 0 => false,
+			&Move::Put(_,ref dst) if Rule::win_only_moves_with_dst_put(&o, banmen, *dst).len() == 0 => false,
 			_ => true,
 		} {
 			return Err(SelfMatchRunningError::InvalidState(String::from(
@@ -1782,7 +1840,7 @@ impl Banmen {
 
 		let (kind,x,y) = match m {
 			&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
-				match self {
+				match banmen {
 					&Banmen(ref kinds) => {
 						let (dx,dy) = ((9 - dx) as usize,(dy - 1) as usize);
 						(kinds[dy][dx],dx,dy)
@@ -1800,7 +1858,7 @@ impl Banmen {
 			KomaKind::SHishaN | KomaKind::GHishaN |
 			KomaKind::SKaku | KomaKind::GKaku |
 			KomaKind::SKakuN | KomaKind::GKakuN => {
-				self.legal_moves_all(t, mc).into_iter().filter(|m| {
+				Rule::legal_moves_all(t, banmen, mc).into_iter().filter(|m| {
 					match m {
 						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
 						&LegalMove::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,_),_) => {
@@ -1812,12 +1870,12 @@ impl Banmen {
 								Teban::Gote => KomaKind::GOu,
 							};
 
-							match self {
+							match banmen {
 								&Banmen(ref kinds) => {
 									if kinds[sy][sx] == ou {
 										true
 									} else {
-										let (tx,ty) = match self.find(&ou) {
+										let (tx,ty) = match banmen.find(&ou) {
 											Some(ref v) if v.len() > 0 => {
 												match v[0] {
 													KomaPosition(ox,oy) => {
@@ -1872,7 +1930,7 @@ impl Banmen {
 								Teban::Gote => KomaKind::GOu,
 							};
 
-							let (tx,ty) = match self.find(&ou) {
+							let (tx,ty) = match banmen.find(&ou) {
 								Some(ref v) if v.len() > 0 => {
 									match v[0] {
 										KomaPosition(ox,oy) => {
@@ -1917,7 +1975,7 @@ impl Banmen {
 				}).collect::<Vec<LegalMove>>()
 			},
 			_ => {
-				self.legal_moves_all(t, mc).into_iter().filter(|m| {
+				Rule::legal_moves_all(t, banmen, mc).into_iter().filter(|m| {
 					match m {
 						&LegalMove::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,_),_) => {
 							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
@@ -1928,7 +1986,7 @@ impl Banmen {
 								Teban::Gote => KomaKind::GOu,
 							};
 
-							match self {
+							match banmen {
 								&Banmen(ref kinds) => {
 									kinds[sy][sx] == ou || (dx == x && dy == y)
 								}
@@ -1950,7 +2008,7 @@ impl Banmen {
 		})
 	}
 
-	pub fn is_put_fu_and_mate(&self,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
+	pub fn is_put_fu_and_mate(banmen:&Banmen,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
 		match *m {
 			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(_,dy)) => {
 				let dy = dy - 1;
@@ -1960,7 +2018,7 @@ impl Banmen {
 					&Teban::Gote => KomaKind::SOu,
 				};
 
-				let oy = match self.find(&ou) {
+				let oy = match banmen.find(&ou) {
 					Some(ref v) if v.len() > 0 => {
 						match v[0] {
 							KomaPosition(_,oy) => {
@@ -1979,12 +2037,12 @@ impl Banmen {
 					_ => false,
 				};
 
-				is_oute && self.legal_moves_all(&teban, &mc).into_iter().filter(|m| {
+				is_oute && Rule::legal_moves_all(&teban, banmen, &mc).into_iter().filter(|m| {
 					match m {
 						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
 						m @ _ => {
-							match self.apply_move_none_check(&teban,&mc,&m.to_move()) {
-								(ref b,_,_) => b.win_only_moves(&teban.opposite()).len() == 0
+							match Rule::apply_move_none_check(banmen,&teban,&mc,&m.to_move()) {
+								(ref b,_,_) => Rule::win_only_moves(&teban.opposite(),b).len() == 0
 							}
 						},
 					}
@@ -1994,10 +2052,10 @@ impl Banmen {
 		}
 	}
 
-	pub fn is_win(&self,teban:&Teban,m:&Move) -> bool {
+	pub fn is_win(banmen:&Banmen,teban:&Teban,m:&Move) -> bool {
 		match m {
 			&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
-				match self {
+				match banmen {
 					&Banmen(ref kinds) => {
 						match teban {
 							&Teban::Sente => {
@@ -2014,7 +2072,7 @@ impl Banmen {
 		}
 	}
 
-	pub fn check_sennichite(&self,mhash:u64,shash:u64,
+	pub fn check_sennichite(_:&Banmen,mhash:u64,shash:u64,
 									kyokumen_hash_map:&mut TwoKeyHashMap<u32>) -> bool {
 		match kyokumen_hash_map.get(&mhash,&shash) {
 			Some(c) if c >= 3 => {
@@ -2031,18 +2089,18 @@ impl Banmen {
 		return true;
 	}
 
-	pub fn check_sennichite_by_oute(&self,teban:&Teban,mhash:u64,shash:u64,
+	pub fn check_sennichite_by_oute(banmen:&Banmen,teban:&Teban,mhash:u64,shash:u64,
 									oute_kyokumen_hash_map:&mut Option<TwoKeyHashMap<u32>>)
 		-> bool {
 
 		match *oute_kyokumen_hash_map {
-			None if self.win_only_moves(&teban).len() > 0 => {
+			None if Rule::win_only_moves(&teban,banmen).len() > 0 => {
 				let mut m = TwoKeyHashMap::new();
 				m.insert(mhash,shash,1);
 				*oute_kyokumen_hash_map = Some(m);
 			},
 			Some(ref mut m) => {
-				if self.win_only_moves(&teban).len() > 0 {
+				if Rule::win_only_moves(&teban,banmen).len() > 0 {
 					if let Some(_) = m.get(&mhash,&shash) {
 						return false;
 					}
@@ -2057,152 +2115,12 @@ impl Banmen {
 
 		true
 	}
-}
-impl Find<KomaPosition,Move> for Vec<LegalMove> {
-	fn find(&self,query:&KomaPosition) -> Option<Move> {
-		let (x,y) = match query {
-			&KomaPosition(x,y) => (x,y)
-		};
-
-		for m in self {
-			match m {
-				&LegalMove::To(ref ms, ref md, _) => {
-					match md {
-						&KomaDstToPosition(dx,dy,_) => {
-							if x == dx && y == dy {
-								return Some(Move::To(*ms,*md));
-							}
-						}
-					}
-				},
-				&LegalMove::Put(ref mk, ref md) => {
-					match md {
-						&KomaDstPutPosition(dx,dy) => {
-							if x == dx && y == dy {
-								return Some(Move::Put(*mk,*md));
-							}
-						}
-					}
-				}
-			}
-		}
-
-		None
-	}
-}
-impl Find<KomaKind,Vec<KomaPosition>> for Banmen {
-	fn find(&self,query:&KomaKind) -> Option<Vec<KomaPosition>> {
-		let mut r:Vec<KomaPosition> = Vec::new();
-
-		match self {
-			&Banmen(ref kinds) => {
-				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len() {
-						if *query == kinds[y][x] {
-							r.push(KomaPosition(9 - x as u32, y as u32 + 1));
-						}
-					}
-				}
-			}
-		}
-
-		if r.len() > 0 {
-			Some(r)
-		} else {
-			None
-		}
-	}
-}
-impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<LegalMove> {
-	fn find(&self,query:&(MochigomaKind,KomaDstPutPosition)) -> Option<Move> {
-		match query {
-			&(ref k, ref d) => {
-				for m in self {
-					match m {
-						&LegalMove::Put(ref mk, ref md) => {
-							if k == mk && d == md {
-								return Some(Move::Put(*k,*d));
-							}
-						},
-						_ => (),
-					}
-				}
-			}
-		}
-
-		None
-	}
-}
-impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
-	fn find(&self,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
-		match query {
-			&(ref s, ref d) => {
-				for m in self {
-					match m {
-						&LegalMove::To(ref ms, ref md, _) => {
-							if s == ms && d == md {
-								return Some(Move::To(*s,*d));
-							}
-						},
-						_ => (),
-					}
-				}
-			}
-		}
-
-		None
-	}
-}
-impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
-	fn find(&self,query:&ObtainKind) -> Option<Vec<Move>> {
-		let mut mvs:Vec<Move> = Vec::new();
-
-		for m in self {
-			match m {
-				&LegalMove::To(ref ms, ref md, Some(ref o)) => {
-					if *o == *query {
-						mvs.push(Move::To(*ms,*md));
-					}
-				},
-				_ => (),
-			}
-		}
-
-		match mvs.len() {
-			0 => None,
-			_ => Some(mvs),
-		}
-	}
-}
-#[derive(Debug)]
-pub enum MochigomaCollections {
-	Empty,
-	Pair(HashMap<MochigomaKind,u32>,HashMap<MochigomaKind,u32>),
-}
-impl Clone for MochigomaCollections {
-	fn clone(&self) -> MochigomaCollections {
-		match *self {
-			MochigomaCollections::Empty => MochigomaCollections::Empty,
-			MochigomaCollections::Pair(ref ms, ref mg) => {
-				MochigomaCollections::Pair(ms.clone(),mg.clone())
-			}
-		}
-	}
-}
-impl MochigomaCollections {
-	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
-		if ms.len() == 0 && mg.len() == 0 {
-			MochigomaCollections::Empty
-		} else {
-			MochigomaCollections::Pair(ms,mg)
-		}
-	}
-	pub fn legal_moves(&self,t:&Teban,b:&Banmen) -> Vec<LegalMove> {
+	pub fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
 		match *t {
 			Teban::Sente => {
-				match *self {
+				match *mc {
 					MochigomaCollections::Pair(ref ms, _) => {
 						match b {
 							&Banmen(ref kinds) => {
@@ -2267,7 +2185,7 @@ impl MochigomaCollections {
 				}
 			},
 			Teban::Gote => {
-				match *self {
+				match *mc {
 					MochigomaCollections::Pair(_, ref mg) => {
 						match b {
 							&Banmen(ref kinds) => {
@@ -2336,199 +2254,15 @@ impl MochigomaCollections {
 		mvs
 	}
 
-	pub fn oute_only_moves(&self,t:&Teban,b:&Banmen) -> Vec<LegalMove> {
-		self.legal_moves(t, b)
+	pub fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
+		Rule::legal_moves_from_mochigoma(t, mc, b)
 			.into_iter().filter(|m| {
 				match m {
 					&LegalMove::Put(k,KomaDstPutPosition(x,y)) => {
-						b.win_only_moves_with_point_and_kind(t, 9 - x, y - 1, KomaKind::from((*t,k))).len() > 0
+						Rule::win_only_moves_with_point_and_kind(t, b, 9 - x, y - 1, KomaKind::from((*t,k))).len() > 0
 					},
 					_ => false,
 				}
 			}).collect::<Vec<LegalMove>>()
-	}
-}
-impl fmt::Debug for Banmen {
-	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-		match *self {
-			Banmen(ref v) => write!(f, "Banmen[{}]", v.iter()
-												.map(|k| format!("{:?}", k))
-												.collect::<Vec<String>>().join(" "))
-		}
-	}
-}
-/// 左上を(0,0)とした位置
-pub const BANMEN_START_POS:Banmen = Banmen([
-	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
-	[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
-	[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
-	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
-	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
-	[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
-	[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
-	[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
-	[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-]);
-impl Validate for KomaSrcPosition {
-	fn validate(&self) -> bool {
-		match *self {
-			KomaSrcPosition(x, y) => x > 0 && x <= 9 && y > 0 && y <= 9,
-		}
-	}
-}
-impl Validate for KomaDstToPosition {
-	fn validate(&self) -> bool {
-		match *self {
-			KomaDstToPosition(x, y, _) => x > 0 && x <= 9 && y > 0 && y <= 9,
-		}
-	}
-}
-impl Validate for KomaDstPutPosition {
-	fn validate(&self) -> bool {
-		match *self {
-			KomaDstPutPosition(x, y) => x > 0 && x <= 9 && y > 0 && y <= 9,
-		}
-	}
-}
-impl Validate for Move {
-	fn validate(&self) -> bool {
-		match *self {
-			Move::To(ref s, ref d) => s.validate() && d.validate(),
-			Move::Put(_, ref d) => d.validate()
-		}
-	}
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum ObtainKind {
-	Fu = 0,
-	Kyou,
-	Kei,
-	Gin,
-	Kin,
-	Kaku,
-	Hisha,
-	Ou,
-}
-impl TryFrom<KomaKind,String> for ObtainKind {
-	fn try_from(kind:KomaKind) -> Result<ObtainKind,TypeConvertError<String>> {
-		Ok(match kind {
-			KomaKind::SFu => ObtainKind::Fu,
-			KomaKind::SKyou => ObtainKind::Kyou,
-			KomaKind::SKei => ObtainKind::Kei,
-			KomaKind::SGin => ObtainKind::Gin,
-			KomaKind::SKin => ObtainKind::Kin,
-			KomaKind::SKaku => ObtainKind::Kaku,
-			KomaKind::SHisha => ObtainKind::Hisha,
-			KomaKind::SOu => ObtainKind::Ou,
-			KomaKind::SFuN => ObtainKind::Fu,
-			KomaKind::SKyouN => ObtainKind::Kyou,
-			KomaKind::SKeiN => ObtainKind::Kei,
-			KomaKind::SGinN => ObtainKind::Gin,
-			KomaKind::SKakuN => ObtainKind::Kaku,
-			KomaKind::SHishaN => ObtainKind::Hisha,
-			KomaKind::GFu => ObtainKind::Fu,
-			KomaKind::GKyou => ObtainKind::Kyou,
-			KomaKind::GKei => ObtainKind::Kei,
-			KomaKind::GGin => ObtainKind::Gin,
-			KomaKind::GKin => ObtainKind::Kin,
-			KomaKind::GKaku => ObtainKind::Kaku,
-			KomaKind::GHisha => ObtainKind::Hisha,
-			KomaKind::GOu => ObtainKind::Ou,
-			KomaKind::GFuN => ObtainKind::Fu,
-			KomaKind::GKyouN => ObtainKind::Kyou,
-			KomaKind::GKeiN => ObtainKind::Kei,
-			KomaKind::GGinN => ObtainKind::Gin,
-			KomaKind::GKakuN => ObtainKind::Kaku,
-			KomaKind::GHishaN => ObtainKind::Hisha,
-			KomaKind::Blank => {
-				return Err(TypeConvertError::LogicError(String::from("Can not  to convert Blank to ObtainKind.")));
-			}
-		})
-	}
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
-pub enum MochigomaKind {
-	Fu = 0,
-	Kyou,
-	Kei,
-	Gin,
-	Kin,
-	Kaku,
-	Hisha,
-}
-impl TryFrom<ObtainKind,String> for MochigomaKind {
-	fn try_from(o:ObtainKind) -> Result<MochigomaKind,TypeConvertError<String>> {
-		Ok(match o {
-			ObtainKind::Fu => MochigomaKind::Fu,
-			ObtainKind::Kyou => MochigomaKind::Kyou,
-			ObtainKind::Kei => MochigomaKind::Kei,
-			ObtainKind::Gin => MochigomaKind::Gin,
-			ObtainKind::Kin => MochigomaKind::Kin,
-			ObtainKind::Kaku => MochigomaKind::Kaku,
-			ObtainKind::Hisha => MochigomaKind::Hisha,
-			ObtainKind::Ou => {
-				return Err(TypeConvertError::LogicError(String::from("Can not  to convert Ou to MochigomaKind.")));
-			}
-		})
-	}
-}
-impl MaxIndex for MochigomaKind {
-	fn max_index() -> usize {
-		MochigomaKind::Hisha as usize
-	}
-}
-pub const MOCHIGOMA_KINDS:[MochigomaKind; 7] = [
-	MochigomaKind::Fu,
-	MochigomaKind::Kyou,
-	MochigomaKind::Kei,
-	MochigomaKind::Gin,
-	MochigomaKind::Kin,
-	MochigomaKind::Kaku,
-	MochigomaKind::Hisha,
-];
-impl From<(Teban,MochigomaKind)> for KomaKind {
-	fn from(tk:(Teban,MochigomaKind)) -> KomaKind {
-		match tk {
-			(Teban::Sente,k) => {
-				match k {
-					MochigomaKind::Fu => KomaKind::SFu,
-					MochigomaKind::Kyou => KomaKind::SKyou,
-					MochigomaKind::Kei => KomaKind::SKei,
-					MochigomaKind::Gin => KomaKind::SGin,
-					MochigomaKind::Kin => KomaKind::SKin,
-					MochigomaKind::Kaku => KomaKind::SKaku,
-					MochigomaKind::Hisha => KomaKind::SHisha,
-				}
-			},
-			(Teban::Gote,k) => {
-				match k {
-					MochigomaKind::Fu => KomaKind::GFu,
-					MochigomaKind::Kyou => KomaKind::GKyou,
-					MochigomaKind::Kei => KomaKind::GKei,
-					MochigomaKind::Gin => KomaKind::GGin,
-					MochigomaKind::Kin => KomaKind::GKin,
-					MochigomaKind::Kaku => KomaKind::GKaku,
-					MochigomaKind::Hisha => KomaKind::GHisha,
-				}
-			}
-		}
-	}
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum Kyokumen {
-	Ban(Teban,KomaKind,u32,u32),
-	MochigomaKind(Teban,MochigomaKind),
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum Teban {
-	Sente,
-	Gote,
-}
-impl Teban {
-	pub fn opposite(&self) -> Teban {
-		match *self {
-			Teban::Sente => Teban::Gote,
-			Teban::Gote => Teban::Sente,
-		}
 	}
 }
