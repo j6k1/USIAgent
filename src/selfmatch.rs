@@ -606,7 +606,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				let teban_at_start = teban.clone();
 
 				let mut current_game_time_limit = [game_time_limit,game_time_limit];
-				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban,0);
+				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
 
 				let kyokumen_hash_map:TwoKeyHashMap<u32> = TwoKeyHashMap::new();
 				let hasher = KyokumenHash::new();
@@ -677,8 +677,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								}
 							}
 
-							if let (Some(limit),inc) = current_time_limit {
-								if limit + Duration::from_millis(inc as u64) < Instant::now() {
+							if let Some(limit) = current_time_limit {
+								if limit < Instant::now() {
 									kifu_writer(&sfen,&mvs);
 									on_gameend(
 										cs[(cs_index+1) % 2].clone(),
@@ -690,22 +690,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								}
 							}
 
-							let tinc = match current_time_limit {
-								(Some(limit),tinc) if limit > Instant::now() => {
-									(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
-								},
-								(Some(_),_) => {
-									0
-								},
-								(_,tinc) => {
-									tinc
-								}
-							};
-
-							current_game_time_limit[cs_index] = current_game_time_limit[cs_index].consumed(
+							current_game_time_limit[cs_index] = current_game_time_limit[cs_index].updated(
 								teban,think_start_time.elapsed()
 							);
-							current_time_limit = current_game_time_limit[cs_index].to_instant(teban,tinc);
+							current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
 
 							match banmen.apply_valid_move(&teban,&mc,&m) {
 								Ok((next,nmc,o)) => {

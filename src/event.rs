@@ -351,9 +351,8 @@ pub enum UsiGoTimeLimit {
 	Infinite,
 }
 impl UsiGoTimeLimit {
-	pub fn to_instant(&self,teban:Teban,tinc:u32) -> (Option<Instant>,u32) {
+	pub fn to_instant(&self,teban:Teban) -> Option<Instant> {
 		let now = Instant::now();
-		let mut tinc = tinc;
 		(match self {
 			&UsiGoTimeLimit::None => None,
 			&UsiGoTimeLimit::Infinite => None,
@@ -380,12 +379,10 @@ impl UsiGoTimeLimit {
 			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Inc(bs,bg))) => {
 				Some(match teban {
 					Teban::Sente => {
-						tinc = tinc + bs as u32;
-						now + Duration::from_millis(ms as u64 + tinc as u64)
+						now + Duration::from_millis(ms as u64 + bs as u64)
 					},
 					Teban::Gote => {
-						tinc = tinc + bg as u32;
-						now + Duration::from_millis(mg as u64 + tinc as u64)
+						now + Duration::from_millis(mg as u64 + bg as u64)
 					}
 				})
 			},
@@ -405,16 +402,27 @@ impl UsiGoTimeLimit {
 			&UsiGoTimeLimit::Limit(None,None) => {
 				Some(now)
 			}
-		}, tinc)
+		})
 	}
 
-	pub fn consumed(&self,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
+	pub fn updated(&self,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
 		match teban {
 			Teban::Sente => {
 				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = self {
 					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
+					let inc = match byoyomi_of_inc {
+						Some(UsiGoByoyomiOrInc::Inc(inc,_)) if ls > diff => {
+							inc
+						},
+						Some(UsiGoByoyomiOrInc::Inc(inc,_)) => {
+							inc - (diff - ls)
+						},
+						_ => {
+							0
+						}
+					};
 					let ls = if ls >= diff {
-						ls - diff
+						ls - diff + inc
 					} else {
 						0
 					};
@@ -427,8 +435,19 @@ impl UsiGoTimeLimit {
 			Teban::Gote => {
 				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = self {
 					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
+					let inc = match byoyomi_of_inc {
+						Some(UsiGoByoyomiOrInc::Inc(_,inc)) if lg > diff => {
+							inc
+						},
+						Some(UsiGoByoyomiOrInc::Inc(_,inc)) => {
+							inc - (diff - lg)
+						},
+						_ => {
+							0
+						}
+					};
 					let lg = if lg >= diff {
-						lg - diff
+						lg - diff + inc
 					} else {
 						0
 					};

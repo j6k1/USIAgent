@@ -2,7 +2,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::error::Error;
 use std::collections::HashMap;
-use std::time::{Instant,Duration};
+use std::time::{Instant};
 
 use TryFrom;
 use error::*;
@@ -2017,13 +2017,13 @@ impl Banmen {
 		(teban,banmen,mc,mhash,shash,kyokumen_hash_map)
 	}
 
-	pub fn is_nyugyoku_win(&self,t:&Teban,mc:&MochigomaCollections,limit:&(Option<Instant>,u32)) -> bool {
+	pub fn is_nyugyoku_win(&self,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
 		if self.win_only_moves(&t.opposite()).len() > 0 {
 			return false
 		}
 
-		if let &(Some(limit),inc) = limit {
-			if limit + Duration::from_millis(inc as u64) > Instant::now() {
+		if let &Some(limit) = limit {
+			if limit > Instant::now() {
 				return false;
 			}
 		}
