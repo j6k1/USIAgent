@@ -644,511 +644,264 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					}
 				}) {
 					match ponders[cs_index] {
-						Some(_) if ponders[cs_index] == prev_move => {
+						None => {
+							cs[cs_index].send(SelfMatchMessage::StartThink(
+								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
+						},
+						pm @ Some(_) if pm == prev_move => {
 							cs[cs_index].send(SelfMatchMessage::PonderHit)?;
-							let think_start_time = Instant::now();
-							match sr.recv()? {
-								SelfMatchMessage::NotifyMove(BestMove::Move(ref m,pm)) => {
-									match self_match_event_queue.lock() {
-										Ok(mut self_match_event_queue) => {
-											self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&banmen,&m))?));
-										},
-										Err(ref e) => {
-											on_error_handler.lock().map(|h| h.call(e)).is_err();
-											cs[0].send(SelfMatchMessage::Error(0))?;
-											cs[1].send(SelfMatchMessage::Error(1))?;
+						},
+						_ => {
+							cs[cs_index].send(SelfMatchMessage::PonderNG)?;
+						}
+					}
 
-											quit_notification();
+					let think_start_time = Instant::now();
 
-											return Err(SelfMatchRunningError::InvalidState(String::from(
-												"Exclusive lock on self_match_event_queue failed."
-											)));
+					match sr.recv()? {
+						SelfMatchMessage::NotifyMove(BestMove::Move(m,pm)) => {
+							match self_match_event_queue.lock() {
+								Ok(mut self_match_event_queue) => {
+									self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&banmen,&m))?));
+								},
+								Err(ref e) => {
+									on_error_handler.lock().map(|h| h.call(e)).is_err();
+									cs[0].send(SelfMatchMessage::Error(0))?;
+									cs[1].send(SelfMatchMessage::Error(1))?;
+
+									quit_notification();
+
+									return Err(SelfMatchRunningError::InvalidState(String::from(
+										"Exclusive lock on self_match_event_queue failed."
+									)));
+								}
+							}
+
+							if let (Some(limit),inc) = current_time_limit {
+								if limit + Duration::from_millis(inc as u64) < Instant::now() {
+									kifu_writer(&sfen,&mvs);
+									on_gameend(
+										cs[(cs_index+1) % 2].clone(),
+										cs[cs_index].clone(),
+										[cs[0].clone(),cs[1].clone()],
+										&sr,
+										SelfMatchGameEndState::Timeover(teban))?;
+									break;
+								}
+							}
+
+							let tinc = match current_time_limit {
+								(Some(limit),tinc) if limit > Instant::now() => {
+									(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
+								},
+								(Some(_),_) => {
+									0
+								},
+								(_,tinc) => {
+									tinc
+								}
+							};
+
+							current_game_time_limit[cs_index] = current_game_time_limit[cs_index].consumed(
+								teban,think_start_time.elapsed()
+							);
+							current_time_limit = current_game_time_limit[cs_index].to_instant(teban,tinc);
+
+							match banmen.apply_valid_move(&teban,&mc,&m) {
+								Ok((next,nmc,o)) => {
+
+									if let Some(_) = prev_move {
+										if banmen.win_only_moves(&teban.opposite()).len() > 0 {
+											if next.win_only_moves(&teban.opposite()).len() > 0 {
+												on_gameend(
+													cs[(cs_index+1) % 2].clone(),
+													cs[cs_index].clone(),
+													[cs[0].clone(),cs[1].clone()],
+													&sr,
+													SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
+												)?;
+												mvs.push(m);
+												kifu_writer(&sfen,&mvs);
+												break;
+											}
 										}
 									}
 
-									if let (Some(limit),inc) = current_time_limit {
-										if limit + Duration::from_millis(inc as u64) < Instant::now() {
-											kifu_writer(&sfen,&mvs);
-											on_gameend(
-												cs[(cs_index+1) % 2].clone(),
-												cs[cs_index].clone(),
-												[cs[0].clone(),cs[1].clone()],
-												&sr,
-												SelfMatchGameEndState::Timeover(teban))?;
-											break;
-										}
+									let is_win = banmen.is_win(&teban,&m);
+
+									mvs.push(m);
+
+									if is_win {
+										kifu_writer(&sfen,&mvs);
+										on_gameend(
+											cs[cs_index].clone(),
+											cs[(cs_index+1) % 2].clone(),
+											[cs[0].clone(),cs[1].clone()],
+											&sr,
+											SelfMatchGameEndState::Win(teban)
+										)?;
+										break;
 									}
 
-									let tinc = match current_time_limit {
-										(Some(limit),tinc) if limit > Instant::now() => {
-											(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
-										},
-										(Some(_),_) => {
-											0
-										},
-										(_,tinc) => {
-											tinc
-										}
-									};
+									mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,&m,&o);
+									shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,&m,&o);
 
-									current_game_time_limit[cs_index] = current_game_time_limit[cs_index].consumed(
-										teban,think_start_time.elapsed()
-									);
-									current_time_limit = current_game_time_limit[cs_index].to_instant(teban,tinc);
+									mc = nmc;
+									teban = teban.opposite();
 
-									match banmen.apply_valid_move(&teban,&mc,m) {
-										Ok((next,nmc,o)) => {
-											if let Some(_) = prev_move {
-												if banmen.win_only_moves(&teban.opposite()).len() > 0 {
-													if next.win_only_moves(&teban.opposite()).len() > 0 {
-														on_gameend(
-															cs[(cs_index+1) % 2].clone(),
-															cs[cs_index].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
-														)?;
-														mvs.push(*m);
-														kifu_writer(&sfen,&mvs);
-														break;
-													}
-												}
-											}
+									banmen = next;
 
-											let is_win = banmen.is_win(&teban,m);
-
-											mvs.push(*m);
-
-											if is_win {
-												kifu_writer(&sfen,&mvs);
-												on_gameend(
-													cs[cs_index].clone(),
-													cs[(cs_index+1) % 2].clone(),
-													[cs[0].clone(),cs[1].clone()],
-													&sr,
-													SelfMatchGameEndState::Win(teban))?;
-												break;
-											}
-
-											mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
-											shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
-
-											mc = nmc;
-											teban = teban.opposite();
-
-											banmen = next;
-
-											if banmen.is_put_fu_and_mate(&teban.opposite(),&mc,m) {
-												on_gameend(
-													cs[(cs_index+1) % 2].clone(),
-													cs[cs_index].clone(),
-													[cs[0].clone(),cs[1].clone()],
-													&sr,
-													SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
-												)?;
-												kifu_writer(&sfen,&mvs);
-												break;
-											}
-
-											if !banmen.check_sennichite_by_oute(
-												&teban.opposite(),mhash,shash,
-												&mut oute_kyokumen_hash_maps[cs_index]
-											) {
-												kifu_writer(&sfen,&mvs);
-												on_gameend(
-													cs[(cs_index+1) % 2].clone(),
-													cs[cs_index].clone(),
-													[cs[0].clone(),cs[1].clone()],
-													&sr,
-													SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
-												)?;
-												break;
-											}
-
-											if !banmen.check_sennichite(
-												mhash,shash,&mut kyokumen_hash_map
-											) {
-												kifu_writer(&sfen,&mvs);
-												on_gameend(
-													cs[(cs_index+1) % 2].clone(),
-													cs[cs_index].clone(),
-													[cs[0].clone(),cs[1].clone()],
-													&sr,
-													SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
-												)?;
-												break;
-											}
-											cs_index = (cs_index + 1) % 2;
-										},
-										Err(_) => {
-											mvs.push(*m);
-											kifu_writer(&sfen,&mvs);
-											on_gameend(
-												cs[(cs_index+1) % 2].clone(),
-												cs[cs_index].clone(),
-												[cs[0].clone(),cs[1].clone()],
-												&sr,
-												SelfMatchGameEndState::Foul(teban,FoulKind::InvalidMove)
-											)?;
-											break;
-										}
+									if banmen.is_put_fu_and_mate(&teban.opposite(),&mc,&m) {
+										kifu_writer(&sfen,&mvs);
+										on_gameend(
+											cs[(cs_index+1) % 2].clone(),
+											cs[cs_index].clone(),
+											[cs[0].clone(),cs[1].clone()],
+											&sr,
+											SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
+										)?;
+										break;
 									}
 
-									prev_move = Some(*m);
+									if !banmen.check_sennichite_by_oute(
+										&teban.opposite(),mhash,shash,
+										&mut oute_kyokumen_hash_maps[cs_index]
+									) {
+										kifu_writer(&sfen,&mvs);
+										on_gameend(
+											cs[(cs_index+1) % 2].clone(),
+											cs[cs_index].clone(),
+											[cs[0].clone(),cs[1].clone()],
+											&sr,
+											SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
+										)?;
+										break;
+									}
+
+									if !banmen.check_sennichite(
+										mhash,shash,&mut kyokumen_hash_map
+									) {
+										kifu_writer(&sfen,&mvs);
+										on_gameend(
+											cs[(cs_index+1) % 2].clone(),
+											cs[cs_index].clone(),
+											[cs[0].clone(),cs[1].clone()],
+											&sr,
+											SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
+										)?;
+										break;
+									}
+
+									ponders[cs_index] = pm;
 
 									match pm {
 										Some(pm) => {
-											ponders[cs_index] = Some(pm);
 											match mvs.clone() {
 												mut mvs => {
 													mvs.push(pm);
 													cs[cs_index].send(
 														SelfMatchMessage::StartPonderThink(
-															teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs
-														))?;
+															teban_at_start.clone(),banmen_at_start.clone(),
+															mc_at_start.clone(),n,mvs))?;
 												}
 											}
 										},
 										None => (),
-									};
-								},
-								SelfMatchMessage::NotifyMove(BestMove::Resign) => {
-									kifu_writer(&sfen,&mvs);
-									on_gameend(
-										cs[(cs_index+1) % 2].clone(),
-										cs[cs_index].clone(),
-										[cs[0].clone(),cs[1].clone()],
-										&sr,
-										SelfMatchGameEndState::Resign(teban)
-									)?;
-									break;
-								},
-								SelfMatchMessage::NotifyMove(BestMove::Abort) => {
-									match self_match_event_queue.lock() {
-										Ok(mut self_match_event_queue) => {
-											self_match_event_queue.push(SelfMatchEvent::Abort);
-										},
-										Err(ref e) => {
-											on_error_handler.lock().map(|h| h.call(e)).is_err();
-											cs[0].send(SelfMatchMessage::Error(0))?;
-											cs[1].send(SelfMatchMessage::Error(1))?;
-
-											quit_notification();
-
-											return Err(SelfMatchRunningError::InvalidState(String::from(
-												"Exclusive lock on self_match_event_queue failed."
-											)));
-										}
 									}
-									break;
+
+									cs_index = (cs_index + 1) % 2;
 								},
-								SelfMatchMessage::NotifyMove(BestMove::Win) if banmen.is_nyugyoku_win(&teban,&mc,&current_time_limit)=> {
-									kifu_writer(&sfen,&mvs);
-									on_gameend(
-										cs[cs_index].clone(),
-										cs[(cs_index+1) % 2].clone(),
-										[cs[0].clone(),cs[1].clone()],
-										&sr,
-										SelfMatchGameEndState::NyuGyokuWin(teban)
-									)?;
-									break;
-								},
-								SelfMatchMessage::NotifyMove(BestMove::Win) => {
+								Err(_) => {
+									mvs.push(m);
 									kifu_writer(&sfen,&mvs);
 									on_gameend(
 										cs[(cs_index+1) % 2].clone(),
 										cs[cs_index].clone(),
 										[cs[0].clone(),cs[1].clone()],
 										&sr,
-										SelfMatchGameEndState::NyuGyokuLose(teban)
+										SelfMatchGameEndState::Foul(teban,FoulKind::InvalidMove)
 									)?;
 									break;
+								}
+							}
+							prev_move = Some(m)
+						},
+						SelfMatchMessage::NotifyMove(BestMove::Resign) => {
+							kifu_writer(&sfen,&mvs);
+							on_gameend(
+								cs[(cs_index+1) % 2].clone(),
+								cs[cs_index].clone(),
+								[cs[0].clone(),cs[1].clone()],
+								&sr,
+								SelfMatchGameEndState::Resign(teban)
+							)?;
+							break;
+						},
+						SelfMatchMessage::NotifyMove(BestMove::Abort) => {
+							match self_match_event_queue.lock() {
+								Ok(mut self_match_event_queue) => {
+									self_match_event_queue.push(SelfMatchEvent::Abort);
 								},
-								SelfMatchMessage::Error(n) => {
-									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2))?;
-									cs[n].send(SelfMatchMessage::Error(n))?;
-									quit_notification();
-									return Err(SelfMatchRunningError::InvalidState(String::from(
-										"An error occurred while executing the player thread."
-									)));
-								},
-								SelfMatchMessage::Quit => {
-									cs[0].send(SelfMatchMessage::Quit)?;
-									cs[1].send(SelfMatchMessage::Quit)?;
-
-									quit_notification();
-
-									return Ok(());
-								},
-								_ => {
+								Err(ref e) => {
+									on_error_handler.lock().map(|h| h.call(e)).is_err();
 									cs[0].send(SelfMatchMessage::Error(0))?;
 									cs[1].send(SelfMatchMessage::Error(1))?;
 
 									quit_notification();
 
 									return Err(SelfMatchRunningError::InvalidState(String::from(
-										"An invalid message was sent to the self-match management thread."
+										"Exclusive lock on self_match_event_queue failed."
 									)));
 								}
 							}
+							break;
 						},
-						Some(_) => {
-							cs[cs_index].send(SelfMatchMessage::PonderNG)?;
+						SelfMatchMessage::NotifyMove(BestMove::Win) if banmen.is_nyugyoku_win(&teban,&mc,&current_time_limit)=> {
+							kifu_writer(&sfen,&mvs);
+							on_gameend(
+								cs[cs_index].clone(),
+								cs[(cs_index+1) % 2].clone(),
+								[cs[0].clone(),cs[1].clone()],
+								&sr,
+								SelfMatchGameEndState::NyuGyokuWin(teban)
+							)?;
+							break;
 						},
-						None => {
-							cs[cs_index].send(SelfMatchMessage::StartThink(
-										teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
-							let think_start_time = Instant::now();
-							match sr.recv()? {
-								SelfMatchMessage::NotifyMove(m) => {
-									prev_move = match m {
-										BestMove::Move(m,pm) => {
-											match self_match_event_queue.lock() {
-												Ok(mut self_match_event_queue) => {
-													self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&banmen,&m))?));
-												},
-												Err(ref e) => {
-													on_error_handler.lock().map(|h| h.call(e)).is_err();
-													cs[0].send(SelfMatchMessage::Error(0))?;
-													cs[1].send(SelfMatchMessage::Error(1))?;
+						SelfMatchMessage::NotifyMove(BestMove::Win) => {
+							kifu_writer(&sfen,&mvs);
+							on_gameend(
+								cs[(cs_index+1) % 2].clone(),
+								cs[cs_index].clone(),
+								[cs[0].clone(),cs[1].clone()],
+								&sr,
+								SelfMatchGameEndState::NyuGyokuLose(teban)
+							)?;
+							break;
+						},
+						SelfMatchMessage::Error(n) => {
+							cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2))?;
+							cs[n].send(SelfMatchMessage::Error(n))?;
+							quit_notification();
+							return Err(SelfMatchRunningError::InvalidState(String::from(
+								"An error occurred while executing the player thread."
+							)));
+						},
+						SelfMatchMessage::Quit => {
+							cs[0].send(SelfMatchMessage::Quit)?;
+							cs[1].send(SelfMatchMessage::Quit)?;
 
-													quit_notification();
+							quit_notification();
 
-													return Err(SelfMatchRunningError::InvalidState(String::from(
-														"Exclusive lock on self_match_event_queue failed."
-													)));
-												}
-											}
+							return Ok(());
+						},
+						_ => {
+							cs[0].send(SelfMatchMessage::Error(0))?;
+							cs[1].send(SelfMatchMessage::Error(1))?;
 
-											if let (Some(limit),inc) = current_time_limit {
-												if limit + Duration::from_millis(inc as u64) < Instant::now() {
-													kifu_writer(&sfen,&mvs);
-													on_gameend(
-														cs[(cs_index+1) % 2].clone(),
-														cs[cs_index].clone(),
-														[cs[0].clone(),cs[1].clone()],
-														&sr,
-														SelfMatchGameEndState::Timeover(teban))?;
-													break;
-												}
-											}
-
-											let tinc = match current_time_limit {
-												(Some(limit),tinc) if limit > Instant::now() => {
-													(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
-												},
-												(Some(_),_) => {
-													0
-												},
-												(_,tinc) => {
-													tinc
-												}
-											};
-
-											current_game_time_limit[cs_index] = current_game_time_limit[cs_index].consumed(
-												teban,think_start_time.elapsed()
-											);
-											current_time_limit = current_game_time_limit[cs_index].to_instant(teban,tinc);
-
-											match banmen.apply_valid_move(&teban,&mc,&m) {
-												Ok((next,nmc,o)) => {
-
-													if let Some(_) = prev_move {
-														if banmen.win_only_moves(&teban.opposite()).len() > 0 {
-															if next.win_only_moves(&teban.opposite()).len() > 0 {
-																on_gameend(
-																	cs[(cs_index+1) % 2].clone(),
-																	cs[cs_index].clone(),
-																	[cs[0].clone(),cs[1].clone()],
-																	&sr,
-																	SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
-																)?;
-																mvs.push(m);
-																kifu_writer(&sfen,&mvs);
-																break;
-															}
-														}
-													}
-
-													let is_win = banmen.is_win(&teban,&m);
-
-													mvs.push(m);
-
-													if is_win {
-														kifu_writer(&sfen,&mvs);
-														on_gameend(
-															cs[cs_index].clone(),
-															cs[(cs_index+1) % 2].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Win(teban)
-														)?;
-														break;
-													}
-
-													mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,&m,&o);
-													shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,&m,&o);
-
-													mc = nmc;
-													teban = teban.opposite();
-
-													banmen = next;
-
-													if banmen.is_put_fu_and_mate(&teban.opposite(),&mc,&m) {
-														kifu_writer(&sfen,&mvs);
-														on_gameend(
-															cs[(cs_index+1) % 2].clone(),
-															cs[cs_index].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
-														)?;
-														break;
-													}
-
-													if !banmen.check_sennichite_by_oute(
-														&teban.opposite(),mhash,shash,
-														&mut oute_kyokumen_hash_maps[cs_index]
-													) {
-														kifu_writer(&sfen,&mvs);
-														on_gameend(
-															cs[(cs_index+1) % 2].clone(),
-															cs[cs_index].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
-														)?;
-														break;
-													}
-
-													if !banmen.check_sennichite(
-														mhash,shash,&mut kyokumen_hash_map
-													) {
-														kifu_writer(&sfen,&mvs);
-														on_gameend(
-															cs[(cs_index+1) % 2].clone(),
-															cs[cs_index].clone(),
-															[cs[0].clone(),cs[1].clone()],
-															&sr,
-															SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
-														)?;
-														break;
-													}
-
-													ponders[cs_index] = pm;
-
-													match pm {
-														Some(pm) => {
-															match mvs.clone() {
-																mut mvs => {
-																	mvs.push(pm);
-																	cs[cs_index].send(
-																		SelfMatchMessage::StartPonderThink(
-																			teban_at_start.clone(),banmen_at_start.clone(),
-																			mc_at_start.clone(),n,mvs))?;
-																}
-															}
-														},
-														None => (),
-													}
-
-													cs_index = (cs_index + 1) % 2;
-												},
-												Err(_) => {
-													mvs.push(m);
-													kifu_writer(&sfen,&mvs);
-													on_gameend(
-														cs[(cs_index+1) % 2].clone(),
-														cs[cs_index].clone(),
-														[cs[0].clone(),cs[1].clone()],
-														&sr,
-														SelfMatchGameEndState::Foul(teban,FoulKind::InvalidMove)
-													)?;
-													break;
-												}
-											}
-											Some(m)
-										},
-										BestMove::Resign => {
-											kifu_writer(&sfen,&mvs);
-											on_gameend(
-												cs[(cs_index+1) % 2].clone(),
-												cs[cs_index].clone(),
-												[cs[0].clone(),cs[1].clone()],
-												&sr,
-												SelfMatchGameEndState::Resign(teban)
-											)?;
-											break;
-										},
-										BestMove::Abort => {
-											match self_match_event_queue.lock() {
-												Ok(mut self_match_event_queue) => {
-													self_match_event_queue.push(SelfMatchEvent::Abort);
-												},
-												Err(ref e) => {
-													on_error_handler.lock().map(|h| h.call(e)).is_err();
-													cs[0].send(SelfMatchMessage::Error(0))?;
-													cs[1].send(SelfMatchMessage::Error(1))?;
-
-													quit_notification();
-
-													return Err(SelfMatchRunningError::InvalidState(String::from(
-														"Exclusive lock on self_match_event_queue failed."
-													)));
-												}
-											}
-											break;
-										},
-										BestMove::Win if banmen.is_nyugyoku_win(&teban,&mc,&current_time_limit)=> {
-											kifu_writer(&sfen,&mvs);
-											on_gameend(
-												cs[cs_index].clone(),
-												cs[(cs_index+1) % 2].clone(),
-												[cs[0].clone(),cs[1].clone()],
-												&sr,
-												SelfMatchGameEndState::NyuGyokuWin(teban)
-											)?;
-											break;
-										},
-										BestMove::Win => {
-											kifu_writer(&sfen,&mvs);
-											on_gameend(
-												cs[(cs_index+1) % 2].clone(),
-												cs[cs_index].clone(),
-												[cs[0].clone(),cs[1].clone()],
-												&sr,
-												SelfMatchGameEndState::NyuGyokuLose(teban)
-											)?;
-											break;
-										}
-									}
-								},
-								SelfMatchMessage::Error(n) => {
-									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2))?;
-									cs[n].send(SelfMatchMessage::Error(n))?;
-									quit_notification();
-									return Err(SelfMatchRunningError::InvalidState(String::from(
-										"An error occurred while executing the player thread."
-									)));
-								},
-								SelfMatchMessage::Quit => {
-									cs[0].send(SelfMatchMessage::Quit)?;
-									cs[1].send(SelfMatchMessage::Quit)?;
-
-									quit_notification();
-
-									return Ok(());
-								},
-								_ => {
-									cs[0].send(SelfMatchMessage::Error(0))?;
-									cs[1].send(SelfMatchMessage::Error(1))?;
-
-									quit_notification();
-									return Err(SelfMatchRunningError::InvalidState(String::from(
-										"An invalid message was sent to the self-match management thread."
-									)));
-								}
-							}
+							quit_notification();
+							return Err(SelfMatchRunningError::InvalidState(String::from(
+								"An invalid message was sent to the self-match management thread."
+							)));
 						}
 					}
 				}
