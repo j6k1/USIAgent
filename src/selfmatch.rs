@@ -653,6 +653,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						},
 						_ => {
 							cs[cs_index].send(SelfMatchMessage::PonderNG)?;
+							continue;
 						}
 					}
 
