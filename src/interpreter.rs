@@ -5,6 +5,7 @@ use std::marker::Send;
 use std::collections::HashMap;
 
 use event::*;
+use protocol::*;
 use output::USIStdErrorWriter;
 use input::USIInputReader;
 use Logger;

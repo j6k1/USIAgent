@@ -1,6 +1,8 @@
 use std::fmt;
 use std::error::Error;
+use std::collections::HashMap;
 
+use event::*;
 use shogi::*;
 use rule::*;
 use command::*;
@@ -391,6 +393,340 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Teban {
 				)));
 			}
 		})
+	}
+}
+impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
+	fn try_from(s: &'a str) -> Result<MochigomaCollections, TypeConvertError<String>> {
+		Ok(match &*s {
+			"-" => MochigomaCollections::Pair(HashMap::new(),HashMap::new()),
+			_ => {
+				let mut chars = s.chars();
+
+				let mut sente:HashMap<MochigomaKind,u32> = HashMap::new();
+				let mut gote:HashMap<MochigomaKind,u32> = HashMap::new();
+
+				while let Some(c) = chars.next() {
+					let t = match c {
+						'R' | 'B' | 'G' | 'S' | 'N' | 'L' | 'P' => Teban::Sente,
+						'r' | 'b' | 'g' | 's' | 'n' | 'l' | 'p' => Teban::Gote,
+						_ => {
+							return Err(TypeConvertError::SyntaxError(
+								String::from("Invalid SFEN character string (illegal representation character string of the piece)"
+							)));
+						}
+					};
+
+					let k = match c {
+						'R' | 'r' => MochigomaKind::Hisha,
+						'B' | 'b' => MochigomaKind::Kaku,
+						'G' | 'g' => MochigomaKind::Kin,
+						'S' | 's'=> MochigomaKind::Gin,
+						'N' | 'n' => MochigomaKind::Kei,
+						'L' | 'l' => MochigomaKind::Kyou,
+						'P' | 'p' => MochigomaKind::Fu,
+						_ => {
+							return Err(TypeConvertError::LogicError(String::from(
+								"SFEN This is a logic error of the pieces analysis phase of the character string analysis process.")
+							));
+						}
+					};
+
+					match chars.next() {
+						Some(n) if n >= '1' && n <= '9' => {
+							let mut ns = String::new();
+							ns.push(n);
+
+							let mut nchars = chars.clone();
+
+							while let Some(next) = nchars.next() {
+								match next {
+									'0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
+										ns.push(next);
+										chars.clone_from(&nchars);
+									},
+									_ => {
+										break;
+									}
+								}
+							}
+
+							let n = ns.parse::<u32>()?;
+
+							match t {
+								Teban::Sente => {
+									let n = match sente.get(&k) {
+										Some(count) => count+n,
+										None => n,
+									};
+
+									sente.insert(k,n);
+								},
+								Teban::Gote => {
+									let n = match gote.get(&k) {
+										Some(count) => count+n,
+										None => n,
+									};
+
+									gote.insert(k,n);
+								},
+							}
+						},
+						_ => {
+							return Err(TypeConvertError::SyntaxError(
+								String::from("Invalid SFEN character string (no number of pieces count)"
+							)));
+						}
+					}
+				}
+
+				MochigomaCollections::Pair(sente,gote)
+			}
+		})
+	}
+}
+pub struct PositionParser {
+}
+impl PositionParser {
+	pub fn new() -> PositionParser {
+		PositionParser{}
+	}
+
+	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		let p = match params.len() {
+			0 => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+			},
+			_ => params,
+		};
+
+		match p[0] {
+			"startpos"=> self.parse_startpos(&params[1..]),
+			"sfen" => self.parse_sfen(&params[1..]),
+			_ => {
+				Err(TypeConvertError::SyntaxError(String::from(
+					"The input form of the go command is invalid. (Insufficient parameters)"
+				)))
+			}
+		}
+	}
+
+	fn parse_startpos<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		let mut r:Vec<Move> = Vec::new();
+
+		if params.len() == 0 {
+			return Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r));
+		}
+
+		match params[0] {
+			"moves" if params.len() >= 2 => {
+				for m in &params[1..] {
+					r.push(Move::try_from(m)?);
+				}
+
+				Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r))
+			},
+			_ => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+			}
+		}
+	}
+
+	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+		if params.len() > 4 && (params[4] != "moves" || params.len() <= 5) {
+			return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+		}
+		Ok(match params {
+			params if params.len() > 3 => match (params[0],params[1],params[2],params[3]) {
+				(p, t, m, n) => {
+					let mut mv:Vec<Move> = Vec::new();
+
+					if params.len() > 5 {
+						for m in &params[5..] {
+								mv.push(Move::try_from(m)?);
+						}
+					}
+
+					SystemEvent::Position(
+						Teban::try_from(t)?,
+						UsiInitialPosition::Sfen(Banmen::try_from(p)?,MochigomaCollections::try_from(m)?),
+						n.parse::<u32>()?,mv)
+				}
+			},
+			_ => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid."
+				)));
+			}
+		})
+	}
+}
+struct UsiGoCreator {
+	f:Box<Fn(UsiGoTimeLimit) -> SystemEvent>,
+}
+impl UsiGoCreator {
+	pub fn new(f:Box<Fn(UsiGoTimeLimit) -> SystemEvent>) -> UsiGoCreator {
+		UsiGoCreator {
+			f:f,
+		}
+	}
+
+	pub fn create(&self,l:UsiGoTimeLimit) -> SystemEvent {
+		(*self.f)(l)
+	}
+}
+pub struct GoParser {
+}
+impl GoParser {
+	pub fn new() -> GoParser {
+		GoParser{}
+	}
+
+	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent, TypeConvertError<String>> {
+		if params.len() == 0 {
+			return Ok(SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::None)));
+		}
+
+		match params[0]{
+			"mate" if params.len() == 2 => {
+				match params[1] {
+					"infinite" => return Ok(SystemEvent::Go(UsiGo::Mate(UsiGoMateTimeLimit::Infinite))),
+					n => return Ok(SystemEvent::Go(
+									UsiGo::Mate(UsiGoMateTimeLimit::Limit(n.parse::<u32>()?)))),
+				}
+			},
+			_ => (),
+		}
+
+		let (params,f) = match params[0] {
+			"ponder" if params.len() == 1 => {
+				return Ok(SystemEvent::Go(UsiGo::Ponder(UsiGoTimeLimit::None)));
+			},
+			"ponder" => (&params[1..], UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Ponder(l))))),
+			_ => (params, UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Go(l))))),
+		};
+
+		match params[0] {
+			"infinite" => match params.len() {
+				1 => {
+					return Ok(f.create(UsiGoTimeLimit::Infinite));
+				},
+				_ => {
+					return Err(TypeConvertError::SyntaxError(String::from(
+						"The format of the position command input is invalid."
+					)));
+				}
+			},
+			_ => (),
+		}
+
+		let mut it = params.iter();
+		let mut limit = None;
+		let mut byori = None;
+
+		while let Some(&p) = it.next() {
+			match p {
+				"btime" => {
+					limit.map_or(Ok(()), |_| Err(TypeConvertError::SyntaxError(String::from(
+						"The input form of the go command is invalid. (Duplicate parameters)"
+					))))?;
+					let bt = it.next().ok_or(TypeConvertError::SyntaxError(String::from(
+						"The input form of the go command is invalid. (There is no value for item)"
+					))).and_then(|n| match n.parse::<u32>() {
+						Ok(n) => Ok(n),
+						Err(_) => {
+							Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer.")))
+						}
+					})?;
+					let wt = match it.next() {
+						Some(&"wtime") => {
+							it.next().ok_or(
+								TypeConvertError::SyntaxError(String::from(
+									"The input form of the go command is invalid. (There is no value for item)"
+								))).and_then(|n| match n.parse::<u32>() {
+									Ok(n) => Ok(n),
+									Err(_) => Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer.")))
+								})?
+						},
+						_ => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Insufficient parameters)"
+							)));
+						}
+					};
+					limit = Some((bt,wt));
+				},
+				"binc" => {
+					byori.map_or(
+						Ok(()),
+						|_| Err(TypeConvertError::SyntaxError(String::from(
+							"The input form of the go command is invalid. (Duplicate parameters)"
+					))))?;
+					let bi = it.next()
+								.ok_or(TypeConvertError::SyntaxError(String::from(
+									"The input form of the go command is invalid. (There is no value for item)"
+								))).and_then(|n| match n.parse::<u32>() {
+									Ok(n) => Ok(n),
+									Err(_) => Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer."))),
+								})?;
+					let wi = match it.next() {
+						Some(&"winc") => {
+							it.next().ok_or(
+								TypeConvertError::SyntaxError(String::from(
+									"The input form of the go command is invalid. (There is no value for item)"
+								))).and_then(|n| match n.parse::<u32>() {
+									Ok(n) => Ok(n),
+									Err(_) => Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer.")))
+								})?
+						},
+						_ => {
+							return Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Insufficient parameters)"
+							)));
+						}
+					};
+					byori = Some(UsiGoByoyomiOrInc::Inc(bi,wi));
+				},
+				"byoyomi" => {
+					byori.map_or(
+						Ok(()),
+						|_| {
+							Err(TypeConvertError::SyntaxError(String::from(
+								"The input form of the go command is invalid. (Duplicate parameters)"
+						)))})?;
+					byori = it.next().ok_or(
+						TypeConvertError::SyntaxError(String::from(
+							"The input form of the go command is invalid. (There is no value for item)"
+						))).and_then(|n| match n.parse::<u32>() {
+							Ok(n) => Ok(Some(UsiGoByoyomiOrInc::Byoyomi(n))),
+							Err(_) => Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer."))),
+						})?;
+				},
+				_ => {
+					return Err(TypeConvertError::SyntaxError(String::from(
+						"The input form of the go command is invalid. (Unknown parameter)")));
+				}
+			}
+		}
+
+		it.next().map_or(
+			limit.map_or(
+				byori.map_or(
+					Ok(f.create(UsiGoTimeLimit::None)),
+					|_| Err(TypeConvertError::SyntaxError(String::from(
+							"The input form of the go command is invalid. (Insufficient parameters)"
+						)))
+				),
+				|ref limit| Ok(f.create(UsiGoTimeLimit::Limit(Some(*limit), byori)))
+			),
+			|_| Err(TypeConvertError::SyntaxError(String::from(
+				"The input form of the go command is invalid. (Unknown parameter)")))
+		)
 	}
 }
 impl ToSfen<TypeConvertError<String>> for Banmen {
