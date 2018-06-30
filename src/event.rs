@@ -77,6 +77,120 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 	}
 }
 #[derive(Debug)]
+pub enum SysEventOption {
+	Str(String),
+	Num(u32),
+	Bool(bool),
+}
+impl Clone for SysEventOption {
+	fn clone(&self) -> SysEventOption {
+		match *self {
+			SysEventOption::Str(ref s) => SysEventOption::Str(s.clone()),
+			SysEventOption::Num(n) => SysEventOption::Num(n),
+			SysEventOption::Bool(b) => SysEventOption::Bool(b),
+		}
+	}
+}
+#[derive(Debug)]
+pub enum SysEventOptionKind {
+	Str,
+	Num,
+	Bool,
+}
+#[derive(Debug)]
+pub enum UsiInitialPosition {
+	Sfen(Banmen, MochigomaCollections),
+	Startpos,
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum UsiGo {
+	Go(UsiGoTimeLimit),
+	Ponder(UsiGoTimeLimit),
+	Mate(UsiGoMateTimeLimit),
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum UsiGoTimeLimit {
+	None,
+	Limit(Option<(u32,u32)>,Option<UsiGoByoyomiOrInc>),
+	Infinite,
+}
+impl UsiGoTimeLimit {
+	pub fn to_instant(&self,teban:Teban) -> Option<Instant> {
+		let now = Instant::now();
+		(match self {
+			&UsiGoTimeLimit::None => None,
+			&UsiGoTimeLimit::Infinite => None,
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),None) => {
+				Some(match teban {
+					Teban::Sente => {
+						now + Duration::from_millis(ms as u64)
+					},
+					Teban::Gote => {
+						now + Duration::from_millis(mg as u64)
+					}
+				})
+			},
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Byoyomi(b))) => {
+				Some(match teban {
+					Teban::Sente => {
+						now + Duration::from_millis(ms as u64 + b as u64)
+					},
+					Teban::Gote => {
+						now + Duration::from_millis(mg as u64 + b as u64)
+					}
+				})
+			}
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Inc(bs,bg))) => {
+				Some(match teban {
+					Teban::Sente => {
+						now + Duration::from_millis(ms as u64 + bs as u64)
+					},
+					Teban::Gote => {
+						now + Duration::from_millis(mg as u64 + bg as u64)
+					}
+				})
+			},
+			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(b))) => {
+				Some(now + Duration::from_millis(b as u64))
+			}
+			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(bs,bg))) => {
+				Some(match teban {
+					Teban::Sente => {
+						now + Duration::from_millis(bs as u64)
+					},
+					Teban::Gote => {
+						now + Duration::from_millis(bg as u64)
+					}
+				})
+			},
+			&UsiGoTimeLimit::Limit(None,None) => {
+				Some(now)
+			}
+		})
+	}
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum UsiGoMateTimeLimit {
+	Limit(u32),
+	Infinite,
+}
+impl UsiGoMateTimeLimit {
+	pub fn to_instant(&self) -> Option<Instant> {
+		match *self {
+			UsiGoMateTimeLimit::Infinite => None,
+			UsiGoMateTimeLimit::Limit(limit) => {
+				let now = Instant::now();
+				Some(now + Duration::from_millis(limit as u64))
+			}
+		}
+	}
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum UsiGoByoyomiOrInc {
+	Byoyomi(u32),
+	Inc(u32,u32),
+}
+#[derive(Debug)]
 pub enum UserEvent {
 	Stop,
 	Quit,
@@ -112,16 +226,6 @@ pub enum SelfMatchEvent {
 	Abort,
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum SelfMatchGameEndState {
-	Win(Teban),
-	Resign(Teban),
-	NyuGyokuWin(Teban),
-	NyuGyokuLose(Teban),
-	Draw,
-	Foul(Teban,FoulKind),
-	Timeover(Teban),
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum Moved {
 	To(MovedKind,(u32,u32),(u32,u32),bool),
 	Put(MochigomaKind,(u32,u32)),
@@ -143,6 +247,57 @@ pub enum MovedKind {
 	GinN,
 	KakuN,
 	HishaN,
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum SelfMatchGameEndState {
+	Win(Teban),
+	Resign(Teban),
+	NyuGyokuWin(Teban),
+	NyuGyokuLose(Teban),
+	Draw,
+	Foul(Teban,FoulKind),
+	Timeover(Teban),
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum GameEndState {
+	Win,
+	Lose,
+	Draw,
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum FoulKind {
+	InvalidMove,
+	PutFuAndMate,
+	Sennichite,
+	SennichiteOu,
+	NotRespondedOute,
+}
+#[derive(Debug)]
+pub enum SelfMatchEventKind {
+	GameStart = 0,
+	Moved,
+	GameEnd,
+	Abort,
+}
+impl MapEventKind<SelfMatchEventKind> for SelfMatchEvent {
+	fn event_kind(&self) -> SelfMatchEventKind {
+		match *self {
+			SelfMatchEvent::GameStart(_,_,_) => SelfMatchEventKind::GameStart,
+			SelfMatchEvent::Moved(_,_) => SelfMatchEventKind::Moved,
+			SelfMatchEvent::GameEnd(_) => SelfMatchEventKind::GameEnd,
+			SelfMatchEvent::Abort => SelfMatchEventKind::Abort,
+		}
+	}
+}
+impl From<SelfMatchEventKind> for usize {
+	fn from(kind: SelfMatchEventKind) -> usize {
+		kind as usize
+	}
+}
+impl MaxIndex for SelfMatchEventKind {
+	fn max_index() -> usize {
+		SelfMatchEventKind::Abort as usize
+	}
 }
 impl<'a> TryFrom<(&'a Banmen,&'a Move),TypeConvertError<String>> for Moved {
 	fn try_from(s:(&'a Banmen,&'a Move)) -> Result<Moved, TypeConvertError<String>> {
@@ -290,161 +445,6 @@ impl fmt::Display for Moved {
 	 		_ => write!(f,"UNKNOWN.")
 	 	}
 	 }
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum FoulKind {
-	InvalidMove,
-	PutFuAndMate,
-	Sennichite,
-	SennichiteOu,
-	NotRespondedOute,
-}
-#[derive(Debug)]
-pub enum SelfMatchEventKind {
-	GameStart = 0,
-	Moved,
-	GameEnd,
-	Abort,
-}
-impl MapEventKind<SelfMatchEventKind> for SelfMatchEvent {
-	fn event_kind(&self) -> SelfMatchEventKind {
-		match *self {
-			SelfMatchEvent::GameStart(_,_,_) => SelfMatchEventKind::GameStart,
-			SelfMatchEvent::Moved(_,_) => SelfMatchEventKind::Moved,
-			SelfMatchEvent::GameEnd(_) => SelfMatchEventKind::GameEnd,
-			SelfMatchEvent::Abort => SelfMatchEventKind::Abort,
-		}
-	}
-}
-impl From<SelfMatchEventKind> for usize {
-	fn from(kind: SelfMatchEventKind) -> usize {
-		kind as usize
-	}
-}
-impl MaxIndex for SelfMatchEventKind {
-	fn max_index() -> usize {
-		SelfMatchEventKind::Abort as usize
-	}
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum GameEndState {
-	Win,
-	Lose,
-	Draw,
-}
-#[derive(Debug)]
-pub enum UsiInitialPosition {
-	Sfen(Banmen, MochigomaCollections),
-	Startpos,
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum UsiGo {
-	Go(UsiGoTimeLimit),
-	Ponder(UsiGoTimeLimit),
-	Mate(UsiGoMateTimeLimit),
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum UsiGoTimeLimit {
-	None,
-	Limit(Option<(u32,u32)>,Option<UsiGoByoyomiOrInc>),
-	Infinite,
-}
-impl UsiGoTimeLimit {
-	pub fn to_instant(&self,teban:Teban) -> Option<Instant> {
-		let now = Instant::now();
-		(match self {
-			&UsiGoTimeLimit::None => None,
-			&UsiGoTimeLimit::Infinite => None,
-			&UsiGoTimeLimit::Limit(Some((ms,mg)),None) => {
-				Some(match teban {
-					Teban::Sente => {
-						now + Duration::from_millis(ms as u64)
-					},
-					Teban::Gote => {
-						now + Duration::from_millis(mg as u64)
-					}
-				})
-			},
-			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Byoyomi(b))) => {
-				Some(match teban {
-					Teban::Sente => {
-						now + Duration::from_millis(ms as u64 + b as u64)
-					},
-					Teban::Gote => {
-						now + Duration::from_millis(mg as u64 + b as u64)
-					}
-				})
-			}
-			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Inc(bs,bg))) => {
-				Some(match teban {
-					Teban::Sente => {
-						now + Duration::from_millis(ms as u64 + bs as u64)
-					},
-					Teban::Gote => {
-						now + Duration::from_millis(mg as u64 + bg as u64)
-					}
-				})
-			},
-			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(b))) => {
-				Some(now + Duration::from_millis(b as u64))
-			}
-			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(bs,bg))) => {
-				Some(match teban {
-					Teban::Sente => {
-						now + Duration::from_millis(bs as u64)
-					},
-					Teban::Gote => {
-						now + Duration::from_millis(bg as u64)
-					}
-				})
-			},
-			&UsiGoTimeLimit::Limit(None,None) => {
-				Some(now)
-			}
-		})
-	}
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum UsiGoMateTimeLimit {
-	Limit(u32),
-	Infinite,
-}
-impl UsiGoMateTimeLimit {
-	pub fn to_instant(&self) -> Option<Instant> {
-		match *self {
-			UsiGoMateTimeLimit::Infinite => None,
-			UsiGoMateTimeLimit::Limit(limit) => {
-				let now = Instant::now();
-				Some(now + Duration::from_millis(limit as u64))
-			}
-		}
-	}
-}
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum UsiGoByoyomiOrInc {
-	Byoyomi(u32),
-	Inc(u32,u32),
-}
-#[derive(Debug)]
-pub enum SysEventOption {
-	Str(String),
-	Num(u32),
-	Bool(bool),
-}
-impl Clone for SysEventOption {
-	fn clone(&self) -> SysEventOption {
-		match *self {
-			SysEventOption::Str(ref s) => SysEventOption::Str(s.clone()),
-			SysEventOption::Num(n) => SysEventOption::Num(n),
-			SysEventOption::Bool(b) => SysEventOption::Bool(b),
-		}
-	}
-}
-#[derive(Debug)]
-pub enum SysEventOptionKind {
-	Str,
-	Num,
-	Bool,
 }
 #[derive(Debug)]
 pub struct EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
