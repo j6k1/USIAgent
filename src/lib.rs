@@ -40,8 +40,8 @@ use shogi::*;
 use protocol::*;
 use rule::*;
 
-pub trait TryFrom<T,E> where Self: Sized {
-	fn try_from(s:T) -> Result<Self, TypeConvertError<E>> where E: fmt::Debug;
+pub trait TryFrom<T,E> where Self: Sized, E: Error + fmt::Display {
+	fn try_from(s:T) -> Result<Self, E> where E: fmt::Debug;
 }
 pub trait MaxIndex {
 	fn max_index() -> usize;

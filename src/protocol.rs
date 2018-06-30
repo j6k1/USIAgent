@@ -13,7 +13,9 @@ pub enum UsiOutput {
 	Command(Vec<String>),
 }
 impl UsiOutput {
-	pub fn try_from(cmd: &UsiCommand) -> Result<UsiOutput, UsiOutputCreateError> {
+}
+impl<'a> TryFrom<&'a UsiCommand,UsiOutputCreateError> for UsiOutput {
+	fn try_from(cmd: &UsiCommand) -> Result<UsiOutput, UsiOutputCreateError> {
 		Ok(UsiOutput::Command(cmd.to_usi_command()?))
 	}
 }
@@ -73,7 +75,7 @@ impl MoveStringFrom for MoveStringCreator {
 		}
 	}
 }
-impl<'a> TryFrom<&'a str,String> for Move {
+impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Move {
 	fn try_from(s: &'a str) -> Result<Move, TypeConvertError<String>> {
 		match s {
 			s if s.len() < 4 => {
@@ -283,7 +285,7 @@ impl ToSfen<ToMoveStringConvertError> for Vec<Move> {
 		Ok(strs.join(" "))
 	}
 }
-impl TryFrom<String,String> for KomaKind {
+impl TryFrom<String,TypeConvertError<String>> for KomaKind {
 	fn try_from(s: String) -> Result<KomaKind, TypeConvertError<String>> {
 		Ok(match &*s {
 			"K" => KomaKind::SOu,
@@ -318,7 +320,7 @@ impl TryFrom<String,String> for KomaKind {
 		})
 	}
 }
-impl<'a> TryFrom<&'a str,String> for Banmen {
+impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Banmen {
 	fn try_from(s: &'a str) -> Result<Banmen, TypeConvertError<String>> {
 		let mut chars = s.chars();
 
@@ -378,7 +380,7 @@ impl<'a> TryFrom<&'a str,String> for Banmen {
 		Ok(Banmen(banmen))
 	}
 }
-impl<'a> TryFrom<&'a str,String> for Teban {
+impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Teban {
 	fn try_from(s: &'a str) -> Result<Teban, TypeConvertError<String>> {
 		Ok(match s {
 			"b" => Teban::Sente,

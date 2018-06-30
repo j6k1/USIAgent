@@ -149,7 +149,7 @@ pub enum ObtainKind {
 	Hisha,
 	Ou,
 }
-impl TryFrom<KomaKind,String> for ObtainKind {
+impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
 	fn try_from(kind:KomaKind) -> Result<ObtainKind,TypeConvertError<String>> {
 		Ok(match kind {
 			KomaKind::SFu => ObtainKind::Fu,
@@ -196,7 +196,7 @@ pub enum MochigomaKind {
 	Kaku,
 	Hisha,
 }
-impl TryFrom<ObtainKind,String> for MochigomaKind {
+impl TryFrom<ObtainKind,TypeConvertError<String>> for MochigomaKind {
 	fn try_from(o:ObtainKind) -> Result<MochigomaKind,TypeConvertError<String>> {
 		Ok(match o {
 			ObtainKind::Fu => MochigomaKind::Fu,

@@ -145,7 +145,7 @@ pub enum MovedKind {
 	KakuN,
 	HishaN,
 }
-impl<'a> TryFrom<(&'a Banmen,&'a Move),String> for Moved {
+impl<'a> TryFrom<(&'a Banmen,&'a Move),TypeConvertError<String>> for Moved {
 	fn try_from(s:(&'a Banmen,&'a Move)) -> Result<Moved, TypeConvertError<String>> {
 		Ok(match s {
 			(&Banmen(ref kinds),&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n))) => {
@@ -447,7 +447,7 @@ pub enum SysEventOptionKind {
 	Num,
 	Bool,
 }
-impl<'a> TryFrom<&'a str,String> for MochigomaCollections {
+impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 	fn try_from(s: &'a str) -> Result<MochigomaCollections, TypeConvertError<String>> {
 		Ok(match &*s {
 			"-" => MochigomaCollections::Pair(HashMap::new(),HashMap::new()),

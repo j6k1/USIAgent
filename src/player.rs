@@ -8,11 +8,12 @@ use std::time::Instant;
 use command::*;
 use error::*;
 use event::*;
+use shogi::*;
 use rule::*;
 use UsiOutput;
 use Logger;
 use OnErrorHandler;
-use shogi::*;
+use TryFrom;
 
 pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	const ID: &'static str;
