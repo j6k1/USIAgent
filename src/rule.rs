@@ -1,9 +1,10 @@
 use std::collections::HashMap;
-use std::time::{Instant};
+use std::time::{Instant,Duration};
 
 use shogi::*;
 use hash::*;
 use error::*;
+use event::*;
 
 use shogi::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 use TryFrom;
@@ -22,13 +23,104 @@ impl LegalMove {
 		}
 	}
 }
-// 可能であれば後でpubを外す
-pub enum NextMove {
+impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
+	fn find(&self,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
+		match query {
+			&(ref s, ref d) => {
+				for m in self {
+					match m {
+						&LegalMove::To(ref ms, ref md, _) => {
+							if s == ms && d == md {
+								return Some(Move::To(*s,*d));
+							}
+						},
+						_ => (),
+					}
+				}
+			}
+		}
+
+		None
+	}
+}
+impl Find<KomaPosition,Move> for Vec<LegalMove> {
+	fn find(&self,query:&KomaPosition) -> Option<Move> {
+		let (x,y) = match query {
+			&KomaPosition(x,y) => (x,y)
+		};
+
+		for m in self {
+			match m {
+				&LegalMove::To(ref ms, ref md, _) => {
+					match md {
+						&KomaDstToPosition(dx,dy,_) => {
+							if x == dx && y == dy {
+								return Some(Move::To(*ms,*md));
+							}
+						}
+					}
+				},
+				&LegalMove::Put(ref mk, ref md) => {
+					match md {
+						&KomaDstPutPosition(dx,dy) => {
+							if x == dx && y == dy {
+								return Some(Move::Put(*mk,*md));
+							}
+						}
+					}
+				}
+			}
+		}
+
+		None
+	}
+}
+impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<LegalMove> {
+	fn find(&self,query:&(MochigomaKind,KomaDstPutPosition)) -> Option<Move> {
+		match query {
+			&(ref k, ref d) => {
+				for m in self {
+					match m {
+						&LegalMove::Put(ref mk, ref md) => {
+							if k == mk && d == md {
+								return Some(Move::Put(*k,*d));
+							}
+						},
+						_ => (),
+					}
+				}
+			}
+		}
+
+		None
+	}
+}
+impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
+	fn find(&self,query:&ObtainKind) -> Option<Vec<Move>> {
+		let mut mvs:Vec<Move> = Vec::new();
+
+		for m in self {
+			match m {
+				&LegalMove::To(ref ms, ref md, Some(ref o)) => {
+					if *o == *query {
+						mvs.push(Move::To(*ms,*md));
+					}
+				},
+				_ => (),
+			}
+		}
+
+		match mvs.len() {
+			0 => None,
+			_ => Some(mvs),
+		}
+	}
+}
+enum NextMove {
 	Once(i32,i32),
 	Repeat(i32,i32),
 }
-// 後でpubを外す
-pub const CANDIDATE:[&[NextMove]; 14] = [
+const CANDIDATE:[&[NextMove]; 14] = [
 	// 歩
 	&[NextMove::Once(0,-1)],
 	// 香車
@@ -137,6 +229,38 @@ pub const BANMEN_START_POS:Banmen = Banmen([
 	[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 	[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
 ]);
+pub trait Validate {
+	fn validate(&self) -> bool;
+}
+impl Validate for KomaSrcPosition {
+	fn validate(&self) -> bool {
+		match *self {
+			KomaSrcPosition(x, y) => x > 0 && x <= 9 && y > 0 && y <= 9,
+		}
+	}
+}
+impl Validate for KomaDstToPosition {
+	fn validate(&self) -> bool {
+		match *self {
+			KomaDstToPosition(x, y, _) => x > 0 && x <= 9 && y > 0 && y <= 9,
+		}
+	}
+}
+impl Validate for KomaDstPutPosition {
+	fn validate(&self) -> bool {
+		match *self {
+			KomaDstPutPosition(x, y) => x > 0 && x <= 9 && y > 0 && y <= 9,
+		}
+	}
+}
+impl Validate for Move {
+	fn validate(&self) -> bool {
+		match *self {
+			Move::To(ref s, ref d) => s.validate() && d.validate(),
+			Move::Put(_, ref d) => d.validate()
+		}
+	}
+}
 pub struct Rule {
 
 }
@@ -2276,5 +2400,60 @@ impl Rule {
 					_ => false,
 				}
 			}).collect::<Vec<LegalMove>>()
+	}
+
+	pub fn update_time_limit(limit:&UsiGoTimeLimit,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
+		match teban {
+			Teban::Sente => {
+				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = limit {
+					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
+					let inc = match byoyomi_of_inc {
+						Some(UsiGoByoyomiOrInc::Inc(inc,_)) if ls > diff => {
+							inc
+						},
+						Some(UsiGoByoyomiOrInc::Inc(inc,_)) => {
+							inc - (diff - ls)
+						},
+						_ => {
+							0
+						}
+					};
+					let ls = if ls >= diff {
+						ls - diff + inc
+					} else {
+						0
+					};
+
+					UsiGoTimeLimit::Limit(Some((ls as u32,lg)),byoyomi_of_inc)
+				} else {
+					limit.clone()
+				}
+			},
+			Teban::Gote => {
+				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = limit {
+					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
+					let inc = match byoyomi_of_inc {
+						Some(UsiGoByoyomiOrInc::Inc(_,inc)) if lg > diff => {
+							inc
+						},
+						Some(UsiGoByoyomiOrInc::Inc(_,inc)) => {
+							inc - (diff - lg)
+						},
+						_ => {
+							0
+						}
+					};
+					let lg = if lg >= diff {
+						lg - diff + inc
+					} else {
+						0
+					};
+
+					UsiGoTimeLimit::Limit(Some((ls, lg as u32)),byoyomi_of_inc)
+				} else {
+					limit.clone()
+				}
+			}
+		}
 	}
 }

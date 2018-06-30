@@ -12,6 +12,7 @@ use OnErrorHandler;
 use TryFrom;
 use SandBox;
 use rule;
+use rule::*;
 use protocol::*;
 
 use std::error::Error;
@@ -631,7 +632,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					 mut mc,
 					 mut mhash,
 					 mut shash,
-					 mut kyokumen_hash_map) = banmen.apply_moves(teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
+					 mut kyokumen_hash_map) = Rule::apply_moves(&banmen,teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
 
 				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u32>>; 2] = [None,None];
 
@@ -693,17 +694,18 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								}
 							}
 
-							current_game_time_limit[cs_index] = current_game_time_limit[cs_index].updated(
+							current_game_time_limit[cs_index] = Rule::update_time_limit(
+								&current_game_time_limit[cs_index],
 								teban,think_start_time.elapsed()
 							);
 							current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
 
-							match banmen.apply_valid_move(&teban,&mc,&m) {
+							match Rule::apply_valid_move(&banmen,&teban,&mc,&m) {
 								Ok((next,nmc,o)) => {
 
 									if let Some(_) = prev_move {
-										if banmen.win_only_moves(&teban.opposite()).len() > 0 {
-											if next.win_only_moves(&teban.opposite()).len() > 0 {
+										if Rule::win_only_moves(&teban.opposite(),&banmen).len() > 0 {
+											if Rule::win_only_moves(&teban.opposite(),&next).len() > 0 {
 												on_gameend(
 													cs[(cs_index+1) % 2].clone(),
 													cs[cs_index].clone(),
@@ -718,7 +720,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										}
 									}
 
-									let is_win = banmen.is_win(&teban,&m);
+									let is_win = Rule::is_win(&banmen,&teban,&m);
 
 									mvs.push(m);
 
@@ -742,7 +744,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									banmen = next;
 
-									if banmen.is_put_fu_and_mate(&teban.opposite(),&mc,&m) {
+									if Rule::is_put_fu_and_mate(&banmen,&teban.opposite(),&mc,&m) {
 										kifu_writer(&sfen,&mvs);
 										on_gameend(
 											cs[(cs_index+1) % 2].clone(),
@@ -754,7 +756,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
-									if !banmen.check_sennichite_by_oute(
+									if !Rule::check_sennichite_by_oute(
+										&banmen,
 										&teban.opposite(),mhash,shash,
 										&mut oute_kyokumen_hash_maps[cs_index]
 									) {
@@ -769,8 +772,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
-									if !banmen.check_sennichite(
-										mhash,shash,&mut kyokumen_hash_map
+									if !Rule::check_sennichite(
+										&banmen,mhash,shash,&mut kyokumen_hash_map
 									) {
 										kifu_writer(&sfen,&mvs);
 										on_gameend(
@@ -847,7 +850,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							}
 							break;
 						},
-						SelfMatchMessage::NotifyMove(BestMove::Win) if banmen.is_nyugyoku_win(&teban,&mc,&current_time_limit)=> {
+						SelfMatchMessage::NotifyMove(BestMove::Win) if Rule::is_nyugyoku_win(&banmen,&teban,&mc,&current_time_limit)=> {
 							kifu_writer(&sfen,&mvs);
 							on_gameend(
 								cs[cs_index].clone(),

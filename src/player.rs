@@ -8,6 +8,7 @@ use std::time::Instant;
 use command::*;
 use error::*;
 use event::*;
+use rule::*;
 use UsiOutput;
 use Logger;
 use OnErrorHandler;
@@ -122,7 +123,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 						&Option<MochigomaKind>,T) -> T {
 
 		for m in &m {
-			match banmen.apply_move_none_check(&teban,&mc,&m) {
+			match Rule::apply_move_none_check(&banmen,&teban,&mc,&m) {
 				(next,nmc,o) => {
 					r = f(self,&teban,&banmen,&mc,&Some(*m),&o,r);
 					banmen = next;

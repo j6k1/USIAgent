@@ -43,17 +43,11 @@ use rule::*;
 pub trait TryFrom<T,E> where Self: Sized {
 	fn try_from(s:T) -> Result<Self, TypeConvertError<E>> where E: fmt::Debug;
 }
-pub trait TryToString<E> where E: fmt::Debug + Error {
-	fn try_to_string(&self) -> Result<String,E>;
+pub trait MaxIndex {
+	fn max_index() -> usize;
 }
 pub trait Find<Q,R> {
 	fn find(&self,query:&Q) -> Option<R>;
-}
-pub trait Validate {
-	fn validate(&self) -> bool;
-}
-pub trait MaxIndex {
-	fn max_index() -> usize;
 }
 pub struct OnErrorHandler<L> where L: Logger {
 	logger:Arc<Mutex<L>>,

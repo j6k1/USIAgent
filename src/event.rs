@@ -404,61 +404,6 @@ impl UsiGoTimeLimit {
 			}
 		})
 	}
-
-	pub fn updated(&self,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
-		match teban {
-			Teban::Sente => {
-				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = self {
-					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
-					let inc = match byoyomi_of_inc {
-						Some(UsiGoByoyomiOrInc::Inc(inc,_)) if ls > diff => {
-							inc
-						},
-						Some(UsiGoByoyomiOrInc::Inc(inc,_)) => {
-							inc - (diff - ls)
-						},
-						_ => {
-							0
-						}
-					};
-					let ls = if ls >= diff {
-						ls - diff + inc
-					} else {
-						0
-					};
-
-					UsiGoTimeLimit::Limit(Some((ls as u32,lg)),byoyomi_of_inc)
-				} else {
-					self.clone()
-				}
-			},
-			Teban::Gote => {
-				if let &UsiGoTimeLimit::Limit(Some((ls,lg)),byoyomi_of_inc) = self {
-					let diff = consumed.as_secs() as u32 * 1000 + consumed.subsec_nanos() / 1000000;
-					let inc = match byoyomi_of_inc {
-						Some(UsiGoByoyomiOrInc::Inc(_,inc)) if lg > diff => {
-							inc
-						},
-						Some(UsiGoByoyomiOrInc::Inc(_,inc)) => {
-							inc - (diff - lg)
-						},
-						_ => {
-							0
-						}
-					};
-					let lg = if lg >= diff {
-						lg - diff + inc
-					} else {
-						0
-					};
-
-					UsiGoTimeLimit::Limit(Some((ls, lg as u32)),byoyomi_of_inc)
-				} else {
-					self.clone()
-				}
-			}
-		}
-	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoMateTimeLimit {
