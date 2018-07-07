@@ -611,6 +611,145 @@ impl Rule {
 		mvs
 	}
 
+	pub fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
+		let mut mvs:Vec<LegalMove> = Vec::new();
+
+		match *t {
+			Teban::Sente => {
+				match *mc {
+					MochigomaCollections::Pair(ref ms, _) => {
+						match b {
+							&Banmen(ref kinds) => {
+								for y in 0..kinds.len() {
+									for x in 0..kinds[y].len() {
+										for m in &MOCHIGOMA_KINDS {
+											match ms.get(&m) {
+												None | Some(&0) => {
+													continue;
+												},
+												Some(_) => (),
+											}
+											match m {
+												&MochigomaKind::Fu => {
+													match kinds[y][x] {
+														KomaKind::Blank if y > 0 => {
+															let mut nifu = false;
+
+															for oy in 0..y {
+																match kinds[oy][x] {
+																	KomaKind::SFu => nifu = true,
+																	_ => (),
+																}
+															}
+
+															for oy in (y+1)..9 {
+																match kinds[oy][x] {
+																	KomaKind::SFu => nifu = true,
+																	_ => (),
+																}
+															}
+
+															if !nifu {
+																mvs.push(
+																	LegalMove::Put(*m,KomaDstPutPosition(
+																	9 - x as u32, y as u32 + 1)));
+															}
+														},
+														_ => (),
+													}
+												},
+												&MochigomaKind::Kyou if y == 0 => (),
+												&MochigomaKind::Kei if y <= 1 => (),
+												_ => {
+													match kinds[y][x] {
+														KomaKind::Blank => {
+															mvs.push(
+																LegalMove::Put(*m,KomaDstPutPosition(
+																9 - x as u32, y as u32 + 1)));
+														},
+														_ => (),
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					MochigomaCollections::Empty => (),
+				}
+			},
+			Teban::Gote => {
+				match *mc {
+					MochigomaCollections::Pair(_, ref mg) => {
+						match b {
+							&Banmen(ref kinds) => {
+								for y in 0..kinds.len() {
+									for x in 0..kinds[y].len() {
+										let (x,y) = (8 - x, 8 - y);
+										for m in &MOCHIGOMA_KINDS {
+											match mg.get(&m) {
+												None | Some(&0) => {
+													continue;
+												},
+												Some(_) => (),
+											}
+											match m {
+												&MochigomaKind::Fu => {
+													match kinds[y][x] {
+														KomaKind::Blank if y < 8 => {
+															let mut nifu = false;
+
+															for oy in 0..y {
+																match kinds[oy][x] {
+																	KomaKind::GFu => nifu = true,
+																	_ => (),
+																}
+															}
+
+															for oy in (y+1)..9 {
+																match kinds[oy][x] {
+																	KomaKind::GFu => nifu = true,
+																	_ => (),
+																}
+															}
+
+															if !nifu {
+																mvs.push(LegalMove::Put(
+																		*m,KomaDstPutPosition(
+																		9 - x as u32, y as u32 + 1)));
+															}
+														},
+														_ => (),
+													}
+												},
+												&MochigomaKind::Kyou if y == 8 => (),
+												&MochigomaKind::Kei if y >= 7 => (),
+												_ => {
+													match kinds[y][x] {
+														KomaKind::Blank => {
+															mvs.push(LegalMove::Put(
+																	*m,KomaDstPutPosition(
+																	9 - x as u32, y as u32 + 1)));
+														},
+														_ => (),
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					MochigomaCollections::Empty => (),
+				}
+			}
+		}
+		mvs
+	}
+
 	pub fn legal_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
@@ -1475,6 +1614,18 @@ impl Rule {
 		mvs
 	}
 
+	pub fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
+		Rule::legal_moves_from_mochigoma(t, mc, b)
+			.into_iter().filter(|m| {
+				match m {
+					&LegalMove::Put(k,KomaDstPutPosition(x,y)) => {
+						Rule::win_only_moves_with_point_and_kind(t, b, 9 - x, y - 1, KomaKind::from((*t,k))).len() > 0
+					},
+					_ => false,
+				}
+			}).collect::<Vec<LegalMove>>()
+	}
+
 	pub fn oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
@@ -2251,156 +2402,6 @@ impl Rule {
 		}
 
 		true
-	}
-	pub fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
-
-		match *t {
-			Teban::Sente => {
-				match *mc {
-					MochigomaCollections::Pair(ref ms, _) => {
-						match b {
-							&Banmen(ref kinds) => {
-								for y in 0..kinds.len() {
-									for x in 0..kinds[y].len() {
-										for m in &MOCHIGOMA_KINDS {
-											match ms.get(&m) {
-												None | Some(&0) => {
-													continue;
-												},
-												Some(_) => (),
-											}
-											match m {
-												&MochigomaKind::Fu => {
-													match kinds[y][x] {
-														KomaKind::Blank if y > 0 => {
-															let mut nifu = false;
-
-															for oy in 0..y {
-																match kinds[oy][x] {
-																	KomaKind::SFu => nifu = true,
-																	_ => (),
-																}
-															}
-
-															for oy in (y+1)..9 {
-																match kinds[oy][x] {
-																	KomaKind::SFu => nifu = true,
-																	_ => (),
-																}
-															}
-
-															if !nifu {
-																mvs.push(
-																	LegalMove::Put(*m,KomaDstPutPosition(
-																	9 - x as u32, y as u32 + 1)));
-															}
-														},
-														_ => (),
-													}
-												},
-												&MochigomaKind::Kyou if y == 0 => (),
-												&MochigomaKind::Kei if y <= 1 => (),
-												_ => {
-													match kinds[y][x] {
-														KomaKind::Blank => {
-															mvs.push(
-																LegalMove::Put(*m,KomaDstPutPosition(
-																9 - x as u32, y as u32 + 1)));
-														},
-														_ => (),
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					},
-					MochigomaCollections::Empty => (),
-				}
-			},
-			Teban::Gote => {
-				match *mc {
-					MochigomaCollections::Pair(_, ref mg) => {
-						match b {
-							&Banmen(ref kinds) => {
-								for y in 0..kinds.len() {
-									for x in 0..kinds[y].len() {
-										let (x,y) = (8 - x, 8 - y);
-										for m in &MOCHIGOMA_KINDS {
-											match mg.get(&m) {
-												None | Some(&0) => {
-													continue;
-												},
-												Some(_) => (),
-											}
-											match m {
-												&MochigomaKind::Fu => {
-													match kinds[y][x] {
-														KomaKind::Blank if y < 8 => {
-															let mut nifu = false;
-
-															for oy in 0..y {
-																match kinds[oy][x] {
-																	KomaKind::GFu => nifu = true,
-																	_ => (),
-																}
-															}
-
-															for oy in (y+1)..9 {
-																match kinds[oy][x] {
-																	KomaKind::GFu => nifu = true,
-																	_ => (),
-																}
-															}
-
-															if !nifu {
-																mvs.push(LegalMove::Put(
-																		*m,KomaDstPutPosition(
-																		9 - x as u32, y as u32 + 1)));
-															}
-														},
-														_ => (),
-													}
-												},
-												&MochigomaKind::Kyou if y == 8 => (),
-												&MochigomaKind::Kei if y >= 7 => (),
-												_ => {
-													match kinds[y][x] {
-														KomaKind::Blank => {
-															mvs.push(LegalMove::Put(
-																	*m,KomaDstPutPosition(
-																	9 - x as u32, y as u32 + 1)));
-														},
-														_ => (),
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					},
-					MochigomaCollections::Empty => (),
-				}
-			}
-		}
-		mvs
-	}
-
-	pub fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
-		Rule::legal_moves_from_mochigoma(t, mc, b)
-			.into_iter().filter(|m| {
-				match m {
-					&LegalMove::Put(k,KomaDstPutPosition(x,y)) => {
-						Rule::win_only_moves_with_point_and_kind(t, b, 9 - x, y - 1, KomaKind::from((*t,k))).len() > 0
-					},
-					_ => false,
-				}
-			}).collect::<Vec<LegalMove>>()
 	}
 
 	pub fn update_time_limit(limit:&UsiGoTimeLimit,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
