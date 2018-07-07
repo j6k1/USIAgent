@@ -2146,7 +2146,8 @@ impl Rule {
 
 	pub fn is_put_fu_and_mate(banmen:&Banmen,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
 		match *m {
-			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(_,dy)) => {
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(dx,dy)) => {
+				let dx = 9 - dx;
 				let dy = dy - 1;
 
 				let ou = match teban {
@@ -2154,22 +2155,22 @@ impl Rule {
 					&Teban::Gote => KomaKind::SOu,
 				};
 
-				let oy = match banmen.find(&ou) {
+				let (ox,oy) = match banmen.find(&ou) {
 					Some(ref v) if v.len() > 0 => {
 						match v[0] {
-							KomaPosition(_,oy) => {
-								(oy - 1) as i32
+							KomaPosition(ox,oy) => {
+								((9 - ox) as i32, (oy - 1) as i32)
 							}
 						}
 					},
 					_ => {
-						-1
+						(-1,-1)
 					}
 				};
 
 				let is_oute = match teban {
-					&Teban::Sente if oy != -1 => dy == (oy + 1) as u32,
-					&Teban::Gote if oy != -1 => dy == (oy - 1) as u32,
+					&Teban::Sente if oy != -1 && ox != -1 => dy == (oy + 1) as u32 && ox as u32 == dx,
+					&Teban::Gote if oy != -1 && ox != -1  => dy == (oy - 1) as u32 && ox as u32 == dx,
 					_ => false,
 				};
 
