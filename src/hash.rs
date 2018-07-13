@@ -91,11 +91,9 @@ const DAN_MAX:usize = 9;
 pub trait InitialHash {
 	const INITIAL_HASH:Self;
 }
-/*
 impl InitialHash for u128 {
 	const INITIAL_HASH:u128 = 0;
 }
-*/
 impl InitialHash for u64 {
 	const INITIAL_HASH:u64 = 0;
 }
