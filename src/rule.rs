@@ -1868,9 +1868,9 @@ impl Rule {
 	pub fn apply_moves(banmen:&Banmen,mut teban:Teban,
 						mut mc:MochigomaCollections,
 						m:&Vec<Move>,mut mhash:u64,mut shash:u64,
-						mut kyokumen_hash_map:TwoKeyHashMap<u32>,
-						hasher:&KyokumenHash)
-		-> (Teban,Banmen,MochigomaCollections,u64,u64,TwoKeyHashMap<u32>) {
+						mut kyokumen_hash_map:TwoKeyHashMap<u64,u32>,
+						hasher:&KyokumenHash<u64>)
+		-> (Teban,Banmen,MochigomaCollections,u64,u64,TwoKeyHashMap<u64,u32>) {
 
 		let mut banmen = banmen.clone();
 
@@ -2361,7 +2361,7 @@ impl Rule {
 	}
 
 	pub fn check_sennichite(_:&Banmen,mhash:u64,shash:u64,
-									kyokumen_hash_map:&mut TwoKeyHashMap<u32>) -> bool {
+									kyokumen_hash_map:&mut TwoKeyHashMap<u64,u32>) -> bool {
 		match kyokumen_hash_map.get(&mhash,&shash) {
 			Some(c) if c >= 3 => {
 				return false;
@@ -2378,7 +2378,7 @@ impl Rule {
 	}
 
 	pub fn check_sennichite_by_oute(banmen:&Banmen,teban:&Teban,mhash:u64,shash:u64,
-									oute_kyokumen_hash_map:&mut Option<TwoKeyHashMap<u32>>)
+									oute_kyokumen_hash_map:&mut Option<TwoKeyHashMap<u64,u32>>)
 		-> bool {
 
 		match *oute_kyokumen_hash_map {

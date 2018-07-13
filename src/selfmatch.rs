@@ -612,7 +612,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				let mut current_game_time_limit = [game_time_limit,game_time_limit];
 				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
 
-				let kyokumen_hash_map:TwoKeyHashMap<u32> = TwoKeyHashMap::new();
+				let kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
 				let hasher = KyokumenHash::new();
 
 				let (ms,mg) = match mc {
@@ -636,7 +636,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					 mut shash,
 					 mut kyokumen_hash_map) = Rule::apply_moves(&banmen,teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
 
-				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u32>>; 2] = [None,None];
+				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u64,u32>>; 2] = [None,None];
 
 				while end_time.map_or(true, |t| Instant::now() - start_time < t)  && !(match notify_quit.lock() {
 					Ok(notify_quit) => {

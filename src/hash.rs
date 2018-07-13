@@ -1,24 +1,29 @@
 use std::collections::HashMap;
+use std::hash::Hash;
+use std::ops::Add;
+use std::ops::Sub;
+use std::ops::BitXor;
 use rand;
 use rand::Rng;
+use rand::Rand;
 use std::num::Wrapping;
 
 use shogi::*;
 
-pub struct TwoKeyHashMap<T> where T: Clone {
-	map:HashMap<u64,Vec<(u64,T)>>
+pub struct TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+	map:HashMap<K,Vec<(K,T)>>
 }
 
-impl<T> TwoKeyHashMap<T> where T: Clone {
-	pub fn new() -> TwoKeyHashMap<T> {
-		let map:HashMap<u64,Vec<(u64,T)>> = HashMap::new();
+impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+	pub fn new() -> TwoKeyHashMap<K,T> {
+		let map:HashMap<K,Vec<(K,T)>> = HashMap::new();
 
 		TwoKeyHashMap {
 			map:map
 		}
 	}
 
-	pub fn get(&self,k:&u64,sk:&u64) -> Option<T> where T: Clone {
+	pub fn get(&self,k:&K,sk:&K) -> Option<T> {
 		match self.map.get(k) {
 			Some(v) if v.len() == 1 => {
 				Some(v[0].1.clone())
@@ -35,7 +40,7 @@ impl<T> TwoKeyHashMap<T> where T: Clone {
 		}
 	}
 
-	pub fn insert(&mut self,k:u64,sk:u64,nv:T) -> Option<T> {
+	pub fn insert(&mut self,k:K,sk:K,nv:T) -> Option<T> {
 		match self.map.get_mut(&k) {
 			Some(ref mut v) if v.len() == 1 => {
 				if v[0].0 == sk {
@@ -60,7 +65,7 @@ impl<T> TwoKeyHashMap<T> where T: Clone {
 			},
 			_ => (),
 		}
-		let mut v:Vec<(u64,T)> = Vec::new();
+		let mut v:Vec<(K,T)> = Vec::new();
 		v.push((sk,nv));
 		self.map.insert(k,v);
 		None
@@ -70,8 +75,8 @@ impl<T> TwoKeyHashMap<T> where T: Clone {
 		self.map.clear();
 	}
 }
-impl<T> Clone for TwoKeyHashMap<T> where T: Clone {
-	fn clone(&self) -> TwoKeyHashMap<T> {
+impl<K,T> Clone for TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+	fn clone(&self) -> TwoKeyHashMap<K,T> {
 		TwoKeyHashMap {
 			map:self.map.clone()
 		}
@@ -83,27 +88,51 @@ const MOCHIGOMA_MAX:usize = 18;
 const SUJI_MAX:usize = 9;
 const DAN_MAX:usize = 9;
 
-pub struct KyokumenHash {
-	kyokumen_hash_seeds:[[u64; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1],
-	mochigoma_hash_seeds:[[[u64; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2],
+pub trait InitialHash {
+	const INITIAL_HASH:Self;
 }
-impl KyokumenHash {
-	pub fn new() -> KyokumenHash {
+/*
+impl InitialHash for u128 {
+	const INITIAL_HASH:u128 = 0;
+}
+*/
+impl InitialHash for u64 {
+	const INITIAL_HASH:u64 = 0;
+}
+impl InitialHash for u32 {
+	const INITIAL_HASH:u32 = 0;
+}
+impl InitialHash for u16 {
+	const INITIAL_HASH:u16 = 0;
+}
+impl InitialHash for u8 {
+	const INITIAL_HASH:u8 = 0;
+}
+pub struct KyokumenHash<T>
+	where T: Add + Sub + BitXor<Output = T> + Rand + Copy + InitialHash,
+			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy {
+	kyokumen_hash_seeds:[[T; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1],
+	mochigoma_hash_seeds:[[[T; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2],
+}
+impl<T> KyokumenHash<T>
+	where T: Add + Sub + BitXor<Output = T> + Rand + Copy + InitialHash,
+			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy {
+	pub fn new() -> KyokumenHash<T> {
 		let mut rnd = rand::XorShiftRng::new_unseeded();
 
-		let mut kyokumen_hash_seeds:[[u64; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1] = [[0; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1];
-		let mut mochigoma_hash_seeds:[[[u64; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2] = [[[0; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2];
+		let mut kyokumen_hash_seeds:[[T; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1] = [[T::INITIAL_HASH; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1];
+		let mut mochigoma_hash_seeds:[[[T; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2] = [[[T::INITIAL_HASH; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2];
 
 		for i in 0..(KOMA_KIND_MAX + 1) {
 			for j in 0..(SUJI_MAX * DAN_MAX) {
-				kyokumen_hash_seeds[i][j] = rnd.next_u64();
+				kyokumen_hash_seeds[i][j] = rnd.gen();
 			}
 		}
 
 		for i in 0..MOCHIGOMA_MAX {
 			for j in 0..(MOCHIGOMA_KIND_MAX + 1) {
-				mochigoma_hash_seeds[0][i][j] = rnd.next_u64();
-				mochigoma_hash_seeds[1][i][j] = rnd.next_u64();
+				mochigoma_hash_seeds[0][i][j] = rnd.gen();
+				mochigoma_hash_seeds[1][i][j] = rnd.gen();
 			}
 		}
 
@@ -113,9 +142,9 @@ impl KyokumenHash {
 		}
 	}
 
-	fn calc_hash<AF,PF>(&self,h:u64,t:&Teban,b:&Banmen,mc:&MochigomaCollections,
+	fn calc_hash<AF,PF>(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,
 												m:&Move,obtained:&Option<MochigomaKind>,add:AF,pull:PF)
-		-> u64 where AF: Fn(u64,u64) -> u64, PF: Fn(u64,u64) -> u64 {
+		-> T where AF: Fn(T,T) -> T, PF: Fn(T,T) -> T {
 		match b {
 			&Banmen(ref kinds) => {
 				match m {
@@ -265,11 +294,11 @@ impl KyokumenHash {
 		}
 	}
 
-	pub fn calc_main_hash(&self,h:u64,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&Move,obtained:&Option<MochigomaKind>) -> u64 {
+	pub fn calc_main_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&Move,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| h ^ v, |h,v| h ^ v)
 	}
 
-	pub fn calc_sub_hash(&self,h:u64,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&Move,obtained:&Option<MochigomaKind>) -> u64 {
+	pub fn calc_sub_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&Move,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| {
 			let h = Wrapping(h);
 			let v = Wrapping(v);
@@ -283,9 +312,9 @@ impl KyokumenHash {
 
 
 	pub fn calc_initial_hash(&self,b:&Banmen,
-		ms:&HashMap<MochigomaKind,u32>,mg:&HashMap<MochigomaKind,u32>) -> (u64,u64) {
-		let mut mhash:u64 = 0;
-		let mut shash:Wrapping<u64> = Wrapping(0u64);
+		ms:&HashMap<MochigomaKind,u32>,mg:&HashMap<MochigomaKind,u32>) -> (T,T) {
+		let mut mhash:T = T::INITIAL_HASH;
+		let mut shash:Wrapping<T> = Wrapping(T::INITIAL_HASH);
 
 		match b {
 			&Banmen(ref kinds) => {
