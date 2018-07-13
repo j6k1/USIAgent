@@ -456,6 +456,30 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					};
 				};
 
+				match self_match_event_queue_inner.lock() {
+					Ok(mut self_match_event_queue) => {
+						self_match_event_queue.push(SelfMatchEvent::GameEnd(s));
+					},
+					Err(ref e) => {
+						on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+						win_cs.send(SelfMatchMessage::Error(0))?;
+						lose_cs.send(SelfMatchMessage::Error(1))?;
+
+						match quit_ready_inner.lock() {
+							Ok(mut quit_ready) => {
+								*quit_ready = true;
+							},
+							Err(ref e) => {
+								on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+							}
+						};
+
+						return Err(SelfMatchRunningError::InvalidState(String::from(
+							"Exclusive lock on self_match_event_queue failed."
+						)));
+					}
+				}
+
 				for current_cs in &[win_cs.clone(),lose_cs.clone()] {
 					current_cs.send(SelfMatchMessage::GameEnd(message_state))?;
 					match sr.recv()? {
@@ -489,29 +513,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					}
 					message_state = GameEndState::Lose;
 				}
-				Ok(match self_match_event_queue_inner.lock() {
-					Ok(mut self_match_event_queue) => {
-						self_match_event_queue.push(SelfMatchEvent::GameEnd(s));
-					},
-					Err(ref e) => {
-						on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-						win_cs.send(SelfMatchMessage::Error(0))?;
-						lose_cs.send(SelfMatchMessage::Error(1))?;
-
-						match quit_ready_inner.lock() {
-							Ok(mut quit_ready) => {
-								*quit_ready = true;
-							},
-							Err(ref e) => {
-								on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-							}
-						};
-
-						return Err(SelfMatchRunningError::InvalidState(String::from(
-							"Exclusive lock on self_match_event_queue failed."
-						)));
-					}
-				})
+				Ok(())
 			};
 
 			let mut game_count = 0;
