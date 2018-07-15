@@ -473,10 +473,10 @@ pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
 											UE: PlayerError,
 											EventHandlerError<K,UE>: From<UE>,
 											usize: From<K> {
-	fn add_handler<F>(&mut self, id:K, handler:F) where F: Fn(&T,&E) ->
+	fn add_handler<F>(&mut self, id:K, handler:F) where F: FnMut(&T,&E) ->
 													Result<(), EventHandlerError<K,UE>> + 'b;
 
-	fn add_once_handler<F>(&mut self, id:K, handler:F) where F: Fn(&T,&E) ->
+	fn add_once_handler<F>(&mut self, id:K, handler:F) where F: FnMut(&T,&E) ->
 													Result<(), EventHandlerError<K,UE>> + 'b;
 
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
@@ -496,8 +496,8 @@ pub struct USIEventDispatcher<'b,K,E,T,L,UE>
 	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>,
 	context_type:PhantomData<T>,
 	event_kind:PhantomData<K>,
-	handlers:Vec<Vec<Box<Fn(&T,&E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
-	once_handlers:Vec<Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
+	handlers:Vec<Vec<Box<FnMut(&T,&E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
+	once_handlers:Vec<Vec<Box<FnMut(&T, &E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
 }
 impl<'b,K,E,T,L,UE> USIEventDispatcher<'b,K,E,T,L,UE>
 	where K: MaxIndex + fmt::Debug,
@@ -533,12 +533,12 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 																		UE: PlayerError,
 																		EventHandlerError<K,UE>: From<UE>,
 																		usize: From<K> {
-	fn add_handler<F>(&mut self, id:K, handler:F) where F: Fn(&T,&E) ->
+	fn add_handler<F>(&mut self, id:K, handler:F) where F: FnMut(&T,&E) ->
 											Result<(), EventHandlerError<K,UE>> + 'b {
 		self.handlers[usize::from(id)].push(Box::new(handler));
 	}
 
-	fn add_once_handler<F>(&mut self, id:K, handler:F) where F: Fn(&T,&E) ->
+	fn add_once_handler<F>(&mut self, id:K, handler:F) where F: FnMut(&T,&E) ->
 											Result<(), EventHandlerError<K,UE>> + 'b {
 		self.once_handlers[usize::from(id)].push(Box::new(handler));
 	}
@@ -553,7 +553,7 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 		let mut has_error = false;
 
 		for e in &events {
-			for h in &self.handlers[usize::from(e.event_kind())] {
+			for h in self.handlers[usize::from(e.event_kind())].iter_mut() {
 				match h(ctx, e) {
 					Ok(_) => true,
 					Err(ref e) => {
@@ -564,10 +564,10 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 			}
 
 			if !self.once_handlers[usize::from(e.event_kind())].is_empty() {
-				let once_handlers:Vec<Box<Fn(&T, &E) -> Result<(), EventHandlerError<K,UE>>>> =
+				let mut once_handlers:Vec<Box<FnMut(&T, &E) -> Result<(), EventHandlerError<K,UE>>>> =
 											self.once_handlers[usize::from(e.event_kind())].drain(0..)
 																							.collect();
-				for h in &once_handlers {
+				for h in once_handlers.iter_mut() {
 					match h(ctx, e) {
 						Ok(_) => true,
 						Err(ref e) => {
