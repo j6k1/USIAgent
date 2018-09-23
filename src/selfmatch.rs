@@ -15,6 +15,8 @@ use rule;
 use rule::*;
 use protocol::*;
 
+use chrono::prelude::*;
+
 use std::error::Error;
 use std::fmt;
 use std::{thread};
@@ -112,6 +114,13 @@ pub enum SelfMatchMessage {
 	Error(usize),
 }
 #[derive(Debug)]
+pub struct SelfMatchResult {
+	pub game_count:u32,
+	pub elapsed:Duration,
+	pub start_dt:DateTime<Local>,
+	pub end_dt:DateTime<Local>,
+}
+#[derive(Debug)]
 pub struct SelfMatchEngine<T,E,S>
 	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
 			E: PlayerError,
@@ -162,7 +171,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
-						on_error:EH) -> Result<(),SelfMatchRunningError>
+						on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
 				OE: Error + fmt::Debug,
@@ -190,7 +199,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
-						mut on_error:EH) -> Result<(),SelfMatchRunningError>
+						mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
 				OE: Error + fmt::Debug,
@@ -228,7 +237,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
-						logger:L, mut on_error:EH) -> Result<(),SelfMatchRunningError>
+						logger:L, mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
@@ -269,7 +278,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						logger_arc:Arc<Mutex<L>>,
-						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),SelfMatchRunningError>
+						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
@@ -282,6 +291,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static {
 		let start_time = Instant::now();
+		let start_dt = Local::now();
 
 		let mut self_match_event_dispatcher = USIEventDispatcher::<
 														SelfMatchEventKind,
@@ -888,7 +898,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 							quit_notification();
 
-							return Ok(());
+							return Ok(SelfMatchResult {
+								game_count: game_count,
+								elapsed: start_time.elapsed(),
+								start_dt:start_dt,
+								end_dt:Local::now(),
+							});
 						},
 						_ => {
 							cs[0].send(SelfMatchMessage::Error(0))?;
@@ -908,7 +923,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 			quit_notification();
 
-			Ok(())
+			Ok(SelfMatchResult {
+				game_count: game_count,
+				elapsed: start_time.elapsed(),
+				start_dt:start_dt,
+				end_dt:Local::now()
+			})
 		}, on_error_handler.clone()).map_err(|e| {
 			match e {
 				SelfMatchRunningError::SendError(SendError(SelfMatchMessage::Error(n))) => {
@@ -1214,7 +1234,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let mut has_error = false;
 
-		bridge_h.join().map_err(|_| {
+		let result = bridge_h.join().map_err(|_| {
 			has_error = true;
 			logger.lock().map(|mut logger| {
 				logger.logging(&format!("Main thread join failed."))
@@ -1222,13 +1242,13 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 				false
 			}).is_err();
-		}).map(|r| {
-			r.map_err(|e| {
-				has_error = true;
-				on_error_handler.lock().map(|h| h.call(&e)).is_err();
-				e
-			}).is_err()
-		}).is_err();
+		}).unwrap_or(Err(SelfMatchRunningError::ThreadJoinFailed(String::from(
+			"Main thread join failed."
+		)))).map_err(|e| {
+			has_error = true;
+			on_error_handler.lock().map(|h| h.call(&e)).is_err();
+			e
+		});
 
 		for h in handlers {
 			h.join().map_err(|_| {
@@ -1253,7 +1273,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				"An error occurred while executing a self match. Please see the log for details ..."
 			)))
 		} else {
-			Ok(())
+			result
 		}
 	}
 }

@@ -70,8 +70,8 @@ pub struct SandBox {
 
 }
 impl SandBox {
-	pub fn immediate<F,E,L>(f:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E>
-	where E: Error, F: FnOnce() -> Result<(),E>, L: Logger {
+	pub fn immediate<F,R,E,L>(f:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<R,E>
+	where E: Error, F: FnOnce() -> Result<R,E>, L: Logger {
 		let r = f();
 		match r {
 			Ok(_) => (),

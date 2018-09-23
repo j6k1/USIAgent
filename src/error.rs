@@ -444,6 +444,7 @@ pub enum SelfMatchRunningError {
 	IOError(io::Error),
 	RecvError(RecvError),
 	SendError(SendError<SelfMatchMessage>),
+	ThreadJoinFailed(String),
 	Fail(String),
 }
 impl fmt::Display for SelfMatchRunningError {
@@ -453,6 +454,7 @@ impl fmt::Display for SelfMatchRunningError {
 		 	SelfMatchRunningError::IOError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::RecvError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::SendError(ref e) => write!(f,"{}",e),
+		 	SelfMatchRunningError::ThreadJoinFailed(ref s) => write!(f,"{}",s),
 		 	SelfMatchRunningError::Fail(ref s) => write!(f,"{}",s),
 	 	}
 	 }
@@ -464,6 +466,7 @@ impl error::Error for SelfMatchRunningError {
 		 	SelfMatchRunningError::IOError(_) => "IO Error.",
 		 	SelfMatchRunningError::RecvError(_) => "An error occurred when receiving the message.",
 		 	SelfMatchRunningError::SendError(_) => "An error occurred while sending the message.",
+			SelfMatchRunningError::ThreadJoinFailed(_) => "An panic occurred in child thread.",
 	 		SelfMatchRunningError::Fail(_) => "An error occurred while running the self-match.",
 	 	}
 	 }
@@ -474,6 +477,7 @@ impl error::Error for SelfMatchRunningError {
 	 		SelfMatchRunningError::IOError(ref e) => Some(e),
 	 		SelfMatchRunningError::RecvError(ref e) => Some(e),
 	 		SelfMatchRunningError::SendError(ref e) => Some(e),
+	 		SelfMatchRunningError::ThreadJoinFailed(_) => None,
 	 		SelfMatchRunningError::Fail(_) => None,
 	 	}
 	 }
