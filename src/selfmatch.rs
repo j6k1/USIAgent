@@ -124,7 +124,6 @@ pub struct SelfMatchResult {
 pub struct SelfMatchEngine<T,E,S>
 	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
 			E: PlayerError,
-			EventHandlerError<SystemEventKind, E>: From<E>,
 			S: InfoSender,
 			Arc<Mutex<S>>: Send + 'static {
 	player_error_type:PhantomData<E>,
@@ -139,7 +138,6 @@ pub struct SelfMatchEngine<T,E,S>
 impl<T,E,S> SelfMatchEngine<T,E,S>
 	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
 			E: PlayerError,
-			EventHandlerError<SystemEventKind, E>: From<E>,
 			S: InfoSender,
 			Arc<Mutex<S>>: Send + 'static {
 	pub fn new(player1:T,player2:T,
