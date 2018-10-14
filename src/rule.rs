@@ -2458,4 +2458,18 @@ impl Rule {
 			}
 		}
 	}
+
+	pub fn create_initial_mochigoma_hashmap() -> HashMap<MochigomaKind,u32> {
+		let mut m:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		m.insert(MochigomaKind::Fu, 9);
+		m.insert(MochigomaKind::Kyou, 2);
+		m.insert(MochigomaKind::Kei, 2);
+		m.insert(MochigomaKind::Gin, 2);
+		m.insert(MochigomaKind::Kin, 2);
+		m.insert(MochigomaKind::Kaku, 1);
+		m.insert(MochigomaKind::Hisha, 1);
+
+		m
+	}
 }
