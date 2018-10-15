@@ -2459,7 +2459,7 @@ impl Rule {
 		}
 	}
 
-	pub fn create_initial_mochigoma_hashmap() -> HashMap<MochigomaKind,u32> {
+	pub fn filled_mochigoma_hashmap() -> HashMap<MochigomaKind,u32> {
 		let mut m:HashMap<MochigomaKind,u32> = HashMap::new();
 
 		m.insert(MochigomaKind::Fu, 9);
