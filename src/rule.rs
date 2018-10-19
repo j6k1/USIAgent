@@ -1899,6 +1899,35 @@ impl Rule {
 		(teban,banmen,mc,mhash,shash,kyokumen_hash_map)
 	}
 
+
+	pub fn apply_moves_with_callback<T,F>(
+						banmen:&Banmen,
+						mut teban:Teban,
+						mut mc:MochigomaCollections,
+						m:&Vec<Move>,mut r:T,mut f:F)
+		-> (Teban,Banmen,MochigomaCollections,T)
+		where F: FnMut(&Banmen,&Teban,
+						&MochigomaCollections,&Option<Move>,
+						&Option<MochigomaKind>,T) -> T {
+
+		let mut banmen = banmen.clone();
+
+		for m in m {
+			match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+				(next,nmc,o) => {
+					r = f(&banmen,&teban,&mc,&Some(*m),&o,r);
+					banmen = next;
+					mc = nmc;
+					teban = teban.opposite();
+				}
+			}
+		}
+
+		r = f(&banmen,&teban,&mc,&None,&None,r);
+
+		(teban,banmen,mc,r)
+	}
+
 	pub fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
 		if Rule::win_only_moves(&t.opposite(),banmen).len() > 0 {
 			return false
