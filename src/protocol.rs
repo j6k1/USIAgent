@@ -452,6 +452,12 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 
 							let n = ns.parse::<u32>()?;
 
+							if n == 1 {
+								return Err(TypeConvertError::LogicError(String::from(
+									"Invalid SFEN character string (the number of pieces is illegal.).")
+								));
+							}
+
 							match t {
 								Teban::Sente => {
 									let n = match sente.get(&k) {
@@ -472,9 +478,24 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 							}
 						},
 						_ => {
-							return Err(TypeConvertError::SyntaxError(
-								String::from("Invalid SFEN character string (no number of pieces count)"
-							)));
+							match t {
+								Teban::Sente => {
+									let n = match sente.get(&k) {
+										Some(count) => count+1,
+										None => 1,
+									};
+
+									sente.insert(k,n);
+								},
+								Teban::Gote => {
+									let n = match gote.get(&k) {
+										Some(count) => count+1,
+										None => 1,
+									};
+
+									gote.insert(k,n);
+								},
+							}
 						}
 					}
 				}
@@ -877,9 +898,11 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 
 				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_GOTE {
 					if let Some(n) = mg.get(&k) {
-						if *n > 0 {
+						if *n > 1 {
 							sfen.push(c);
 							sfen.push_str(&n.to_string());
+						} else if *n == 1 {
+							sfen.push(c);
 						}
 					}
 				}
