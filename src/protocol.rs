@@ -506,7 +506,7 @@ impl PositionParser {
 			"sfen" => self.parse_sfen(&params[1..]),
 			_ => {
 				Err(TypeConvertError::SyntaxError(String::from(
-					"The input form of the go command is invalid. (Insufficient parameters)"
+					"The input form of the position command is invalid. (Insufficient parameters)"
 				)))
 			}
 		}
