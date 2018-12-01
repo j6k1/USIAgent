@@ -438,7 +438,7 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 							let mut ns = String::new();
 							ns.push(n);
 
-							let mut nnchars = chars.clone();
+							let mut nnchars = nchars.clone();
 
 							while let Some(next) = nnchars.next() {
 								match next {
