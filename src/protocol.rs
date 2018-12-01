@@ -431,20 +431,23 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 						}
 					};
 
-					match chars.next() {
+					let mut nchars = chars.clone();
+
+					match nchars.next() {
 						Some(n) if n >= '1' && n <= '9' => {
 							let mut ns = String::new();
 							ns.push(n);
 
-							let mut nchars = chars.clone();
+							let mut nnchars = chars.clone();
 
-							while let Some(next) = nchars.next() {
+							while let Some(next) = nnchars.next() {
 								match next {
 									'0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
 										ns.push(next);
-										chars.clone_from(&nchars);
+										chars.clone_from(&nnchars);
 									},
 									_ => {
+										chars.clone_from(&nchars);
 										break;
 									}
 								}
