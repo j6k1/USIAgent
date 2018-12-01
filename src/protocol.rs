@@ -438,16 +438,17 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 							let mut ns = String::new();
 							ns.push(n);
 
-							let mut nnchars = nchars.clone();
+							chars.clone_from(&nchars);
 
-							while let Some(next) = nnchars.next() {
+							let mut nchars = chars.clone();
+
+							while let Some(next) = nchars.next() {
 								match next {
 									'0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
 										ns.push(next);
-										chars.clone_from(&nnchars);
+										chars.clone_from(&nchars);
 									},
 									_ => {
-										chars.clone_from(&nchars);
 										break;
 									}
 								}
