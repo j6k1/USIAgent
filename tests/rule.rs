@@ -906,6 +906,52 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_inside_gote() {
 		}
 	}
 }
+#[test]
+fn test_legal_moves_banmen_with_kaku_nari_border_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	let mut wall_banmen = blank_banmen.clone();
+
+	for x in 0..9 {
+		wall_banmen.0[2][x] = GFu;
+	}
+
+	let mut banmen = wall_banmen.clone();
+
+	banmen.0[4][4] = SKaku;
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			match m {
+				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+			}
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_banmen_with_kaku_nari_border_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	let mut wall_banmen = blank_banmen.clone();
+
+	for x in 0..9 {
+		wall_banmen.0[6][x] = SFu;
+	}
+
+	let mut banmen = wall_banmen.clone();
+
+	banmen.0[4][4] = GKaku;
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			match m {
+				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+			}
+		}).collect::<Vec<LegalMove>>()
+	);
+}
 fn find_from_move_to(mvs:&Vec<LegalMove>,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
 	match query {
 		&(ref s, ref d) => {
