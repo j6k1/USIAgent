@@ -148,6 +148,12 @@ pub enum ObtainKind {
 	Kaku,
 	Hisha,
 	Ou,
+	FuN,
+	KyouN,
+	KeiN,
+	GinN,
+	KakuN,
+	HishaN,
 }
 impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
 	fn try_from(kind:KomaKind) -> Result<ObtainKind,TypeConvertError<String>> {
@@ -160,12 +166,12 @@ impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
 			KomaKind::SKaku => ObtainKind::Kaku,
 			KomaKind::SHisha => ObtainKind::Hisha,
 			KomaKind::SOu => ObtainKind::Ou,
-			KomaKind::SFuN => ObtainKind::Fu,
-			KomaKind::SKyouN => ObtainKind::Kyou,
-			KomaKind::SKeiN => ObtainKind::Kei,
-			KomaKind::SGinN => ObtainKind::Gin,
-			KomaKind::SKakuN => ObtainKind::Kaku,
-			KomaKind::SHishaN => ObtainKind::Hisha,
+			KomaKind::SFuN => ObtainKind::FuN,
+			KomaKind::SKyouN => ObtainKind::KyouN,
+			KomaKind::SKeiN => ObtainKind::KeiN,
+			KomaKind::SGinN => ObtainKind::GinN,
+			KomaKind::SKakuN => ObtainKind::KakuN,
+			KomaKind::SHishaN => ObtainKind::HishaN,
 			KomaKind::GFu => ObtainKind::Fu,
 			KomaKind::GKyou => ObtainKind::Kyou,
 			KomaKind::GKei => ObtainKind::Kei,
@@ -174,12 +180,12 @@ impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
 			KomaKind::GKaku => ObtainKind::Kaku,
 			KomaKind::GHisha => ObtainKind::Hisha,
 			KomaKind::GOu => ObtainKind::Ou,
-			KomaKind::GFuN => ObtainKind::Fu,
-			KomaKind::GKyouN => ObtainKind::Kyou,
-			KomaKind::GKeiN => ObtainKind::Kei,
-			KomaKind::GGinN => ObtainKind::Gin,
-			KomaKind::GKakuN => ObtainKind::Kaku,
-			KomaKind::GHishaN => ObtainKind::Hisha,
+			KomaKind::GFuN => ObtainKind::FuN,
+			KomaKind::GKyouN => ObtainKind::KyouN,
+			KomaKind::GKeiN => ObtainKind::KeiN,
+			KomaKind::GGinN => ObtainKind::GinN,
+			KomaKind::GKakuN => ObtainKind::KakuN,
+			KomaKind::GHishaN => ObtainKind::HishaN,
 			KomaKind::Blank => {
 				return Err(TypeConvertError::LogicError(String::from("Can not  to convert Blank to ObtainKind.")));
 			}
@@ -199,13 +205,13 @@ pub enum MochigomaKind {
 impl TryFrom<ObtainKind,TypeConvertError<String>> for MochigomaKind {
 	fn try_from(o:ObtainKind) -> Result<MochigomaKind,TypeConvertError<String>> {
 		Ok(match o {
-			ObtainKind::Fu => MochigomaKind::Fu,
-			ObtainKind::Kyou => MochigomaKind::Kyou,
-			ObtainKind::Kei => MochigomaKind::Kei,
-			ObtainKind::Gin => MochigomaKind::Gin,
+			ObtainKind::Fu | ObtainKind::FuN => MochigomaKind::Fu,
+			ObtainKind::Kyou | ObtainKind::KyouN=> MochigomaKind::Kyou,
+			ObtainKind::Kei | ObtainKind::KeiN => MochigomaKind::Kei,
+			ObtainKind::Gin | ObtainKind::GinN => MochigomaKind::Gin,
 			ObtainKind::Kin => MochigomaKind::Kin,
-			ObtainKind::Kaku => MochigomaKind::Kaku,
-			ObtainKind::Hisha => MochigomaKind::Hisha,
+			ObtainKind::Kaku | ObtainKind::KakuN => MochigomaKind::Kaku,
+			ObtainKind::Hisha | ObtainKind::HishaN => MochigomaKind::Hisha,
 			ObtainKind::Ou => {
 				return Err(TypeConvertError::LogicError(String::from("Can not  to convert Ou to MochigomaKind.")));
 			}
