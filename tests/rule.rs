@@ -7,10 +7,10 @@ use usiagent::TryFrom;
 use usiagent::Find;
 use usiagent::shogi::*;
 use usiagent::error::*;
-#[allow(dead_code)]
 use usiagent::rule;
+use usiagent::rule::Rule;
 use usiagent::hash::*;
-#[allow(dead_code)]
+#[allow(unused)]
 use usiagent::shogi::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
 
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
@@ -23,6 +23,48 @@ impl LegalMove {
 		match self  {
 			&LegalMove::To(ref ms, ref md, _) => Move::To(*ms,*md),
 			&LegalMove::Put(ref mk, ref md) => Move::Put(*mk,*md),
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kaku_all_position_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[y][x] = SKaku;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+					match m {
+						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+					}
+				}).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kaku_all_position_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8-y][8-x] = GKaku;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+					match m {
+						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+					}
+				}).collect::<Vec<LegalMove>>()
+			);
 		}
 	}
 }
