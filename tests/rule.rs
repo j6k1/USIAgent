@@ -1901,7 +1901,7 @@ fn test_legal_moves_banmen_with_kakun_nari_border_gote() {
 	);
 }
 #[test]
-fn test_legal_moves_banmen_with_kakun_contiguous_sente() {
+fn test_legal_moves_banmen_with_kaku_nari_contiguous_sente() {
 	const KOMAKINDS:[KomaKind; 2] = [SFu,GFu];
 
 	const OFFSETS:[(i32,i32); 4] = [
@@ -1930,7 +1930,7 @@ fn test_legal_moves_banmen_with_kakun_contiguous_sente() {
 	}
 }
 #[test]
-fn test_legal_moves_banmen_with_kakun_contiguous_gote() {
+fn test_legal_moves_banmen_with_kaku_nari_contiguous_gote() {
 	const KOMAKINDS:[KomaKind; 2] = [GFu,SFu];
 
 	const OFFSETS:[(i32,i32); 4] = [
@@ -2311,7 +2311,7 @@ fn test_legal_moves_banmen_with_kaku_nari_prev_occupied_righttop_to_leftbottom_g
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_7_squares_sente() {
+fn test_legal_moves_banmen_with_kaku_nari_7_squares_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	for y in 0..9 {
@@ -2330,7 +2330,7 @@ fn test_legal_moves_with_kaku_nari_7_squares_sente() {
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_8_squares_sente() {
+fn test_legal_moves_banmen_with_kaku_nari_8_squares_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	for y in 0..9 {
@@ -2349,7 +2349,7 @@ fn test_legal_moves_with_kaku_nari_8_squares_sente() {
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_7_squares_gote() {
+fn test_legal_moves_banmen_with_kaku_nari_7_squares_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	for y in 0..9 {
@@ -2357,8 +2357,8 @@ fn test_legal_moves_with_kaku_nari_7_squares_gote() {
 
 		banmen.0[y][6] = GKaku;
 
-		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
-			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
 				match m {
 					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
 					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
@@ -2368,7 +2368,7 @@ fn test_legal_moves_with_kaku_nari_7_squares_gote() {
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_8_squares_gote() {
+fn test_legal_moves_banmen_with_kaku_nari_8_squares_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	for y in 0..9 {
@@ -2376,8 +2376,8 @@ fn test_legal_moves_with_kaku_nari_8_squares_gote() {
 
 		banmen.0[y][7] = GKaku;
 
-		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
-			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
 				match m {
 					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
 					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
@@ -2387,14 +2387,14 @@ fn test_legal_moves_with_kaku_nari_8_squares_gote() {
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_7_squares_and_contiguous_sente() {
+fn test_legal_moves_banmen_with_kaku_nari_7_squares_and_contiguous_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const OFFSETS:[(i32,i32); 4] = [
-		(-1,-1),
-		(-1,1),
-		(1,-1),
-		(1,1)
+		(-1,0),
+		(0,-1),
+		(0,1),
+		(1,0)
 	];
 
 	for y in 0..9 {
@@ -2403,9 +2403,11 @@ fn test_legal_moves_with_kaku_nari_7_squares_and_contiguous_sente() {
 
 			banmen.0[y][6] = SKakuN;
 
-			if y as i32 + o.1 >= 0 && y as i32 + o.1 <= 8 {
-				banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = SFu;
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
 			}
+
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = SFu;
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
@@ -2419,14 +2421,14 @@ fn test_legal_moves_with_kaku_nari_7_squares_and_contiguous_sente() {
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_8_squares_and_contiguous_sente() {
+fn test_legal_moves_banmen_with_kaku_nari_8_squares_and_contiguous_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const OFFSETS:[(i32,i32); 4] = [
-		(-1,-1),
-		(-1,1),
-		(1,-1),
-		(1,1)
+		(-1,0),
+		(0,-1),
+		(0,1),
+		(1,0)
 	];
 
 	for y in 0..9 {
@@ -2435,9 +2437,11 @@ fn test_legal_moves_with_kaku_nari_8_squares_and_contiguous_sente() {
 
 			banmen.0[y][7] = SKakuN;
 
-			if y as i32 + o.1 >= 0 && y as i32 + o.1 <= 8 {
-				banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = SFu;
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
 			}
+
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = SFu;
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
@@ -2451,14 +2455,14 @@ fn test_legal_moves_with_kaku_nari_8_squares_and_contiguous_sente() {
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_7_squares_and_contiguous_gote() {
+fn test_legal_moves_banmen_with_kaku_nari_7_squares_and_contiguous_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const OFFSETS:[(i32,i32); 4] = [
-		(-1,-1),
-		(-1,1),
-		(1,-1),
-		(1,1)
+		(-1,0),
+		(0,-1),
+		(0,1),
+		(1,0)
 	];
 
 	for y in 0..9 {
@@ -2467,12 +2471,14 @@ fn test_legal_moves_with_kaku_nari_7_squares_and_contiguous_gote() {
 
 			banmen.0[y][6] = GKakuN;
 
-			if y as i32 + o.1 >= 0 && y as i32 + o.1 <= 8 {
-				banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = GFu;
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
 			}
 
-			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
-				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = GFu;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
 					match m {
 						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
 						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
@@ -2483,7 +2489,307 @@ fn test_legal_moves_with_kaku_nari_7_squares_and_contiguous_gote() {
 	}
 }
 #[test]
-fn test_legal_moves_with_kaku_nari_8_squares_and_contiguous_gote() {
+fn test_legal_moves_banmen_with_kaku_nari_8_squares_and_contiguous_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const OFFSETS:[(i32,i32); 4] = [
+		(-1,0),
+		(0,-1),
+		(0,1),
+		(1,0)
+	];
+
+	for y in 0..9 {
+		for o in &OFFSETS {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[y][7] = GKakuN;
+
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
+			}
+
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = GFu;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+					match m {
+						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+					}
+				}).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_corner_sente() {
+	const POSITIONS:[(usize,usize); 16] = [
+		(0,0),(0,1),(1,0),(1,1),
+		(0,7),(0,8),(1,7),(1,8),
+		(7,0),(7,1),(8,0),(8,1),
+		(7,7),(7,8),(8,7),(8,8)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for p in &POSITIONS {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[p.1][p.0] = SHisha;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_corner_gote() {
+	const POSITIONS:[(usize,usize); 16] = [
+		(0,0),(0,1),(1,0),(1,1),
+		(0,7),(0,8),(1,7),(1,8),
+		(7,0),(7,1),(8,0),(8,1),
+		(7,7),(7,8),(8,7),(8,8)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for p in &POSITIONS {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8 - p.1][8 - p.0] = GHisha;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_border_sente() {
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		banmen.0[2][x] = GFu;
+	}
+
+	banmen.0[3][4] = SHisha;
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			match m {
+				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+			}
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_border_gote() {
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		banmen.0[6][x] = SFu;
+	}
+
+	banmen.0[5][4] = GHisha;
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+			match m {
+				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+			}
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_dst_occupied_self_sente() {
+	const OFFSETS:[(i32,i32); 8] = [
+		(-2,0),(-1,0),(0,-2),(0,-1),(0,1),(0,2),(1,0),(2,0)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for o in &OFFSETS {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = SHisha;
+
+		banmen.0[(4+o.1) as usize][(4+o.0) as usize] = SFu;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_dst_occupied_opponent_sente() {
+	const OFFSETS:[(i32,i32); 8] = [
+		(-2,0),(-1,0),(0,-2),(0,-1),(0,1),(0,2),(1,0),(2,0)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for o in &OFFSETS {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = SHisha;
+
+		banmen.0[(4+o.1) as usize][(4+o.0) as usize] = GFu;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_dst_occupied_self_gote() {
+	const OFFSETS:[(i32,i32); 8] = [
+		(-2,0),(-1,0),(0,-2),(0,-1),(0,1),(0,2),(1,0),(2,0)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for o in &OFFSETS {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = GHisha;
+
+		banmen.0[(4+o.1) as usize][(4+o.0) as usize] = GFu;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_dst_occupied_opponent_gote() {
+	const OFFSETS:[(i32,i32); 8] = [
+		(-2,0),(-1,0),(0,-2),(0,-1),(0,1),(0,2),(1,0),(2,0)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for o in &OFFSETS {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = GHisha;
+
+		banmen.0[(4+o.1) as usize][(4+o.0) as usize] = SFu;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_7_squares_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y][6] = SHisha;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_8_squares_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y][7] = SHisha;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_7_squares_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y][6] = GHisha;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_8_squares_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y][7] = GHisha;
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				match m {
+					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+				}
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_7_squares_and_contiguous_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const OFFSETS:[(i32,i32); 4] = [
@@ -2497,14 +2803,118 @@ fn test_legal_moves_with_kaku_nari_8_squares_and_contiguous_gote() {
 		for o in &OFFSETS {
 			let mut banmen = blank_banmen.clone();
 
-			banmen.0[y][7] = GKakuN;
+			banmen.0[y][6] = SHishaN;
 
-			if y as i32 + o.1 >= 0 && y as i32 + o.1 <= 8 {
-				banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = GFu;
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
 			}
+
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = SFu;
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+					match m {
+						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+					}
+				}).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_8_squares_and_contiguous_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const OFFSETS:[(i32,i32); 4] = [
+		(-1,-1),
+		(-1,1),
+		(1,-1),
+		(1,1)
+	];
+
+	for y in 0..9 {
+		for o in &OFFSETS {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[y][7] = SHishaN;
+
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
+			}
+
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = SFu;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+					match m {
+						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+					}
+				}).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_7_squares_and_contiguous_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const OFFSETS:[(i32,i32); 4] = [
+		(-1,-1),
+		(-1,1),
+		(1,-1),
+		(1,1)
+	];
+
+	for y in 0..9 {
+		for o in &OFFSETS {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[y][6] = GHishaN;
+
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
+			}
+
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = GFu;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+					match m {
+						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
+					}
+				}).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_nari_8_squares_and_contiguous_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const OFFSETS:[(i32,i32); 4] = [
+		(-1,0),
+		(0,-1),
+		(0,1),
+		(1,0)
+	];
+
+	for y in 0..9 {
+		for o in &OFFSETS {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[y][7] = GHishaN;
+
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 {
+				continue;
+			}
+
+			banmen.0[(y as i32+o.1) as usize][(6+o.0) as usize] = GFu;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
 					match m {
 						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
 						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
