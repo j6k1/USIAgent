@@ -2602,6 +2602,28 @@ impl From<rule::LegalMove> for LegalMove {
 		}
 	}
 }
+impl From<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> for LegalMove {
+	fn from(to:((u32,u32),(u32,u32,bool),Option<ObtainKind>)) -> LegalMove {
+		match to {
+			((sx,sy),(dx,dy,nari),obtained) => {
+				LegalMove::To(
+					KomaSrcPosition(9 - sx, sy + 1),
+					KomaDstToPosition(9 - dx, dy + 1, nari),
+					obtained
+				)
+			}
+		}
+	}
+}
+impl From<(MochigomaKind,(u32,u32))> for LegalMove {
+	fn from(put:(MochigomaKind,(u32,u32))) -> LegalMove {
+		match put {
+			(k,(x,y)) => {
+				LegalMove::Put(k,KomaDstPutPosition(9 - x, y + 1))
+			}
+		}
+	}
+}
 fn find_from_move_to(mvs:&Vec<LegalMove>,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
 	match query {
 		&(ref s, ref d) => {
