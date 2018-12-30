@@ -60,10 +60,7 @@ fn test_legal_moves_banmen_with_kaku_all_position_sente() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -81,10 +78,7 @@ fn test_legal_moves_banmen_with_kaku_all_position_gote() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -110,10 +104,7 @@ fn test_legal_moves_banmen_with_kaku_occupied_corner_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -138,10 +129,7 @@ fn test_legal_moves_banmen_with_kaku_occupied_corner_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -166,10 +154,7 @@ fn test_legal_moves_banmen_with_kaku_occupied_corner_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -194,10 +179,7 @@ fn test_legal_moves_banmen_with_kaku_occupied_corner_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -227,10 +209,7 @@ fn test_legal_moves_banmen_with_kaku_occupied_corner2_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -262,10 +241,7 @@ fn test_legal_moves_banmen_with_kaku_occupied_corner2_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -289,10 +265,7 @@ fn test_legal_moves_banmen_with_kaku_left_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -314,10 +287,7 @@ fn test_legal_moves_banmen_with_kaku_right_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -339,10 +309,7 @@ fn test_legal_moves_banmen_with_kaku_top_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -364,10 +331,7 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -389,10 +353,7 @@ fn test_legal_moves_banmen_with_kaku_left_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -414,10 +375,7 @@ fn test_legal_moves_banmen_with_kaku_right_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -439,10 +397,7 @@ fn test_legal_moves_banmen_with_kaku_top_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -464,10 +419,7 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -489,10 +441,7 @@ fn test_legal_moves_banmen_with_kaku_left_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -514,10 +463,7 @@ fn test_legal_moves_banmen_with_kaku_right_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -539,10 +485,7 @@ fn test_legal_moves_banmen_with_kaku_top_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -564,10 +507,7 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -589,10 +529,7 @@ fn test_legal_moves_banmen_with_kaku_left_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -614,10 +551,7 @@ fn test_legal_moves_banmen_with_kaku_right_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -639,10 +573,7 @@ fn test_legal_moves_banmen_with_kaku_top_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -664,10 +595,7 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -694,10 +622,7 @@ fn test_legal_moves_banmen_with_kaku_left_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -726,10 +651,7 @@ fn test_legal_moves_banmen_with_kaku_right_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -758,10 +680,7 @@ fn test_legal_moves_banmen_with_kaku_top_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -790,10 +709,7 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -822,10 +738,7 @@ fn test_legal_moves_banmen_with_kaku_left_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -854,10 +767,7 @@ fn test_legal_moves_banmen_with_kaku_right_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -886,10 +796,7 @@ fn test_legal_moves_banmen_with_kaku_top_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -918,10 +825,7 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -944,10 +848,7 @@ fn test_legal_moves_banmen_with_kaku_nari_border_sente() {
 
 	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-			match m {
-				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-			}
+			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
 }
@@ -967,10 +868,7 @@ fn test_legal_moves_banmen_with_kaku_nari_border_gote() {
 
 	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-			match m {
-				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-			}
+			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
 }
@@ -986,10 +884,7 @@ fn test_legal_moves_banmen_with_kakun_all_position_sente() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -1007,10 +902,7 @@ fn test_legal_moves_banmen_with_kakun_all_position_gote() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -1036,10 +928,7 @@ fn test_legal_moves_banmen_with_kakun_occupied_corner_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1064,10 +953,7 @@ fn test_legal_moves_banmen_with_kakun_occupied_corner_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1092,10 +978,7 @@ fn test_legal_moves_banmen_with_kakun_occupied_corner_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1120,10 +1003,7 @@ fn test_legal_moves_banmen_with_kakun_occupied_corner_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1153,10 +1033,7 @@ fn test_legal_moves_banmen_with_kakun_occupied_corner2_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1188,10 +1065,7 @@ fn test_legal_moves_banmen_with_kakun_occupied_corner2_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1215,10 +1089,7 @@ fn test_legal_moves_banmen_with_kakun_left_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1240,10 +1111,7 @@ fn test_legal_moves_banmen_with_kakun_right_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1265,10 +1133,7 @@ fn test_legal_moves_banmen_with_kakun_top_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1290,10 +1155,7 @@ fn test_legal_moves_banmen_with_kakun_bottom_wall_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1315,10 +1177,7 @@ fn test_legal_moves_banmen_with_kakun_left_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1340,10 +1199,7 @@ fn test_legal_moves_banmen_with_kakun_right_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1365,10 +1221,7 @@ fn test_legal_moves_banmen_with_kakun_top_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1390,10 +1243,7 @@ fn test_legal_moves_banmen_with_kakun_bottom_wall_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1415,10 +1265,7 @@ fn test_legal_moves_banmen_with_kakun_left_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1440,10 +1287,7 @@ fn test_legal_moves_banmen_with_kakun_right_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1465,10 +1309,7 @@ fn test_legal_moves_banmen_with_kakun_top_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1490,10 +1331,7 @@ fn test_legal_moves_banmen_with_kakun_bottom_wall_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1515,10 +1353,7 @@ fn test_legal_moves_banmen_with_kakun_left_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1540,10 +1375,7 @@ fn test_legal_moves_banmen_with_kakun_right_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1565,10 +1397,7 @@ fn test_legal_moves_banmen_with_kakun_top_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1590,10 +1419,7 @@ fn test_legal_moves_banmen_with_kakun_bottom_wall_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -1620,10 +1446,7 @@ fn test_legal_moves_banmen_with_kakun_left_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1652,10 +1475,7 @@ fn test_legal_moves_banmen_with_kakun_right_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1684,10 +1504,7 @@ fn test_legal_moves_banmen_with_kakun_top_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1716,10 +1533,7 @@ fn test_legal_moves_banmen_with_kakun_bottom_wall_inside_sente() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1748,10 +1562,7 @@ fn test_legal_moves_banmen_with_kakun_left_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1780,10 +1591,7 @@ fn test_legal_moves_banmen_with_kakun_right_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1812,10 +1620,7 @@ fn test_legal_moves_banmen_with_kakun_top_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1844,10 +1649,7 @@ fn test_legal_moves_banmen_with_kakun_bottom_wall_inside_gote() {
 
 				assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 					Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-						match m {
-							rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-							rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-						}
+						LegalMove::from(m)
 					}).collect::<Vec<LegalMove>>()
 				);
 			}
@@ -1870,10 +1672,7 @@ fn test_legal_moves_banmen_with_kakun_nari_border_sente() {
 
 	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-			match m {
-				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-			}
+			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
 }
@@ -1893,10 +1692,7 @@ fn test_legal_moves_banmen_with_kakun_nari_border_gote() {
 
 	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-			match m {
-				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-			}
+			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
 }
@@ -1920,10 +1716,7 @@ fn test_legal_moves_banmen_with_kaku_nari_contiguous_sente() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -1949,10 +1742,7 @@ fn test_legal_moves_banmen_with_kaku_nari_contiguous_gote() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -1971,10 +1761,7 @@ fn test_legal_moves_banmen_with_kaku_next_occupied_lefttop_to_rightbottom_sente(
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -1993,10 +1780,7 @@ fn test_legal_moves_banmen_with_kaku_next_occupied_righttop_to_leftbottom_sente(
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2015,10 +1799,7 @@ fn test_legal_moves_banmen_with_kaku_next_occupied_lefttop_to_rightbottom_gote()
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2037,10 +1818,7 @@ fn test_legal_moves_banmen_with_kaku_next_occupied_righttop_to_leftbottom_gote()
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2059,10 +1837,7 @@ fn test_legal_moves_banmen_with_kaku_prev_occupied_lefttop_to_rightbottom_sente(
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2081,10 +1856,7 @@ fn test_legal_moves_banmen_with_kaku_prev_occupied_righttop_to_leftbottom_sente(
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2103,10 +1875,7 @@ fn test_legal_moves_banmen_with_kaku_prev_occupied_lefttop_to_rightbottom_gote()
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2125,10 +1894,7 @@ fn test_legal_moves_banmen_with_kaku_prev_occupied_righttop_to_leftbottom_gote()
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2147,10 +1913,7 @@ fn test_legal_moves_banmen_with_kaku_nari_next_occupied_lefttop_to_rightbottom_s
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2169,10 +1932,7 @@ fn test_legal_moves_banmen_with_kaku_nari_next_occupied_righttop_to_leftbottom_s
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2191,10 +1951,7 @@ fn test_legal_moves_banmen_with_kaku_nari_next_occupied_lefttop_to_rightbottom_g
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2213,10 +1970,7 @@ fn test_legal_moves_banmen_with_kaku_nari_next_occupied_righttop_to_leftbottom_g
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2235,10 +1989,7 @@ fn test_legal_moves_banmen_with_kaku_nari_prev_occupied_lefttop_to_rightbottom_s
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2257,10 +2008,7 @@ fn test_legal_moves_banmen_with_kaku_nari_prev_occupied_righttop_to_leftbottom_s
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2279,10 +2027,7 @@ fn test_legal_moves_banmen_with_kaku_nari_prev_occupied_lefttop_to_rightbottom_g
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2301,10 +2046,7 @@ fn test_legal_moves_banmen_with_kaku_nari_prev_occupied_righttop_to_leftbottom_g
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2321,10 +2063,7 @@ fn test_legal_moves_banmen_with_kaku_nari_7_squares_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2340,10 +2079,7 @@ fn test_legal_moves_banmen_with_kaku_nari_8_squares_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2359,10 +2095,7 @@ fn test_legal_moves_banmen_with_kaku_nari_7_squares_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2378,10 +2111,7 @@ fn test_legal_moves_banmen_with_kaku_nari_8_squares_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2411,10 +2141,7 @@ fn test_legal_moves_banmen_with_kaku_nari_7_squares_and_contiguous_sente() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2445,10 +2172,7 @@ fn test_legal_moves_banmen_with_kaku_nari_8_squares_and_contiguous_sente() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2479,10 +2203,7 @@ fn test_legal_moves_banmen_with_kaku_nari_7_squares_and_contiguous_gote() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2513,10 +2234,7 @@ fn test_legal_moves_banmen_with_kaku_nari_8_squares_and_contiguous_gote() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2540,10 +2258,7 @@ fn test_legal_moves_banmen_with_hisha_corner_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2566,10 +2281,7 @@ fn test_legal_moves_banmen_with_hisha_corner_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2586,10 +2298,7 @@ fn test_legal_moves_banmen_with_hisha_nari_border_sente() {
 
 	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-			match m {
-				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-			}
+			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
 }
@@ -2605,10 +2314,7 @@ fn test_legal_moves_banmen_with_hisha_nari_border_gote() {
 
 	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-			match m {
-				rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-				rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-			}
+			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
 }
@@ -2629,10 +2335,7 @@ fn test_legal_moves_banmen_with_hisha_dst_occupied_self_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2654,10 +2357,7 @@ fn test_legal_moves_banmen_with_hisha_dst_occupied_opponent_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2679,10 +2379,7 @@ fn test_legal_moves_banmen_with_hisha_dst_occupied_self_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2704,10 +2401,7 @@ fn test_legal_moves_banmen_with_hisha_dst_occupied_opponent_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2723,10 +2417,7 @@ fn test_legal_moves_banmen_with_hisha_nari_7_squares_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2742,10 +2433,7 @@ fn test_legal_moves_banmen_with_hisha_nari_8_squares_sente() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2761,10 +2449,7 @@ fn test_legal_moves_banmen_with_hisha_nari_7_squares_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2780,10 +2465,7 @@ fn test_legal_moves_banmen_with_hisha_nari_8_squares_gote() {
 
 		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-				match m {
-					rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-					rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-				}
+				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
@@ -2813,10 +2495,7 @@ fn test_legal_moves_banmen_with_hisha_nari_7_squares_and_contiguous_sente() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2847,10 +2526,7 @@ fn test_legal_moves_banmen_with_hisha_nari_8_squares_and_contiguous_sente() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2881,10 +2557,7 @@ fn test_legal_moves_banmen_with_hisha_nari_7_squares_and_contiguous_gote() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
 		}
@@ -2915,12 +2588,17 @@ fn test_legal_moves_banmen_with_hisha_nari_8_squares_and_contiguous_gote() {
 
 			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
 				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
-					match m {
-						rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
-						rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
-					}
+					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
+		}
+	}
+}
+impl From<rule::LegalMove> for LegalMove {
+	fn from(m:rule::LegalMove) -> LegalMove {
+		match m {
+			rule::LegalMove::To(s,d,o) => LegalMove::To(s,d,o),
+			rule::LegalMove::Put(k,d) => LegalMove::Put(k,d),
 		}
 	}
 }
