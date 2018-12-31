@@ -288,7 +288,7 @@ impl Rule {
 								let dy = y + my;
 								match kinds[dy as usize][dx as usize] {
 									KomaKind::Blank if  (kind == SFu && dy == 0) ||
-														(kind == SKei && dy <= 2) => {
+														(kind == SKei && dy <= 1) => {
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
 											KomaDstToPosition(
