@@ -3474,7 +3474,1185 @@ fn test_legal_moves_banmen_with_kei_8_squares_dst_occupied_opponent_gote() {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_corner_sente() {
+	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
+		vec![
+			((0,0),(1,1,true),None),
+			((0,0),(1,1,false),None)
+		],
+		vec![
+			((0,1),(0,0,true),None),
+			((0,1),(0,0,false),None),
+			((0,1),(1,0,true),None),
+			((0,1),(1,0,false),None),
+			((0,1),(1,2,true),None),
+			((0,1),(1,2,false),None)
+		],
+		vec![
+			((1,0),(0,1,true),None),
+			((1,0),(0,1,false),None),
+			((1,0),(2,1,true),None),
+			((1,0),(2,1,false),None)
+		],
+		vec![
+			((1,1),(1,0,true),None),
+			((1,1),(1,0,false),None),
+			((1,1),(0,0,true),None),
+			((1,1),(0,0,false),None),
+			((1,1),(2,0,true),None),
+			((1,1),(2,0,false),None),
+			((1,1),(0,2,true),None),
+			((1,1),(0,2,false),None),
+			((1,1),(2,2,true),None),
+			((1,1),(2,2,false),None)
+		],
+		vec![
+			((8,0),(7,1,true),None),
+			((8,0),(7,1,false),None)
+		],
+		vec![
+			((8,1),(8,0,true),None),
+			((8,1),(8,0,false),None),
+			((8,1),(7,0,true),None),
+			((8,1),(7,0,false),None),
+			((8,1),(7,2,true),None),
+			((8,1),(7,2,false),None)
+		],
+		vec![
+			((7,0),(6,1,true),None),
+			((7,0),(6,1,false),None),
+			((7,0),(8,1,true),None),
+			((7,0),(8,1,false),None)
+		],
+		vec![
+			((7,1),(7,0,true),None),
+			((7,1),(7,0,false),None),
+			((7,1),(6,0,true),None),
+			((7,1),(6,0,false),None),
+			((7,1),(8,0,true),None),
+			((7,1),(8,0,false),None),
+			((7,1),(6,2,true),None),
+			((7,1),(6,2,false),None),
+			((7,1),(8,2,true),None),
+			((7,1),(8,2,false),None)
+		],
+		vec![
+			((0,8),(0,7,false),None),
+			((0,8),(1,7,false),None)
+		],
+		vec![
+			((0,7),(0,6,false),None),
+			((0,7),(1,6,false),None),
+			((0,7),(1,8,false),None)
+		],
+		vec![
+			((1,8),(1,7,false),None),
+			((1,8),(0,7,false),None),
+			((1,8),(2,7,false),None)
+		],
+		vec![
+			((1,7),(1,6,false),None),
+			((1,7),(0,6,false),None),
+			((1,7),(2,6,false),None),
+			((1,7),(0,8,false),None),
+			((1,7),(2,8,false),None)
+		],
+		vec![
+			((8,8),(8,7,false),None),
+			((8,8),(7,7,false),None)
+		],
+		vec![
+			((8,7),(8,6,false),None),
+			((8,7),(7,6,false),None),
+			((8,7),(7,8,false),None)
+		],
+		vec![
+			((7,8),(7,7,false),None),
+			((7,8),(6,7,false),None),
+			((7,8),(8,7,false),None)
+		],
+		vec![
+			((7,7),(7,6,false),None),
+			((7,7),(6,6,false),None),
+			((7,7),(8,6,false),None),
+			((7,7),(6,8,false),None),
+			((7,7),(8,8,false),None)
+		]
+	];
 
+	const POSITIONS:[(usize,usize); 16] = [
+		(0,0),(0,1),(1,0),(1,1),
+		(8,0),(8,1),(7,0),(7,1),
+		(0,8),(0,7),(1,8),(1,7),
+		(8,8),(8,7),(7,8),(7,7)
+	];
+
+	let answer = answer.into_iter().map(|mvs| {
+		mvs.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),o) => {
+					LegalMove::from(((sx,sy),(dx,dy,nari),o))
+				}
+			}
+		}).collect::<Vec<LegalMove>>()
+	}).collect::<Vec<Vec<LegalMove>>>();
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (a,p) in answer.iter().zip(&POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[p.1][p.0] = SGin;
+
+		assert_eq!(
+			a,
+			&Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_corner_gote() {
+	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
+		vec![
+			((0,0),(1,1,true),None),
+			((0,0),(1,1,false),None)
+		],
+		vec![
+			((0,1),(0,0,true),None),
+			((0,1),(0,0,false),None),
+			((0,1),(1,0,true),None),
+			((0,1),(1,0,false),None),
+			((0,1),(1,2,true),None),
+			((0,1),(1,2,false),None)
+		],
+		vec![
+			((1,0),(0,1,true),None),
+			((1,0),(0,1,false),None),
+			((1,0),(2,1,true),None),
+			((1,0),(2,1,false),None)
+		],
+		vec![
+			((1,1),(1,0,true),None),
+			((1,1),(1,0,false),None),
+			((1,1),(0,0,true),None),
+			((1,1),(0,0,false),None),
+			((1,1),(2,0,true),None),
+			((1,1),(2,0,false),None),
+			((1,1),(0,2,true),None),
+			((1,1),(0,2,false),None),
+			((1,1),(2,2,true),None),
+			((1,1),(2,2,false),None)
+		],
+		vec![
+			((8,0),(7,1,true),None),
+			((8,0),(7,1,false),None)
+		],
+		vec![
+			((8,1),(8,0,true),None),
+			((8,1),(8,0,false),None),
+			((8,1),(7,0,true),None),
+			((8,1),(7,0,false),None),
+			((8,1),(7,2,true),None),
+			((8,1),(7,2,false),None)
+		],
+		vec![
+			((7,0),(6,1,true),None),
+			((7,0),(6,1,false),None),
+			((7,0),(8,1,true),None),
+			((7,0),(8,1,false),None)
+		],
+		vec![
+			((7,1),(7,0,true),None),
+			((7,1),(7,0,false),None),
+			((7,1),(6,0,true),None),
+			((7,1),(6,0,false),None),
+			((7,1),(8,0,true),None),
+			((7,1),(8,0,false),None),
+			((7,1),(6,2,true),None),
+			((7,1),(6,2,false),None),
+			((7,1),(8,2,true),None),
+			((7,1),(8,2,false),None)
+		],
+		vec![
+			((0,8),(0,7,false),None),
+			((0,8),(1,7,false),None)
+		],
+		vec![
+			((0,7),(0,6,false),None),
+			((0,7),(1,6,false),None),
+			((0,7),(1,8,false),None)
+		],
+		vec![
+			((1,8),(1,7,false),None),
+			((1,8),(0,7,false),None),
+			((1,8),(2,7,false),None)
+		],
+		vec![
+			((1,7),(1,6,false),None),
+			((1,7),(0,6,false),None),
+			((1,7),(2,6,false),None),
+			((1,7),(0,8,false),None),
+			((1,7),(2,8,false),None)
+		],
+		vec![
+			((8,8),(8,7,false),None),
+			((8,8),(7,7,false),None)
+		],
+		vec![
+			((8,7),(8,6,false),None),
+			((8,7),(7,6,false),None),
+			((8,7),(7,8,false),None)
+		],
+		vec![
+			((7,8),(7,7,false),None),
+			((7,8),(6,7,false),None),
+			((7,8),(8,7,false),None)
+		],
+		vec![
+			((7,7),(7,6,false),None),
+			((7,7),(6,6,false),None),
+			((7,7),(8,6,false),None),
+			((7,7),(6,8,false),None),
+			((7,7),(8,8,false),None)
+		]
+	];
+
+	const POSITIONS:[(usize,usize); 16] = [
+		(0,0),(0,1),(1,0),(1,1),
+		(8,0),(8,1),(7,0),(7,1),
+		(0,8),(0,7),(1,8),(1,7),
+		(8,8),(8,7),(7,8),(7,7)
+	];
+
+
+	let answer = answer.into_iter().map(|mvs| {
+		mvs.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),_) => {
+					LegalMove::from(((8 - sx, 8 - sy),(8- dx, 8 - dy, nari),None))
+				}
+			}
+		}).collect::<Vec<LegalMove>>()
+	}).collect::<Vec<Vec<LegalMove>>>();
+
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (a,p) in answer.iter().zip(&POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-p.1][8-p.0] = GGin;
+
+		assert_eq!(
+			a,
+			&Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_border_sente() {
+let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
+		((4,3),(4,2,true),Some(ObtainKind::Fu)),
+		((4,3),(4,2,false),Some(ObtainKind::Fu)),
+		((4,3),(3,2,true),Some(ObtainKind::Fu)),
+		((4,3),(3,2,false),Some(ObtainKind::Fu)),
+		((4,3),(5,2,true),Some(ObtainKind::Fu)),
+		((4,3),(5,2,false),Some(ObtainKind::Fu)),
+		((4,3),(3,4,false),None),
+		((4,3),(5,4,false),None),
+	];
+
+	let answer = answer.into_iter().map(|m| {
+		match m {
+			((sx,sy),(dx,dy,nari),o) => {
+				LegalMove::from(((sx,sy),(dx,dy,nari),o))
+			}
+		}
+	}).collect::<Vec<LegalMove>>();
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	let mut wall_banmen = blank_banmen.clone();
+
+	for x in 0..9 {
+		wall_banmen.0[2][x] = GFu;
+	}
+
+	let mut banmen = wall_banmen.clone();
+
+	banmen.0[3][4] = SGin;
+
+	assert_eq!(
+		answer,
+		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_border_gote() {
+let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
+		((4,3),(4,2,true),Some(ObtainKind::Fu)),
+		((4,3),(4,2,false),Some(ObtainKind::Fu)),
+		((4,3),(3,2,true),Some(ObtainKind::Fu)),
+		((4,3),(3,2,false),Some(ObtainKind::Fu)),
+		((4,3),(5,2,true),Some(ObtainKind::Fu)),
+		((4,3),(5,2,false),Some(ObtainKind::Fu)),
+		((4,3),(3,4,false),None),
+		((4,3),(5,4,false),None),
+	];
+
+	let answer = answer.into_iter().map(|m| {
+		match m {
+			((sx,sy),(dx,dy,nari),o) => {
+				LegalMove::from(((8 - sx,8 - sy),(8 - dx,8 - dy,nari),o))
+			}
+		}
+	}).collect::<Vec<LegalMove>>();
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	let mut wall_banmen = blank_banmen.clone();
+
+	for x in 0..9 {
+		wall_banmen.0[6][x] = SFu;
+	}
+
+	let mut banmen = wall_banmen.clone();
+
+	banmen.0[5][4] = GGin;
+
+	assert_eq!(
+		answer,
+		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_7_squares_sente() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+		for o in &OFFSETS {
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 6 + o.0 < 0 || 6 + o.0 > 8 {
+				continue;
+			}
+
+			let nari = (y + o.1) <= 2;
+
+			if nari {
+				answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,true),None));
+			}
+			answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,false),None));
+		}
+
+		let answer = answer.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),o) => {
+					LegalMove::from(((sx,sy),(dx,dy,nari),o))
+				}
+			}
+		}).collect::<Vec<LegalMove>>();
+
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y as usize][6] = SGin;
+
+		assert_eq!(
+			answer,
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_8_squares_sente() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+		for o in &OFFSETS {
+			if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 7 + o.0 < 0 || 7 + o.0 > 8 {
+				continue;
+			}
+
+			let nari = (y + o.1) <= 2;
+
+			if nari {
+				answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,true),None));
+			}
+			answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,false),None));
+		}
+
+		let answer = answer.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),o) => {
+					LegalMove::from(((sx,sy),(dx,dy,nari),o))
+				}
+			}
+		}).collect::<Vec<LegalMove>>();
+
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y as usize][7] = SGin;
+
+		assert_eq!(
+			answer,
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_7_squares_gote() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+		for o in &OFFSETS {
+			if y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 2 - o.0 < 0 || 2 - o.0 > 8 {
+				continue;
+			}
+
+			let nari = (y - o.1) >= 6;
+
+			if nari {
+				answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,true),None));
+			}
+			answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,false),None));
+		}
+
+		let answer = answer.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),o) => {
+					LegalMove::from(((sx,sy),(dx,dy,nari),o))
+				}
+			}
+		}).collect::<Vec<LegalMove>>();
+
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y as usize][2] = GGin;
+
+		assert_eq!(
+			answer,
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_8_squares_gote() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+		for o in &OFFSETS {
+			if y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 1 - o.0 < 0 || 1 - o.0 > 8 {
+				continue;
+			}
+
+			let nari = (y - o.1) >= 6;
+
+			if nari {
+				answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,true),None));
+			}
+			answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,false),None));
+		}
+
+		let answer = answer.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),o) => {
+					LegalMove::from(((sx,sy),(dx,dy,nari),o))
+				}
+			}
+		}).collect::<Vec<LegalMove>>();
+
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[y as usize][1] = GGin;
+
+		assert_eq!(
+			answer,
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_self_sente() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+			if occ.1 > 0 {
+				for o in &OFFSETS {
+					if occ == o || y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 6 + o.0 < 0 || 6 + o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y + o.1) <= 2;
+
+					if nari {
+						answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,true),None));
+					}
+					answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,false),None));
+				}
+
+				if y + occ.1 <= 8 {
+					let nari = (y + occ.1 - 1) <= 2;
+
+					if nari {
+						answer.push((
+							((6 + occ.0) as u32,(y + occ.1) as u32),
+							((6 + occ.0) as u32,(y + occ.1 - 1) as u32,true),None));
+					}
+
+					if y + occ.1 - 1 > 0 {
+						answer.push((
+								((6 + occ.0) as u32,(y + occ.1) as u32),
+								((6 + occ.0) as u32,(y + occ.1 - 1) as u32,false),None));
+					}
+				}
+			} else {
+				if y + occ.1 >= 1 {
+					let nari = (y + occ.1 - 1) <= 2;
+
+					if nari {
+						answer.push((
+							((6 + occ.0) as u32,(y + occ.1) as u32),
+							((6 + occ.0) as u32,(y + occ.1 - 1) as u32,true),None));
+					}
+
+					if y + occ.1 - 1 > 0 {
+						answer.push((
+								((6 + occ.0) as u32,(y + occ.1) as u32),
+								((6 + occ.0) as u32,(y + occ.1 - 1) as u32,false),None));
+					}
+				}
+
+				for o in &OFFSETS {
+					if occ == o || y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 6 + o.0 < 0 || 6 + o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y + o.1) <= 2;
+
+					if nari {
+						answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,true),None));
+					}
+					answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,false),None));
+				}
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y + occ.1 >= 0 && y + occ.1 <= 8 {
+				banmen.0[(y + occ.1) as usize][(6 + occ.0) as usize] = SFu;
+			}
+
+			banmen.0[y as usize][6] = SGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_self_sente() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+			if occ.1 > 0 {
+				for o in &OFFSETS {
+					if occ == o || y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 7 + o.0 < 0 || 7 + o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y + o.1) <= 2;
+
+					if nari {
+						answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,true),None));
+					}
+					answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,false),None));
+				}
+
+				if y + occ.1 <= 8 {
+					let nari = (y + occ.1 - 1) <= 2;
+
+					if nari {
+						answer.push((
+							((7 + occ.0) as u32,(y + occ.1) as u32),
+							((7 + occ.0) as u32,(y + occ.1 - 1) as u32,true),None));
+					}
+
+					if y + occ.1 - 1 > 0 {
+						answer.push((
+								((7 + occ.0) as u32,(y + occ.1) as u32),
+								((7 + occ.0) as u32,(y + occ.1 - 1) as u32,false),None));
+					}
+				}
+			} else {
+				if y + occ.1 >= 1 {
+					let nari = (y + occ.1 - 1) <= 2;
+
+					if nari {
+						answer.push((
+							((7 + occ.0) as u32,(y + occ.1) as u32),
+							((7 + occ.0) as u32,(y + occ.1 - 1) as u32,true),None));
+					}
+
+					if y + occ.1 - 1 > 0 {
+						answer.push((
+								((7 + occ.0) as u32,(y + occ.1) as u32),
+								((7 + occ.0) as u32,(y + occ.1 - 1) as u32,false),None));
+					}
+				}
+
+				for o in &OFFSETS {
+					if occ == o || y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 7 + o.0 < 0 || 7 + o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y + o.1) <= 2;
+
+					if nari {
+						answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,true),None));
+					}
+					answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,false),None));
+				}
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y + occ.1 >= 0 && y + occ.1 <= 8 {
+				banmen.0[(y + occ.1) as usize][(7 + occ.0) as usize] = SFu;
+			}
+
+			banmen.0[y as usize][7] = SGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_self_gote() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+			if occ.1 > 0 {
+				for o in &OFFSETS {
+					if occ == o || y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 2 - o.0 < 0 || 2 - o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y - o.1) >= 6;
+
+					if nari {
+						answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,true),None));
+					}
+					answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,false),None));
+				}
+
+				if y as i32 - occ.1 >=  0 && y as i32 - occ.1 <= 7 {
+					let nari = (y - occ.1 + 1) >= 6;
+
+					if nari {
+						answer.push((
+							((2 - occ.0) as u32,(y - occ.1) as u32),
+							((2 - occ.0) as u32,(y - occ.1 + 1) as u32,true),None));
+					}
+
+					if y - occ.1 + 1 < 8 {
+						answer.push((
+								((2 - occ.0) as u32,(y - occ.1) as u32),
+								((2 - occ.0) as u32,(y - occ.1 + 1) as u32,false),None));
+					}
+				}
+			} else {
+				if y as i32 - occ.1 >= 0 {
+					let nari = (y - occ.1 + 1) >= 6;
+
+					if nari {
+						answer.push((
+							((2 - occ.0) as u32,(y - occ.1) as u32),
+							((2 - occ.0) as u32,(y - occ.1 + 1) as u32,true),None));
+					}
+
+					if y - occ.1 + 1 < 8 {
+						answer.push((
+								((2 - occ.0) as u32,(y - occ.1) as u32),
+								((2 - occ.0) as u32,(y - occ.1 + 1) as u32,false),None));
+					}
+				}
+
+				for o in &OFFSETS {
+					if occ == o || y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 2 - o.0 < 0 || 2 - o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y - o.1) >= 6;
+
+					if nari {
+						answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,true),None));
+					}
+					answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,false),None));
+				}
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y - occ.1 >= 0 && y - occ.1 <= 8 {
+				banmen.0[(y - occ.1) as usize][(2 - occ.0) as usize] = GFu;
+			}
+
+			banmen.0[y as usize][2] = GGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_self_gote() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+			if occ.1 > 0 {
+				for o in &OFFSETS {
+					if occ == o || y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 1 - o.0 < 0 || 1 - o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y - o.1) >= 6;
+
+					if nari {
+						answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,true),None));
+					}
+					answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,false),None));
+				}
+
+				if y as i32 - occ.1 >=  0 && y as i32 - occ.1 <= 7 {
+					let nari = (y - occ.1 + 1) >= 6;
+
+					if nari {
+						answer.push((
+							((1 - occ.0) as u32,(y - occ.1) as u32),
+							((1 - occ.0) as u32,(y - occ.1 + 1) as u32,true),None));
+					}
+
+					if y - occ.1 + 1 < 8 {
+						answer.push((
+								((1 - occ.0) as u32,(y - occ.1) as u32),
+								((1 - occ.0) as u32,(y - occ.1 + 1) as u32,false),None));
+					}
+				}
+			} else {
+				if y as i32 - occ.1 >= 0 {
+					let nari = (y - occ.1 + 1) >= 6;
+
+					if nari {
+						answer.push((
+							((1 - occ.0) as u32,(y - occ.1) as u32),
+							((1 - occ.0) as u32,(y - occ.1 + 1) as u32,true),None));
+					}
+
+					if y - occ.1 + 1 < 8 {
+						answer.push((
+								((1 - occ.0) as u32,(y - occ.1) as u32),
+								((1 - occ.0) as u32,(y - occ.1 + 1) as u32,false),None));
+					}
+				}
+
+				for o in &OFFSETS {
+					if occ == o || y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 1 - o.0 < 0 || 1 - o.0 > 8 {
+						continue;
+					}
+
+					let nari = (y - o.1) >= 6;
+
+					if nari {
+						answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,true),None));
+					}
+					answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,false),None));
+				}
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y - occ.1 >= 0 && y - occ.1 <= 8 {
+				banmen.0[(y - occ.1) as usize][(1 - occ.0) as usize] = GFu;
+			}
+
+			banmen.0[y as usize][1] = GGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_opponent_sente() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+			for o in &OFFSETS {
+				if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 6 + o.0 < 0 || 6 + o.0 > 8 {
+					continue;
+				}
+
+				let nari = (y + o.1) <= 2;
+
+				let obtained = if o == occ {
+					Some(ObtainKind::Fu)
+				} else {
+					None
+				};
+
+				if nari {
+					answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,true),obtained));
+				}
+				answer.push(((6,y as u32),((6+o.0) as u32,(y+o.1) as u32,false),obtained));
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y + occ.1 >= 0 && y + occ.1 <= 8 {
+				banmen.0[(y + occ.1) as usize][(6 + occ.0) as usize] = GFu;
+			}
+
+			banmen.0[y as usize][6] = SGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_opponent_sente() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+			for o in &OFFSETS {
+				if y as i32 + o.1 < 0 || y as i32 + o.1 > 8 || 7 + o.0 < 0 || 7 + o.0 > 8 {
+					continue;
+				}
+
+				let nari = (y + o.1) <= 2;
+
+				let obtained = if o == occ {
+					Some(ObtainKind::Fu)
+				} else {
+					None
+				};
+
+				if nari {
+					answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,true),obtained));
+				}
+				answer.push(((7,y as u32),((7+o.0) as u32,(y+o.1) as u32,false),obtained));
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y + occ.1 >= 0 && y + occ.1 <= 8 {
+				banmen.0[(y + occ.1) as usize][(7 + occ.0) as usize] = GFu;
+			}
+
+			banmen.0[y as usize][7] = SGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_opponent_gote() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+			for o in &OFFSETS {
+				if y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 2 - o.0 < 0 || 2 - o.0 > 8 {
+					continue;
+				}
+
+				let nari = (y - o.1) >= 6;
+
+				let obtained = if o == occ {
+					Some(ObtainKind::Fu)
+				} else {
+					None
+				};
+
+				if nari {
+					answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,true),obtained));
+				}
+				answer.push(((2,y as u32),((2-o.0) as u32,(y-o.1) as u32,false),obtained));
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y - occ.1 >= 0 && y - occ.1 <= 8 {
+				banmen.0[(y - occ.1) as usize][(2 - occ.0) as usize] = SFu;
+			}
+
+			banmen.0[y as usize][2] = GGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_opponent_gote() {
+	const OFFSETS:[(i32,i32); 5] = [
+		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+	];
+
+	const OCC_OFFSETS:[(i32,i32); 2] = [
+		(-1,1),(1,1)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for y in 0..9 {
+		for occ in &OCC_OFFSETS {
+			let mut answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = Vec::new();
+
+			for o in &OFFSETS {
+				if y as i32 - o.1 < 0 || y as i32 - o.1 > 8 || 1 - o.0 < 0 || 1 - o.0 > 8 {
+					continue;
+				}
+
+				let nari = (y - o.1) >= 6;
+
+				let obtained = if o == occ {
+					Some(ObtainKind::Fu)
+				} else {
+					None
+				};
+
+				if nari {
+					answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,true),obtained));
+				}
+				answer.push(((1,y as u32),((1-o.0) as u32,(y-o.1) as u32,false),obtained));
+			}
+
+			let answer = answer.into_iter().map(|m| {
+				match m {
+					((sx,sy),(dx,dy,nari),o) => {
+						LegalMove::from(((sx,sy),(dx,dy,nari),o))
+					}
+				}
+			}).collect::<Vec<LegalMove>>();
+
+			let mut banmen = blank_banmen.clone();
+
+			if y - occ.1 >= 0 && y - occ.1 <= 8 {
+				banmen.0[(y - occ.1) as usize][(1 - occ.0) as usize] = SFu;
+			}
+
+			banmen.0[y as usize][1] = GGin;
+
+			assert_eq!(
+				answer,
+				Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			)
+		}
+	}
 }
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
