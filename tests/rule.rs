@@ -20,6 +20,10 @@ use usiagent::shogi::KomaKind::{
 	SKaku,
 	SHisha,
 	SOu,
+	SFuN,
+	SKyouN,
+	SKeiN,
+	SGinN,
 	SKakuN,
 	SHishaN,
 	GFu,
@@ -30,6 +34,10 @@ use usiagent::shogi::KomaKind::{
 	GKaku,
 	GHisha,
 	GOu,
+	GFuN,
+	GKyouN,
+	GKeiN,
+	GGinN,
 	GKakuN,
 	GHishaN,
 	Blank
@@ -5690,6 +5698,230 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote() {
 #[test]
 fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote() {
 	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(GKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_corner_sente() {
+	test_legal_moves_banmen_with_kin_corner_sente_impl(SFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_corner_gote() {
+	test_legal_moves_banmen_with_kin_corner_gote_impl(GFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_7_squares_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_sente_impl(SFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_8_squares_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_sente_impl(SFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_7_squares_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_gote_impl(GFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_8_squares_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_gote_impl(GFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_7_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(SFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_8_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(SFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_7_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(GFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_8_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(GFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_7_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl(SFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_8_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl(SFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_7_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(GFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_8_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(GFuN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_corner_sente() {
+	test_legal_moves_banmen_with_kin_corner_sente_impl(SKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_corner_gote() {
+	test_legal_moves_banmen_with_kin_corner_gote_impl(GKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_7_squares_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_sente_impl(SKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_8_squares_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_sente_impl(SKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_7_squares_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_gote_impl(GKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_8_squares_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_gote_impl(GKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_7_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(SKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_8_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(SKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_7_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(GKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_8_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(GKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_7_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl(SKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_8_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl(SKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_7_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(GKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_nari_8_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(GKyouN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_corner_sente() {
+	test_legal_moves_banmen_with_kin_corner_sente_impl(SKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_corner_gote() {
+	test_legal_moves_banmen_with_kin_corner_gote_impl(GKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_7_squares_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_sente_impl(SKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_8_squares_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_sente_impl(SKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_7_squares_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_gote_impl(GKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_8_squares_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_gote_impl(GKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_7_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(SKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_8_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(SKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_7_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(GKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_8_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(GKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_7_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl(SKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_8_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl(SKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_7_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(GKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_kei_nari_8_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(GKeiN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_corner_sente() {
+	test_legal_moves_banmen_with_kin_corner_sente_impl(SGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_corner_gote() {
+	test_legal_moves_banmen_with_kin_corner_gote_impl(GGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_7_squares_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_sente_impl(SGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_8_squares_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_sente_impl(SGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_7_squares_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_gote_impl(GGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_8_squares_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_gote_impl(GGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_7_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(SGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_8_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(SGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_7_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(GGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_8_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(GGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_7_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl(SGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_8_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl(SGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_7_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(GGinN)
+}
+#[test]
+fn test_legal_moves_banmen_with_gin_nari_8_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(GGinN)
 }
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
