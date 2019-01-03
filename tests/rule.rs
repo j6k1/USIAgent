@@ -4654,8 +4654,7 @@ fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_opponent_gote() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_corner_sente() {
+fn test_legal_moves_banmen_with_kin_corner_sente_impl(kind:KomaKind) {
 	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
 		vec![
 			((0,0),(1,0,false),None),
@@ -4779,7 +4778,7 @@ fn test_legal_moves_banmen_with_kin_corner_sente() {
 	for (a,p) in answer.iter().zip(&POSITIONS) {
 		let mut banmen = blank_banmen.clone();
 
-		banmen.0[p.1][p.0] = SKin;
+		banmen.0[p.1][p.0] = kind;
 
 		assert_eq!(
 			a,
@@ -4790,8 +4789,7 @@ fn test_legal_moves_banmen_with_kin_corner_sente() {
 	}
 
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_corner_gote() {
+fn test_legal_moves_banmen_with_kin_corner_gote_impl(kind:KomaKind) {
 	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
 		vec![
 			((0,0),(1,0,false),None),
@@ -4917,7 +4915,7 @@ fn test_legal_moves_banmen_with_kin_corner_gote() {
 	for (a,p) in answer.iter().zip(&POSITIONS) {
 		let mut banmen = blank_banmen.clone();
 
-		banmen.0[8-p.1][8-p.0] = GKin;
+		banmen.0[8-p.1][8-p.0] = kind;
 
 		assert_eq!(
 			a,
@@ -4928,8 +4926,7 @@ fn test_legal_moves_banmen_with_kin_corner_gote() {
 	}
 
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_7_squares_sente() {
+fn test_legal_moves_banmen_with_kin_7_squares_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -4956,7 +4953,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_sente() {
 
 		let mut banmen = blank_banmen.clone();
 
-		banmen.0[y as usize][6] = SKin;
+		banmen.0[y as usize][6] = kind;
 
 		assert_eq!(
 			answer,
@@ -4966,8 +4963,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_sente() {
 		)
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_8_squares_sente() {
+fn test_legal_moves_banmen_with_kin_8_squares_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -4994,7 +4990,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_sente() {
 
 		let mut banmen = blank_banmen.clone();
 
-		banmen.0[y as usize][7] = SKin;
+		banmen.0[y as usize][7] = kind;
 
 		assert_eq!(
 			answer,
@@ -5004,8 +5000,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_sente() {
 		)
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_7_squares_gote() {
+fn test_legal_moves_banmen_with_kin_7_squares_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5032,7 +5027,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_gote() {
 
 		let mut banmen = blank_banmen.clone();
 
-		banmen.0[y as usize][2] = GKin;
+		banmen.0[y as usize][2] = kind;
 
 		assert_eq!(
 			answer,
@@ -5042,8 +5037,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_gote() {
 		)
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_8_squares_gote() {
+fn test_legal_moves_banmen_with_kin_8_squares_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5070,7 +5064,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_gote() {
 
 		let mut banmen = blank_banmen.clone();
 
-		banmen.0[y as usize][1] = GKin;
+		banmen.0[y as usize][1] = kind;
 
 		assert_eq!(
 			answer,
@@ -5080,8 +5074,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_gote() {
 		)
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente() {
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5157,7 +5150,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente() {
 				banmen.0[(y + occ.1) as usize][(6 + occ.0) as usize] = SFu;
 			}
 
-			banmen.0[y as usize][6] = SKin;
+			banmen.0[y as usize][6] = kind;
 
 			assert_eq!(
 				answer,
@@ -5168,8 +5161,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente() {
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5245,7 +5237,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente() {
 				banmen.0[(y + occ.1) as usize][(7 + occ.0) as usize] = SFu;
 			}
 
-			banmen.0[y as usize][7] = SKin;
+			banmen.0[y as usize][7] = kind;
 
 			assert_eq!(
 				answer,
@@ -5256,8 +5248,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote() {
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5334,7 +5325,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote() {
 				banmen.0[(y - occ.1) as usize][(2 - occ.0) as usize] = GFu;
 			}
 
-			banmen.0[y as usize][2] = GKin;
+			banmen.0[y as usize][2] = kind;
 
 			assert_eq!(
 				answer,
@@ -5345,8 +5336,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote() {
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5423,7 +5413,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote() {
 				banmen.0[(y - occ.1) as usize][(1 - occ.0) as usize] = GFu;
 			}
 
-			banmen.0[y as usize][1] = GKin;
+			banmen.0[y as usize][1] = kind;
 
 			assert_eq!(
 				answer,
@@ -5434,8 +5424,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente() {
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5476,7 +5465,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente() {
 				banmen.0[(y + occ.1) as usize][(6 + occ.0) as usize] = GFu;
 			}
 
-			banmen.0[y as usize][6] = SKin;
+			banmen.0[y as usize][6] = kind;
 
 			assert_eq!(
 				answer,
@@ -5487,8 +5476,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente() {
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5530,7 +5518,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente() {
 				banmen.0[(y + occ.1) as usize][(7 + occ.0) as usize] = GFu;
 			}
 
-			banmen.0[y as usize][7] = SKin;
+			banmen.0[y as usize][7] = kind;
 
 			assert_eq!(
 				answer,
@@ -5541,8 +5529,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote() {
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5584,7 +5571,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote() {
 				banmen.0[(y - occ.1) as usize][(2 - occ.0) as usize] = SFu;
 			}
 
-			banmen.0[y as usize][2] = GKin;
+			banmen.0[y as usize][2] = kind;
 
 			assert_eq!(
 				answer,
@@ -5595,8 +5582,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote() {
 		}
 	}
 }
-#[test]
-fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote() {
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
 		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
 	];
@@ -5638,7 +5624,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote() {
 				banmen.0[(y - occ.1) as usize][(1 - occ.0) as usize] = SFu;
 			}
 
-			banmen.0[y as usize][1] = GKin;
+			banmen.0[y as usize][1] = kind;
 
 			assert_eq!(
 				answer,
@@ -5648,6 +5634,62 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote() {
 			)
 		}
 	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_corner_sente() {
+	test_legal_moves_banmen_with_kin_corner_sente_impl(SKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_corner_gote() {
+	test_legal_moves_banmen_with_kin_corner_gote_impl(GKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_7_squares_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_sente_impl(SKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_8_squares_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_sente_impl(SKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_7_squares_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_gote_impl(GKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_8_squares_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_gote_impl(GKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(SKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(SKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(GKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(GKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl(SKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl(SKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(GKin)
+}
+#[test]
+fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote() {
+	test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(GKin)
 }
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
