@@ -7131,6 +7131,266 @@ fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_opponent_gote() {
 		}
 	}
 }
+#[test]
+fn test_legal_moves_from_mochigoma_with_fu_sente() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[2][8] = Blank;
+	banmen.0[0][8] = Blank;
+	banmen.0[3][8] = GKyou;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Fu, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,HashMap::new());
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_fu_gote() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8-2][8-8] = Blank;
+	banmen.0[8-0][8-8] = Blank;
+	banmen.0[8-3][8-8] = SKyou;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Fu, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kyou_sente() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[0][8] = Blank;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Kyou, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,HashMap::new());
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kyou_gote() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8-0][8-8] = Blank;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Kyou, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kei_sente() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[2][8] = Blank;
+	banmen.0[3][8] = GFu;
+	banmen.0[8][7] = Blank;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Kei, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,HashMap::new());
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kei_gote() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8-2][8-8] = Blank;
+	banmen.0[8-3][8-8] = SFu;
+	banmen.0[8-8][8-7] = Blank;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Kei, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_gin_sente() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8][6] = Blank;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Gin, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,HashMap::new());
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_gin_gote() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8-8][8-6] = Blank;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Gin, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kin_sente() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8][5] = Blank;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Kin, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,HashMap::new());
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kin_gote() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8-8][8-5] = Blank;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Kin, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_hisha_sente() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[7][7] = Blank;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Hisha, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,HashMap::new());
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_hisha_gote() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8-7][8-7] = Blank;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Hisha, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kaku_sente() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[7][1] = Blank;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Kaku, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,HashMap::new());
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_from_mochigoma_with_kaku_gote() {
+	let mut banmen = rule::BANMEN_START_POS.clone();
+
+	banmen.0[8-7][8-1] = Blank;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Kaku, 1);
+
+	let mc:MochigomaCollections = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
 		match m {
