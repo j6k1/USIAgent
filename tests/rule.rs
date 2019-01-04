@@ -57,6 +57,183 @@ impl LegalMove {
 	}
 }
 #[test]
+fn test_legal_moves_banmen_with_fu_corner_sente() {
+	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
+		vec![
+		],
+		vec![
+			((0,1),(0,0,true),None),
+		],
+		vec![
+			((0,2),(0,1,true),None),
+			((0,2),(0,1,false),None)
+		],
+		vec![
+		],
+		vec![
+			((8,1),(8,0,true),None)
+		],
+		vec![
+			((8,2),(8,1,true),None),
+			((8,2),(8,1,false),None)
+		]
+	];
+
+	const POSITIONS:[(usize,usize); 6] = [
+		(0,0),(0,1),(0,2),
+		(8,0),(8,1),(8,2)
+	];
+
+	let answer = answer.into_iter().map(|mvs| {
+		mvs.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),o) => {
+					LegalMove::from(((sx,sy),(dx,dy,nari),o))
+				}
+			}
+		}).collect::<Vec<LegalMove>>()
+	}).collect::<Vec<Vec<LegalMove>>>();
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (a,p) in answer.iter().zip(&POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[p.1][p.0] = SFu;
+
+		assert_eq!(
+			a,
+			&Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_corner_gote() {
+	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
+		vec![
+		],
+		vec![
+			((0,1),(0,0,true),None),
+		],
+		vec![
+			((0,2),(0,1,true),None),
+			((0,2),(0,1,false),None)
+		],
+		vec![
+		],
+		vec![
+			((8,1),(8,0,true),None)
+		],
+		vec![
+			((8,2),(8,1,true),None),
+			((8,2),(8,1,false),None)
+		]
+	];
+
+	const POSITIONS:[(usize,usize); 6] = [
+		(0,0),(0,1),(0,2),
+		(8,0),(8,1),(8,2)
+	];
+
+	let answer = answer.into_iter().map(|mvs| {
+		mvs.into_iter().map(|m| {
+			match m {
+				((sx,sy),(dx,dy,nari),_) => {
+					LegalMove::from(((8 - sx, 8 - sy),(8- dx, 8 - dy, nari),None))
+				}
+			}
+		}).collect::<Vec<LegalMove>>()
+	}).collect::<Vec<Vec<LegalMove>>>();
+
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (a,p) in answer.iter().zip(&POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-p.1][8-p.0] = GFu;
+
+		assert_eq!(
+			a,
+			&Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		)
+	}
+
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_border_sente() {
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
+		((4,3),(4,2,true),Some(ObtainKind::Fu)),
+		((4,3),(4,2,false),Some(ObtainKind::Fu)),
+	];
+
+	let answer = answer.into_iter().map(|m| {
+		match m {
+			((sx,sy),(dx,dy,nari),o) => {
+				LegalMove::from(((sx,sy),(dx,dy,nari),o))
+			}
+		}
+	}).collect::<Vec<LegalMove>>();
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	let mut wall_banmen = blank_banmen.clone();
+
+	for x in 0..9 {
+		wall_banmen.0[2][x] = GFu;
+	}
+
+	let mut banmen = wall_banmen.clone();
+
+	banmen.0[3][4] = SFu;
+
+	assert_eq!(
+		answer,
+		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	)
+}
+#[test]
+fn test_legal_moves_banmen_with_fu_nari_border_gote() {
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
+		((4,3),(4,2,true),Some(ObtainKind::Fu)),
+		((4,3),(4,2,false),Some(ObtainKind::Fu)),
+	];
+
+	let answer = answer.into_iter().map(|m| {
+		match m {
+			((sx,sy),(dx,dy,nari),o) => {
+				LegalMove::from(((8 - sx,8 - sy),(8 - dx,8 - dy,nari),o))
+			}
+		}
+	}).collect::<Vec<LegalMove>>();
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	let mut wall_banmen = blank_banmen.clone();
+
+	for x in 0..9 {
+		wall_banmen.0[6][x] = SFu;
+	}
+
+	let mut banmen = wall_banmen.clone();
+
+	banmen.0[5][4] = GFu;
+
+	assert_eq!(
+		answer,
+		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	)
+}
+#[test]
 fn test_legal_moves_banmen_with_kaku_all_position_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
