@@ -843,13 +843,6 @@ impl Rule {
 							}
 						}
 
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - x as u32, ty as u32 + 1, false),
-								Some(ObtainKind::Ou),
-						));
-
 						if ty < 3 {
 							mvs.push(
 								LegalMove::To(
@@ -858,6 +851,13 @@ impl Rule {
 									Some(ObtainKind::Ou),
 							));
 						}
+
+						mvs.push(
+							LegalMove::To(
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - x as u32, ty as u32 + 1, false),
+								Some(ObtainKind::Ou),
+						));
 						mvs
 					},
 					KomaKind::SKei => {
@@ -929,13 +929,6 @@ impl Rule {
 							return mvs;
 						}
 
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
 						if ty < 3 {
 							mvs.push(
 								LegalMove::To(
@@ -944,6 +937,13 @@ impl Rule {
 									Some(ObtainKind::Ou),
 							));
 						}
+
+						mvs.push(
+							LegalMove::To(
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
+								Some(ObtainKind::Ou),
+						));
 						mvs
 					},
 					KomaKind::SHisha => {
@@ -1002,13 +1002,6 @@ impl Rule {
 							return mvs;
 						}
 
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
 						if ty < 3 {
 							mvs.push(
 								LegalMove::To(
@@ -1017,6 +1010,13 @@ impl Rule {
 									Some(ObtainKind::Ou),
 							));
 						}
+
+						mvs.push(
+							LegalMove::To(
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
+								Some(ObtainKind::Ou),
+						));
 						mvs
 					},
 					KomaKind::SKakuN => {
@@ -1204,13 +1204,6 @@ impl Rule {
 							}
 						}
 
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - x as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
 						if ty >= 6 {
 							mvs.push(
 								LegalMove::To(
@@ -1219,6 +1212,13 @@ impl Rule {
 									Some(ObtainKind::Ou),
 							));
 						}
+
+						mvs.push(
+							LegalMove::To(
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - x as u32,ty as u32 + 1,false),
+								Some(ObtainKind::Ou),
+						));
 						mvs
 					},
 					KomaKind::GKei => {
@@ -1290,13 +1290,6 @@ impl Rule {
 							return mvs;
 						}
 
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
 						if ty >= 6 {
 							mvs.push(
 								LegalMove::To(
@@ -1305,6 +1298,13 @@ impl Rule {
 									Some(ObtainKind::Ou),
 							));
 						}
+
+						mvs.push(
+							LegalMove::To(
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
+								Some(ObtainKind::Ou),
+						));
 						mvs
 					},
 					KomaKind::GHisha => {
@@ -1363,13 +1363,6 @@ impl Rule {
 							return mvs;
 						}
 
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
 						if ty >= 6 {
 							mvs.push(
 								LegalMove::To(
@@ -1378,6 +1371,13 @@ impl Rule {
 									Some(ObtainKind::Ou),
 							));
 						}
+
+						mvs.push(
+							LegalMove::To(
+								KomaSrcPosition(9 - x as u32,y as u32 + 1),
+								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
+								Some(ObtainKind::Ou),
+						));
 						mvs
 					},
 					KomaKind::GKakuN => {
