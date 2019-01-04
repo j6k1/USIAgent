@@ -6,6 +6,8 @@ use std::time::{Instant};
 use usiagent::TryFrom;
 use usiagent::Find;
 use usiagent::shogi::*;
+use usiagent::protocol::*;
+use usiagent::event::*;
 use usiagent::error::*;
 use usiagent::rule;
 use usiagent::rule::Rule;
@@ -7387,6 +7389,74 @@ fn test_legal_moves_from_mochigoma_with_kaku_gote() {
 
 	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
 		Rule::legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_all_sente() {
+	const INITIAL_SFEN:&'static str = "sfen l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w RGgsn5p 1";
+
+	let position_parser = PositionParser::new();
+
+	let (_, banmen, mc, _, _) = match position_parser.parse(&INITIAL_SFEN.split(" ").collect::<Vec<&str>>()).unwrap() {
+		position => match position {
+			SystemEvent::Position(teban, p, n, m) => {
+				let(banmen,mc) = match p {
+					UsiInitialPosition::Startpos => {
+						(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					},
+					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
+						(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
+					},
+					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
+						(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					}
+				};
+				(teban,banmen,mc,n,m)
+			},
+			_ => {
+				panic!("invalid state.");
+			}
+		}
+	};
+
+	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
+		Rule::legal_moves_all(&Teban::Sente,&banmen,&mc).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_legal_moves_all_gote() {
+	const INITIAL_SFEN:&'static str = "sfen l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w RGgsn5p 1";
+
+	let position_parser = PositionParser::new();
+
+	let (_, banmen, mc, _, _) = match position_parser.parse(&INITIAL_SFEN.split(" ").collect::<Vec<&str>>()).unwrap() {
+		position => match position {
+			SystemEvent::Position(teban, p, n, m) => {
+				let(banmen,mc) = match p {
+					UsiInitialPosition::Startpos => {
+						(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					},
+					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
+						(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
+					},
+					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
+						(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					}
+				};
+				(teban,banmen,mc,n,m)
+			},
+			_ => {
+				panic!("invalid state.");
+			}
+		}
+	};
+
+	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),
+		Rule::legal_moves_all(&Teban::Gote,&banmen,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
