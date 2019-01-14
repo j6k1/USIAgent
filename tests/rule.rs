@@ -8570,8 +8570,8 @@ fn test_apply_move_none_check_sente() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
-		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
+		Rule::legal_moves_all(&Teban::Sente,&banmen,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
@@ -8621,8 +8621,8 @@ fn test_apply_move_none_check_gote() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
-		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),
+		Rule::legal_moves_all(&Teban::Gote,&banmen,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
@@ -8650,8 +8650,8 @@ fn test_apply_move_none_check_nari_move_sente() {
 		}
 	}
 
-	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
-		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
+		Rule::legal_moves_all(&Teban::Sente,&banmen,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
@@ -8690,8 +8690,8 @@ fn test_apply_move_none_check_nari_move_gote() {
 		}
 	}
 
-	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
-		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),
+		Rule::legal_moves_all(&Teban::Gote,&banmen,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
@@ -8720,12 +8720,14 @@ fn test_apply_move_none_check_put_move_sente() {
 		let mut mc = MochigomaCollections::Pair(ms,mg);
 
 		match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
-			_ => {
+			(next,nmc,_) => {
+				banmen = next;
+				mc = nmc;
 			}
 		}
 
-		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
-			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+		assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
+			Rule::legal_moves_all(&Teban::Sente,&banmen,&mc).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -8766,12 +8768,14 @@ fn test_apply_move_none_check_put_move_gote() {
 		let mut mc = MochigomaCollections::Pair(ms,mg);
 
 		match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
-			_ => {
+			(next,nmc,_) => {
+				banmen = next;
+				mc = nmc;
 			}
 		}
 
-		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
-			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+		assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),
+			Rule::legal_moves_all(&Teban::Gote,&banmen,&mc).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
