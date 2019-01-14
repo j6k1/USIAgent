@@ -11,6 +11,7 @@ use usiagent::event::*;
 use usiagent::error::*;
 use usiagent::rule;
 use usiagent::rule::Rule;
+use usiagent::rule::BANMEN_START_POS;
 use usiagent::hash::*;
 #[allow(unused)]
 use usiagent::shogi::KomaKind::{
@@ -8532,6 +8533,245 @@ fn test_win_only_moves_none_moves_with_hisha_nari_occupied_opponent_gote() {
 
 		assert_eq!(answer,
 			Rule::win_only_moves(&Teban::Sente,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_apply_move_none_check_sente() {
+	let mvs:Vec<Vec<Move>> = vec![
+		vec![
+			Move::To(KomaSrcPosition(9-2,6+1),KomaDstToPosition(9-2,5+1,false)),
+			Move::To(KomaSrcPosition(9-1,7+1),KomaDstToPosition(9-3,5+1,false)),
+			Move::To(KomaSrcPosition(9-7,6+1),KomaDstToPosition(9-7,5+1,false)),
+			Move::To(KomaSrcPosition(9-2,5+1),KomaDstToPosition(9-2,4+1,false)),
+			Move::To(KomaSrcPosition(9-2,4+1),KomaDstToPosition(9-2,3+1,false)),
+			Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,false))
+		],
+		vec![
+			Move::To(KomaSrcPosition(9-2,1+1),KomaDstToPosition(9-2,2+1,false))
+		]
+	];
+
+	let mut banmen = BANMEN_START_POS.clone();
+	let mut teban = Teban::Sente;
+	let mut mc = MochigomaCollections::Empty;
+
+	for m in &mvs {
+		for m in m {
+			match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+				(next,nmc,_) => {
+					banmen = next;
+					mc = nmc;
+				}
+			}
+		}
+		teban = teban.opposite();
+	}
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_apply_move_none_check_gote() {
+	let mvs:Vec<Vec<Move>> = vec![
+		vec![
+			Move::To(KomaSrcPosition(9-2,6+1),KomaDstToPosition(9-2,5+1,false)),
+			Move::To(KomaSrcPosition(9-1,7+1),KomaDstToPosition(9-3,5+1,false)),
+			Move::To(KomaSrcPosition(9-7,6+1),KomaDstToPosition(9-7,5+1,false)),
+			Move::To(KomaSrcPosition(9-2,5+1),KomaDstToPosition(9-2,4+1,false)),
+			Move::To(KomaSrcPosition(9-2,4+1),KomaDstToPosition(9-2,3+1,false)),
+			Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,false))
+		],
+		vec![
+			Move::To(KomaSrcPosition(9-2,1+1),KomaDstToPosition(9-2,2+1,false))
+		]
+	];
+
+	let mvs = mvs.into_iter().map(|mvs| {
+		mvs.into_iter().map(|m| {
+			match m {
+				Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
+					Move::To(KomaSrcPosition(10-sx,10-sy),KomaDstToPosition(10-dx,10-dy,n))
+				},
+				Move::Put(k,KomaDstPutPosition(dx,dy)) => {
+					Move::Put(k,KomaDstPutPosition(10-dx,10-dy))
+				}
+			}
+		}).collect::<Vec<Move>>()
+	}).collect::<Vec<Vec<Move>>>();
+
+	let mut banmen = BANMEN_START_POS.clone();
+	let mut teban = Teban::Gote;
+	let mut mc = MochigomaCollections::Empty;
+
+	for m in &mvs {
+		for m in m {
+			match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+				(next,nmc,_) => {
+					banmen = next;
+					mc = nmc;
+				}
+			}
+		}
+		teban = teban.opposite();
+	}
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_apply_move_none_check_nari_move_sente() {
+	let mvs:Vec<Move> = vec![
+		Move::To(KomaSrcPosition(9-1,7+1),KomaDstToPosition(9-3,5+1,false)),
+		Move::To(KomaSrcPosition(9-7,6+1),KomaDstToPosition(9-7,5+1,false)),
+		Move::To(KomaSrcPosition(9-2,5+1),KomaDstToPosition(9-2,4+1,false)),
+		Move::To(KomaSrcPosition(9-2,4+1),KomaDstToPosition(9-2,3+1,false)),
+		Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,true))
+	];
+
+	let mut banmen = BANMEN_START_POS.clone();
+	let teban = Teban::Sente;
+	let mut mc = MochigomaCollections::Empty;
+
+	for m in &mvs {
+		match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+			(next,nmc,_) => {
+				banmen = next;
+				mc = nmc;
+			}
+		}
+	}
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_apply_move_none_check_nari_move_gote() {
+	let mvs:Vec<Move> = vec![
+		Move::To(KomaSrcPosition(9-1,7+1),KomaDstToPosition(9-3,5+1,false)),
+		Move::To(KomaSrcPosition(9-7,6+1),KomaDstToPosition(9-7,5+1,false)),
+		Move::To(KomaSrcPosition(9-2,5+1),KomaDstToPosition(9-2,4+1,false)),
+		Move::To(KomaSrcPosition(9-2,4+1),KomaDstToPosition(9-2,3+1,false)),
+		Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,true))
+	];
+
+	let mvs = mvs.into_iter().map(|m| {
+		match m {
+			Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
+				Move::To(KomaSrcPosition(10-sx,10-sy),KomaDstToPosition(10-dx,10-dy,n))
+			},
+			Move::Put(k,KomaDstPutPosition(dx,dy)) => {
+				Move::Put(k,KomaDstPutPosition(10-dx,10-dy))
+			}
+		}
+	}).collect::<Vec<Move>>();
+
+	let mut banmen = BANMEN_START_POS.clone();
+	let teban = Teban::Gote;
+	let mut mc = MochigomaCollections::Empty;
+
+	for m in &mvs {
+		match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+			(next,nmc,_) => {
+				banmen = next;
+				mc = nmc;
+			}
+		}
+	}
+
+	assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+		Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_apply_move_none_check_put_move_sente() {
+	let mvs:Vec<Move> = vec![
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-7,4+1)),
+		Move::Put(MochigomaKind::Kyou,KomaDstPutPosition(9-7,4+1)),
+	];
+
+	for m in &mvs {
+		let mut banmen = BANMEN_START_POS.clone();
+
+		banmen.0[6][8] = Blank;
+		banmen.0[6][7] = Blank;
+		banmen.0[8][8] = Blank;
+
+		let teban = Teban::Sente;
+		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		ms.insert(MochigomaKind::Fu, 2);
+		ms.insert(MochigomaKind::Kyou,1);
+
+		let mut mc = MochigomaCollections::Pair(ms,mg);
+
+		match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+			_ => {
+			}
+		}
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Sente,&banmen).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_apply_move_none_check_put_move_gote() {
+	let mvs:Vec<Move> = vec![
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-7,4+1)),
+		Move::Put(MochigomaKind::Kyou,KomaDstPutPosition(9-7,4+1)),
+	];
+
+	let mvs = mvs.into_iter().map(|m| {
+		match m {
+			Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
+				Move::To(KomaSrcPosition(10-sx,10-sy),KomaDstToPosition(10-dx,10-dy,n))
+			},
+			Move::Put(k,KomaDstPutPosition(dx,dy)) => {
+				Move::Put(k,KomaDstPutPosition(10-dx,10-dy))
+			}
+		}
+	}).collect::<Vec<Move>>();
+
+	for m in &mvs {
+		let mut banmen = BANMEN_START_POS.clone();
+
+		banmen.0[6][8] = Blank;
+		banmen.0[6][7] = Blank;
+		banmen.0[8][8] = Blank;
+
+		let teban = Teban::Gote;
+		let ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		mg.insert(MochigomaKind::Fu, 2);
+		mg.insert(MochigomaKind::Kyou,1);
+
+		let mut mc = MochigomaCollections::Pair(ms,mg);
+
+		match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+			_ => {
+			}
+		}
+
+		assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+			Rule::legal_moves_from_banmen(&Teban::Gote,&banmen).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
