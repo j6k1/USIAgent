@@ -3685,14 +3685,14 @@ fn test_legal_moves_banmen_with_gin_corner_sente() {
 			((1,0),(2,1,false),None)
 		],
 		vec![
-			((1,1),(1,0,true),None),
-			((1,1),(1,0,false),None),
 			((1,1),(0,0,true),None),
 			((1,1),(0,0,false),None),
-			((1,1),(2,0,true),None),
-			((1,1),(2,0,false),None),
 			((1,1),(0,2,true),None),
 			((1,1),(0,2,false),None),
+			((1,1),(1,0,true),None),
+			((1,1),(1,0,false),None),
+			((1,1),(2,0,true),None),
+			((1,1),(2,0,false),None),
 			((1,1),(2,2,true),None),
 			((1,1),(2,2,false),None)
 		],
@@ -3701,12 +3701,12 @@ fn test_legal_moves_banmen_with_gin_corner_sente() {
 			((8,0),(7,1,false),None)
 		],
 		vec![
-			((8,1),(8,0,true),None),
-			((8,1),(8,0,false),None),
 			((8,1),(7,0,true),None),
 			((8,1),(7,0,false),None),
 			((8,1),(7,2,true),None),
-			((8,1),(7,2,false),None)
+			((8,1),(7,2,false),None),
+			((8,1),(8,0,true),None),
+			((8,1),(8,0,false),None)
 		],
 		vec![
 			((7,0),(6,1,true),None),
@@ -3715,14 +3715,14 @@ fn test_legal_moves_banmen_with_gin_corner_sente() {
 			((7,0),(8,1,false),None)
 		],
 		vec![
-			((7,1),(7,0,true),None),
-			((7,1),(7,0,false),None),
 			((7,1),(6,0,true),None),
 			((7,1),(6,0,false),None),
-			((7,1),(8,0,true),None),
-			((7,1),(8,0,false),None),
 			((7,1),(6,2,true),None),
 			((7,1),(6,2,false),None),
+			((7,1),(7,0,true),None),
+			((7,1),(7,0,false),None),
+			((7,1),(8,0,true),None),
+			((7,1),(8,0,false),None),
 			((7,1),(8,2,true),None),
 			((7,1),(8,2,false),None)
 		],
@@ -3736,36 +3736,36 @@ fn test_legal_moves_banmen_with_gin_corner_sente() {
 			((0,7),(1,8,false),None)
 		],
 		vec![
-			((1,8),(1,7,false),None),
 			((1,8),(0,7,false),None),
+			((1,8),(1,7,false),None),
 			((1,8),(2,7,false),None)
 		],
 		vec![
-			((1,7),(1,6,false),None),
 			((1,7),(0,6,false),None),
-			((1,7),(2,6,false),None),
 			((1,7),(0,8,false),None),
+			((1,7),(1,6,false),None),
+			((1,7),(2,6,false),None),
 			((1,7),(2,8,false),None)
 		],
 		vec![
-			((8,8),(8,7,false),None),
-			((8,8),(7,7,false),None)
+			((8,8),(7,7,false),None),
+			((8,8),(8,7,false),None)
 		],
 		vec![
-			((8,7),(8,6,false),None),
 			((8,7),(7,6,false),None),
-			((8,7),(7,8,false),None)
+			((8,7),(7,8,false),None),
+			((8,7),(8,6,false),None)
 		],
 		vec![
-			((7,8),(7,7,false),None),
 			((7,8),(6,7,false),None),
+			((7,8),(7,7,false),None),
 			((7,8),(8,7,false),None)
 		],
 		vec![
-			((7,7),(7,6,false),None),
 			((7,7),(6,6,false),None),
-			((7,7),(8,6,false),None),
 			((7,7),(6,8,false),None),
+			((7,7),(7,6,false),None),
+			((7,7),(8,6,false),None),
 			((7,7),(8,8,false),None)
 		]
 	];
@@ -3825,14 +3825,14 @@ fn test_legal_moves_banmen_with_gin_corner_gote() {
 			((1,0),(2,1,false),None)
 		],
 		vec![
-			((1,1),(1,0,true),None),
-			((1,1),(1,0,false),None),
 			((1,1),(0,0,true),None),
 			((1,1),(0,0,false),None),
-			((1,1),(2,0,true),None),
-			((1,1),(2,0,false),None),
 			((1,1),(0,2,true),None),
 			((1,1),(0,2,false),None),
+			((1,1),(1,0,true),None),
+			((1,1),(1,0,false),None),
+			((1,1),(2,0,true),None),
+			((1,1),(2,0,false),None),
 			((1,1),(2,2,true),None),
 			((1,1),(2,2,false),None)
 		],
@@ -3841,12 +3841,12 @@ fn test_legal_moves_banmen_with_gin_corner_gote() {
 			((8,0),(7,1,false),None)
 		],
 		vec![
-			((8,1),(8,0,true),None),
-			((8,1),(8,0,false),None),
 			((8,1),(7,0,true),None),
 			((8,1),(7,0,false),None),
 			((8,1),(7,2,true),None),
-			((8,1),(7,2,false),None)
+			((8,1),(7,2,false),None),
+			((8,1),(8,0,true),None),
+			((8,1),(8,0,false),None)
 		],
 		vec![
 			((7,0),(6,1,true),None),
@@ -3855,14 +3855,14 @@ fn test_legal_moves_banmen_with_gin_corner_gote() {
 			((7,0),(8,1,false),None)
 		],
 		vec![
-			((7,1),(7,0,true),None),
-			((7,1),(7,0,false),None),
 			((7,1),(6,0,true),None),
 			((7,1),(6,0,false),None),
-			((7,1),(8,0,true),None),
-			((7,1),(8,0,false),None),
 			((7,1),(6,2,true),None),
 			((7,1),(6,2,false),None),
+			((7,1),(7,0,true),None),
+			((7,1),(7,0,false),None),
+			((7,1),(8,0,true),None),
+			((7,1),(8,0,false),None),
 			((7,1),(8,2,true),None),
 			((7,1),(8,2,false),None)
 		],
@@ -3876,36 +3876,36 @@ fn test_legal_moves_banmen_with_gin_corner_gote() {
 			((0,7),(1,8,false),None)
 		],
 		vec![
-			((1,8),(1,7,false),None),
 			((1,8),(0,7,false),None),
+			((1,8),(1,7,false),None),
 			((1,8),(2,7,false),None)
 		],
 		vec![
-			((1,7),(1,6,false),None),
 			((1,7),(0,6,false),None),
-			((1,7),(2,6,false),None),
 			((1,7),(0,8,false),None),
+			((1,7),(1,6,false),None),
+			((1,7),(2,6,false),None),
 			((1,7),(2,8,false),None)
 		],
 		vec![
-			((8,8),(8,7,false),None),
-			((8,8),(7,7,false),None)
+			((8,8),(7,7,false),None),
+			((8,8),(8,7,false),None)
 		],
 		vec![
-			((8,7),(8,6,false),None),
 			((8,7),(7,6,false),None),
-			((8,7),(7,8,false),None)
+			((8,7),(7,8,false),None),
+			((8,7),(8,6,false),None)
 		],
 		vec![
-			((7,8),(7,7,false),None),
 			((7,8),(6,7,false),None),
+			((7,8),(7,7,false),None),
 			((7,8),(8,7,false),None)
 		],
 		vec![
-			((7,7),(7,6,false),None),
 			((7,7),(6,6,false),None),
-			((7,7),(8,6,false),None),
 			((7,7),(6,8,false),None),
+			((7,7),(7,6,false),None),
+			((7,7),(8,6,false),None),
 			((7,7),(8,8,false),None)
 		]
 	];
@@ -3948,13 +3948,13 @@ fn test_legal_moves_banmen_with_gin_corner_gote() {
 #[test]
 fn test_legal_moves_banmen_with_gin_nari_border_sente() {
 	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-		((4,3),(4,2,true),Some(ObtainKind::Fu)),
-		((4,3),(4,2,false),Some(ObtainKind::Fu)),
 		((4,3),(3,2,true),Some(ObtainKind::Fu)),
 		((4,3),(3,2,false),Some(ObtainKind::Fu)),
+		((4,3),(3,4,false),None),
+		((4,3),(4,2,true),Some(ObtainKind::Fu)),
+		((4,3),(4,2,false),Some(ObtainKind::Fu)),
 		((4,3),(5,2,true),Some(ObtainKind::Fu)),
 		((4,3),(5,2,false),Some(ObtainKind::Fu)),
-		((4,3),(3,4,false),None),
 		((4,3),(5,4,false),None),
 	];
 
@@ -3988,13 +3988,13 @@ fn test_legal_moves_banmen_with_gin_nari_border_sente() {
 #[test]
 fn test_legal_moves_banmen_with_gin_nari_border_gote() {
 	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-		((4,3),(4,2,true),Some(ObtainKind::Fu)),
-		((4,3),(4,2,false),Some(ObtainKind::Fu)),
 		((4,3),(3,2,true),Some(ObtainKind::Fu)),
 		((4,3),(3,2,false),Some(ObtainKind::Fu)),
+		((4,3),(3,4,false),None),
+		((4,3),(4,2,true),Some(ObtainKind::Fu)),
+		((4,3),(4,2,false),Some(ObtainKind::Fu)),
 		((4,3),(5,2,true),Some(ObtainKind::Fu)),
 		((4,3),(5,2,false),Some(ObtainKind::Fu)),
-		((4,3),(3,4,false),None),
 		((4,3),(5,4,false),None),
 	];
 
@@ -4028,7 +4028,7 @@ fn test_legal_moves_banmen_with_gin_nari_border_gote() {
 #[test]
 fn test_legal_moves_banmen_with_gin_7_squares_sente() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -4072,7 +4072,7 @@ fn test_legal_moves_banmen_with_gin_7_squares_sente() {
 #[test]
 fn test_legal_moves_banmen_with_gin_8_squares_sente() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -4116,7 +4116,7 @@ fn test_legal_moves_banmen_with_gin_8_squares_sente() {
 #[test]
 fn test_legal_moves_banmen_with_gin_7_squares_gote() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -4160,7 +4160,7 @@ fn test_legal_moves_banmen_with_gin_7_squares_gote() {
 #[test]
 fn test_legal_moves_banmen_with_gin_8_squares_gote() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -4204,7 +4204,7 @@ fn test_legal_moves_banmen_with_gin_8_squares_gote() {
 #[test]
 fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_self_sente() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4304,7 +4304,7 @@ fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_self_sente() {
 #[test]
 fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_self_sente() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4404,7 +4404,7 @@ fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_self_sente() {
 #[test]
 fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_self_gote() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4505,7 +4505,7 @@ fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_self_gote() {
 #[test]
 fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_self_gote() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4606,7 +4606,7 @@ fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_self_gote() {
 #[test]
 fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_opponent_sente() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4665,7 +4665,7 @@ fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_opponent_sente() {
 #[test]
 fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_opponent_sente() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4725,7 +4725,7 @@ fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_opponent_sente() {
 #[test]
 fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_opponent_gote() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4785,7 +4785,7 @@ fn test_legal_moves_banmen_with_gin_7_squares_and_contiguous_opponent_gote() {
 #[test]
 fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_opponent_gote() {
 	const OFFSETS:[(i32,i32); 5] = [
-		(0,-1),(-1,-1),(1,-1),(-1,1),(1,1)
+		(-1,-1),(-1,1),(0,-1),(1,-1),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 2] = [
@@ -4845,50 +4845,50 @@ fn test_legal_moves_banmen_with_gin_8_squares_and_contiguous_opponent_gote() {
 fn test_legal_moves_banmen_with_kin_corner_sente_impl(kind:KomaKind) {
 	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
 		vec![
-			((0,0),(1,0,false),None),
-			((0,0),(0,1,false),None)
+			((0,0),(0,1,false),None),
+			((0,0),(1,0,false),None)
 		],
 		vec![
 			((0,1),(0,0,false),None),
+			((0,1),(0,2,false),None),
 			((0,1),(1,0,false),None),
-			((0,1),(1,1,false),None),
-			((0,1),(0,2,false),None)
+			((0,1),(1,1,false),None)
 		],
 		vec![
 			((1,0),(0,0,false),None),
-			((1,0),(2,0,false),None),
-			((1,0),(1,1,false),None)
+			((1,0),(1,1,false),None),
+			((1,0),(2,0,false),None)
 		],
 		vec![
-			((1,1),(1,0,false),None),
 			((1,1),(0,0,false),None),
-			((1,1),(2,0,false),None),
 			((1,1),(0,1,false),None),
-			((1,1),(2,1,false),None),
+			((1,1),(1,0,false),None),
 			((1,1),(1,2,false),None),
+			((1,1),(2,0,false),None),
+			((1,1),(2,1,false),None)
 		],
 		vec![
 			((8,0),(7,0,false),None),
 			((8,0),(8,1,false),None)
 		],
 		vec![
-			((8,1),(8,0,false),None),
 			((8,1),(7,0,false),None),
 			((8,1),(7,1,false),None),
+			((8,1),(8,0,false),None),
 			((8,1),(8,2,false),None)
 		],
 		vec![
 			((7,0),(6,0,false),None),
+			((7,0),(7,1,false),None),
 			((7,0),(8,0,false),None),
-			((7,0),(7,1,false),None)
 		],
 		vec![
-			((7,1),(7,0,false),None),
 			((7,1),(6,0,false),None),
-			((7,1),(8,0,false),None),
 			((7,1),(6,1,false),None),
+			((7,1),(7,0,false),None),
+			((7,1),(7,2,false),None),
+			((7,1),(8,0,false),None),
 			((7,1),(8,1,false),None),
-			((7,1),(7,2,false),None)
 		],
 		vec![
 			((0,8),(0,7,false),None),
@@ -4897,50 +4897,50 @@ fn test_legal_moves_banmen_with_kin_corner_sente_impl(kind:KomaKind) {
 		],
 		vec![
 			((0,7),(0,6,false),None),
+			((0,7),(0,8,false),None),
 			((0,7),(1,6,false),None),
 			((0,7),(1,7,false),None),
-			((0,7),(0,8,false),None)
 		],
 		vec![
-			((1,8),(1,7,false),None),
 			((1,8),(0,7,false),None),
-			((1,8),(2,7,false),None),
 			((1,8),(0,8,false),None),
+			((1,8),(1,7,false),None),
+			((1,8),(2,7,false),None),
 			((1,8),(2,8,false),None)
 		],
 		vec![
-			((1,7),(1,6,false),None),
 			((1,7),(0,6,false),None),
-			((1,7),(2,6,false),None),
 			((1,7),(0,7,false),None),
+			((1,7),(1,6,false),None),
+			((1,7),(1,8,false),None),
+			((1,7),(2,6,false),None),
 			((1,7),(2,7,false),None),
-			((1,7),(1,8,false),None)
 		],
 		vec![
-			((8,8),(8,7,false),None),
 			((8,8),(7,7,false),None),
-			((8,8),(7,8,false),None)
+			((8,8),(7,8,false),None),
+			((8,8),(8,7,false),None),
 		],
 		vec![
-			((8,7),(8,6,false),None),
 			((8,7),(7,6,false),None),
 			((8,7),(7,7,false),None),
+			((8,7),(8,6,false),None),
 			((8,7),(8,8,false),None)
 		],
 		vec![
-			((7,8),(7,7,false),None),
 			((7,8),(6,7,false),None),
-			((7,8),(8,7,false),None),
 			((7,8),(6,8,false),None),
+			((7,8),(7,7,false),None),
+			((7,8),(8,7,false),None),
 			((7,8),(8,8,false),None)
 		],
 		vec![
-			((7,7),(7,6,false),None),
 			((7,7),(6,6,false),None),
-			((7,7),(8,6,false),None),
 			((7,7),(6,7,false),None),
+			((7,7),(7,6,false),None),
+			((7,7),(7,8,false),None),
+			((7,7),(8,6,false),None),
 			((7,7),(8,7,false),None),
-			((7,7),(7,8,false),None)
 		]
 	];
 
@@ -4980,50 +4980,50 @@ fn test_legal_moves_banmen_with_kin_corner_sente_impl(kind:KomaKind) {
 fn test_legal_moves_banmen_with_kin_corner_gote_impl(kind:KomaKind) {
 	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
 		vec![
+			((0,0),(0,1,false),None),
 			((0,0),(1,0,false),None),
-			((0,0),(0,1,false),None)
 		],
 		vec![
 			((0,1),(0,0,false),None),
+			((0,1),(0,2,false),None),
 			((0,1),(1,0,false),None),
 			((0,1),(1,1,false),None),
-			((0,1),(0,2,false),None)
 		],
 		vec![
 			((1,0),(0,0,false),None),
+			((1,0),(1,1,false),None),
 			((1,0),(2,0,false),None),
-			((1,0),(1,1,false),None)
 		],
 		vec![
-			((1,1),(1,0,false),None),
 			((1,1),(0,0,false),None),
-			((1,1),(2,0,false),None),
 			((1,1),(0,1,false),None),
-			((1,1),(2,1,false),None),
+			((1,1),(1,0,false),None),
 			((1,1),(1,2,false),None),
+			((1,1),(2,0,false),None),
+			((1,1),(2,1,false),None),
 		],
 		vec![
 			((8,0),(7,0,false),None),
 			((8,0),(8,1,false),None)
 		],
 		vec![
-			((8,1),(8,0,false),None),
 			((8,1),(7,0,false),None),
 			((8,1),(7,1,false),None),
+			((8,1),(8,0,false),None),
 			((8,1),(8,2,false),None)
 		],
 		vec![
 			((7,0),(6,0,false),None),
+			((7,0),(7,1,false),None),
 			((7,0),(8,0,false),None),
-			((7,0),(7,1,false),None)
 		],
 		vec![
-			((7,1),(7,0,false),None),
 			((7,1),(6,0,false),None),
-			((7,1),(8,0,false),None),
 			((7,1),(6,1,false),None),
+			((7,1),(7,0,false),None),
+			((7,1),(7,2,false),None),
+			((7,1),(8,0,false),None),
 			((7,1),(8,1,false),None),
-			((7,1),(7,2,false),None)
 		],
 		vec![
 			((0,8),(0,7,false),None),
@@ -5032,50 +5032,50 @@ fn test_legal_moves_banmen_with_kin_corner_gote_impl(kind:KomaKind) {
 		],
 		vec![
 			((0,7),(0,6,false),None),
+			((0,7),(0,8,false),None),
 			((0,7),(1,6,false),None),
 			((0,7),(1,7,false),None),
-			((0,7),(0,8,false),None)
 		],
 		vec![
-			((1,8),(1,7,false),None),
 			((1,8),(0,7,false),None),
-			((1,8),(2,7,false),None),
 			((1,8),(0,8,false),None),
+			((1,8),(1,7,false),None),
+			((1,8),(2,7,false),None),
 			((1,8),(2,8,false),None)
 		],
 		vec![
-			((1,7),(1,6,false),None),
 			((1,7),(0,6,false),None),
-			((1,7),(2,6,false),None),
 			((1,7),(0,7,false),None),
+			((1,7),(1,6,false),None),
+			((1,7),(1,8,false),None),
+			((1,7),(2,6,false),None),
 			((1,7),(2,7,false),None),
-			((1,7),(1,8,false),None)
 		],
 		vec![
-			((8,8),(8,7,false),None),
 			((8,8),(7,7,false),None),
-			((8,8),(7,8,false),None)
+			((8,8),(7,8,false),None),
+			((8,8),(8,7,false),None),
 		],
 		vec![
-			((8,7),(8,6,false),None),
 			((8,7),(7,6,false),None),
 			((8,7),(7,7,false),None),
+			((8,7),(8,6,false),None),
 			((8,7),(8,8,false),None)
 		],
 		vec![
-			((7,8),(7,7,false),None),
 			((7,8),(6,7,false),None),
-			((7,8),(8,7,false),None),
 			((7,8),(6,8,false),None),
+			((7,8),(7,7,false),None),
+			((7,8),(8,7,false),None),
 			((7,8),(8,8,false),None)
 		],
 		vec![
-			((7,7),(7,6,false),None),
 			((7,7),(6,6,false),None),
-			((7,7),(8,6,false),None),
 			((7,7),(6,7,false),None),
+			((7,7),(7,6,false),None),
+			((7,7),(7,8,false),None),
+			((7,7),(8,6,false),None),
 			((7,7),(8,7,false),None),
-			((7,7),(7,8,false),None)
 		]
 	];
 
@@ -5116,7 +5116,7 @@ fn test_legal_moves_banmen_with_kin_corner_gote_impl(kind:KomaKind) {
 }
 fn test_legal_moves_banmen_with_kin_7_squares_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -5153,7 +5153,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_sente_impl(kind:KomaKind) {
 }
 fn test_legal_moves_banmen_with_kin_8_squares_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -5190,7 +5190,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_sente_impl(kind:KomaKind) {
 }
 fn test_legal_moves_banmen_with_kin_7_squares_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -5227,7 +5227,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_gote_impl(kind:KomaKind) {
 }
 fn test_legal_moves_banmen_with_kin_8_squares_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -5264,7 +5264,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_gote_impl(kind:KomaKind) {
 }
 fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -5351,7 +5351,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_sente_impl(kin
 }
 fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -5438,7 +5438,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_sente_impl(kin
 }
 fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -5526,7 +5526,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_self_gote_impl(kind
 }
 fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -5614,7 +5614,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_self_gote_impl(kind
 }
 fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -5666,7 +5666,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_sente_impl
 }
 fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -5719,7 +5719,7 @@ fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_sente_impl
 }
 fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -5772,7 +5772,7 @@ fn test_legal_moves_banmen_with_kin_7_squares_and_contiguous_opponent_gote_impl(
 }
 fn test_legal_moves_banmen_with_kin_8_squares_and_contiguous_opponent_gote_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1)
+		(-1,-1),(-1,0),(0,-1),(0,1),(1,-1),(1,0)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -6107,61 +6107,61 @@ fn test_legal_moves_banmen_with_gin_nari_8_squares_and_contiguous_opponent_gote(
 fn test_legal_moves_banmen_with_ou_corner_sente() {
 	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
 		vec![
-			((0,0),(1,0,false),None),
 			((0,0),(0,1,false),None),
+			((0,0),(1,0,false),None),
 			((0,0),(1,1,false),None)
 		],
 		vec![
 			((0,1),(0,0,false),None),
+			((0,1),(0,2,false),None),
 			((0,1),(1,0,false),None),
 			((0,1),(1,1,false),None),
-			((0,1),(0,2,false),None),
 			((0,1),(1,2,false),None)
 		],
 		vec![
 			((1,0),(0,0,false),None),
-			((1,0),(2,0,false),None),
-			((1,0),(1,1,false),None),
 			((1,0),(0,1,false),None),
+			((1,0),(1,1,false),None),
+			((1,0),(2,0,false),None),
 			((1,0),(2,1,false),None)
 		],
 		vec![
-			((1,1),(1,0,false),None),
 			((1,1),(0,0,false),None),
-			((1,1),(2,0,false),None),
 			((1,1),(0,1,false),None),
-			((1,1),(2,1,false),None),
-			((1,1),(1,2,false),None),
 			((1,1),(0,2,false),None),
+			((1,1),(1,0,false),None),
+			((1,1),(1,2,false),None),
+			((1,1),(2,0,false),None),
+			((1,1),(2,1,false),None),
 			((1,1),(2,2,false),None)
 		],
 		vec![
 			((8,0),(7,0,false),None),
+			((8,0),(7,1,false),None),
 			((8,0),(8,1,false),None),
-			((8,0),(7,1,false),None)
 		],
 		vec![
-			((8,1),(8,0,false),None),
 			((8,1),(7,0,false),None),
 			((8,1),(7,1,false),None),
+			((8,1),(7,2,false),None),
+			((8,1),(8,0,false),None),
 			((8,1),(8,2,false),None),
-			((8,1),(7,2,false),None)
 		],
 		vec![
 			((7,0),(6,0,false),None),
-			((7,0),(8,0,false),None),
-			((7,0),(7,1,false),None),
 			((7,0),(6,1,false),None),
+			((7,0),(7,1,false),None),
+			((7,0),(8,0,false),None),
 			((7,0),(8,1,false),None)
 		],
 		vec![
-			((7,1),(7,0,false),None),
 			((7,1),(6,0,false),None),
-			((7,1),(8,0,false),None),
 			((7,1),(6,1,false),None),
-			((7,1),(8,1,false),None),
-			((7,1),(7,2,false),None),
 			((7,1),(6,2,false),None),
+			((7,1),(7,0,false),None),
+			((7,1),(7,2,false),None),
+			((7,1),(8,0,false),None),
+			((7,1),(8,1,false),None),
 			((7,1),(8,2,false),None)
 		],
 		vec![
@@ -6171,55 +6171,55 @@ fn test_legal_moves_banmen_with_ou_corner_sente() {
 		],
 		vec![
 			((0,7),(0,6,false),None),
+			((0,7),(0,8,false),None),
 			((0,7),(1,6,false),None),
 			((0,7),(1,7,false),None),
-			((0,7),(0,8,false),None),
 			((0,7),(1,8,false),None)
 		],
 		vec![
-			((1,8),(1,7,false),None),
 			((1,8),(0,7,false),None),
-			((1,8),(2,7,false),None),
 			((1,8),(0,8,false),None),
+			((1,8),(1,7,false),None),
+			((1,8),(2,7,false),None),
 			((1,8),(2,8,false),None)
 		],
 		vec![
-			((1,7),(1,6,false),None),
 			((1,7),(0,6,false),None),
-			((1,7),(2,6,false),None),
 			((1,7),(0,7,false),None),
-			((1,7),(2,7,false),None),
-			((1,7),(1,8,false),None),
 			((1,7),(0,8,false),None),
+			((1,7),(1,6,false),None),
+			((1,7),(1,8,false),None),
+			((1,7),(2,6,false),None),
+			((1,7),(2,7,false),None),
 			((1,7),(2,8,false),None)
 		],
 		vec![
-			((8,8),(8,7,false),None),
 			((8,8),(7,7,false),None),
-			((8,8),(7,8,false),None)
+			((8,8),(7,8,false),None),
+			((8,8),(8,7,false),None),
 		],
 		vec![
-			((8,7),(8,6,false),None),
 			((8,7),(7,6,false),None),
 			((8,7),(7,7,false),None),
+			((8,7),(7,8,false),None),
+			((8,7),(8,6,false),None),
 			((8,7),(8,8,false),None),
-			((8,7),(7,8,false),None)
 		],
 		vec![
-			((7,8),(7,7,false),None),
 			((7,8),(6,7,false),None),
-			((7,8),(8,7,false),None),
 			((7,8),(6,8,false),None),
+			((7,8),(7,7,false),None),
+			((7,8),(8,7,false),None),
 			((7,8),(8,8,false),None)
 		],
 		vec![
-			((7,7),(7,6,false),None),
 			((7,7),(6,6,false),None),
-			((7,7),(8,6,false),None),
 			((7,7),(6,7,false),None),
-			((7,7),(8,7,false),None),
-			((7,7),(7,8,false),None),
 			((7,7),(6,8,false),None),
+			((7,7),(7,6,false),None),
+			((7,7),(7,8,false),None),
+			((7,7),(8,6,false),None),
+			((7,7),(8,7,false),None),
 			((7,7),(8,8,false),None)
 		]
 	];
@@ -6261,61 +6261,61 @@ fn test_legal_moves_banmen_with_ou_corner_sente() {
 fn test_legal_moves_banmen_with_ou_corner_gote() {
 	let answer:Vec<Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)>> = vec![
 		vec![
-			((0,0),(1,0,false),None),
 			((0,0),(0,1,false),None),
+			((0,0),(1,0,false),None),
 			((0,0),(1,1,false),None)
 		],
 		vec![
 			((0,1),(0,0,false),None),
+			((0,1),(0,2,false),None),
 			((0,1),(1,0,false),None),
 			((0,1),(1,1,false),None),
-			((0,1),(0,2,false),None),
 			((0,1),(1,2,false),None)
 		],
 		vec![
 			((1,0),(0,0,false),None),
-			((1,0),(2,0,false),None),
-			((1,0),(1,1,false),None),
 			((1,0),(0,1,false),None),
+			((1,0),(1,1,false),None),
+			((1,0),(2,0,false),None),
 			((1,0),(2,1,false),None)
 		],
 		vec![
-			((1,1),(1,0,false),None),
 			((1,1),(0,0,false),None),
-			((1,1),(2,0,false),None),
 			((1,1),(0,1,false),None),
-			((1,1),(2,1,false),None),
-			((1,1),(1,2,false),None),
 			((1,1),(0,2,false),None),
+			((1,1),(1,0,false),None),
+			((1,1),(1,2,false),None),
+			((1,1),(2,0,false),None),
+			((1,1),(2,1,false),None),
 			((1,1),(2,2,false),None)
 		],
 		vec![
 			((8,0),(7,0,false),None),
+			((8,0),(7,1,false),None),
 			((8,0),(8,1,false),None),
-			((8,0),(7,1,false),None)
 		],
 		vec![
-			((8,1),(8,0,false),None),
 			((8,1),(7,0,false),None),
 			((8,1),(7,1,false),None),
+			((8,1),(7,2,false),None),
+			((8,1),(8,0,false),None),
 			((8,1),(8,2,false),None),
-			((8,1),(7,2,false),None)
 		],
 		vec![
 			((7,0),(6,0,false),None),
-			((7,0),(8,0,false),None),
-			((7,0),(7,1,false),None),
 			((7,0),(6,1,false),None),
+			((7,0),(7,1,false),None),
+			((7,0),(8,0,false),None),
 			((7,0),(8,1,false),None)
 		],
 		vec![
-			((7,1),(7,0,false),None),
 			((7,1),(6,0,false),None),
-			((7,1),(8,0,false),None),
 			((7,1),(6,1,false),None),
-			((7,1),(8,1,false),None),
-			((7,1),(7,2,false),None),
 			((7,1),(6,2,false),None),
+			((7,1),(7,0,false),None),
+			((7,1),(7,2,false),None),
+			((7,1),(8,0,false),None),
+			((7,1),(8,1,false),None),
 			((7,1),(8,2,false),None)
 		],
 		vec![
@@ -6325,55 +6325,55 @@ fn test_legal_moves_banmen_with_ou_corner_gote() {
 		],
 		vec![
 			((0,7),(0,6,false),None),
+			((0,7),(0,8,false),None),
 			((0,7),(1,6,false),None),
 			((0,7),(1,7,false),None),
-			((0,7),(0,8,false),None),
 			((0,7),(1,8,false),None)
 		],
 		vec![
-			((1,8),(1,7,false),None),
 			((1,8),(0,7,false),None),
-			((1,8),(2,7,false),None),
 			((1,8),(0,8,false),None),
+			((1,8),(1,7,false),None),
+			((1,8),(2,7,false),None),
 			((1,8),(2,8,false),None)
 		],
 		vec![
-			((1,7),(1,6,false),None),
 			((1,7),(0,6,false),None),
-			((1,7),(2,6,false),None),
 			((1,7),(0,7,false),None),
-			((1,7),(2,7,false),None),
-			((1,7),(1,8,false),None),
 			((1,7),(0,8,false),None),
+			((1,7),(1,6,false),None),
+			((1,7),(1,8,false),None),
+			((1,7),(2,6,false),None),
+			((1,7),(2,7,false),None),
 			((1,7),(2,8,false),None)
 		],
 		vec![
-			((8,8),(8,7,false),None),
 			((8,8),(7,7,false),None),
-			((8,8),(7,8,false),None)
+			((8,8),(7,8,false),None),
+			((8,8),(8,7,false),None),
 		],
 		vec![
-			((8,7),(8,6,false),None),
 			((8,7),(7,6,false),None),
 			((8,7),(7,7,false),None),
+			((8,7),(7,8,false),None),
+			((8,7),(8,6,false),None),
 			((8,7),(8,8,false),None),
-			((8,7),(7,8,false),None)
 		],
 		vec![
-			((7,8),(7,7,false),None),
 			((7,8),(6,7,false),None),
-			((7,8),(8,7,false),None),
 			((7,8),(6,8,false),None),
+			((7,8),(7,7,false),None),
+			((7,8),(8,7,false),None),
 			((7,8),(8,8,false),None)
 		],
 		vec![
-			((7,7),(7,6,false),None),
 			((7,7),(6,6,false),None),
-			((7,7),(8,6,false),None),
 			((7,7),(6,7,false),None),
-			((7,7),(8,7,false),None),
-			((7,7),(7,8,false),None),
 			((7,7),(6,8,false),None),
+			((7,7),(7,6,false),None),
+			((7,7),(7,8,false),None),
+			((7,7),(8,6,false),None),
+			((7,7),(8,7,false),None),
 			((7,7),(8,8,false),None)
 		]
 	];
@@ -6416,7 +6416,7 @@ fn test_legal_moves_banmen_with_ou_corner_gote() {
 #[test]
 fn test_legal_moves_banmen_with_ou_7_squares_sente() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -6454,7 +6454,7 @@ fn test_legal_moves_banmen_with_ou_7_squares_sente() {
 #[test]
 fn test_legal_moves_banmen_with_ou_8_squares_sente() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -6492,7 +6492,7 @@ fn test_legal_moves_banmen_with_ou_8_squares_sente() {
 #[test]
 fn test_legal_moves_banmen_with_ou_7_squares_gote() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -6530,7 +6530,7 @@ fn test_legal_moves_banmen_with_ou_7_squares_gote() {
 #[test]
 fn test_legal_moves_banmen_with_ou_8_squares_gote() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -6568,7 +6568,7 @@ fn test_legal_moves_banmen_with_ou_8_squares_gote() {
 #[test]
 fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_self_sente() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -6656,7 +6656,7 @@ fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_self_sente() {
 #[test]
 fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_self_sente() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -6744,7 +6744,7 @@ fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_self_sente() {
 #[test]
 fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_self_gote() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -6833,7 +6833,7 @@ fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_self_gote() {
 #[test]
 fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_self_gote() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -6922,7 +6922,7 @@ fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_self_gote() {
 #[test]
 fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_opponent_sente() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -6975,7 +6975,7 @@ fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_opponent_sente() {
 #[test]
 fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_opponent_sente() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -7029,7 +7029,7 @@ fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_opponent_sente() {
 #[test]
 fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_opponent_gote() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -7083,7 +7083,7 @@ fn test_legal_moves_banmen_with_ou_7_squares_and_contiguous_opponent_gote() {
 #[test]
 fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_opponent_gote() {
 	const OFFSETS:[(i32,i32); 8] = [
-		(0,-1),(-1,-1),(1,-1),(-1,0),(1,0),(0,1),(-1,1),(1,1)
+		(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
 	];
 
 	const OCC_OFFSETS:[(i32,i32); 3] = [
@@ -8860,19 +8860,19 @@ const CANDIDATE:[&[NextMove]; 14] = [
 	// 桂馬
 	&[NextMove::Once(-1,-2),NextMove::Once(1,-2)],
 	// 銀
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,1),
+		NextMove::Once(0,-1),
+		NextMove::Once(1,-1),
 		NextMove::Once(1,1)
 	],
 	// 金
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 角
 	&[NextMove::Repeat(-1,-1),
@@ -8887,66 +8887,66 @@ const CANDIDATE:[&[NextMove]; 14] = [
 		NextMove::Repeat(1,0)
 	],
 	// 王
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1),
 		NextMove::Once(-1,1),
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0),
 		NextMove::Once(1,1)
 	],
 	// 成歩
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成香
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成桂
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成銀
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成角
 	&[NextMove::Repeat(-1,-1),
 		NextMove::Repeat(1,-1),
 		NextMove::Repeat(-1,1),
 		NextMove::Repeat(1,1),
+		NextMove::Once(-1,0),
 		NextMove::Once(0,-1),
 		NextMove::Once(0,1),
-		NextMove::Once(-1,0),
 		NextMove::Once(1,0)
 	],
 	// 成飛
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
-		NextMove::Once(-1,1),
-		NextMove::Once(1,1),
-		NextMove::Repeat(0,-1),
+	&[NextMove::Repeat(0,-1),
 		NextMove::Repeat(0,1),
 		NextMove::Repeat(-1,0),
-		NextMove::Repeat(1,0)
+		NextMove::Repeat(1,0),
+		NextMove::Once(-1,-1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,1)
 	],
 ];
 #[allow(dead_code)]

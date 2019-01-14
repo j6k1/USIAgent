@@ -128,19 +128,19 @@ const CANDIDATE:[&[NextMove]; 14] = [
 	// 桂馬
 	&[NextMove::Once(-1,-2),NextMove::Once(1,-2)],
 	// 銀
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,1),
+		NextMove::Once(0,-1),
+		NextMove::Once(1,-1),
 		NextMove::Once(1,1)
 	],
 	// 金
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 角
 	&[NextMove::Repeat(-1,-1),
@@ -155,66 +155,66 @@ const CANDIDATE:[&[NextMove]; 14] = [
 		NextMove::Repeat(1,0)
 	],
 	// 王
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1),
 		NextMove::Once(-1,1),
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0),
 		NextMove::Once(1,1)
 	],
 	// 成歩
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成香
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成桂
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成銀
-	&[NextMove::Once(0,-1),
-		NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
+	&[NextMove::Once(-1,-1),
 		NextMove::Once(-1,0),
-		NextMove::Once(1,0),
-		NextMove::Once(0,1)
+		NextMove::Once(0,-1),
+		NextMove::Once(0,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,0)
 	],
 	// 成角
 	&[NextMove::Repeat(-1,-1),
 		NextMove::Repeat(1,-1),
 		NextMove::Repeat(-1,1),
 		NextMove::Repeat(1,1),
+		NextMove::Once(-1,0),
 		NextMove::Once(0,-1),
 		NextMove::Once(0,1),
-		NextMove::Once(-1,0),
 		NextMove::Once(1,0)
 	],
 	// 成飛
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(1,-1),
-		NextMove::Once(-1,1),
-		NextMove::Once(1,1),
-		NextMove::Repeat(0,-1),
+	&[NextMove::Repeat(0,-1),
 		NextMove::Repeat(0,1),
 		NextMove::Repeat(-1,0),
-		NextMove::Repeat(1,0)
+		NextMove::Repeat(1,0),
+		NextMove::Once(-1,-1),
+		NextMove::Once(-1,1),
+		NextMove::Once(1,-1),
+		NextMove::Once(1,1)
 	],
 ];
 /// 左上を(0,0)とした位置
