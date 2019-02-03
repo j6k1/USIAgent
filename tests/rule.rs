@@ -6385,7 +6385,6 @@ fn test_legal_moves_banmen_with_ou_corner_gote() {
 		(8,8),(8,7),(7,8),(7,7)
 	];
 
-
 	let answer = answer.into_iter().map(|mvs| {
 		mvs.into_iter().map(|m| {
 			match m {

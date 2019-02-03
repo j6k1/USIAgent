@@ -6,14 +6,164 @@ use hash::*;
 use error::*;
 use event::*;
 
-use shogi::KomaKind::{SFu,SKyou,SKei,SGin,SKin,SKaku,SHisha,SOu,GFu,GKyou,GKei,GGin,GKin,GKaku,GHisha,GOu,Blank};
+use shogi::KomaKind::{
+	SFu,
+	SKyou,
+	SKei,
+	SGin,
+	SKin,
+	SKaku,
+	SHisha,
+	SOu,
+	SFuN,
+	SKyouN,
+	SKeiN,
+	SGinN,
+	SKakuN,
+	SHishaN,
+	GFu,
+	GKyou,
+	GKei,
+	GGin,
+	GKin,
+	GKaku,
+	GHisha,
+	GOu,
+	GFuN,
+	GKyouN,
+	GKeiN,
+	GGinN,
+	GKakuN,
+	GHishaN,
+	Blank
+};
 use TryFrom;
 use Find;
 
+impl From<u32> for ObtainKind {
+	fn from(k:u32) -> ObtainKind {
+		match k {
+			0 => ObtainKind::Fu,
+			1 => ObtainKind::Kyou,
+			2 => ObtainKind::Kei,
+			3 => ObtainKind::Gin,
+			4 => ObtainKind::Kin,
+			5 => ObtainKind::Kaku,
+			6 => ObtainKind::Hisha,
+			7 => ObtainKind::Ou,
+			8 => ObtainKind::FuN,
+			9 => ObtainKind::KyouN,
+			10 => ObtainKind::KeiN,
+			11=> ObtainKind::GinN,
+			12 => ObtainKind::KakuN,
+			13 => ObtainKind::HishaN,
+			_ => unreachable!(),
+		}
+	}
+}
+impl From<u32> for KomaKind {
+	fn from(k:u32) -> KomaKind {
+		match k {
+			0 => SFu,
+			1 => SKyou,
+			2 => SKei,
+			3 => SGin,
+			4 => SKin,
+			5 => SKaku,
+			6 => SHisha,
+			7 => SOu,
+			8 => SFuN,
+			9 => SKyouN,
+			10 => SKeiN,
+			11 => SGinN,
+			12 => SKakuN,
+			13 => SHishaN,
+			14 => GFu,
+			15 => GKyou,
+			16 => GKei,
+			17 => GGin,
+			18 => GKin,
+			19 => GKaku,
+			20 => GHisha,
+			21 => GOu,
+			22 => GFuN,
+			23 => GKyouN,
+			24 => GKeiN,
+			25 => GGinN,
+			26 => GKakuN,
+			27 => GHishaN,
+			_ => unreachable!(),
+		}
+	}
+}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum LegalMove {
 	To(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>),
 	Put(MochigomaKind,KomaDstPutPosition),
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub struct LegalMoveTo(u32);
+impl LegalMoveTo {
+	pub fn new(from:u32,to:u32,nari:bool,obtaind:Option<ObtainKind>) -> LegalMoveTo {
+		let n:u32 = if nari {
+			1
+		} else {
+			0
+		};
+
+		LegalMoveTo(
+			obtaind.map_or(0, |o| o as u32 + 1) << 15 |
+			n << 14 |
+			(to << 7) & 0b1111111 |
+			from & 0b1111111
+		)
+	}
+
+	#[inline]
+	pub fn from(&self) -> u32 {
+		self.0 & 0b1111111
+	}
+
+	#[inline]
+	pub fn to(&self) -> u32 {
+		(self.0 >> 7) & 0b1111111
+	}
+
+	#[inline]
+	pub fn nari(&self) -> bool {
+		(self.0 & 1 << 14) != 0
+	}
+
+	#[inline]
+	pub fn obtained(&self) -> Option<ObtainKind> {
+		let o:u32 = self.0 >> 15;
+
+		if o == 0 {
+			None
+		} else {
+			Some(ObtainKind::from(o-1))
+		}
+	}
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub struct LegalMovePut(u32);
+impl LegalMovePut {
+	pub fn new(kind:KomaKind,to:u32) -> LegalMovePut {
+		LegalMovePut(
+			(to << 5) & 0b1111111 |
+			(kind as u32) & 0b11111
+		)
+	}
+
+	#[inline]
+	pub fn to(&self) -> u32 {
+		(self.0 >> 5) & 0b1111111
+	}
+
+	#[inline]
+	pub fn kind(&self) -> KomaKind {
+		KomaKind::from(self.0 & 0b11111)
+	}
 }
 impl LegalMove {
 	pub fn to_move(&self) -> Move {
@@ -166,6 +316,28 @@ const CANDIDATE_BITS:[u128; 14] = [
 	0b001000000_010100000_001000000,
 	// 成飛(一マスだけ進める手だけここに定義)
 	0b010100000_000000000_010100000
+];
+const DIAG_LEFT_ROTATE_MAP:[i32; 81] = [
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1,21,28,34,39,43,46,48,-1,
+	-1,15,22,29,35,40,44,47,-1,
+	-1,10,16,23,30,36,41,45,-1,
+	-1, 6,11,17,24,31,37,42,-1,
+	-1, 3, 7,12,18,25,32,38,-1,
+	-1, 1, 4, 8,13,19,26,33,-1,
+	-1, 0, 2, 5, 9,14,20,27,-1,
+	-1,-1,-1,-1,-1,-1,-1,-1,-1
+];
+const DIAG_RIGHT_ROTATE_MAP:[i32; 81] = [
+	-1,-1,-1,-1,-1,-1,-1,-1,-1,
+	-1, 0, 1, 3, 6,10,15,21,-1,
+	-1, 2, 4, 7,11,16,22,28,-1,
+	-1, 5, 8,12,17,23,29,34,-1,
+	-1, 9,13,18,24,30,35,39,-1,
+	-1,14,19,25,31,36,40,43,-1,
+	-1,20,26,32,37,41,44,46,-1,
+	-1,27,33,38,42,45,47,48,-1,
+	-1,-1,-1,-1,-1,-1,-1,-1,-1
 ];
 enum NextMove {
 	Once(i32,i32),
