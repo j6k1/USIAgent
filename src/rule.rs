@@ -116,6 +116,57 @@ impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
 		}
 	}
 }
+union BitBoard {
+	merged_bitboard:u128,
+	bitboard:[u64; 2]
+}
+struct State {
+	banmen:Banmen,
+	sente_self_board:BitBoard,
+	sente_opponent_board:BitBoard,
+	gote_self_board:BitBoard,
+	gote_opponent_board:BitBoard,
+	sente_diag_board:BitBoard,
+	gote_diag_board:BitBoard,
+	rotate_board:BitBoard,
+	sente_ou_position_board:BitBoard,
+	gote_ou_position_board:BitBoard
+}
+impl State {
+	pub fn map<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen) -> T {
+		f(&self.banmen)
+	}
+}
+const CANDIDATE_BITS:[u128; 14] = [
+	// 歩
+	0b000000000_001000000,
+	// 桂馬(合法手の計算ではこの値は利用しない)
+	0b0,
+	// 桂馬
+	0b100000000_000000000_100000000,
+	// 銀
+	0b010100000_010000000_010100000,
+	// 金
+	0b011000000_010100000_011000000,
+	// 角(合法手の計算ではこの値は利用しない)
+	0b0,
+	// 飛車(合法手の計算ではこの値は利用しない)
+	0b0,
+	// 王
+	0b011100000_010100000_011100000,
+	// 成歩
+	0b011000000_010100000_011000000,
+	// 成香
+	0b011000000_010100000_011000000,
+	// 成桂
+	0b011000000_010100000_011000000,
+	// 成銀
+	0b011000000_010100000_011000000,
+	// 成角(一マスだけ進める手だけここに定義)
+	0b001000000_010100000_001000000,
+	// 成飛(一マスだけ進める手だけここに定義)
+	0b010100000_000000000_010100000
+];
 enum NextMove {
 	Once(i32,i32),
 	Repeat(i32,i32),
