@@ -689,7 +689,7 @@ impl Rule {
 		let mut mvs:Vec<Square> = Vec::new();
 
 		let board = unsafe {
-			diag_bitboard.bitboard[0]
+			*diag_bitboard.bitboard.get_unchecked(0)
 		};
 
 		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
@@ -716,7 +716,7 @@ impl Rule {
 		}
 
 		let board = unsafe {
-			diag_bitboard.bitboard[1]
+			*diag_bitboard.bitboard.get_unchecked(1)
 		};
 
 		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
@@ -743,7 +743,7 @@ impl Rule {
 		}
 
 		let board = unsafe {
-			diag_bitboard.bitboard[1]
+			*diag_bitboard.bitboard.get_unchecked(1)
 		};
 
 		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
@@ -770,7 +770,7 @@ impl Rule {
 		}
 
 		let board = unsafe {
-			diag_bitboard.bitboard[0]
+			*diag_bitboard.bitboard.get_unchecked(0)
 		};
 
 		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
@@ -809,7 +809,7 @@ impl Rule {
 		let mut mvs:Vec<Square> = Vec::new();
 
 		let board = unsafe {
-			diag_bitboard.bitboard[0]
+			*diag_bitboard.bitboard.get_unchecked(0)
 		};
 
 		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
@@ -836,7 +836,7 @@ impl Rule {
 		}
 
 		let board = unsafe {
-			diag_bitboard.bitboard[1]
+			*diag_bitboard.bitboard.get_unchecked(1)
 		};
 
 		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
@@ -863,7 +863,7 @@ impl Rule {
 		}
 
 		let board = unsafe {
-			diag_bitboard.bitboard[1]
+			*diag_bitboard.bitboard.get_unchecked(1)
 		};
 
 		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
@@ -890,7 +890,7 @@ impl Rule {
 		}
 
 		let board = unsafe {
-			diag_bitboard.bitboard[0]
+			*diag_bitboard.bitboard.get_unchecked(0)
 		};
 
 		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
@@ -1018,7 +1018,7 @@ impl Rule {
 		let (bl,br) = unsafe {
 			match bitboard {
 				BitBoard { bitboard } => {
-					(bitboard[0],bitboard[1])
+					(*bitboard.get_unchecked(0),*bitboard.get_unchecked(1))
 				}
 			}
 		};
@@ -1026,14 +1026,14 @@ impl Rule {
 		if bl != 0 {
 			let p = bl.trailing_zeros() as Square;
 			unsafe {
-				bitboard.bitboard[0] &= bitboard.bitboard[0] - 1;
+				*(bitboard.bitboard.get_unchecked_mut(0)) &= *bitboard.bitboard.get_unchecked(0) - 1;
 			}
 
 			return p - 1;
 		} else if br != 0 {
 			let p = br.trailing_zeros() as Square;
 			unsafe {
-				bitboard.bitboard[1] &= bitboard.bitboard[1] - 1;
+				*(bitboard.bitboard.get_unchecked_mut(1)) &= *bitboard.bitboard.get_unchecked(1) - 1;
 			}
 
 			return p + 64;
