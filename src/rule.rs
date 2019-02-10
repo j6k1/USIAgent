@@ -348,7 +348,7 @@ impl State {
 						let li = DIAG_LEFT_ROTATE_MAP[i];
 
 						let lmask = if li != -1 {
-							1 << li + 64
+							1 << li
 						} else {
 							0
 						};
@@ -356,7 +356,7 @@ impl State {
 						let ri = DIAG_RIGHT_ROTATE_MAP[i];
 
 						let rmask = if ri != -1 {
-							1 << ri
+							1 << ri + 64
 						} else {
 							0
 						};
