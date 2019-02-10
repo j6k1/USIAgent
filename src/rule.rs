@@ -657,7 +657,7 @@ impl Rule {
 		} else if from == 10 {
 			board &= mask;
 		} else {
-			board &= mask << from - 11 + 1;
+			board &= mask << (from - 11 + 1);
 		}
 
 		let mut board = BitBoard { merged_bitboard: board };
