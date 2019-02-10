@@ -652,7 +652,7 @@ impl Rule {
 
 		let mut board = !self_occupied;
 
-		if from < 11 {
+		if from < 10 {
 			board &= mask >> (11 - from - 1);
 		} else if from == 10 {
 			board &= mask;
