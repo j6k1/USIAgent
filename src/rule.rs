@@ -96,6 +96,7 @@ impl From<u32> for KomaKind {
 		}
 	}
 }
+type Square = i32;
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum LegalMove {
 	To(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>),
@@ -266,7 +267,7 @@ impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
 		}
 	}
 }
-union BitBoard {
+pub union BitBoard {
 	merged_bitboard:u128,
 	bitboard:[u64; 2]
 }
@@ -462,7 +463,7 @@ const DIAG_RIGHT_BITBOARD_SLIDE_INFO: [(i32,u32,u32); 81] = [
 	(15, 7, 8),(21, 7, 9),(28, 6, 8),(34, 5, 7),(39, 4, 6),(43, 3, 5),(46, 2, 4),(48, 1, 3),(-1, 0, 2),
 	(21, 8, 9),(28, 7, 8),(34, 6, 7),(39, 5, 6),(43, 4, 5),(46, 3, 4),(48, 2, 3),(-1, 0, 2),(-1, 0, 1)
 ];
-const DIAG_BITBOARD_MASK: [u32; 81] = [
+const DIAG_BITBOARD_MASK: [u64; 81] = [
 	0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,
 	0b0,0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b0,
 	0b0,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b0,
@@ -622,6 +623,376 @@ pub struct Rule {
 
 }
 impl Rule {
+	pub fn legal_moves_once_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
+	) {
+		let x = from / 9;
+		let y = from - x * 9;
+
+		let mut mask = CANDIDATE_BITS[kind as usize];
+
+		if y == 0 || ((kind == SKei || kind == GKei) && y <= 1) {
+			mask = mask & TOP_MASK;
+		} else if y == 8 {
+			mask = mask & BOTTOM_MASK;
+		}
+
+		if x == 8 {
+			mask = mask & RIGHT_MASK;
+		}
+
+		let mask = mask as u128;
+		let self_occupied = unsafe {
+			match self_occupied {
+				BitBoard { merged_bitboard } => {
+					merged_bitboard
+				}
+			}
+		};
+
+		let mut board = !self_occupied;
+
+		if from < 11 {
+			board &= mask >> (11 - from + 1);
+		} else if from == 10 {
+			board &= mask;
+		} else {
+			board &= mask << from - 11;
+		}
+
+		let mut board = BitBoard { merged_bitboard: board };
+
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+
+			if p == -1 {
+				break;
+			} else {
+				mvs.push(p);
+			}
+		}
+	}
+
+	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard(
+		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
+	) {
+		let board = unsafe {
+			diag_bitboard.bitboard[0]
+		};
+
+		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from - (c * 10)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from - (c * 10)) == 0 {
+				mvs.push((from - (c * 10)) as Square);
+			}
+		}
+
+		let board = unsafe {
+			diag_bitboard.bitboard[1]
+		};
+
+		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from - (c * 8)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from - (c * 8)) == 0 {
+				mvs.push((from - (c * 8)) as Square);
+			}
+		}
+
+		let board = unsafe {
+			diag_bitboard.bitboard[1]
+		};
+
+		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from + (c * 8)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from + (c * 8)) == 0 {
+				mvs.push((from + (c * 8)) as Square);
+			}
+		}
+
+		let board = unsafe {
+			diag_bitboard.bitboard[0]
+		};
+
+		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from + (c * 10)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from + (c * 10)) == 0 {
+				mvs.push((from + (c * 10)) as Square);
+			}
+		}
+
+		if kind == SKakuN {
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard(self_occupied_of_forward_view,from,kind,mvs);
+		}
+	}
+
+	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard(
+		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
+	) {
+
+		let board = unsafe {
+			diag_bitboard.bitboard[0]
+		};
+
+		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from + (c * 10)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from + (c * 10)) == 0 {
+				mvs.push((from + (c * 10)) as Square);
+			}
+		}
+
+		let board = unsafe {
+			diag_bitboard.bitboard[1]
+		};
+
+		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from + (c * 8)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from + (c * 8)) == 0 {
+				mvs.push((from + (c * 8)) as Square);
+			}
+		}
+
+		let board = unsafe {
+			diag_bitboard.bitboard[1]
+		};
+
+		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from - (c * 8)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from - (c * 8)) == 0 {
+				mvs.push((from - (c * 8)) as Square);
+			}
+		}
+
+		let board = unsafe {
+			diag_bitboard.bitboard[0]
+		};
+
+		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let mut c = 1;
+
+			while c < count {
+				mvs.push((from - (c * 10)) as Square);
+				c += 1;
+			}
+
+			let self_occupied_of_forward_view = unsafe {
+				self_occupied_of_forward_view.merged_bitboard
+			};
+
+			if self_occupied_of_forward_view & 1 << (from - (c * 10)) == 0 {
+				mvs.push((from - (c * 10)) as Square);
+			}
+		}
+
+		if kind == GKakuN {
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard(self_occupied_of_forward_view,from,kind,mvs);
+		}
+	}
+
+	pub fn calc_to_bottom_move_count_of_kaku(diag_bitboard:u64,from:u32) -> u32 {
+		let (row_offset,offset,row_width) = match DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize] {
+			(row_offset,offset,row_width) => {
+				(row_offset,offset,row_width)
+			}
+		};
+
+		if row_offset == -1 {
+			return 0;
+		} else {
+			let row = if row_offset == 0 {
+				diag_bitboard & DIAG_BITBOARD_MASK[from as usize]
+			} else {
+				(diag_bitboard >> row_offset) & DIAG_BITBOARD_MASK[from as usize]
+			};
+
+			let row = row >> offset + 1;
+
+			let l = if row == 0 {
+				row_width - 1 - offset
+			} else {
+				row.trailing_zeros() + 1
+			};
+
+			l
+		}
+	}
+
+	pub fn calc_to_left_bottom_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
+		Rule::calc_to_bottom_move_count_of_kaku(r_diag_bitboard,from)
+	}
+
+	pub fn calc_to_right_bottom_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
+		let x = from / 9;
+		let y = from - x * 9;
+
+		let (x,y) = {
+			(y,8-x)
+		};
+
+		let from = y * 9 + x;
+
+		Rule::calc_to_bottom_move_count_of_kaku(l_diag_bitboard,from)
+	}
+
+	pub fn calc_to_top_move_count_of_kaku(diag_bitboard:u64,from:u32) -> u32 {
+		let (row_offset,mask_row_offset,offset,row_width) = match DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize] {
+			(row_offset,offset,row_width) => {
+				if row_offset == -1 {
+					return 0;
+				}
+
+				(
+					64 - row_offset - row_width as i32,
+					64 - row_offset,
+					row_width - 1 - offset,
+					row_width
+				)
+			}
+		};
+
+		let row = (diag_bitboard << row_offset) & (DIAG_BITBOARD_MASK[from as usize] << mask_row_offset);
+
+		let row = row >> offset + 1;
+
+		let l = if row == 0 {
+			row_width - 1 - offset
+		} else {
+			row.leading_zeros() + 1
+		};
+
+		l
+	}
+
+	pub fn calc_to_right_top_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
+		Rule::calc_to_top_move_count_of_kaku(r_diag_bitboard,from)
+	}
+
+	pub fn calc_to_left_top_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
+		let x = from / 9;
+		let y = from - x * 9;
+
+		let (x,y) = {
+			(y,8-x)
+		};
+
+		let from = y * 9 + x;
+
+		Rule::calc_to_top_move_count_of_kaku(l_diag_bitboard,from)
+	}
+
+	pub fn pop_lsb(bitboard:&mut BitBoard) -> Square {
+		let (bl,br) = unsafe {
+			match bitboard {
+				BitBoard { bitboard } => {
+					(bitboard[0],bitboard[1])
+				}
+			}
+		};
+
+		if bl != 0 {
+			let p = bl.trailing_zeros() as Square;
+			unsafe {
+				bitboard.bitboard[0] &= bitboard.bitboard[0] - 1;
+			}
+
+			return p - 1;
+		} else if br != 0 {
+			let p = br.trailing_zeros() as Square;
+			unsafe {
+				bitboard.bitboard[1] &= bitboard.bitboard[1] - 1;
+			}
+
+			return p + 64;
+		} else {
+			return -1;
+		}
+	}
+
 	pub fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:KomaKind)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
