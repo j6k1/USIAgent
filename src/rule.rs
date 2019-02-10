@@ -276,10 +276,8 @@ pub struct State {
 	sente_opponent_board:BitBoard,
 	gote_self_board:BitBoard,
 	gote_opponent_board:BitBoard,
-	sente_diag_board:BitBoard,
-	gote_diag_board:BitBoard,
-	sente_rotate_board:BitBoard,
-	gote_rotate_board:BitBoard,
+	diag_board:BitBoard,
+	rotate_board:BitBoard,
 	sente_hisha_board:BitBoard,
 	gote_hisha_board:BitBoard,
 	sente_kaku_board:BitBoard,
@@ -295,10 +293,8 @@ impl State {
 		let mut sente_opponent_board:u128 = 0;
 		let mut gote_self_board:u128 = 0;
 		let mut gote_opponent_board:u128 = 0;
-		let mut sente_diag_board:u128 = 0;
-		let mut gote_diag_board:u128 = 0;
-		let mut sente_rotate_board:u128 = 0;
-		let mut gote_rotate_board:u128 = 0;
+		let mut diag_board:u128 = 0;
+		let mut rotate_board:u128 = 0;
 		let mut sente_hisha_board:u128 = 0;
 		let mut gote_hisha_board:u128 = 0;
 		let mut sente_kaku_board:u128 = 0;
@@ -316,36 +312,10 @@ impl State {
 						match kind {
 							SFu => sente_fu_board ^= 1 << (y * 9 + x),
 							SKaku => {
-								let i = y * 9 + x;
-
-								sente_kaku_board ^= 1 << i;
-
-								let li = DIAG_LEFT_ROTATE_MAP[i];
-
-								let lmask = if li != -1 {
-									1 << li + 64
-								} else {
-									0
-								};
-
-								let ri = DIAG_RIGHT_ROTATE_MAP[i];
-
-								let rmask = if ri != -1 {
-									1 << ri
-								} else {
-									0
-								};
-
-								sente_diag_board ^= lmask | rmask;
+								sente_kaku_board ^= 1 << (y * 9 + x);
 							},
 							SHisha => {
 								sente_hisha_board ^= 1 << (y * 9 + x);
-
-								let (x,y) = {
-									(8 - y,x)
-								};
-
-								sente_rotate_board ^= 1 << (y * 9 + x);
 							},
 							SOu => {
 								sente_ou_position_board ^= 1 << (y * 9 + x);
@@ -354,36 +324,10 @@ impl State {
 								gote_fu_board ^= 1 << (y * 9 + x);
 							},
 							GKaku => {
-								let i = y * 9 + x;
-
-								gote_kaku_board ^= 1 << i;
-
-								let li = DIAG_LEFT_ROTATE_MAP[i];
-
-								let lmask = if li != -1 {
-									1 << li + 64
-								} else {
-									0
-								};
-
-								let ri = DIAG_RIGHT_ROTATE_MAP[i];
-
-								let rmask = if ri != -1 {
-									1 << ri
-								} else {
-									0
-								};
-
-								gote_diag_board ^= lmask | rmask;
+								gote_kaku_board ^= 1 << (y * 9 + x);
 							},
 							GHisha => {
 								gote_hisha_board ^= 1 << (y * 9 + x);
-
-								let (x,y) = {
-									(8 - y,x)
-								};
-
-								gote_rotate_board ^= 1 << (y * 9 + x);
 							},
 							GOu => {
 								gote_ou_position_board ^= 1 << (y * 9 + x);
@@ -398,6 +342,32 @@ impl State {
 							gote_self_board ^= 1 << ((8 - y) * 9 + (8- x));
 							sente_opponent_board ^= 1 << (y * 9 + x);
 						}
+
+						let i = y * 9 + x;
+
+						let li = DIAG_LEFT_ROTATE_MAP[i];
+
+						let lmask = if li != -1 {
+							1 << li + 64
+						} else {
+							0
+						};
+
+						let ri = DIAG_RIGHT_ROTATE_MAP[i];
+
+						let rmask = if ri != -1 {
+							1 << ri
+						} else {
+							0
+						};
+
+						diag_board ^= lmask | rmask;
+
+						let (x,y) = {
+							(8 - y,x)
+						};
+
+						rotate_board ^= 1 << (y * 9 + x);
 					}
 				}
 			}
@@ -409,10 +379,8 @@ impl State {
 			sente_opponent_board:BitBoard{ merged_bitboard: sente_opponent_board },
 			gote_self_board:BitBoard{ merged_bitboard: gote_self_board },
 			gote_opponent_board:BitBoard{ merged_bitboard: gote_opponent_board },
-			sente_diag_board:BitBoard{ merged_bitboard: sente_diag_board },
-			gote_diag_board:BitBoard{ merged_bitboard: gote_diag_board },
-			sente_rotate_board:BitBoard{ merged_bitboard: sente_rotate_board },
-			gote_rotate_board:BitBoard{ merged_bitboard: gote_rotate_board },
+			diag_board:BitBoard{ merged_bitboard: diag_board },
+			rotate_board:BitBoard{ merged_bitboard: rotate_board },
 			sente_hisha_board:BitBoard{ merged_bitboard: sente_hisha_board },
 			gote_hisha_board:BitBoard{ merged_bitboard: gote_hisha_board },
 			sente_kaku_board:BitBoard{ merged_bitboard: sente_kaku_board },
