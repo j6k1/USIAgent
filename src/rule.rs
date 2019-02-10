@@ -130,7 +130,7 @@ impl LegalMoveTo {
 	}
 
 	#[inline]
-	pub fn nari(&self) -> bool {
+	pub fn is_nari(&self) -> bool {
 		(self.0 & 1 << 14) != 0
 	}
 
@@ -270,7 +270,7 @@ union BitBoard {
 	merged_bitboard:u128,
 	bitboard:[u64; 2]
 }
-struct State {
+pub struct State {
 	banmen:Banmen,
 	sente_self_board:BitBoard,
 	sente_opponent_board:BitBoard,
@@ -278,14 +278,131 @@ struct State {
 	gote_opponent_board:BitBoard,
 	sente_diag_board:BitBoard,
 	gote_diag_board:BitBoard,
-	rotate_board:BitBoard,
+	sente_rotate_board:BitBoard,
+	gote_rotate_board:BitBoard,
 	sente_fu_board:BitBoard,
 	gote_fu_board:BitBoard,
 	sente_ou_position_board:BitBoard,
 	gote_ou_position_board:BitBoard
 }
 impl State {
-	pub fn map<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen) -> T {
+	pub fn new(banmen:Banmen) -> State {
+		let mut sente_self_board:u128 = 0;
+		let mut sente_opponent_board:u128 = 0;
+		let mut gote_self_board:u128 = 0;
+		let mut gote_opponent_board:u128 = 0;
+		let mut sente_diag_board:u128 = 0;
+		let mut gote_diag_board:u128 = 0;
+		let mut sente_rotate_board:u128 = 0;
+		let mut gote_rotate_board:u128 = 0;
+		let mut sente_fu_board:u128 = 0;
+		let mut gote_fu_board:u128 = 0;
+		let mut sente_ou_position_board:u128 = 0;
+		let mut gote_ou_position_board:u128 = 0;
+
+		match banmen {
+			Banmen(ref kinds) => {
+				for y in 0..9 {
+					for x in 0..9 {
+						let kind = kinds[y][x];
+						match kind {
+							SFu => sente_fu_board ^= 1 << (y * 9 + x),
+							SKaku => {
+								let i = y * 9 + x;
+								let li = DIAG_LEFT_ROTATE_MAP[i];
+
+								let lmask = if li != -1 {
+									1 << li + 64
+								} else {
+									0
+								};
+
+								let ri = DIAG_RIGHT_ROTATE_MAP[i];
+
+								let rmask = if ri != -1 {
+									1 << ri
+								} else {
+									0
+								};
+
+								sente_diag_board ^= lmask | rmask;
+							},
+							SHisha => {
+								let (x,y) = {
+									(8 - y,x)
+								};
+
+								sente_rotate_board ^= 1 << (y * 9 + x);
+							},
+							SOu => {
+								sente_ou_position_board ^= 1 << (y * 9 + x);
+							},
+							GFu => {
+								gote_fu_board ^= 1 << (y * 9 + x);
+							},
+							GKaku => {
+								let i = y * 9 + x;
+								let li = DIAG_LEFT_ROTATE_MAP[i];
+
+								let lmask = if li != -1 {
+									1 << li + 64
+								} else {
+									0
+								};
+
+								let ri = DIAG_RIGHT_ROTATE_MAP[i];
+
+								let rmask = if ri != -1 {
+									1 << ri
+								} else {
+									0
+								};
+
+								gote_diag_board ^= lmask | rmask;
+							},
+							GHisha => {
+								let (x,y) = {
+									(8 - y,x)
+								};
+
+								gote_rotate_board ^= 1 << (y * 9 + x);
+							},
+							GOu => {
+								gote_ou_position_board ^= 1 << (y * 9 + x);
+							},
+							_ => (),
+						}
+
+						if kind < GFu {
+							sente_self_board ^= 1 << (y * 9 + x);
+							gote_opponent_board ^= 1 << ((8 - y) * 9 + (8 - x));
+						} else if kind >= GFu && kind < Blank {
+							gote_self_board ^= 1 << ((8 - y) * 9 + (8- x));
+							sente_opponent_board ^= 1 << (y * 9 + x);
+						}
+					}
+				}
+			}
+		}
+
+		State {
+			banmen:banmen,
+			sente_self_board:BitBoard{ merged_bitboard: sente_self_board },
+			sente_opponent_board:BitBoard{ merged_bitboard: sente_opponent_board },
+			gote_self_board:BitBoard{ merged_bitboard: gote_self_board },
+			gote_opponent_board:BitBoard{ merged_bitboard: gote_opponent_board },
+			sente_diag_board:BitBoard{ merged_bitboard: sente_diag_board },
+			gote_diag_board:BitBoard{ merged_bitboard: gote_diag_board },
+			sente_rotate_board:BitBoard{ merged_bitboard: sente_rotate_board },
+			gote_rotate_board:BitBoard{ merged_bitboard: gote_rotate_board },
+			sente_fu_board:BitBoard{ merged_bitboard: sente_fu_board },
+			gote_fu_board:BitBoard{ merged_bitboard: gote_fu_board },
+			sente_ou_position_board:BitBoard{ merged_bitboard: sente_ou_position_board },
+			gote_ou_position_board:BitBoard{ merged_bitboard: gote_ou_position_board }
+		}
+	}
+
+	pub fn map_banmen<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen) -> T {
 		f(&self.banmen)
 	}
 }
@@ -319,6 +436,9 @@ const CANDIDATE_BITS:[u128; 14] = [
 	// 成飛(一マスだけ進める手だけここに定義)
 	0b010100000_000000000_010100000
 ];
+const TOP_MASK: u128 = 0b001111111_001111111_001111111;
+const BOTTOM_MASK: u128 = 0b111111110_111111110_111111110;
+const RIGHT_MASK: u128 = 0b111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111;
 const DIAG_LEFT_ROTATE_MAP:[i32; 81] = [
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,
 	-1,21,28,34,39,43,46,48,-1,
