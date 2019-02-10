@@ -280,6 +280,10 @@ pub struct State {
 	gote_diag_board:BitBoard,
 	sente_rotate_board:BitBoard,
 	gote_rotate_board:BitBoard,
+	sente_hisha_board:BitBoard,
+	gote_hisha_board:BitBoard,
+	sente_kaku_board:BitBoard,
+	gote_kaku_board:BitBoard,
 	sente_fu_board:BitBoard,
 	gote_fu_board:BitBoard,
 	sente_ou_position_board:BitBoard,
@@ -295,6 +299,10 @@ impl State {
 		let mut gote_diag_board:u128 = 0;
 		let mut sente_rotate_board:u128 = 0;
 		let mut gote_rotate_board:u128 = 0;
+		let mut sente_hisha_board:u128 = 0;
+		let mut gote_hisha_board:u128 = 0;
+		let mut sente_kaku_board:u128 = 0;
+		let mut gote_kaku_board:u128 = 0;
 		let mut sente_fu_board:u128 = 0;
 		let mut gote_fu_board:u128 = 0;
 		let mut sente_ou_position_board:u128 = 0;
@@ -309,6 +317,9 @@ impl State {
 							SFu => sente_fu_board ^= 1 << (y * 9 + x),
 							SKaku => {
 								let i = y * 9 + x;
+
+								sente_kaku_board ^= 1 << i;
+
 								let li = DIAG_LEFT_ROTATE_MAP[i];
 
 								let lmask = if li != -1 {
@@ -328,6 +339,8 @@ impl State {
 								sente_diag_board ^= lmask | rmask;
 							},
 							SHisha => {
+								sente_hisha_board ^= 1 << (y * 9 + x);
+
 								let (x,y) = {
 									(8 - y,x)
 								};
@@ -342,6 +355,9 @@ impl State {
 							},
 							GKaku => {
 								let i = y * 9 + x;
+
+								gote_kaku_board ^= 1 << i;
+
 								let li = DIAG_LEFT_ROTATE_MAP[i];
 
 								let lmask = if li != -1 {
@@ -361,6 +377,8 @@ impl State {
 								gote_diag_board ^= lmask | rmask;
 							},
 							GHisha => {
+								gote_hisha_board ^= 1 << (y * 9 + x);
+
 								let (x,y) = {
 									(8 - y,x)
 								};
@@ -395,6 +413,10 @@ impl State {
 			gote_diag_board:BitBoard{ merged_bitboard: gote_diag_board },
 			sente_rotate_board:BitBoard{ merged_bitboard: sente_rotate_board },
 			gote_rotate_board:BitBoard{ merged_bitboard: gote_rotate_board },
+			sente_hisha_board:BitBoard{ merged_bitboard: sente_hisha_board },
+			gote_hisha_board:BitBoard{ merged_bitboard: gote_hisha_board },
+			sente_kaku_board:BitBoard{ merged_bitboard: sente_kaku_board },
+			gote_kaku_board:BitBoard{ merged_bitboard: gote_kaku_board },
 			sente_fu_board:BitBoard{ merged_bitboard: sente_fu_board },
 			gote_fu_board:BitBoard{ merged_bitboard: gote_fu_board },
 			sente_ou_position_board:BitBoard{ merged_bitboard: sente_ou_position_board },
