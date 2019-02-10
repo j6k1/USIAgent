@@ -684,9 +684,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from - (c * 10)) as Square);
+				to -= 10;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -694,8 +696,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from - (c * 10)) == 0 {
-				mvs.push((from - (c * 10)) as Square);
+			to -= 10;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
@@ -707,9 +711,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from - (c * 8)) as Square);
+				to -= 8;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -717,8 +723,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from - (c * 8)) == 0 {
-				mvs.push((from - (c * 8)) as Square);
+			to -= 8;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
@@ -730,9 +738,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from + (c * 8)) as Square);
+				to +=8;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -740,8 +750,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from + (c * 8)) == 0 {
-				mvs.push((from + (c * 8)) as Square);
+			to += 8;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
@@ -753,9 +765,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from + (c * 10)) as Square);
+				to += 10;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -763,8 +777,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from + (c * 10)) == 0 {
-				mvs.push((from + (c * 10)) as Square);
+			to += 10;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
@@ -785,9 +801,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from + (c * 10)) as Square);
+				to += 10;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -795,8 +813,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from + (c * 10)) == 0 {
-				mvs.push((from + (c * 10)) as Square);
+			to += 10;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
@@ -808,9 +828,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from + (c * 8)) as Square);
+				to += 8;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -818,8 +840,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from + (c * 8)) == 0 {
-				mvs.push((from + (c * 8)) as Square);
+			to += 8;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
@@ -831,9 +855,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from - (c * 8)) as Square);
+				to -= 8;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -841,8 +867,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from - (c * 8)) == 0 {
-				mvs.push((from - (c * 8)) as Square);
+			to -= 8;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
@@ -854,9 +882,11 @@ impl Rule {
 
 		if count > 0 {
 			let mut c = 1;
+			let mut to = from;
 
 			while c < count {
-				mvs.push((from - (c * 10)) as Square);
+				to -= 10;
+				mvs.push(to as Square);
 				c += 1;
 			}
 
@@ -864,8 +894,10 @@ impl Rule {
 				self_occupied_of_forward_view.merged_bitboard
 			};
 
-			if self_occupied_of_forward_view & 1 << (from - (c * 10)) == 0 {
-				mvs.push((from - (c * 10)) as Square);
+			to -= 10;
+
+			if self_occupied_of_forward_view & 1 << to == 0 {
+				mvs.push(to as Square);
 			}
 		}
 
