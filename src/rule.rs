@@ -311,37 +311,37 @@ impl State {
 					for x in 0..9 {
 						let kind = kinds[y][x];
 						match kind {
-							SFu => sente_fu_board ^= 1 << (y * 9 + x),
+							SFu => sente_fu_board ^= 1 << (y * 9 + x + 1),
 							SKaku => {
-								sente_kaku_board ^= 1 << (y * 9 + x);
+								sente_kaku_board ^= 1 << (y * 9 + x + 1);
 							},
 							SHisha => {
-								sente_hisha_board ^= 1 << (y * 9 + x);
+								sente_hisha_board ^= 1 << (y * 9 + x + 1);
 							},
 							SOu => {
-								sente_ou_position_board ^= 1 << (y * 9 + x);
+								sente_ou_position_board ^= 1 << (y * 9 + x + 1);
 							},
 							GFu => {
-								gote_fu_board ^= 1 << (y * 9 + x);
+								gote_fu_board ^= 1 << (y * 9 + x + 1);
 							},
 							GKaku => {
-								gote_kaku_board ^= 1 << (y * 9 + x);
+								gote_kaku_board ^= 1 << (y * 9 + x + 1);
 							},
 							GHisha => {
-								gote_hisha_board ^= 1 << (y * 9 + x);
+								gote_hisha_board ^= 1 << (y * 9 + x + 1);
 							},
 							GOu => {
-								gote_ou_position_board ^= 1 << (y * 9 + x);
+								gote_ou_position_board ^= 1 << (y * 9 + x + 1);
 							},
 							_ => (),
 						}
 
 						if kind < GFu {
-							sente_self_board ^= 1 << (y * 9 + x);
-							gote_opponent_board ^= 1 << ((8 - y) * 9 + (8 - x));
+							sente_self_board ^= 1 << (y * 9 + x + 1);
+							gote_opponent_board ^= 1 << ((8 - y) * 9 + (8 - x) + 1);
 						} else if kind >= GFu && kind < Blank {
-							gote_self_board ^= 1 << ((8 - y) * 9 + (8- x));
-							sente_opponent_board ^= 1 << (y * 9 + x);
+							gote_self_board ^= 1 << ((8 - y) * 9 + (8- x) + 1);
+							sente_opponent_board ^= 1 << (y * 9 + x + 1);
 						}
 
 						let i = y * 9 + x;
@@ -368,7 +368,7 @@ impl State {
 							(8 - y,x)
 						};
 
-						rotate_board ^= 1 << (y * 9 + x);
+						rotate_board ^= 1 << (y * 9 + x + 1);
 					}
 				}
 			}
@@ -657,7 +657,7 @@ impl Rule {
 		} else if from == 10 {
 			board &= mask;
 		} else {
-			board &= mask << from - 11;
+			board &= mask << from - 11 + 1;
 		}
 
 		let mut board = BitBoard { merged_bitboard: board };
@@ -698,7 +698,7 @@ impl Rule {
 
 			to -= 10;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -725,7 +725,7 @@ impl Rule {
 
 			to -= 8;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -752,7 +752,7 @@ impl Rule {
 
 			to += 8;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -779,7 +779,7 @@ impl Rule {
 
 			to += 10;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -815,7 +815,7 @@ impl Rule {
 
 			to += 10;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -842,7 +842,7 @@ impl Rule {
 
 			to += 8;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -869,7 +869,7 @@ impl Rule {
 
 			to -= 8;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -896,7 +896,7 @@ impl Rule {
 
 			to -= 10;
 
-			if self_occupied_of_forward_view & 1 << to == 0 {
+			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
