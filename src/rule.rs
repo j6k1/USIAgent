@@ -623,7 +623,7 @@ pub struct Rule {
 
 }
 impl Rule {
-	pub fn legal_moves_once_with_point_and_kind_and_bitboard(
+	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 		self_occupied:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
 	) {
 		let x = from / 9;
@@ -673,9 +673,21 @@ impl Rule {
 		}
 	}
 
+	pub fn legal_moves_once_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,from:u32,kind:KomaKind
+	) -> Vec<Square> {
+		let mut mvs:Vec<Square> = Vec::new();
+
+		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(self_occupied,from,kind,&mut mvs);
+
+		mvs
+	}
+
 	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard(
-		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
-	) {
+		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Vec<Square> {
+		let mut mvs:Vec<Square> = Vec::new();
+
 		let board = unsafe {
 			diag_bitboard.bitboard[0]
 		};
@@ -785,13 +797,16 @@ impl Rule {
 		}
 
 		if kind == SKakuN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard(self_occupied_of_forward_view,from,kind,mvs);
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(self_occupied_of_forward_view,from,kind,&mut mvs);
 		}
+
+		mvs
 	}
 
 	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard(
-		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
-	) {
+		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Vec<Square> {
+		let mut mvs:Vec<Square> = Vec::new();
 
 		let board = unsafe {
 			diag_bitboard.bitboard[0]
@@ -902,8 +917,10 @@ impl Rule {
 		}
 
 		if kind == GKakuN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard(self_occupied_of_forward_view,from,kind,mvs);
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(self_occupied_of_forward_view,from,kind,&mut mvs);
 		}
+
+		mvs
 	}
 
 	pub fn calc_to_bottom_move_count_of_kaku(diag_bitboard:u64,from:u32) -> u32 {
