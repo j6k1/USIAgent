@@ -260,11 +260,6 @@ impl From<Move> for AppliedMove {
 		}
 	}
 }
-impl Move {
-	pub fn to_applied_move(&self) -> AppliedMove {
-		AppliedMove::from(*self)
-	}
-}
 impl LegalMove {
 	pub fn to_move(&self) -> Move {
 		match self  {

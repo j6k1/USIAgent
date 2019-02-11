@@ -3,6 +3,7 @@ use std::fmt::Formatter;
 use std::collections::HashMap;
 
 use TryFrom;
+use rule::AppliedMove;
 use error::*;
 
 use Find;
@@ -113,6 +114,11 @@ pub struct KomaDstPutPosition(pub u32,pub u32);
 pub enum Move {
 	To(KomaSrcPosition,KomaDstToPosition),
 	Put(MochigomaKind,KomaDstPutPosition),
+}
+impl Move {
+	pub fn to_applied_move(&self) -> AppliedMove {
+		AppliedMove::from(*self)
+	}
 }
 #[derive(Debug)]
 pub enum MochigomaCollections {
