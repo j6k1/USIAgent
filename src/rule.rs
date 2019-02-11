@@ -166,6 +166,100 @@ impl LegalMovePut {
 		KomaKind::from(self.0 & 0b11111)
 	}
 }
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub enum AppliedMove {
+	To(AppliedMoveTo),
+	Put(AppliedMovePut)
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub struct AppliedMoveTo(u32);
+impl AppliedMoveTo {
+	#[inline]
+	pub fn from(&self) -> u32 {
+		self.0 & 0b1111111
+	}
+
+	#[inline]
+	pub fn to(&self) -> u32 {
+		(self.0 >> 7) & 0b1111111
+	}
+
+	#[inline]
+	pub fn is_nari(&self) -> bool {
+		(self.0 & 1 << 14) != 0
+	}
+}
+impl From<LegalMoveTo> for AppliedMoveTo {
+	fn from(m:LegalMoveTo) -> AppliedMoveTo {
+		AppliedMoveTo(m.0 & 0b111111111111111)
+	}
+}
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+pub struct AppliedMovePut(u32);
+impl AppliedMovePut {
+	#[inline]
+	pub fn to(&self) -> u32 {
+		(self.0 >> 5) & 0b1111111
+	}
+
+	#[inline]
+	pub fn kind(&self) -> KomaKind {
+		KomaKind::from(self.0 & 0b11111)
+	}
+}
+impl From<LegalMovePut> for AppliedMovePut {
+	fn from(m:LegalMovePut) -> AppliedMovePut {
+		AppliedMovePut(m.0)
+	}
+}
+/*
+impl From<LegalMove> for AppliedMove {
+	fn from(m:LegalMove) -> AppliedMove {
+		match m {
+			LegalMove::To(m) => AppliedMove(AppliedMoveTo::from(m)),
+			LegalMove::Put(m) => AppliedMove(AppliedMovePut::from(m))
+		}
+	}
+}
+*/
+impl From<Move> for AppliedMove {
+	fn from(m:Move) -> AppliedMove {
+		match m {
+			Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
+				let sx = 9 - sx;
+				let sy = sy - 1;
+				let dx = 9 - dx;
+				let dy = dy - 1;
+
+				let from = sx * 9 + sy;
+				let to = dx * 9 + dy;
+
+				let n = if n {
+					1
+				} else {
+					0
+				};
+
+				AppliedMove::To(AppliedMoveTo(
+					n << 14 |
+					(to << 7) & 0b1111111 |
+					from & 0b1111111
+				))
+			},
+			Move::Put(kind,KomaDstPutPosition(x,y)) => {
+				let x = 9 - x;
+				let y = y - 1;
+
+				let to = x * 9 + y;
+
+				AppliedMove::Put(AppliedMovePut(
+					(to << 5) & 0b1111111 |
+					(kind as u32) & 0b11111
+				))
+			}
+		}
+	}
+}
 impl LegalMove {
 	pub fn to_move(&self) -> Move {
 		match self  {
