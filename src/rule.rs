@@ -267,6 +267,7 @@ impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
 		}
 	}
 }
+#[derive(Clone, Copy)]
 pub union BitBoard {
 	merged_bitboard:u128,
 	bitboard:[u64; 2]
@@ -676,7 +677,7 @@ impl Rule {
 			} else if teban == Teban::Sente {
 				mvs.push(p);
 			} else {
-				mvs.push(63 - p);
+				mvs.push(80 - p);
 			}
 		}
 	}
@@ -1024,6 +1025,234 @@ impl Rule {
 		let from = y * 9 + x;
 
 		Rule::calc_to_top_move_count_of_kaku(l_diag_bitboard,from)
+	}
+
+	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Vec<Square> {
+		let mut mvs:Vec<Square> = Vec::new();
+
+		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to -= 1;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to -= 1;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to += 1;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to += 1;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to -= 9;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to -= 9;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to += 9;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to += 9;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		if kind == SHishaN {
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Teban::Sente,self_occupied,from,kind,&mut mvs
+			);
+		}
+
+		mvs
+	}
+
+	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Vec<Square> {
+		let mut mvs:Vec<Square> = Vec::new();
+
+		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to += 1;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to += 1;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (80 - to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to -= 1;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to -= 1;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (80 - to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to += 9;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to += 9;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (80 - to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to -= 9;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to -= 9;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (80 - to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		if kind == GHishaN {
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Teban::Gote,self_occupied,from,kind,&mut mvs
+			);
+		}
+
+		mvs
+	}
+
+	pub fn calc_to_bottom_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
+		Rule::calc_back_move_repeat_count(bitboard,from)
+	}
+
+	pub fn calc_to_top_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
+		Rule::calc_forward_move_repeat_count(bitboard,from)
+	}
+
+	pub fn calc_to_left_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
+		Rule::calc_back_move_repeat_count(bitboard,from)
+	}
+
+	pub fn calc_to_right_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
+		Rule::calc_forward_move_repeat_count(bitboard,from)
 	}
 
 	pub fn calc_back_move_repeat_count(bitboard:BitBoard,from:u32) -> u32 {
