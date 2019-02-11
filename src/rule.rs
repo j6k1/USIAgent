@@ -624,8 +624,14 @@ pub struct Rule {
 }
 impl Rule {
 	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-		self_occupied:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
+		teban:Teban,self_occupied:BitBoard,from:u32,kind:KomaKind,mvs:&mut Vec<Square>
 	) {
+		let from = if teban == Teban::Sente {
+			from
+		} else {
+			80 - from
+		};
+
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -667,24 +673,26 @@ impl Rule {
 
 			if p == -1 {
 				break;
-			} else {
+			} else if teban == Teban::Sente {
 				mvs.push(p);
+			} else {
+				mvs.push(63 - p);
 			}
 		}
 	}
 
 	pub fn legal_moves_once_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,from:u32,kind:KomaKind
+		teban:Teban,self_occupied:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
 		let mut mvs:Vec<Square> = Vec::new();
 
-		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(self_occupied,from,kind,&mut mvs);
+		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(teban,self_occupied,from,kind,&mut mvs);
 
 		mvs
 	}
 
 	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard(
-		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+		self_occupied:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
 		let mut mvs:Vec<Square> = Vec::new();
 
@@ -704,13 +712,13 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to -= 10;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -731,13 +739,13 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to -= 8;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -758,13 +766,13 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to += 8;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -785,26 +793,28 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to += 10;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
 
 		if kind == SKakuN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(self_occupied_of_forward_view,from,kind,&mut mvs);
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Teban::Sente,self_occupied,from,kind,&mut mvs
+			);
 		}
 
 		mvs
 	}
 
 	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard(
-		self_occupied_of_forward_view:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+		self_occupied:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
 		let mut mvs:Vec<Square> = Vec::new();
 
@@ -824,13 +834,13 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to += 10;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (80 - to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -851,13 +861,13 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to += 8;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (80 - to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -878,13 +888,13 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to -= 8;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (80 - to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -905,19 +915,21 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_of_forward_view = unsafe {
-				self_occupied_of_forward_view.merged_bitboard
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
 			};
 
 			to -= 10;
 
-			if self_occupied_of_forward_view & 1 << (to + 1) == 0 {
+			if self_occupied & 1 << (80 - to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
 
 		if kind == GKakuN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(self_occupied_of_forward_view,from,kind,&mut mvs);
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Teban::Gote,self_occupied,from,kind,&mut mvs
+			);
 		}
 
 		mvs
