@@ -284,6 +284,8 @@ pub struct State {
 	gote_hisha_board:BitBoard,
 	sente_kaku_board:BitBoard,
 	gote_kaku_board:BitBoard,
+	sente_kyou_board:BitBoard,
+	gote_kyou_board:BitBoard,
 	sente_fu_board:BitBoard,
 	gote_fu_board:BitBoard,
 	sente_ou_position_board:BitBoard,
@@ -301,6 +303,8 @@ impl State {
 		let mut gote_hisha_board:u128 = 0;
 		let mut sente_kaku_board:u128 = 0;
 		let mut gote_kaku_board:u128 = 0;
+		let mut sente_kyou_board:u128 = 0;
+		let mut gote_kyou_board:u128 = 0;
 		let mut sente_fu_board:u128 = 0;
 		let mut gote_fu_board:u128 = 0;
 		let mut sente_ou_position_board:u128 = 0;
@@ -313,27 +317,15 @@ impl State {
 						let kind = kinds[y][x];
 						match kind {
 							SFu => sente_fu_board ^= 1 << (y * 9 + x + 1),
-							SKaku => {
-								sente_kaku_board ^= 1 << (y * 9 + x + 1);
-							},
-							SHisha => {
-								sente_hisha_board ^= 1 << (y * 9 + x + 1);
-							},
-							SOu => {
-								sente_ou_position_board ^= 1 << (y * 9 + x + 1);
-							},
-							GFu => {
-								gote_fu_board ^= 1 << (y * 9 + x + 1);
-							},
-							GKaku => {
-								gote_kaku_board ^= 1 << (y * 9 + x + 1);
-							},
-							GHisha => {
-								gote_hisha_board ^= 1 << (y * 9 + x + 1);
-							},
-							GOu => {
-								gote_ou_position_board ^= 1 << (y * 9 + x + 1);
-							},
+							SKyou => sente_kyou_board ^= 1 << (y * 9 + 1),
+							SKaku => sente_kaku_board ^= 1 << (y * 9 + x + 1),
+							SHisha => sente_hisha_board ^= 1 << (y * 9 + x + 1),
+							SOu => sente_ou_position_board ^= 1 << (y * 9 + x + 1),
+							GFu => gote_fu_board ^= 1 << (y * 9 + x + 1),
+							GKyou => gote_kyou_board ^= 1 << (y * 9 + 1),
+							GKaku => gote_kaku_board ^= 1 << (y * 9 + x + 1),
+							GHisha => gote_hisha_board ^= 1 << (y * 9 + x + 1),
+							GOu => gote_ou_position_board ^= 1 << (y * 9 + x + 1),
 							_ => (),
 						}
 
@@ -387,6 +379,8 @@ impl State {
 			gote_hisha_board:BitBoard{ merged_bitboard: gote_hisha_board },
 			sente_kaku_board:BitBoard{ merged_bitboard: sente_kaku_board },
 			gote_kaku_board:BitBoard{ merged_bitboard: gote_kaku_board },
+			sente_kyou_board:BitBoard{ merged_bitboard: sente_kyou_board },
+			gote_kyou_board:BitBoard{ merged_bitboard: gote_kyou_board },
 			sente_fu_board:BitBoard{ merged_bitboard: sente_fu_board },
 			gote_fu_board:BitBoard{ merged_bitboard: gote_fu_board },
 			sente_ou_position_board:BitBoard{ merged_bitboard: sente_ou_position_board },
@@ -682,6 +676,7 @@ impl Rule {
 		}
 	}
 
+	#[inline]
 	pub fn legal_moves_once_with_point_and_kind_and_bitboard(
 		teban:Teban,self_occupied:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
@@ -964,10 +959,12 @@ impl Rule {
 		}
 	}
 
+	#[inline]
 	pub fn calc_to_left_bottom_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
 		Rule::calc_to_bottom_move_count_of_kaku(r_diag_bitboard,from)
 	}
 
+	#[inline]
 	pub fn calc_to_right_bottom_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
 		let x = from / 9;
 		let y = from - x * 9;
@@ -1010,10 +1007,12 @@ impl Rule {
 		l
 	}
 
+	#[inline]
 	pub fn calc_to_right_top_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
 		Rule::calc_to_top_move_count_of_kaku(r_diag_bitboard,from)
 	}
 
+	#[inline]
 	pub fn calc_to_left_top_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
 		let x = from / 9;
 		let y = from - x * 9;
@@ -1239,20 +1238,86 @@ impl Rule {
 		mvs
 	}
 
+	#[inline]
 	pub fn calc_to_bottom_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
 		Rule::calc_back_move_repeat_count(bitboard,from)
 	}
 
+	#[inline]
 	pub fn calc_to_top_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
 		Rule::calc_forward_move_repeat_count(bitboard,from)
 	}
 
+	#[inline]
 	pub fn calc_to_left_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
 		Rule::calc_back_move_repeat_count(bitboard,from)
 	}
 
+	#[inline]
 	pub fn calc_to_right_move_count_of_hisha(bitboard:BitBoard,from:u32) -> u32 {
 		Rule::calc_forward_move_repeat_count(bitboard,from)
+	}
+
+	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,bitboard:BitBoard,from:u32
+	) -> Vec<Square> {
+		let mut mvs:Vec<Square> = Vec::new();
+
+		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to -= 1;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to -= 1;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		mvs
+	}
+
+	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,bitboard:BitBoard,from:u32
+	) -> Vec<Square> {
+		let mut mvs:Vec<Square> = Vec::new();
+
+		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let mut c = 1;
+			let mut to = from;
+
+			while c < count {
+				to += 1;
+				mvs.push(to as Square);
+				c += 1;
+			}
+
+			to += 1;
+
+			let self_occupied = unsafe {
+				self_occupied.merged_bitboard
+			};
+
+			if self_occupied & 1 << (80 - to + 1) != 0 {
+				mvs.push(to as Square);
+			}
+		}
+
+		mvs
 	}
 
 	pub fn calc_back_move_repeat_count(bitboard:BitBoard,from:u32) -> u32 {
