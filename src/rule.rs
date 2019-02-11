@@ -998,7 +998,7 @@ impl Rule {
 
 		let row = (diag_bitboard << row_offset) & (DIAG_BITBOARD_MASK[from as usize] << mask_row_offset);
 
-		let row = row >> offset + 1;
+		let row = row << offset + 1;
 
 		let l = if row == 0 {
 			row_width - 1 - offset
@@ -1024,6 +1024,48 @@ impl Rule {
 		let from = y * 9 + x;
 
 		Rule::calc_to_top_move_count_of_kaku(l_diag_bitboard,from)
+	}
+
+	pub fn calc_back_move_repeat_count(bitboard:BitBoard,from:u32) -> u32 {
+		let board_x = from / 9;
+		let board_y = from - board_x * 9;
+
+		let board = unsafe {
+			BitBoard {
+				merged_bitboard: (bitboard.merged_bitboard << board_x + 1) & 0b111111111
+			}
+		};
+
+		let board = unsafe { *board.bitboard.get_unchecked(0) };
+		let board = board >> (board_y + 1);
+
+		if board == 0 {
+			8 - board_y
+		} else {
+			board.trailing_zeros() + 1
+		}
+	}
+
+	pub fn calc_forward_move_repeat_count(bitboard:BitBoard,from:u32) -> u32 {
+		let board_x = from / 9;
+		let board_y = from - board_x * 9;
+
+		let board = unsafe {
+			BitBoard {
+				merged_bitboard: (
+					(bitboard.merged_bitboard << ((8 - board_x) * 9)) << 46
+				) & 0b111111111 << 119
+			}
+		};
+
+		let board = unsafe { *board.bitboard.get_unchecked(1) };
+		let board = board << (board_y + 1);
+
+		if board == 0 {
+			8 - board_y
+		} else {
+			board.leading_zeros() + 1
+		}
 	}
 
 	pub fn pop_lsb(bitboard:&mut BitBoard) -> Square {
