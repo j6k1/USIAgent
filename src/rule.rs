@@ -686,7 +686,7 @@ impl Rule {
 	pub fn legal_moves_once_with_point_and_kind_and_bitboard(
 		teban:Teban,self_occupied:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
-		let mut mvs:Vec<Square> = Vec::new();
+		let mut mvs:Vec<Square> = Vec::with_capacity(8);
 
 		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(teban,self_occupied,from,kind,&mut mvs);
 
@@ -696,7 +696,7 @@ impl Rule {
 	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
-		let mut mvs:Vec<Square> = Vec::new();
+		let mut mvs:Vec<Square> = Vec::with_capacity(20);
 
 		let board = unsafe {
 			*diag_bitboard.bitboard.get_unchecked(0)
@@ -818,7 +818,7 @@ impl Rule {
 	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
-		let mut mvs:Vec<Square> = Vec::new();
+		let mut mvs:Vec<Square> = Vec::with_capacity(20);
 
 		let board = unsafe {
 			*diag_bitboard.bitboard.get_unchecked(0)
@@ -1035,7 +1035,7 @@ impl Rule {
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
-		let mut mvs:Vec<Square> = Vec::new();
+		let mut mvs:Vec<Square> = Vec::with_capacity(20);
 
 		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
 
@@ -1141,7 +1141,7 @@ impl Rule {
 	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Vec<Square> {
-		let mut mvs:Vec<Square> = Vec::new();
+		let mut mvs:Vec<Square> = Vec::with_capacity(20);
 
 		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
 
@@ -1267,7 +1267,7 @@ impl Rule {
 	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,bitboard:BitBoard,from:u32
 	) -> Vec<Square> {
-		let mut mvs:Vec<Square> = Vec::new();
+		let mut mvs:Vec<Square> = Vec::with_capacity(8);
 
 		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
 
@@ -1298,7 +1298,7 @@ impl Rule {
 	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,bitboard:BitBoard,from:u32
 	) -> Vec<Square> {
-		let mut mvs:Vec<Square> = Vec::new();
+		let mut mvs:Vec<Square> = Vec::with_capacity(8);
 
 		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
 
