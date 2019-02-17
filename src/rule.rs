@@ -563,12 +563,12 @@ const DIAG_BITBOARD_MASK: [u64; 81] = [
 	0b0,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,0b0,
 	0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0
 ];
-const SENTE_NARI_MASK: u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
-const GOTE_NARI_MASK: u128 = 0b000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111;
-const DENY_MOVE_SENTE_FU_AND_KYOU_MASK: u128 = 0b10000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
-const DENY_MOVE_SENTE_KEI_MASK: u128 = 0b110000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
-const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
-const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
+const SENTE_NARI_MASK: u128 = 0b000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111;
+const GOTE_NARI_MASK: u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
+const DENY_MOVE_SENTE_FU_AND_KYOU_MASK: u128 = 0b000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
+const DENY_MOVE_SENTE_KEI_MASK: u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
+const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
+const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
 enum NextMove {
 	Once(i32,i32),
 	Repeat(i32,i32),
@@ -3725,5 +3725,105 @@ impl Rule {
 		m.insert(MochigomaKind::Hisha, 1);
 
 		m
+	}
+}
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn const_test_sente_nari_mask() {
+		for i in 0..128 {
+			let x = i / 9;
+			let y = i - x * 9;
+
+			if i == 0 {
+				assert!(SENTE_NARI_MASK & 1 != 0);
+			} else if x < 9 && y <= 2 {
+				assert!(SENTE_NARI_MASK & 1 << i != 0);
+			} else {
+				assert!(SENTE_NARI_MASK & 1 << i == 0);
+			}
+		}
+	}
+
+	#[test]
+	fn const_test_gote_nari_mask() {
+		for i in 0..128 {
+			let x = i / 9;
+			let y = i - x * 9;
+
+			if i == 0 {
+				assert!(GOTE_NARI_MASK & 1 == 0);
+			} else if x < 9 && y >= 6 {
+				assert!(GOTE_NARI_MASK & 1 << i != 0);
+			} else {
+				assert!(GOTE_NARI_MASK & 1 << i == 0);
+			}
+		}
+	}
+
+	#[test]
+	fn const_test_deny_move_sente_fu_and_kyou_mask() {
+		for i in 0..128 {
+			let x = i / 9;
+			let y = i - x * 9;
+
+			if i == 0 {
+				assert!(DENY_MOVE_SENTE_FU_AND_KYOU_MASK & 1 != 0);
+			} else if x < 9 && y == 0 {
+				assert!(DENY_MOVE_SENTE_FU_AND_KYOU_MASK & 1 << i != 0);
+			} else {
+				assert!(DENY_MOVE_SENTE_FU_AND_KYOU_MASK & 1 << i == 0);
+			}
+		}
+	}
+
+	#[test]
+	fn const_test_deny_move_gote_fu_and_kyou_mask() {
+		for i in 0..128 {
+			let x = i / 9;
+			let y = i - x * 9;
+
+			if i == 0 {
+				assert!(DENY_MOVE_GOTE_FU_AND_KYOU_MASK & 1 == 0);
+			} else if x < 9 && y == 8 {
+				assert!(DENY_MOVE_GOTE_FU_AND_KYOU_MASK & 1 << i != 0);
+			} else {
+				assert!(DENY_MOVE_GOTE_FU_AND_KYOU_MASK & 1 << i == 0);
+			}
+		}
+	}
+
+	#[test]
+	fn const_test_deny_move_deny_move_sente_kei_mask() {
+		for i in 0..128 {
+			let x = i / 9;
+			let y = i - x * 9;
+
+			if i == 0 {
+				assert!(DENY_MOVE_SENTE_KEI_MASK & 1 != 0);
+			} else if x < 9 && y <= 1 {
+				assert!(DENY_MOVE_SENTE_KEI_MASK & 1 << i != 0);
+			} else {
+				assert!(DENY_MOVE_SENTE_KEI_MASK & 1 << i == 0);
+			}
+		}
+	}
+
+	#[test]
+	fn const_test_deny_move_deny_move_gote_kei_mask() {
+		for i in 0..128 {
+			let x = i / 9;
+			let y = i - x * 9;
+
+			if i == 0 {
+				assert!(DENY_MOVE_GOTE_KEI_MASK & 1 == 0);
+			} else if x < 9 && y >= 7 {
+				assert!(DENY_MOVE_GOTE_KEI_MASK & 1 << i != 0);
+			} else {
+				assert!(DENY_MOVE_GOTE_KEI_MASK & 1 << i == 0);
+			}
+		}
 	}
 }
