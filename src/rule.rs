@@ -410,25 +410,25 @@ impl State {
 					for x in 0..9 {
 						let kind = kinds[y][x];
 						match kind {
-							SFu => sente_fu_board ^= 1 << (y * 9 + x + 1),
-							SKyou => sente_kyou_board ^= 1 << (y * 9 + 1),
-							SKaku => sente_kaku_board ^= 1 << (y * 9 + x + 1),
-							SHisha => sente_hisha_board ^= 1 << (y * 9 + x + 1),
-							SOu => sente_ou_position_board ^= 1 << (y * 9 + x + 1),
-							GFu => gote_fu_board ^= 1 << (y * 9 + x + 1),
-							GKyou => gote_kyou_board ^= 1 << (y * 9 + 1),
-							GKaku => gote_kaku_board ^= 1 << (y * 9 + x + 1),
-							GHisha => gote_hisha_board ^= 1 << (y * 9 + x + 1),
-							GOu => gote_ou_position_board ^= 1 << (y * 9 + x + 1),
+							SFu => sente_fu_board ^= 1 << (x * 9 + y + 1),
+							SKyou => sente_kyou_board ^= 1 << (x * 9 + y + 1),
+							SKaku => sente_kaku_board ^= 1 << (x * 9 + y + 1),
+							SHisha => sente_hisha_board ^= 1 << (x * 9 + y + 1),
+							SOu => sente_ou_position_board ^= 1 << (x * 9 + y + 1),
+							GFu => gote_fu_board ^= 1 << (x * 9 + y + 1),
+							GKyou => gote_kyou_board ^= 1 << (x * 9 + y + 1),
+							GKaku => gote_kaku_board ^= 1 << (x * 9 + y + 1),
+							GHisha => gote_hisha_board ^= 1 << (x * 9 + y + 1),
+							GOu => gote_ou_position_board ^= 1 << (x * 9 + y + 1),
 							_ => (),
 						}
 
 						if kind < GFu {
-							sente_self_board ^= 1 << (y * 9 + x + 1);
-							gote_opponent_board ^= 1 << ((8 - y) * 9 + (8 - x) + 1);
+							sente_self_board ^= 1 << (x * 9 + y + 1);
+							gote_opponent_board ^= 1 << ((8 - x) * 9 + (8 - y) + 1);
 						} else if kind >= GFu && kind < Blank {
-							gote_self_board ^= 1 << ((8 - y) * 9 + (8- x) + 1);
-							sente_opponent_board ^= 1 << (y * 9 + x + 1);
+							gote_self_board ^= 1 << ((8 - x) * 9 + (8- y) + 1);
+							sente_opponent_board ^= 1 << (x * 9 + y + 1);
 						}
 
 						let i = y * 9 + x;
@@ -455,7 +455,7 @@ impl State {
 							(8 - y,x)
 						};
 
-						rotate_board ^= 1 << (y * 9 + x + 1);
+						rotate_board ^= 1 << (x * 9 + y + 1);
 					}
 				}
 			}
@@ -563,12 +563,12 @@ const DIAG_BITBOARD_MASK: [u64; 81] = [
 	0b0,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,0b0,
 	0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0
 ];
-const SENTE_NARI_MASK: u128 = 0b0111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
-const GOTE_NARI_MASK: u128 = 0b0000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111;
-const DENY_MOVE_SENTE_FU_AND_KYOU_MASK: u128 = 0b010000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
-const DENY_MOVE_SENTE_KEI_MASK: u128 = 0b0110000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
-const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b0000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
-const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b0000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
+const SENTE_NARI_MASK: u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
+const GOTE_NARI_MASK: u128 = 0b000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111;
+const DENY_MOVE_SENTE_FU_AND_KYOU_MASK: u128 = 0b10000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
+const DENY_MOVE_SENTE_KEI_MASK: u128 = 0b110000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
+const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
+const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
 enum NextMove {
 	Once(i32,i32),
 	Repeat(i32,i32),
@@ -1426,7 +1426,7 @@ impl Rule {
 
 		let board = unsafe {
 			BitBoard {
-				merged_bitboard: (bitboard.merged_bitboard << board_x + 1) & 0b111111111
+				merged_bitboard: (bitboard.merged_bitboard << board_x * 9) & 0b111111111
 			}
 		};
 
@@ -1447,7 +1447,7 @@ impl Rule {
 		let board = unsafe {
 			BitBoard {
 				merged_bitboard: (
-					(bitboard.merged_bitboard << ((8 - board_x) * 9)) << 46
+					(bitboard.merged_bitboard << (128 - board_x * 9))
 				) & 0b111111111 << 119
 			}
 		};
