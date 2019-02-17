@@ -61,51 +61,30 @@ impl From<u32> for ObtainKind {
 		}
 	}
 }
-impl From<u32> for KomaKind {
-	fn from(k:u32) -> KomaKind {
+impl From<u32> for MochigomaKind {
+	fn from(k:u32) -> MochigomaKind {
 		match k {
-			0 => SFu,
-			1 => SKyou,
-			2 => SKei,
-			3 => SGin,
-			4 => SKin,
-			5 => SKaku,
-			6 => SHisha,
-			7 => SOu,
-			8 => SFuN,
-			9 => SKyouN,
-			10 => SKeiN,
-			11 => SGinN,
-			12 => SKakuN,
-			13 => SHishaN,
-			14 => GFu,
-			15 => GKyou,
-			16 => GKei,
-			17 => GGin,
-			18 => GKin,
-			19 => GKaku,
-			20 => GHisha,
-			21 => GOu,
-			22 => GFuN,
-			23 => GKyouN,
-			24 => GKeiN,
-			25 => GGinN,
-			26 => GKakuN,
-			27 => GHishaN,
+			0 => MochigomaKind::Fu,
+			1 => MochigomaKind::Kyou,
+			2 => MochigomaKind::Kei,
+			3 => MochigomaKind::Gin,
+			4 => MochigomaKind::Kin,
+			5 => MochigomaKind::Kaku,
+			6 => MochigomaKind::Hisha,
 			_ => unreachable!(),
 		}
 	}
 }
 type Square = i32;
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum LegalMove {
-	To(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>),
-	Put(MochigomaKind,KomaDstPutPosition),
+	To(LegalMoveTo),
+	Put(LegalMovePut),
 }
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct LegalMoveTo(u32);
 impl LegalMoveTo {
-	pub fn new(from:u32,to:u32,nari:bool,obtaind:Option<ObtainKind>) -> LegalMoveTo {
+	pub fn new(src:u32,to:u32,nari:bool,obtaind:Option<ObtainKind>) -> LegalMoveTo {
 		let n:u32 = if nari {
 			1
 		} else {
@@ -116,17 +95,17 @@ impl LegalMoveTo {
 			obtaind.map_or(0, |o| o as u32 + 1) << 15 |
 			n << 14 |
 			(to << 7) & 0b1111111 |
-			from & 0b1111111
+			src & 0b1111111
 		)
 	}
 
 	#[inline]
-	pub fn from(&self) -> u32 {
+	pub fn src(&self) -> u32 {
 		self.0 & 0b1111111
 	}
 
 	#[inline]
-	pub fn to(&self) -> u32 {
+	pub fn dst(&self) -> u32 {
 		(self.0 >> 7) & 0b1111111
 	}
 
@@ -146,41 +125,41 @@ impl LegalMoveTo {
 		}
 	}
 }
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct LegalMovePut(u32);
 impl LegalMovePut {
-	pub fn new(kind:KomaKind,to:u32) -> LegalMovePut {
+	pub fn new(kind:MochigomaKind,to:u32) -> LegalMovePut {
 		LegalMovePut(
-			(to << 5) & 0b1111111 |
-			(kind as u32) & 0b11111
+			(to << 3) & 0b1111111 |
+			(kind as u32) & 0b111
 		)
 	}
 
 	#[inline]
-	pub fn to(&self) -> u32 {
-		(self.0 >> 5) & 0b1111111
+	pub fn dst(&self) -> u32 {
+		(self.0 >> 3) & 0b1111111
 	}
 
 	#[inline]
-	pub fn kind(&self) -> KomaKind {
-		KomaKind::from(self.0 & 0b11111)
+	pub fn kind(&self) -> MochigomaKind {
+		MochigomaKind::from(self.0 & 0b111)
 	}
 }
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum AppliedMove {
 	To(AppliedMoveTo),
 	Put(AppliedMovePut)
 }
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct AppliedMoveTo(u32);
 impl AppliedMoveTo {
 	#[inline]
-	pub fn from(&self) -> u32 {
+	pub fn src(&self) -> u32 {
 		self.0 & 0b1111111
 	}
 
 	#[inline]
-	pub fn to(&self) -> u32 {
+	pub fn dst(&self) -> u32 {
 		(self.0 >> 7) & 0b1111111
 	}
 
@@ -194,17 +173,17 @@ impl From<LegalMoveTo> for AppliedMoveTo {
 		AppliedMoveTo(m.0 & 0b111111111111111)
 	}
 }
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct AppliedMovePut(u32);
 impl AppliedMovePut {
 	#[inline]
 	pub fn to(&self) -> u32 {
-		(self.0 >> 5) & 0b1111111
+		(self.0 >> 3) & 0b1111111
 	}
 
 	#[inline]
-	pub fn kind(&self) -> KomaKind {
-		KomaKind::from(self.0 & 0b11111)
+	pub fn kind(&self) -> MochigomaKind {
+		MochigomaKind::from(self.0 & 0b111)
 	}
 }
 impl From<LegalMovePut> for AppliedMovePut {
@@ -212,16 +191,14 @@ impl From<LegalMovePut> for AppliedMovePut {
 		AppliedMovePut(m.0)
 	}
 }
-/*
 impl From<LegalMove> for AppliedMove {
 	fn from(m:LegalMove) -> AppliedMove {
 		match m {
-			LegalMove::To(m) => AppliedMove(AppliedMoveTo::from(m)),
-			LegalMove::Put(m) => AppliedMove(AppliedMovePut::from(m))
+			LegalMove::To(m) => AppliedMove::To(AppliedMoveTo::from(m)),
+			LegalMove::Put(m) => AppliedMove::Put(AppliedMovePut::from(m))
 		}
 	}
 }
-*/
 impl From<Move> for AppliedMove {
 	fn from(m:Move) -> AppliedMove {
 		match m {
@@ -231,8 +208,8 @@ impl From<Move> for AppliedMove {
 				let dx = 9 - dx;
 				let dy = dy - 1;
 
-				let from = sx * 9 + sy;
-				let to = dx * 9 + dy;
+				let src = sx * 9 + sy;
+				let dst = dx * 9 + dy;
 
 				let n = if n {
 					1
@@ -242,40 +219,79 @@ impl From<Move> for AppliedMove {
 
 				AppliedMove::To(AppliedMoveTo(
 					n << 14 |
-					(to << 7) & 0b1111111 |
-					from & 0b1111111
+					(dst << 7) & 0b1111111 |
+					src & 0b1111111
 				))
 			},
 			Move::Put(kind,KomaDstPutPosition(x,y)) => {
 				let x = 9 - x;
 				let y = y - 1;
 
-				let to = x * 9 + y;
+				let dst = x * 9 + y;
 
 				AppliedMove::Put(AppliedMovePut(
-					(to << 5) & 0b1111111 |
-					(kind as u32) & 0b11111
+					(dst << 3) & 0b1111111 |
+					(kind as u32) & 0111
 				))
 			}
 		}
 	}
 }
 impl LegalMove {
-	pub fn to_move(&self) -> Move {
-		match self  {
-			&LegalMove::To(ref ms, ref md, _) => Move::To(*ms,*md),
-			&LegalMove::Put(ref mk, ref md) => Move::Put(*mk,*md),
+	pub fn to_applied_move(&self) -> AppliedMove {
+		AppliedMove::from(*self)
+	}
+}
+impl From<LegalMove> for Move {
+	fn from(m:LegalMove) -> Move {
+		match m {
+			LegalMove::To(m) => {
+				let src = m.src();
+				let dst = m.dst();
+				let n = m.is_nari();
+				let sx = src / 9;
+				let sy = src - sx * 9;
+				let dx = dst / 9;
+				let dy = dst - dx * 9;
+				let sx = 9 - sx;
+				let sy = sy + 1;
+				let dx = 9 - dx;
+				let dy = dy + 1;
+
+				Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n))
+			},
+			LegalMove::Put(m) => {
+				let dst = m.dst();
+				let kind = m.kind();
+				let dx = dst / 9;
+				let dy = dst - dx * 9;
+				let dx = 9 - dx;
+				let dy = dy + 1;
+
+				Move::Put(kind,KomaDstPutPosition(dx,dy))
+			}
 		}
 	}
 }
 impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
 	fn find(&self,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
 		match query {
-			&(ref s, ref d) => {
+			&(ref s,ref d) => {
+				let (sx,sy) = match s {
+					KomaSrcPosition(sx,sy) => (9 - sx, sy - 1)
+				};
+
+				let (dx,dy) = match d {
+					KomaDstToPosition(dx,dy,_) => (9 - dx, dy -1),
+				};
+
+				let src = sx * 9 + sy;
+				let dst = dx * 9 + dy;
+
 				for m in self {
 					match m {
-						&LegalMove::To(ref ms, ref md, _) => {
-							if s == ms && d == md {
+						&LegalMove::To(m) => {
+							if src == m.src() && dst == m.dst() {
 								return Some(Move::To(*s,*d));
 							}
 						},
@@ -294,24 +310,18 @@ impl Find<KomaPosition,Move> for Vec<LegalMove> {
 			&KomaPosition(x,y) => (x,y)
 		};
 
+		let index = (9 - x) * 9 + (y - 1);
+
 		for m in self {
 			match m {
-				&LegalMove::To(ref ms, ref md, _) => {
-					match md {
-						&KomaDstToPosition(dx,dy,_) => {
-							if x == dx && y == dy {
-								return Some(Move::To(*ms,*md));
-							}
-						}
+				LegalMove::To(mt) => {
+					if index == mt.dst() {
+						return Some(Move::from(*m));
 					}
 				},
-				&LegalMove::Put(ref mk, ref md) => {
-					match md {
-						&KomaDstPutPosition(dx,dy) => {
-							if x == dx && y == dy {
-								return Some(Move::Put(*mk,*md));
-							}
-						}
+				LegalMove::Put(mp) => {
+					if index == mp.dst() {
+						return Some(Move::from(*m));
 					}
 				}
 			}
@@ -324,11 +334,16 @@ impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<LegalMove> {
 	fn find(&self,query:&(MochigomaKind,KomaDstPutPosition)) -> Option<Move> {
 		match query {
 			&(ref k, ref d) => {
+				let (dx,dy) = match d {
+					&KomaDstPutPosition(dx,dy) => (9 - dx, dy - 1)
+				};
+				let index = dx * 9 + dy;
+
 				for m in self {
 					match m {
-						&LegalMove::Put(ref mk, ref md) => {
-							if k == mk && d == md {
-								return Some(Move::Put(*k,*d));
+						LegalMove::Put(mp) => {
+							if *k == mp.kind() && index == mp.dst() {
+								return Some(Move::from(*m));
 							}
 						},
 						_ => (),
@@ -346,9 +361,11 @@ impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
 
 		for m in self {
 			match m {
-				&LegalMove::To(ref ms, ref md, Some(ref o)) => {
-					if *o == *query {
-						mvs.push(Move::To(*ms,*md));
+				LegalMove::To(mt) => {
+					if let Some(o) = mt.obtained() {
+						if  o == *query {
+							mvs.push(Move::from(*m));
+						}
 					}
 				},
 				_ => (),
@@ -1363,7 +1380,7 @@ impl Rule {
 	) -> Vec<Square> {
 		let mut mvs:Vec<Square> = Vec::with_capacity(8);
 
-		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
+		let count = Rule::calc_forward_move_repeat_count(bitboard,from);
 
 		if count > 0 {
 			let mut c = 1;
@@ -1394,7 +1411,7 @@ impl Rule {
 	) -> Vec<Square> {
 		let mut mvs:Vec<Square> = Vec::with_capacity(8);
 
-		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
+		let count = Rule::calc_back_move_repeat_count(bitboard,from);
 
 		if count > 0 {
 			let mut c = 1;
@@ -1490,355 +1507,550 @@ impl Rule {
 		}
 	}
 
-	pub fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:KomaKind)
-		-> Vec<LegalMove> {
+	pub fn legal_moves_with_point_and_kind(
+		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind
+	) -> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		let kinds = match banmen {
-			&Banmen(ref kinds) => kinds,
-		};
+		Rule::legal_moves_with_point_and_kind_and_buffer(t,state,x,y,kind,&mut mvs);
 
-		let x:i32 = x as i32;
-		let y:i32 = y as i32;
-
-		match *t {
-			Teban::Sente if kind < KomaKind::GFu => {
-				let mv = CANDIDATE[kind as usize];
-
-				for m in mv {
-					match m {
-						&NextMove::Once(mx,my) => {
-							if x + mx >= 0 && x + mx < 9 && y + my >= 0 && y + my < 9 {
-								let dx = x + mx;
-								let dy = y + my;
-								match kinds[dy as usize][dx as usize] {
-									KomaKind::Blank if  (kind == SFu && dy == 0) ||
-														(kind == SKei && dy <= 1) => {
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),None));
-									},
-									KomaKind::Blank => {
-										if  kind < SOu &&
-											kind != KomaKind::SKin && dy <= 2 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),None));
-										}
-										mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false),None));
-									},
-									dst if dst >= KomaKind::GFu &&
-										((kind == SFu && dy == 0) || (kind == SKei && dy <= 1)) => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),obtained));
-									},
-									dst if dst >= KomaKind::GFu => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-
-										if  kind < SOu &&
-											kind != KomaKind::SKin && dy <= 2 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),obtained));
-										}
-
-										mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false),obtained));
-									},
-									_ => (),
-								}
-							}
-						},
-						&NextMove::Repeat(mx,my) => {
-							let mut dx = x;
-							let mut dy = y;
-
-							while dx + mx >= 0 && dx + mx < 9 && dy + my >= 0 && dy + my < 9 {
-								dx = dx + mx;
-								dy = dy + my;
-
-								match kinds[dy as usize][dx as usize] {
-									KomaKind::Blank if kind == SKyou && dy == 0 => {
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),None));
-									},
-									KomaKind::Blank => {
-										if  kind < KomaKind::SOu &&
-											kind != KomaKind::SKin && dy <= 2 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),None));
-										}
-										mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, false),None));
-									},
-									dst if dst < KomaKind::GFu => {
-										break;
-									},
-									dst if dst >= KomaKind::GFu && kind == SKyou && dy == 0 => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),obtained));
-										break;
-									},
-									dst if dst >= KomaKind::GFu => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-
-										if  kind < KomaKind::SOu &&
-											kind != KomaKind::SKin && dy <= 2 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),obtained));
-										}
-
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),obtained));
-										break;
-									},
-									_ => (),
-								}
-							}
-						}
-					}
-				}
-			},
-			Teban::Gote if kind >= KomaKind::GFu && kind < KomaKind::Blank => {
-				let mv = CANDIDATE[kind as usize - KomaKind::GFu as usize];
-				for m in mv {
-					match m {
-						&NextMove::Once(mx,my) => {
-							let mx = -mx;
-							let my = -my;
-							if x + mx >= 0 && x + mx < 9 && y + my >= 0 && y + my < 9 {
-								let dx = x + mx;
-								let dy = y + my;
-								match kinds[dy as usize][dx as usize] {
-									KomaKind::Blank if  (kind == GFu && dy == 8) ||
-														(kind == GKei && dy >= 7) => {
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),None));
-									},
-									KomaKind::Blank => {
-										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin && dy >= 6 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),None));
-										}
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),None));
-									},
-									dst if dst < KomaKind::GFu &&
-										((kind == GFu && dy == 8) || (kind == GKei && dy >= 7)) => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),obtained));
-									},
-									dst if dst < KomaKind::GFu => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-
-										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin && dy >= 6 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),obtained));
-										}
-
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),obtained));
-									},
-									_ => (),
-								}
-							}
-						},
-						&NextMove::Repeat(mx,my) => {
-							let mx = -mx;
-							let my = -my;
-							let mut dx = x;
-							let mut dy = y;
-
-							while dx + mx >= 0 && dx + mx < 9 && dy + my >= 0 && dy + my < 9 {
-								dx = dx + mx;
-								dy = dy + my;
-
-								match kinds[dy as usize][dx as usize] {
-									KomaKind::Blank if kind == GKyou && dy == 8 => {
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),None));
-									},
-									KomaKind::Blank => {
-										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin && dy >= 6 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),None));
-										}
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),None));
-									},
-									dst if dst >= KomaKind::GFu => {
-										break;
-									},
-									dst if dst < KomaKind::GFu &&
-										kind == GKyou && dy == 8 => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, true),obtained));
-										break;
-									},
-									dst if dst < KomaKind::GFu => {
-										let obtained = match ObtainKind::try_from(dst) {
-											Ok(obtained) => Some(obtained),
-											Err(_) => None,
-										};
-
-										if  kind < KomaKind::GOu &&
-											kind != KomaKind::GKin && dy >= 6 {
-
-											mvs.push(LegalMove::To(
-												KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-												KomaDstToPosition(
-													9 - dx as u32, dy as u32 + 1, true),obtained));
-										}
-
-										mvs.push(LegalMove::To(
-											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
-											KomaDstToPosition(
-												9 - dx as u32, dy as u32 + 1, false),obtained));
-										break;
-									},
-									_ => (),
-								}
-							}
-						}
-					}
-				}
-			},
-			_ => (),
-		}
 		mvs
 	}
 
-	pub fn legal_moves_with_point(t:&Teban,banmen:&Banmen,x:u32,y:u32)
+	pub fn legal_moves_with_point_and_kind_and_buffer(
+		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
+	) {
+		let from = x * 9 + y;
+
+		let kinds = match &state.banmen {
+			&Banmen(ref kinds) => kinds
+		};
+
+		match kind {
+			SFu => {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_bitboard = unsafe { state.sente_opponent_board.merged_bitboard };
+
+					let o = if opponent_bitboard & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			SKyou => {
+				let bitboard = unsafe {
+					let self_occupied = state.sente_self_board.merged_bitboard;
+					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
+
+					BitBoard {
+						merged_bitboard: self_occupied | opponent_occupied
+					}
+				};
+
+				for m in Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard(
+					state.sente_self_board, bitboard, from
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_bitboard = unsafe { state.sente_opponent_board.merged_bitboard };
+
+					let o = if opponent_bitboard & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			}
+			SKei => {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_bitboard = unsafe { state.sente_opponent_board.merged_bitboard };
+
+					let o = if opponent_bitboard & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_SENTE_KEI_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			SKaku | SKakuN => {
+				for m in Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard(
+					state.sente_self_board, state.diag_board, from, kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_bitboard = unsafe { state.sente_opponent_board.merged_bitboard };
+
+					let o = if opponent_bitboard & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if kind == SKaku && SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			SHisha | SHishaN => {
+				let bitboard = unsafe {
+					let self_occupied = state.sente_self_board.merged_bitboard;
+					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
+
+					BitBoard {
+						merged_bitboard: self_occupied | opponent_occupied
+					}
+				};
+
+				for m in Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
+					state.sente_self_board, bitboard, state.rotate_board, from, kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_bitboard = unsafe { state.sente_opponent_board.merged_bitboard };
+
+					let o = if opponent_bitboard & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if kind == SHisha && SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			SGin | SOu =>  {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_bitboard = unsafe { state.sente_opponent_board.merged_bitboard };
+
+					let o = if opponent_bitboard & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			SFuN | SKyouN | SKeiN | SGinN | SKin => {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_bitboard = unsafe { state.sente_opponent_board.merged_bitboard };
+
+					let o = if opponent_bitboard & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GFu => {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			GKyou => {
+				let bitboard = unsafe {
+					let self_occupied = state.sente_self_board.merged_bitboard;
+					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
+
+					BitBoard {
+						merged_bitboard: self_occupied | opponent_occupied
+					}
+				};
+
+				for m in Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard(
+					state.gote_self_board, bitboard, from
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			GKei => {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_GOTE_KEI_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			GKaku | GKakuN => {
+				for m in Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard(
+					state.gote_self_board, state.diag_board, from, kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if kind == GKaku && GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GHisha | GHishaN => {
+				let bitboard = unsafe {
+					let self_occupied = state.sente_self_board.merged_bitboard;
+					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
+
+					BitBoard {
+						merged_bitboard: self_occupied | opponent_occupied
+					}
+				};
+
+				for m in Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard(
+					state.gote_self_board, bitboard, state.rotate_board, from, kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if kind == GHisha && GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GGin | GOu =>  {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GFuN | GKyouN | GKeiN | GGinN | GKin => {
+				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,from,kind
+				) {
+					let to = m as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			Blank => (),
+		}
+	}
+
+	pub fn legal_moves_with_point(t:&Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
-		match banmen {
+		match &state.banmen {
 			&Banmen(ref kinds) => {
-				Rule::legal_moves_with_point_and_kind(t,banmen,x,y,kinds[y as usize][x as usize])
+				Rule::legal_moves_with_point_and_kind(t,state,x,y,kinds[y as usize][x as usize])
 			}
 		}
 	}
-	pub fn legal_moves_with_src(t:&Teban,banmen:&Banmen,src:KomaSrcPosition)
+	pub fn legal_moves_with_src(t:&Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
-			KomaSrcPosition(x,y) => Rule::legal_moves_with_point(t, banmen, 9 - x, y - 1)
+			KomaSrcPosition(x,y) => Rule::legal_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves_with_dst_to(t:&Teban,banmen:&Banmen,dst:KomaDstToPosition)
+	pub fn legal_moves_with_dst_to(t:&Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstToPosition(x,y,_) => Rule::legal_moves_with_point(t, banmen, 9 - x, y - 1)
+			KomaDstToPosition(x,y,_) => Rule::legal_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves_with_dst_put(t:&Teban,banmen:&Banmen,dst:KomaDstPutPosition)
+	pub fn legal_moves_with_dst_put(t:&Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstPutPosition(x,y) => Rule::legal_moves_with_point(t, banmen, 9 - x, y - 1)
+			KomaDstPutPosition(x,y) => Rule::legal_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves_from_banmen(t:&Teban,banmen:&Banmen)
+
+	pub fn legal_moves_from_banmen(t:&Teban,state:&State)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match banmen {
+		Rule::legal_moves_from_banmen_and_buffer(t,state,&mut mvs);
+
+		mvs
+	}
+
+	pub fn legal_moves_from_banmen_and_buffer(t:&Teban,state:&State,mvs:&mut Vec<LegalMove>) {
+		match &state.banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8 - x, 8 - y),
-						};
-						mvs.append(&mut Rule::legal_moves_with_point(t, banmen, x as u32, y as u32));
+						Rule::legal_moves_with_point_and_kind_and_buffer(
+							t, state, x as u32, y as u32, kinds[y][x], &mut mvs
+						);
 					}
 				}
 			}
 		}
+	}
+
+	pub fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,state:&State)
+		-> Vec<LegalMove> {
+
+		let mut mvs:Vec<LegalMove> = Vec::new();
+
+		Rule::legal_moves_from_mochigoma_with_buffer(t,mc,state,&mut mvs);
+
 		mvs
 	}
 
-	pub fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
-
+	pub fn legal_moves_from_mochigoma_with_buffer(
+		t:&Teban,mc:&MochigomaCollections,state:&State,mvs:&mut Vec<LegalMove>
+	) {
 		match *t {
 			Teban::Sente => {
 				match *mc {
@@ -1995,7 +2207,6 @@ impl Rule {
 		mvs.append(&mut Rule::legal_moves_from_mochigoma(t, mc, banmen));
 		mvs
 	}
-
 
 	pub fn win_only_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:KomaKind)
 		-> Vec<LegalMove> {
