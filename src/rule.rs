@@ -403,6 +403,7 @@ impl Not for BitBoard {
 		}
 	}
 }
+#[derive(Clone)]
 pub struct State {
 	banmen:Banmen,
 	sente_self_board:BitBoard,
@@ -563,6 +564,29 @@ pub struct PartialState {
 	pub gote_fu_board:BitBoard,
 	pub sente_ou_position_board:BitBoard,
 	pub gote_ou_position_board:BitBoard
+}
+impl PartialState {
+	pub fn to_full_state(&self,banmen:Banmen) -> State {
+		State {
+			banmen:banmen,
+			sente_self_board: self.sente_self_board,
+			sente_opponent_board: self.sente_opponent_board,
+			gote_self_board: self.gote_self_board,
+			gote_opponent_board: self.gote_opponent_board,
+			diag_board: self.diag_board,
+			rotate_board: self.rotate_board,
+			sente_hisha_board: self.sente_hisha_board,
+			gote_hisha_board: self.gote_hisha_board,
+			sente_kaku_board: self.sente_kaku_board,
+			gote_kaku_board: self.gote_kaku_board,
+			sente_kyou_board: self.sente_kyou_board,
+			gote_kyou_board: self.gote_kyou_board,
+			sente_fu_board: self.sente_fu_board,
+			gote_fu_board: self.gote_fu_board,
+			sente_ou_position_board: self.sente_ou_position_board,
+			gote_ou_position_board: self.gote_ou_position_board,
+		}
+	}
 }
 const CANDIDATE_BITS:[u128; 14] = [
 	// 歩
@@ -3072,7 +3096,6 @@ impl Rule {
 		mvs
 	}
 
-
 	pub fn oute_only_moves_with_point(t:&Teban,state:&State,mc:&MochigomaCollections,x:u32,y:u32)
 		-> Vec<LegalMove> {
 		let mvs = Rule::win_only_moves_with_point(t,state,x,y);
@@ -3675,22 +3698,41 @@ impl Rule {
 		ps
 	}
 
-	pub fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move)
-		-> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
+	pub fn apply_move_none_check(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove)
+		-> (State,MochigomaCollections,Option<MochigomaKind>) {
+		let ps = Rule::apply_move_to_partial_state_none_check(state,t,mc,m);
+		let (banmen,mc,o) = Rule::apply_move_to_banmen_and_mochigoma_none_check(
+			&state.banmen,t,mc,m
+		);
+		(ps.to_full_state(banmen),mc,o)
+	}
+
+	pub fn apply_move_to_banmen_and_mochigoma_none_check(
+		banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove
+	) -> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
 
 		let mut kinds = match banmen {
 			&Banmen(ref kinds) => kinds.clone(),
 		};
 
 		let (nmc,obtained) = match m {
-			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
-				let k = kinds[(sy - 1) as usize][(9 - sx) as usize];
+			&AppliedMove::To(m) => {
+				let from = m.src();
+				let to = m.dst();
+				let n = m.is_nari();
 
-				kinds[(sy - 1) as usize][(9 - sx) as usize] = KomaKind::Blank;
+				let sx = from as usize / 9;
+				let sy = from as usize - sx as usize* 9;
+				let dx = to as usize / 9;
+				let dy = to as usize - dx as usize * 9;
 
-				match kinds[(dy - 1) as usize][(9 - dx) as usize] {
+				let k = kinds[sy][sx];
+
+				kinds[sy][sx] = KomaKind::Blank;
+
+				match kinds[dy][dx] {
 					KomaKind::Blank => {
-						kinds[(dy - 1) as usize][(9 - dx) as usize] = match n {
+						kinds[dy][dx] = match n {
 							true => {
 								match k {
 									KomaKind::SFu => KomaKind::SFuN,
@@ -3723,7 +3765,7 @@ impl Rule {
 							Err(_) => None,
 						};
 
-						kinds[(dy - 1) as usize][(9 - dx) as usize] = match n {
+						kinds[dy][dx] = match n {
 							true => {
 								match k {
 									KomaKind::SFu => KomaKind::SFuN,
@@ -3799,8 +3841,14 @@ impl Rule {
 					}
 				}
 			},
-			&Move::Put(k,KomaDstPutPosition(dx,dy)) => {
-				kinds[(dy - 1) as usize][(9 - dx) as usize] = KomaKind::from((*t,k));
+			&AppliedMove::Put(m) => {
+				let to = m.dst();
+				let k = m.kind();
+
+				let dx = to as usize / 9;
+				let dy = to as usize - dx * 9;
+
+				kinds[dy][dx] = KomaKind::from((*t,k));
 
 				let mut mc = mc.clone();
 
@@ -3842,59 +3890,40 @@ impl Rule {
 		(Banmen(kinds),nmc,obtained)
 	}
 
-	pub fn apply_valid_move(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move)
-		-> Result<(Banmen,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
+	pub fn is_valid_move(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
+		true
+	}
 
-		match m {
-			&Move::To(s,d) => {
-				let mvs = Rule::legal_moves_from_banmen(t,banmen);
+	pub fn apply_valid_move(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove)
+		-> Result<(State,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
-				match mvs.find(&(s,d)) {
-					Some(_) => {
-						Ok(Rule::apply_move_none_check(banmen,t,mc,m))
-					},
-					None => {
-						Err(ShogiError::InvalidState(String::from(
-							"This is not legal move."
-						)))
-					}
-				}
-			},
-			&Move::Put(k,d) => {
-				let mvs = Rule::legal_moves_from_mochigoma(t,mc,banmen);
-
-				match mvs.find(&(k,d)) {
-					Some(_) => {
-						Ok(Rule::apply_move_none_check(banmen,t,mc,m))
-					},
-					None => {
-						Err(ShogiError::InvalidState(String::from(
-							"This is not legal move."
-						)))
-					}
-				}
-			}
+		if !Rule::is_valid_move(state, t, mc, m) {
+			Err(ShogiError::InvalidState(String::from(
+				"This is not legal move."
+			)))
+		} else {
+			Ok(Rule::apply_move_none_check(state,t,mc,m))
 		}
 	}
 
-	pub fn apply_moves(banmen:&Banmen,mut teban:Teban,
+	pub fn apply_moves(state:&State,mut teban:Teban,
 						mut mc:MochigomaCollections,
-						m:&Vec<Move>,mut mhash:u64,mut shash:u64,
+						m:&Vec<AppliedMove>,mut mhash:u64,mut shash:u64,
 						mut kyokumen_hash_map:TwoKeyHashMap<u64,u32>,
 						hasher:&KyokumenHash<u64>)
-		-> (Teban,Banmen,MochigomaCollections,u64,u64,TwoKeyHashMap<u64,u32>) {
+		-> (Teban,State,MochigomaCollections,u64,u64,TwoKeyHashMap<u64,u32>) {
 
-		let mut banmen = banmen.clone();
+		let mut state = state.clone();
 
 		for m in m {
-			match Rule::apply_move_none_check(&banmen,&teban,&mc,&m) {
+			match Rule::apply_move_none_check(&state,&teban,&mc,&m) {
 				(next,nmc,o) => {
-					mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,m,&o);
-					shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,m,&o);
+					mhash = hasher.calc_main_hash(mhash,&teban,&state.banmen,&mc,m,&o);
+					shash = hasher.calc_sub_hash(shash,&teban,&state.banmen,&mc,m,&o);
 
 					mc = nmc;
 					teban = teban.opposite();
-					banmen = next;
+					state = next;
 
 					match kyokumen_hash_map.get(&mhash,&shash) {
 						Some(c) => {
@@ -3908,40 +3937,39 @@ impl Rule {
 			}
 		}
 
-		(teban,banmen,mc,mhash,shash,kyokumen_hash_map)
+		(teban,state,mc,mhash,shash,kyokumen_hash_map)
 	}
 
 
 	pub fn apply_moves_with_callback<T,F>(
-						banmen:&Banmen,
+						state:&State,
 						mut teban:Teban,
 						mut mc:MochigomaCollections,
-						m:&Vec<Move>,mut r:T,mut f:F)
-		-> (Teban,Banmen,MochigomaCollections,T)
+						m:&Vec<AppliedMove>,mut r:T,mut f:F)
+		-> (Teban,State,MochigomaCollections,T)
 		where F: FnMut(&Banmen,&Teban,
-						&MochigomaCollections,&Option<Move>,
+						&MochigomaCollections,&Option<AppliedMove>,
 						&Option<MochigomaKind>,T) -> T {
-
-		let mut banmen = banmen.clone();
+		let mut state = state.clone();
 
 		for m in m {
-			match Rule::apply_move_none_check(&banmen,&teban,&mc,m) {
+			match Rule::apply_move_none_check(&state,&teban,&mc,m) {
 				(next,nmc,o) => {
-					r = f(&banmen,&teban,&mc,&Some(*m),&o,r);
-					banmen = next;
+					r = f(&state.banmen,&teban,&mc,&Some(*m),&o,r);
+					state = next;
 					mc = nmc;
 					teban = teban.opposite();
 				}
 			}
 		}
 
-		r = f(&banmen,&teban,&mc,&None,&None,r);
+		r = f(&state.banmen,&teban,&mc,&None,&None,r);
 
-		(teban,banmen,mc,r)
+		(teban,state,mc,r)
 	}
 
-	pub fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
-		if Rule::win_only_moves(&t.opposite(),banmen).len() > 0 {
+	pub fn is_nyugyoku_win(state:&State,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
+		if Rule::is_mate(&t.opposite(),state) {
 			return false
 		}
 
@@ -3951,25 +3979,24 @@ impl Rule {
 			}
 		}
 
-		let ou = match *t {
-			Teban::Sente => KomaKind::SOu,
-			Teban::Gote => KomaKind::GOu,
-		};
-
-		let oy = match banmen.find(&ou) {
-			Some(ref v) if v.len() > 0 => {
-				match v[0] {
-					KomaPosition(_,oy) => {
-						(oy - 1) as usize
-					}
-				}
+		let ou_position_board = match *t {
+			Teban::Sente => {
+				state.sente_ou_position_board
 			},
-			_ => {
-				return false;
-			}
+			Teban::Gote => {
+				state.gote_ou_position_board
+			},
 		};
 
-		match banmen {
+		let p = Rule::pop_lsb(&mut ou_position_board);
+		if p == -1 {
+			return false;
+		}
+
+		let ox = p / 9;
+		let oy = p - ox * 9;
+
+		match &state.banmen {
 			&Banmen(ref kinds) => {
 				match *t {
 					Teban::Sente => {
@@ -4150,15 +4177,15 @@ impl Rule {
 			}
 		}
 	}
-
-	pub fn responded_oute(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
+	/*
+	pub fn responded_oute(state:&State,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
 		-> Result<bool,SelfMatchRunningError> {
 
 		let o = t.opposite();
 
-		if !match m {
-			&Move::To(_,ref dst) if Rule::win_only_moves_with_dst_to(&o, banmen, *dst).len() == 0 => false,
-			&Move::Put(_,ref dst) if Rule::win_only_moves_with_dst_put(&o, banmen, *dst).len() == 0 => false,
+		if Rule::win_only_moves_with_dst_to(&o, state, m).len() == 0 {
+			&Move::To(_,ref dst) if Rule::win_only_moves_with_dst_to(&o, state, *dst).len() == 0 => false,
+			&Move::Put(_,ref dst) if Rule::win_only_moves_with_dst_put(&o, state, *dst).len() == 0 => false,
 			_ => true,
 		} {
 			return Err(SelfMatchRunningError::InvalidState(String::from(
@@ -4335,43 +4362,44 @@ impl Rule {
 			}
 		})
 	}
-
-	pub fn is_put_fu_and_mate(banmen:&Banmen,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
+	*/
+	pub fn is_put_fu_and_mate(state:&State,teban:&Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
 		match *m {
-			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(dx,dy)) => {
-				let dx = 9 - dx;
-				let dy = dy - 1;
+			AppliedMove::Put(m) => {
+				let to = m.dst();
+				let dx = to / 9;
+				let dy = to - dx * 9;
 
-				let ou = match teban {
-					&Teban::Sente => KomaKind::GOu,
-					&Teban::Gote => KomaKind::SOu,
+				let kind = match &state.banmen {
+					&Banmen(ref kinds) => kinds[dy as usize][dx as usize]
 				};
 
-				let (ox,oy) = match banmen.find(&ou) {
-					Some(ref v) if v.len() > 0 => {
-						match v[0] {
-							KomaPosition(ox,oy) => {
-								((9 - ox) as i32, (oy - 1) as i32)
-							}
-						}
-					},
+				match kind {
+					SFu | GFu => (),
 					_ => {
-						(-1,-1)
+						return false;
 					}
+				}
+
+				let to_mask = if to > 0 {
+					1 << to
+				} else {
+					1
 				};
 
-				let is_oute = match teban {
-					&Teban::Sente if oy != -1 && ox != -1 => dy == (oy + 1) as u32 && ox as u32 == dx,
-					&Teban::Gote if oy != -1 && ox != -1  => dy == (oy - 1) as u32 && ox as u32 == dx,
-					_ => false,
-				};
+				let is_oute = Rule::is_mate_with_partial_state_and_point_and_kind(teban,&state.to_partial_state(),dx,dy,kind);
 
-				is_oute && Rule::legal_moves_all(&teban, banmen, &mc).into_iter().filter(|m| {
-					match m {
-						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
+				is_oute && Rule::legal_moves_all(&teban, state, &mc).into_iter().filter(|m| {
+					match *m {
+						LegalMove::To(m) if m.obtained() == Some(ObtainKind::Ou) => true,
 						m @ _ => {
-							match Rule::apply_move_none_check(banmen,&teban,&mc,&m.to_move()) {
-								(ref b,_,_) => Rule::win_only_moves(&teban.opposite(),b).len() == 0
+							match Rule::apply_move_none_check(
+								state,&teban,&mc,&m.to_applied_move()
+							) {
+								(next,nmc,o) if Rule::is_mate(&teban.opposite(),&next) => {
+									false
+								},
+								_ => true
 							}
 						},
 					}
@@ -4401,7 +4429,119 @@ impl Rule {
 		}
 	}
 
-	pub fn check_sennichite(_:&Banmen,mhash:u64,shash:u64,
+	pub fn is_mate(t:&Teban,state:&State)
+		-> bool {
+		let mut mvs:Vec<LegalMove> = Vec::new();
+		let ps = state.to_partial_state();
+
+		match &state.banmen {
+			&Banmen(ref kinds) => {
+				for y in 0..kinds.len() {
+					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8 - y),
+						};
+						if Rule::is_mate_with_partial_state_and_point_and_kind(
+							t, &ps, x as u32, y as u32, kinds[y as usize][x as usize]
+						) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		false
+	}
+
+	pub fn is_mate_with_partial_state_and_point_and_kind(t:&Teban,ps:&PartialState,x:u32,y:u32,kind:KomaKind) -> bool {
+		let from = x * 9 + y;
+		let state = ps;
+
+		(match kind {
+			SFu => {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				)
+			},
+			SKyou => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
+					state.sente_self_board, state.sente_ou_position_board, bitboard, from
+				)
+			}
+			SKei => {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				)
+			},
+			SKaku | SKakuN => {
+				Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
+					state.sente_self_board, state.sente_ou_position_board, state.diag_board, from, kind
+				)
+			},
+			SHisha | SHishaN => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
+					state.sente_self_board, state.sente_ou_position_board, bitboard, state.rotate_board, from, kind
+				)
+			},
+			SGin | SOu =>  {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				)
+			},
+			SFuN | SKyouN | SKeiN | SGinN | SKin => {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				)
+			},
+			GFu => {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				)
+			},
+			GKyou => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
+					state.gote_self_board, state.gote_ou_position_board, bitboard, from
+				)
+			},
+			GKei => {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				)
+			},
+			GKaku | GKakuN => {
+				Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
+					state.gote_self_board, state.gote_ou_position_board, state.diag_board, from, kind
+				)
+			},
+			GHisha | GHishaN => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
+					state.gote_self_board, state.gote_ou_position_board, bitboard, state.rotate_board, from, kind
+				)
+			},
+			GGin | GOu =>  {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				)
+			},
+			GFuN | GKyouN | GKeiN | GGinN | GKin => {
+				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				)
+			},
+			Blank => None,
+		}).is_some()
+	}
+
+	pub fn check_sennichite(_:&State,mhash:u64,shash:u64,
 									kyokumen_hash_map:&mut TwoKeyHashMap<u64,u32>) -> bool {
 		match kyokumen_hash_map.get(&mhash,&shash) {
 			Some(c) if c >= 3 => {
@@ -4418,18 +4558,18 @@ impl Rule {
 		return true;
 	}
 
-	pub fn check_sennichite_by_oute(banmen:&Banmen,teban:&Teban,mhash:u64,shash:u64,
+	pub fn check_sennichite_by_oute(state:&State,teban:&Teban,mhash:u64,shash:u64,
 									oute_kyokumen_hash_map:&mut Option<TwoKeyHashMap<u64,u32>>)
 		-> bool {
 
 		match *oute_kyokumen_hash_map {
-			None if Rule::win_only_moves(&teban,banmen).len() > 0 => {
+			None if Rule::is_mate(teban,state) => {
 				let mut m = TwoKeyHashMap::new();
 				m.insert(mhash,shash,1);
 				*oute_kyokumen_hash_map = Some(m);
 			},
 			Some(ref mut m) => {
-				if Rule::win_only_moves(&teban,banmen).len() > 0 {
+				if Rule::is_mate(teban,state) {
 					if let Some(_) = m.get(&mhash,&shash) {
 						return false;
 					}

@@ -9,6 +9,7 @@ use rand::Rand;
 use std::num::Wrapping;
 
 use shogi::*;
+use rule::AppliedMove;
 
 pub struct TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 	map:HashMap<K,Vec<(K,T)>>
@@ -141,16 +142,19 @@ impl<T> KyokumenHash<T>
 	}
 
 	fn calc_hash<AF,PF>(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,
-												m:&Move,obtained:&Option<MochigomaKind>,add:AF,pull:PF)
+												m:&AppliedMove,obtained:&Option<MochigomaKind>,add:AF,pull:PF)
 		-> T where AF: Fn(T,T) -> T, PF: Fn(T,T) -> T {
 		match b {
 			&Banmen(ref kinds) => {
-				match m {
-					&Move::To(KomaSrcPosition(sx,sy), KomaDstToPosition(dx, dy, n)) => {
-						let sx = (9 - sx) as usize;
-						let sy = (sy - 1) as usize;
-						let dx = (9 - dx) as usize;
-						let dy = dy as usize - 1;
+				match *m {
+					AppliedMove::To(m) => {
+						let from = m.src();
+						let to = m.dst();
+						let sx = from as usize / 9;
+						let sy = from as usize - sx as usize * 9;
+						let dx = to as usize / 9;
+						let dy = to as usize - dx as usize * 9;
+						let n = m.is_nari();
 
 						let mut hash = h;
 						let k = kinds[sy][sx];
@@ -228,7 +232,12 @@ impl<T> KyokumenHash<T>
 
 						hash
 					},
-					&Move::Put(ref mk, ref md) => {
+					AppliedMove::Put(m) => {
+						let to = m.dst();
+						let mk = m.kind();
+						let dx = to as usize / 9;
+						let dy = to as usize - dx as usize * 9;
+
 						let mut hash = h;
 
 						let c = match t {
@@ -264,7 +273,7 @@ impl<T> KyokumenHash<T>
 							}
 						};
 
-						let k = *mk as usize;
+						let k = mk as usize;
 
 						match t {
 							&Teban::Sente => {
@@ -275,14 +284,11 @@ impl<T> KyokumenHash<T>
 							}
 						}
 
-						let dx = 9 - md.0 as usize;
-						let dy = md.1 as usize - 1;
-
 						let dk = kinds[dy][dx] as usize;
 
 						hash = pull(hash,self.kyokumen_hash_seeds[dk as usize][dy * 8 + dx]);
 
-						let k = KomaKind::from((*t,*mk)) as usize;
+						let k = KomaKind::from((*t,mk)) as usize;
 
 						hash = add(hash,self.kyokumen_hash_seeds[k as usize][dy * 8 + dx]);
 						hash
@@ -292,11 +298,11 @@ impl<T> KyokumenHash<T>
 		}
 	}
 
-	pub fn calc_main_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&Move,obtained:&Option<MochigomaKind>) -> T {
+	pub fn calc_main_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| h ^ v, |h,v| h ^ v)
 	}
 
-	pub fn calc_sub_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&Move,obtained:&Option<MochigomaKind>) -> T {
+	pub fn calc_sub_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| {
 			let h = Wrapping(h);
 			let v = Wrapping(v);
