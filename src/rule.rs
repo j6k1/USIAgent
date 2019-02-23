@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
+use std::ops::BitOr;
 
 use shogi::*;
 use hash::*;
@@ -380,8 +381,17 @@ impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
 }
 #[derive(Clone, Copy)]
 pub union BitBoard {
-	merged_bitboard:u128,
-	bitboard:[u64; 2]
+	pub merged_bitboard:u128,
+	pub bitboard:[u64; 2]
+}
+impl BitOr for BitBoard {
+	type Output = Self;
+
+	fn bitor(self, rhs: Self) -> Self {
+		unsafe {
+			BitBoard { merged_bitboard: self.merged_bitboard | rhs.merged_bitboard }
+		}
+	}
 }
 pub struct State {
 	banmen:Banmen,
@@ -1560,14 +1570,7 @@ impl Rule {
 				}
 			},
 			SKyou => {
-				let bitboard = unsafe {
-					let self_occupied = state.sente_self_board.merged_bitboard;
-					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
-
-					BitBoard {
-						merged_bitboard: self_occupied | opponent_occupied
-					}
-				};
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				for m in Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard(
 					state.sente_self_board, bitboard, from
@@ -1787,14 +1790,7 @@ impl Rule {
 				}
 			},
 			GKyou => {
-				let bitboard = unsafe {
-					let self_occupied = state.sente_self_board.merged_bitboard;
-					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
-
-					BitBoard {
-						merged_bitboard: self_occupied | opponent_occupied
-					}
-				};
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				for m in Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard(
 					state.gote_self_board, bitboard, from
@@ -2055,7 +2051,7 @@ impl Rule {
 			Teban::Sente => {
 				match *mc {
 					MochigomaCollections::Pair(ref ms, _) => {
-						match b {
+						match &state.banmen {
 							&Banmen(ref kinds) => {
 								for y in 0..kinds.len() {
 									for x in 0..kinds[y].len() {
@@ -2120,7 +2116,7 @@ impl Rule {
 			Teban::Gote => {
 				match *mc {
 					MochigomaCollections::Pair(_, ref mg) => {
-						match b {
+						match &state.banmen {
 							&Banmen(ref kinds) => {
 								for y in 0..kinds.len() {
 									for x in 0..kinds[y].len() {
