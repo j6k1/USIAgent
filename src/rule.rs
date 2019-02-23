@@ -1464,16 +1464,16 @@ impl Rule {
 		let board = unsafe {
 			BitBoard {
 				merged_bitboard: (
-					(bitboard.merged_bitboard << (128 - board_x * 9))
+					(bitboard.merged_bitboard << (127 - 8 - board_x * 9 - 1))
 				) & 0b111111111 << 119
 			}
 		};
 
 		let board = unsafe { *board.bitboard.get_unchecked(1) };
-		let board = board << (board_y + 1);
+		let board = board << (8 - board_y + 1);
 
 		if board == 0 {
-			8 - board_y
+			board_y
 		} else {
 			board.leading_zeros() + 1
 		}
@@ -1501,7 +1501,7 @@ impl Rule {
 				*(bitboard.bitboard.get_unchecked_mut(1)) &= *bitboard.bitboard.get_unchecked(1) - 1;
 			}
 
-			return p + 64;
+			return p + 63;
 		} else {
 			return -1;
 		}
