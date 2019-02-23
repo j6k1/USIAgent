@@ -179,7 +179,7 @@ impl From<LegalMoveTo> for AppliedMoveTo {
 pub struct AppliedMovePut(u32);
 impl AppliedMovePut {
 	#[inline]
-	pub fn to(&self) -> u32 {
+	pub fn dst(&self) -> u32 {
 		(self.0 >> 3) & 0b1111111
 	}
 
@@ -472,7 +472,7 @@ impl State {
 
 						let li = DIAG_LEFT_ROTATE_MAP[i];
 
-						let lmask = if li = -1 {
+						let lmask = if li == -1 {
 							0
 						} else if li == 0 {
 							1
@@ -524,6 +524,27 @@ impl State {
 	pub fn map_banmen<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen) -> T {
 		f(&self.banmen)
 	}
+
+	pub fn to_partial_state(&self) -> PartialState {
+		PartialState {
+			sente_self_board: self.sente_self_board,
+			sente_opponent_board: self.sente_opponent_board,
+			gote_self_board: self.gote_self_board,
+			gote_opponent_board: self.gote_opponent_board,
+			diag_board: self.diag_board,
+			rotate_board: self.rotate_board,
+			sente_hisha_board: self.sente_hisha_board,
+			gote_hisha_board: self.gote_hisha_board,
+			sente_kaku_board: self.sente_kaku_board,
+			gote_kaku_board: self.gote_kaku_board,
+			sente_kyou_board: self.sente_kyou_board,
+			gote_kyou_board: self.gote_kyou_board,
+			sente_fu_board: self.sente_fu_board,
+			gote_fu_board: self.gote_fu_board,
+			sente_ou_position_board: self.sente_ou_position_board,
+			gote_ou_position_board: self.gote_ou_position_board,
+		}
+	}
 }
 pub struct PartialState {
 	pub sente_self_board:BitBoard,
@@ -542,28 +563,6 @@ pub struct PartialState {
 	pub gote_fu_board:BitBoard,
 	pub sente_ou_position_board:BitBoard,
 	pub gote_ou_position_board:BitBoard
-}
-impl From<&State> for PartialState {
-	fn from(state:&State) -> PartialState {
-		PartialState {
-			sente_self_board: state.sente_self_board,
-			sente_opponent_board: state.sente_opponent_board,
-			gote_self_board: state.gote_self_board,
-			gote_opponent_board: state.gote_opponent_board,
-			diag_board: state.diag_board,
-			rotate_board: state.rotate_board,
-			sente_hisha_board: state.sente_hisha_board,
-			gote_hisha_board: state.gote_hisha_board,
-			sente_kaku_board: state.sente_kaku_board,
-			gote_kaku_board: state.gote_kaku_board,
-			sente_kyou_board: state.sente_kyou_board,
-			gote_kyou_board: state.gote_kyou_board,
-			sente_fu_board: state.sente_fu_board,
-			gote_fu_board: state.gote_fu_board,
-			sente_ou_position_board: state.sente_ou_position_board,
-			gote_ou_position_board: state.gote_ou_position_board,
-		}
-	}
 }
 const CANDIDATE_BITS:[u128; 14] = [
 	// 歩
@@ -3166,7 +3165,7 @@ impl Rule {
 
 	pub fn apply_move_to_partial_state_none_check(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove)
 		-> PartialState {
-		let mut ps = PartialState::from(state);
+		let mut ps = state.to_partial_state();
 
 		match &state.banmen {
 			&Banmen(ref kinds) => {
@@ -3446,13 +3445,229 @@ impl Rule {
 						ps.diag_board = unsafe {
 							BitBoard {
 								merged_bitboard: ps.diag_board.merged_bitboard ^ (
-									from_l | to_l | from_r | to_r
+									from_mask_l | to_mask_l | from_mask_r | to_mask_r
 								)
 							}
 						};
 					},
 					AppliedMove::Put(m) => {
+						let to = m.dst();
 
+						let to_mask = if to > 0 {
+							1 << to
+						} else {
+							1
+						};
+
+						match *t {
+							Teban::Sente => {
+								match m.kind() {
+									MochigomaKind::Fu => {
+										ps.sente_fu_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_fu_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.sente_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_self_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+									},
+									MochigomaKind::Kyou => {
+										ps.sente_kyou_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_kyou_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.sente_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_self_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+									},
+									MochigomaKind::Hisha => {
+										ps.sente_hisha_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_hisha_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.sente_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_self_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+									},
+									MochigomaKind::Kaku => {
+										ps.sente_kaku_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_kaku_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.sente_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_self_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+									},
+									MochigomaKind::Kei | MochigomaKind::Gin | MochigomaKind::Kin => {
+										ps.sente_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_self_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										}
+									}
+								}
+							},
+							Teban::Gote => {
+								match m.kind() {
+									MochigomaKind::Fu => {
+										ps.gote_fu_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_fu_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_self_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+										ps.sente_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_opponent_board.merged_bitboard ^ to_mask
+											}
+										};
+									},
+									MochigomaKind::Kyou => {
+										ps.gote_kyou_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_kyou_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_self_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+										ps.sente_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_opponent_board.merged_bitboard ^ to_mask
+											}
+										};
+									},
+									MochigomaKind::Hisha => {
+										ps.gote_hisha_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_hisha_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_self_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+										ps.sente_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_opponent_board.merged_bitboard ^ to_mask
+											}
+										};
+									},
+									MochigomaKind::Kaku => {
+										ps.gote_kaku_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_kaku_board.merged_bitboard ^ to_mask
+											}
+										};
+										ps.gote_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_self_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+										ps.sente_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_opponent_board.merged_bitboard ^ to_mask
+											}
+										};
+									},
+									MochigomaKind::Kei | MochigomaKind::Gin | MochigomaKind::Kin => {
+										ps.gote_self_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.gote_self_board.merged_bitboard ^ (1 << (80 - to))
+											}
+										};
+										ps.sente_opponent_board = unsafe {
+											BitBoard {
+												merged_bitboard: ps.sente_opponent_board.merged_bitboard ^ to_mask
+											}
+										};
+									}
+								}
+							}
+						}
+						let dx = to / 9;
+						let dy = to - dx * 9;
+
+						let to_mask = if dy > 0 || dx > 0 {
+							1 << (dy * 9 + dx)
+						} else {
+							1
+						};
+
+						ps.rotate_board = unsafe {
+							BitBoard {
+								merged_bitboard: ps.rotate_board.merged_bitboard ^ to_mask
+							}
+						};
+						let to_l = DIAG_LEFT_ROTATE_MAP[to as usize];
+
+						let to_mask_l = if to_l < 0 {
+							0
+						} else if to_l == 0 {
+							1
+						} else {
+							1 << to_l
+						};
+						let to_r = DIAG_LEFT_ROTATE_MAP[to as usize];
+
+						let to_mask_r = if to_r < 0 {
+							0
+						} else if to_r == 0 {
+							1 << 64
+						} else {
+							1 << (to_r + 64)
+						};
+						ps.diag_board = unsafe {
+							BitBoard {
+								merged_bitboard: ps.diag_board.merged_bitboard ^ (
+									to_mask_l | to_mask_r
+								)
+							}
+						};
 					}
 				}
 			}
