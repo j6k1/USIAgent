@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::ops::BitOr;
+use std::ops::Not;
 
 use shogi::*;
 use hash::*;
@@ -390,6 +391,15 @@ impl BitOr for BitBoard {
 	fn bitor(self, rhs: Self) -> Self {
 		unsafe {
 			BitBoard { merged_bitboard: self.merged_bitboard | rhs.merged_bitboard }
+		}
+	}
+}
+impl Not for BitBoard {
+	type Output = Self;
+
+	fn not(self) -> Self {
+		unsafe {
+			BitBoard { merged_bitboard: !self.merged_bitboard }
 		}
 	}
 }
@@ -1665,14 +1675,7 @@ impl Rule {
 				}
 			},
 			SHisha | SHishaN => {
-				let bitboard = unsafe {
-					let self_occupied = state.sente_self_board.merged_bitboard;
-					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
-
-					BitBoard {
-						merged_bitboard: self_occupied | opponent_occupied
-					}
-				};
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				for m in Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
 					state.sente_self_board, bitboard, state.rotate_board, from, kind
@@ -1885,14 +1888,7 @@ impl Rule {
 				}
 			},
 			GHisha | GHishaN => {
-				let bitboard = unsafe {
-					let self_occupied = state.sente_self_board.merged_bitboard;
-					let opponent_occupied = state.sente_opponent_board.merged_bitboard;
-
-					BitBoard {
-						merged_bitboard: self_occupied | opponent_occupied
-					}
-				};
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				for m in Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard(
 					state.gote_self_board, bitboard, state.rotate_board, from, kind
@@ -2015,16 +2011,21 @@ impl Rule {
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		Rule::legal_moves_from_banmen_and_buffer(t,state,&mut mvs);
+		Rule::legal_moves_from_banmen_with_buffer(t,state,&mut mvs);
 
 		mvs
 	}
 
-	pub fn legal_moves_from_banmen_and_buffer(t:&Teban,state:&State,mvs:&mut Vec<LegalMove>) {
+	pub fn legal_moves_from_banmen_with_buffer(t:&Teban,state:&State,mvs:&mut Vec<LegalMove>) {
 		match &state.banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8-x,8-y),
+						};
+
 						Rule::legal_moves_with_point_and_kind_and_buffer(
 							t, state, x as u32, y as u32, kinds[y][x], &mut mvs
 						);
@@ -2051,60 +2052,72 @@ impl Rule {
 			Teban::Sente => {
 				match *mc {
 					MochigomaCollections::Pair(ref ms, _) => {
-						match &state.banmen {
-							&Banmen(ref kinds) => {
-								for y in 0..kinds.len() {
-									for x in 0..kinds[y].len() {
-										for m in &MOCHIGOMA_KINDS {
-											match ms.get(&m) {
-												None | Some(&0) => {
-													continue;
-												},
-												Some(_) => (),
-											}
-											match m {
-												&MochigomaKind::Fu => {
-													match kinds[y][x] {
-														KomaKind::Blank if y > 0 => {
-															let mut nifu = false;
+						for m in &MOCHIGOMA_KINDS {
+							match ms.get(&m) {
+								None | Some(&0) => {
+									continue;
+								},
+								Some(_) => (),
+							}
 
-															for oy in 0..y {
-																match kinds[oy][x] {
-																	KomaKind::SFu => nifu = true,
-																	_ => (),
-																}
-															}
+							match *m {
+								MochigomaKind::Fu | MochigomaKind::Kyou => {
+									let candidate_bitboard = {
+										state.sente_self_board | state.sente_opponent_board
+									};
 
-															for oy in (y+1)..9 {
-																match kinds[oy][x] {
-																	KomaKind::SFu => nifu = true,
-																	_ => (),
-																}
-															}
+									let mut candidate_bitboard = !candidate_bitboard;
 
-															if !nifu {
-																mvs.push(
-																	LegalMove::Put(*m,KomaDstPutPosition(
-																	9 - x as u32, y as u32 + 1)));
-															}
-														},
-														_ => (),
-													}
-												},
-												&MochigomaKind::Kyou if y == 0 => (),
-												&MochigomaKind::Kei if y <= 1 => (),
-												_ => {
-													match kinds[y][x] {
-														KomaKind::Blank => {
-															mvs.push(
-																LegalMove::Put(*m,KomaDstPutPosition(
-																9 - x as u32, y as u32 + 1)));
-														},
-														_ => (),
-													}
-												}
-											}
+									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+										if p == -1 {
+											break;
 										}
+
+										let p_mask = 1 << p;
+
+										if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & p_mask != 0 {
+											continue;
+										}
+
+										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
+									}
+								},
+								MochigomaKind::Kei => {
+									let candidate_bitboard = {
+										state.sente_self_board | state.sente_opponent_board
+									};
+
+									let mut candidate_bitboard = !candidate_bitboard;
+
+									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+										if p == -1 {
+											break;
+										}
+
+										let p_mask = 1 << p;
+
+										if DENY_MOVE_SENTE_KEI_MASK & p_mask != 0 {
+											continue;
+										}
+
+										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
+									}
+								},
+								_ => {
+									let candidate_bitboard = {
+										state.sente_self_board | state.sente_opponent_board
+									};
+
+									let mut candidate_bitboard = !candidate_bitboard;
+
+									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+										if p == -1 {
+											break;
+										}
+
+										let p_mask = 1 << p;
+
+										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
 									}
 								}
 							}
@@ -2116,61 +2129,78 @@ impl Rule {
 			Teban::Gote => {
 				match *mc {
 					MochigomaCollections::Pair(_, ref mg) => {
-						match &state.banmen {
-							&Banmen(ref kinds) => {
-								for y in 0..kinds.len() {
-									for x in 0..kinds[y].len() {
-										let (x,y) = (8 - x, 8 - y);
-										for m in &MOCHIGOMA_KINDS {
-											match mg.get(&m) {
-												None | Some(&0) => {
-													continue;
-												},
-												Some(_) => (),
-											}
-											match m {
-												&MochigomaKind::Fu => {
-													match kinds[y][x] {
-														KomaKind::Blank if y < 8 => {
-															let mut nifu = false;
+						for m in &MOCHIGOMA_KINDS {
+							match mg.get(&m) {
+								None | Some(&0) => {
+									continue;
+								},
+								Some(_) => (),
+							}
 
-															for oy in 0..y {
-																match kinds[oy][x] {
-																	KomaKind::GFu => nifu = true,
-																	_ => (),
-																}
-															}
+							match *m {
+								MochigomaKind::Fu | MochigomaKind::Kyou => {
+									let candidate_bitboard = {
+										state.gote_self_board | state.gote_opponent_board
+									};
 
-															for oy in (y+1)..9 {
-																match kinds[oy][x] {
-																	KomaKind::GFu => nifu = true,
-																	_ => (),
-																}
-															}
+									let mut candidate_bitboard = !candidate_bitboard;
 
-															if !nifu {
-																mvs.push(LegalMove::Put(
-																		*m,KomaDstPutPosition(
-																		9 - x as u32, y as u32 + 1)));
-															}
-														},
-														_ => (),
-													}
-												},
-												&MochigomaKind::Kyou if y == 8 => (),
-												&MochigomaKind::Kei if y >= 7 => (),
-												_ => {
-													match kinds[y][x] {
-														KomaKind::Blank => {
-															mvs.push(LegalMove::Put(
-																	*m,KomaDstPutPosition(
-																	9 - x as u32, y as u32 + 1)));
-														},
-														_ => (),
-													}
-												}
-											}
+									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+										if p == -1 {
+											break;
 										}
+
+										let p = 80 - p;
+
+										let p_mask = 1 << p;
+
+										if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & p_mask != 0 {
+											continue;
+										}
+
+										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
+									}
+								},
+								MochigomaKind::Kei => {
+									let candidate_bitboard = {
+										state.gote_self_board | state.gote_opponent_board
+									};
+
+									let mut candidate_bitboard = !candidate_bitboard;
+
+									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+										if p == -1 {
+											break;
+										}
+
+										let p = 80 - p;
+
+										let p_mask = 1 << p;
+
+										if DENY_MOVE_GOTE_KEI_MASK & p_mask != 0 {
+											continue;
+										}
+
+										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
+									}
+								},
+								_ => {
+									let candidate_bitboard = {
+										state.gote_self_board | state.gote_opponent_board
+									};
+
+									let mut candidate_bitboard = !candidate_bitboard;
+
+									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+										if p == -1 {
+											break;
+										}
+
+										let p = 80 - p;
+
+										let p_mask = 1 << p;
+
+										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
 									}
 								}
 							}
@@ -2180,820 +2210,752 @@ impl Rule {
 				}
 			}
 		}
-		mvs
 	}
 
-	pub fn legal_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
+	pub fn legal_moves_all(t:&Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match banmen {
-			&Banmen(ref kinds) => {
-				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8 - x, 8- y),
-						};
-						mvs.append(&mut Rule::legal_moves_with_point(t, banmen, x as u32, y as u32));
-					}
-				}
-			}
-		}
-		mvs.append(&mut Rule::legal_moves_from_mochigoma(t, mc, banmen));
+		Rule::legal_moves_from_banmen_with_buffer(t, state, &mut mvs);
+		Rule::legal_moves_from_mochigoma_with_buffer(t, mc, state, &mut mvs);
 		mvs
 	}
 
-	pub fn win_only_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:KomaKind)
-		-> Vec<LegalMove> {
+	pub fn win_only_move_once_with_point_and_kind_and_bitboard(
+		teban:Teban,self_occupied:BitBoard,self_ou_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Option<Square> {
+		let from = if teban == Teban::Sente {
+			from
+		} else {
+			80 - from
+		};
+
+		let x = from / 9;
+		let y = from - x * 9;
+
+		let mut mask = CANDIDATE_BITS[kind as usize];
+
+		if y == 0 || ((kind == SKei || kind == GKei) && y <= 1) {
+			mask = mask & TOP_MASK;
+		} else if y == 8 {
+			mask = mask & BOTTOM_MASK;
+		}
+
+		if x == 8 {
+			mask = mask & RIGHT_MASK;
+		}
+
+		let mask = mask as u128;
+		let self_occupied = unsafe {
+			match self_occupied {
+				BitBoard { merged_bitboard } => {
+					merged_bitboard
+				}
+			}
+		};
+
+		let mut board = !self_occupied;
+
+		if from < 10 {
+			board &= mask >> (11 - from - 1);
+		} else if from == 10 {
+			board &= mask;
+		} else {
+			board &= mask << (from - 11 + 1);
+		}
+
+		let self_ou_bitboard = unsafe {
+			self_ou_bitboard.merged_bitboard
+		};
+
+		if self_ou_bitboard & board != 0 {
+			let mut board = BitBoard { merged_bitboard: self_ou_bitboard };
+			let p = Rule::pop_lsb(&mut board);
+
+			match teban {
+				Teban::Sente => Some(p),
+				Teban::Gote => Some(80 - p),
+			}
+		} else {
+			None
+		}
+	}
+
+	pub fn win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,self_ou_bitboard:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Option<Square> {
+		let self_ou_bitboard_raw = unsafe {
+			self_ou_bitboard.merged_bitboard
+		};
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(0)
+		};
+
+		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from - 10 * count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(1)
+		};
+
+		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from - 8 * count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(1)
+		};
+
+		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from + 8 * count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(0)
+		};
+
+		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from + 10 * count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		if kind == SKakuN {
+			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+				Teban::Sente,self_occupied,self_ou_bitboard,from,kind
+			)
+		} else {
+			None
+		}
+	}
+
+	pub fn win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,self_ou_bitboard:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Option<Square> {
+		let self_ou_bitboard_raw = unsafe {
+			self_ou_bitboard.merged_bitboard
+		};
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(0)
+		};
+
+		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from + 10 * count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(1)
+		};
+
+		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from + 8 * count;
+
+			if self_ou_bitboard_raw & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(1)
+		};
+
+		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from - 8 * count;
+
+			if self_ou_bitboard_raw & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let board = unsafe {
+			*diag_bitboard.bitboard.get_unchecked(0)
+		};
+
+		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
+
+		if count > 0 {
+			let p = from - 10 * count;
+
+			if self_ou_bitboard_raw & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		if kind == GKakuN {
+			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+				Teban::Gote,self_occupied,self_ou_bitboard,from,kind
+			)
+		} else {
+			None
+		}
+	}
+
+
+	pub fn win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Option<Square> {
+		let self_ou_bitboard_raw = unsafe {
+			self_ou_bitboard.merged_bitboard
+		};
+
+		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let p = from - count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let p = from + count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let p = from - 9 * count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let p = from + 9 * count;
+
+			if self_ou_bitboard_raw & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		if kind == SHishaN {
+			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+				Teban::Sente,self_occupied,self_ou_bitboard,from,kind
+			)
+		} else {
+			None
+		}
+	}
+
+	pub fn win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
+	) -> Option<Square> {
+		let self_ou_bitboard_raw = unsafe {
+			self_ou_bitboard.merged_bitboard
+		};
+
+		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let p = from + count;
+
+			if self_ou_bitboard_raw & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
+
+		if count > 0 {
+			let p = from - count;
+
+			if self_ou_bitboard_raw & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let p = from + 9 * count;
+
+			if self_ou_bitboard_raw & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,from);
+
+		if count > 0 {
+			let p = from - 9 * count;
+
+			if self_ou_bitboard_raw & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		if kind == GHishaN {
+			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+				Teban::Gote,self_occupied,self_ou_bitboard,from,kind
+			)
+		} else {
+			None
+		}
+	}
+
+
+	pub fn win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
+	) -> Option<Square> {
+		let self_ou_bitboard = unsafe {
+			self_ou_bitboard.merged_bitboard
+		};
+
+		let count = Rule::calc_forward_move_repeat_count(bitboard,from);
+
+		if count > 0 {
+			let p = from - count;
+
+			if self_ou_bitboard & (1 << p) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		None
+	}
+
+	pub fn win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
+		self_occupied:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
+	) -> Option<Square> {
+		let self_ou_bitboard = unsafe {
+			self_ou_bitboard.merged_bitboard
+		};
+
+		let count = Rule::calc_back_move_repeat_count(bitboard,from);
+
+		if count > 0 {
+			let p = from + count;
+
+			if self_ou_bitboard & (1 << (80 - p)) != 0 {
+				return Some(p as Square);
+			}
+		}
+
+		None
+	}
+
+	pub fn win_only_moves_with_point_and_kind(
+		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind
+	) -> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
+		Rule::win_only_moves_with_point_and_kind_and_buffer(t, state, x, y, kind, &mut mvs);
+		mvs
+	}
 
-		let kinds = match banmen {
-			&Banmen(ref kinds) => kinds,
+	pub fn win_only_moves_with_point_and_kind_and_buffer(
+		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
+	) {
+		let from = x * 9 + y;
+
+		let kinds = match &state.banmen {
+			&Banmen(ref kinds) => kinds
 		};
 
-		let x:i32 = x as i32;
-		let y:i32 = y as i32;
+		match kind {
+			SFu => {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				) {
+					let to = p as u32;
 
-		let ou = match *t {
-			Teban::Sente => KomaKind::GOu,
-			Teban::Gote => KomaKind::SOu,
-		};
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
 
-		let target = match banmen.find(&ou) {
-			Some(ref r) => r[0],
-			None => {
-				return mvs;
-			}
-		};
+					let o = Some(ObtainKind::Ou);
 
-		let (dx,dy) = match target {
-			KomaPosition(x,y) => ((9 - x) as i32,(y - 1) as i32),
-		};
-
-		match *t {
-			Teban::Sente if kind < KomaKind::GFu => {
-
-				match kind {
-					KomaKind::SFu |
-						KomaKind::SGin |
-						KomaKind::SKin |
-						KomaKind::SOu |
-						KomaKind::SFuN |
-						KomaKind::SKyouN |
-						KomaKind::SKeiN |
-						KomaKind::SGinN => {
-
-						if (dx - x).abs() > 1 || (dy - y).abs() > 1 {
-							return mvs;
-						}
-
-						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
-							.into_iter().filter(|m| {
-								match m {
-									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
-									_ => false,
-								}
-							}).collect::<Vec<LegalMove>>()
-					},
-					KomaKind::SKyou => {
-						if dy > y || dx != x {
-							return mvs;
-						}
-
-						let mut ty:i32 = y;
-
-						while ty > dy {
-							ty = ty - 1;
-
-							if kinds[ty as usize][x as usize] == ou {
-								break;
-							}
-
-							if kinds[ty as usize][x as usize] != KomaKind::Blank {
-								return mvs;
-							}
-						}
-
-						if ty < 3 {
-							mvs.push(
-								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32 + 1),
-									KomaDstToPosition(9 - x as u32,ty as u32 + 1, true),
-									Some(ObtainKind::Ou),
-							));
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - x as u32, ty as u32 + 1, false),
-								Some(ObtainKind::Ou),
-						));
-						mvs
-					},
-					KomaKind::SKei => {
-						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
-							.into_iter().filter(|m| {
-								match m {
-									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
-									_ => false,
-								}
-							}).collect::<Vec<LegalMove>>()
-					},
-					KomaKind::SKaku => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if dx - x < 0 && dx - x == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && -(dx - x) == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if -(dx - x) == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						if ty < 3 {
-							mvs.push(
-								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32 + 1),
-									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
-									Some(ObtainKind::Ou),
-							));
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-						mvs
-					},
-					KomaKind::SHisha => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if dy - y < 0 && dx == x {
-							while ty > dy {
-								ty = ty - 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx == x {
-							while ty < dy {
-								ty = ty + 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && dy == y {
-							while tx > dx {
-								tx = tx - 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dy == y {
-							while tx < dx {
-								tx = tx + 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						if ty < 3 {
-							mvs.push(
-								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32 + 1),
-									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
-									Some(ObtainKind::Ou),
-							));
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-						mvs
-					},
-					KomaKind::SKakuN => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
-							tx = dx;
-							ty = dy;
-						} else if dx - x < 0 && dx - x == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && -(dx - x) == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if -(dx - x) == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
-						mvs
-					},
-					KomaKind::SHishaN => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
-							tx = dx;
-							ty = dy;
-						} else if dy - y < 0 && dx == x {
-							while ty > dy {
-								ty = ty - 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx == x {
-							while ty < dy {
-								ty = ty + 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && dy == y {
-							while tx > dx {
-								tx = tx - 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dy == y {
-							while tx < dx {
-								tx = tx + 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
-						mvs
-					},
-					_ => mvs,
-				}
-			},
-			Teban::Gote if kind >= KomaKind::GFu && kind < KomaKind::Blank => {
-				match kind {
-					KomaKind::GFu |
-						KomaKind::GGin |
-						KomaKind::GKin |
-						KomaKind::GOu |
-						KomaKind::GFuN |
-						KomaKind::GKyouN |
-						KomaKind::GKeiN |
-						KomaKind::GGinN => {
-
-						if (dx - x).abs() > 1 || (dy - y).abs() > 1 {
-							return mvs;
-						}
-
-						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
-							.into_iter().filter(|m| {
-								match m {
-									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
-									_ => false,
-								}
-							}).collect::<Vec<LegalMove>>()
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
 					}
-					KomaKind::GKyou => {
-						if dy < y || dx != x {
-							return mvs;
-						}
 
-						let mut ty:i32 = y;
-
-						while ty < dy {
-							ty = ty + 1;
-
-							if kinds[ty as usize][x as usize] == ou {
-								break;
-							}
-
-							if kinds[ty as usize][x as usize] != KomaKind::Blank {
-								return mvs;
-							}
-						}
-
-						if ty >= 6 {
-							mvs.push(
-								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32 + 1),
-									KomaDstToPosition(9 - x as u32,ty as u32 + 1,true),
-									Some(ObtainKind::Ou),
-							));
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - x as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-						mvs
-					},
-					KomaKind::GKei => {
-						Rule::legal_moves_with_point_and_kind(t, banmen, x as u32, y as u32, kind)
-							.into_iter().filter(|m| {
-								match m {
-									&LegalMove::To(_,_,Some(o)) if o == ObtainKind::Ou => true,
-									_ => false,
-								}
-							}).collect::<Vec<LegalMove>>()
-					},
-					KomaKind::GKaku => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if dx - x < 0 && dx - x == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && -(dx - x) == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if -(dx - x) == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						if ty >= 6 {
-							mvs.push(
-								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32 + 1),
-									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
-									Some(ObtainKind::Ou),
-							));
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-						mvs
-					},
-					KomaKind::GHisha => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if dy - y < 0 && dx == x {
-							while ty > dy {
-								ty = ty - 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx == x {
-							while ty < dy {
-								ty = ty + 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && dy == y {
-							while tx > dx {
-								tx = tx - 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dy == y {
-							while tx < dx {
-								tx = tx + 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						if ty >= 6 {
-							mvs.push(
-								LegalMove::To(
-									KomaSrcPosition(9 - x as u32,y as u32 + 1),
-									KomaDstToPosition(9 - tx as u32,ty as u32 + 1,true),
-									Some(ObtainKind::Ou),
-							));
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-						mvs
-					},
-					KomaKind::GKakuN => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
-							tx = dx;
-							ty = dy;
-						} else if dx - x < 0 && dx - x == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && -(dx - x) == dy - y {
-							while tx > dx {
-								tx = tx - 1;
-								ty = ty + 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if -(dx - x) == dy - y {
-							while tx < dx {
-								tx = tx + 1;
-								ty = ty - 1;
-
-								if kinds[ty as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
-						mvs
-					},
-					KomaKind::GHishaN => {
-						let mut tx:i32 = x;
-						let mut ty:i32 = y;
-
-						if (dx - x).abs() <= 1 && (dy - y).abs() <= 1 {
-							tx = dx;
-							ty = dy;
-						} else if dy - y < 0 && dx == x {
-							while ty > dy {
-								ty = ty - 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx == x {
-							while ty < dy {
-								ty = ty + 1;
-
-								if kinds[ty as usize][x as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dx - x < 0 && dy == y {
-							while tx > dx {
-								tx = tx - 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else if dy == y {
-							while tx < dx {
-								tx = tx + 1;
-
-								if kinds[y as usize][tx as usize] == ou {
-									break;
-								}
-
-								if kinds[ty as usize][tx as usize] != KomaKind::Blank {
-									return mvs;
-								}
-							}
-						} else {
-							return mvs;
-						}
-
-						mvs.push(
-							LegalMove::To(
-								KomaSrcPosition(9 - x as u32,y as u32 + 1),
-								KomaDstToPosition(9 - tx as u32,ty as u32 + 1,false),
-								Some(ObtainKind::Ou),
-						));
-
-						mvs
-					},
-					_ => mvs,
+					if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
 				}
 			},
-			_ => mvs,
+			SKyou => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				if let Some(p) = Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
+					state.sente_self_board, state.sente_ou_position_board, bitboard, from
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			}
+			SKei => {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_SENTE_KEI_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			SKaku | SKakuN => {
+				if let Some(p) = Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
+					state.sente_self_board, state.sente_ou_position_board, state.diag_board, from, kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if kind == SKaku && SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			SHisha | SHishaN => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				if let Some(p) = Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
+					state.sente_self_board, state.sente_ou_position_board, bitboard, state.rotate_board, from, kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if kind == SHisha && SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			SGin | SOu =>  {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if SENTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			SFuN | SKyouN | SKeiN | SGinN | SKin => {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GFu => {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			GKyou => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				if let Some(p) = Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
+					state.gote_self_board, state.gote_ou_position_board, bitboard, from
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			GKei => {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					if DENY_MOVE_GOTE_KEI_MASK & to_mask == 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					}
+				}
+			},
+			GKaku | GKakuN => {
+				if let Some(p) = Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
+					state.gote_self_board, state.gote_ou_position_board, state.diag_board, from, kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					if kind == GKaku && GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GHisha | GHishaN => {
+				let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+				if let Some(p) = Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
+					state.gote_self_board, state.gote_ou_position_board, bitboard, state.rotate_board, from, kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if kind == GHisha && GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GGin | GOu =>  {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let o = Some(ObtainKind::Ou);
+
+					if GOTE_NARI_MASK & to_mask != 0 {
+						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+					}
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			GFuN | GKyouN | GKeiN | GGinN | GKin => {
+				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
+					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+				) {
+					let to = p as u32;
+
+					let to_mask = if to > 0 {
+						1 << to
+					} else {
+						1
+					};
+
+					let opponent_board = unsafe { state.sente_self_board.merged_bitboard };
+
+					let o = if opponent_board & to_mask != 0 {
+						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+							Ok(obtained) => Some(obtained),
+							Err(_) => None,
+						}
+					} else {
+						None
+					};
+
+					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+				}
+			},
+			Blank => (),
 		}
 	}
 
-	pub fn win_only_moves_with_point(t:&Teban,banmen:&Banmen,x:u32,y:u32)
+	pub fn win_only_moves_with_point(t:&Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
-		match banmen {
+		match &state.banmen {
 			&Banmen(ref kinds) => {
-				Rule::win_only_moves_with_point_and_kind(t,banmen,x,y,kinds[y as usize][x as usize])
+				Rule::win_only_moves_with_point_and_kind(t,state,x,y,kinds[y as usize][x as usize])
 			}
 		}
 	}
 
-	pub fn win_only_moves_with_src(t:&Teban,banmen:&Banmen,src:KomaSrcPosition)
+	pub fn win_only_moves_with_src(t:&Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
-			KomaSrcPosition(x,y) => Rule::win_only_moves_with_point(t,banmen, 9 - x, y - 1)
+			KomaSrcPosition(x,y) => Rule::win_only_moves_with_point(t,state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves_with_dst_to(t:&Teban,banmen:&Banmen,dst:KomaDstToPosition)
+	pub fn win_only_moves_with_dst_to(t:&Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstToPosition(x,y,_) => Rule::win_only_moves_with_point(t, banmen, 9 - x, y - 1)
+			KomaDstToPosition(x,y,_) => Rule::win_only_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves_with_dst_put(t:&Teban,banmen:&Banmen,dst:KomaDstPutPosition)
+	pub fn win_only_moves_with_dst_put(t:&Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
-			KomaDstPutPosition(x,y) => Rule::win_only_moves_with_point(t, banmen, 9 - x, y - 1)
+			KomaDstPutPosition(x,y) => Rule::win_only_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves(t:&Teban,banmen:&Banmen)
+	pub fn win_only_moves(t:&Teban,state:&State)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
-		match banmen {
+		match &state.banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
@@ -3001,7 +2963,9 @@ impl Rule {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8 - y),
 						};
-						mvs.append(&mut Rule::win_only_moves_with_point(t, banmen, x as u32, y as u32));
+						Rule::win_only_moves_with_point_and_kind_and_buffer(
+							t, state, x as u32, y as u32, kinds[y as usize][x as usize], &mut mvs
+						);
 					}
 				}
 			}
