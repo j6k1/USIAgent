@@ -1547,7 +1547,7 @@ impl Rule {
 	}
 
 	pub fn legal_moves_with_point_and_kind(
-		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind
+		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
@@ -1557,7 +1557,7 @@ impl Rule {
 	}
 
 	pub fn legal_moves_with_point_and_kind_and_buffer(
-		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
+		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
 	) {
 		let from = x * 9 + y;
 
@@ -1568,7 +1568,7 @@ impl Rule {
 		match kind {
 			SFu => {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,from,kind
+					t,state.sente_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1634,7 +1634,7 @@ impl Rule {
 			}
 			SKei => {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,from,kind
+					t,state.sente_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1726,7 +1726,7 @@ impl Rule {
 			},
 			SGin | SOu =>  {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,from,kind
+					t,state.sente_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1755,7 +1755,7 @@ impl Rule {
 			},
 			SFuN | SKyouN | SKeiN | SGinN | SKin => {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,from,kind
+					t,state.sente_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1781,7 +1781,7 @@ impl Rule {
 			},
 			GFu => {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,from,kind
+					t,state.gote_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1847,7 +1847,7 @@ impl Rule {
 			},
 			GKei => {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,from,kind
+					t,state.gote_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1939,7 +1939,7 @@ impl Rule {
 			},
 			GGin | GOu =>  {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,from,kind
+					t,state.gote_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1968,7 +1968,7 @@ impl Rule {
 			},
 			GFuN | GKyouN | GKeiN | GGinN | GKin => {
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,from,kind
+					t,state.gote_self_board,from,kind
 				) {
 					let to = m as u32;
 
@@ -1996,7 +1996,7 @@ impl Rule {
 		}
 	}
 
-	pub fn legal_moves_with_point(t:&Teban,state:&State,x:u32,y:u32)
+	pub fn legal_moves_with_point(t:Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
 		match &state.banmen {
 			&Banmen(ref kinds) => {
@@ -2004,21 +2004,21 @@ impl Rule {
 			}
 		}
 	}
-	pub fn legal_moves_with_src(t:&Teban,state:&State,src:KomaSrcPosition)
+	pub fn legal_moves_with_src(t:Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
 			KomaSrcPosition(x,y) => Rule::legal_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves_with_dst_to(t:&Teban,state:&State,dst:KomaDstToPosition)
+	pub fn legal_moves_with_dst_to(t:Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
 			KomaDstToPosition(x,y,_) => Rule::legal_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn legal_moves_with_dst_put(t:&Teban,state:&State,dst:KomaDstPutPosition)
+	pub fn legal_moves_with_dst_put(t:Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
 			KomaDstPutPosition(x,y) => Rule::legal_moves_with_point(t, state, 9 - x, y - 1)
@@ -2026,7 +2026,7 @@ impl Rule {
 	}
 
 
-	pub fn legal_moves_from_banmen(t:&Teban,state:&State)
+	pub fn legal_moves_from_banmen(t:Teban,state:&State)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
@@ -2035,12 +2035,12 @@ impl Rule {
 		mvs
 	}
 
-	pub fn legal_moves_from_banmen_with_buffer(t:&Teban,state:&State,mvs:&mut Vec<LegalMove>) {
+	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut Vec<LegalMove>) {
 		match &state.banmen {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
+						let (x,y) = match t {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8-x,8-y),
 						};
@@ -2054,7 +2054,7 @@ impl Rule {
 		}
 	}
 
-	pub fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,state:&State)
+	pub fn legal_moves_from_mochigoma(t:Teban,mc:&MochigomaCollections,state:&State)
 		-> Vec<LegalMove> {
 
 		let mut mvs:Vec<LegalMove> = Vec::new();
@@ -2065,9 +2065,9 @@ impl Rule {
 	}
 
 	pub fn legal_moves_from_mochigoma_with_buffer(
-		t:&Teban,mc:&MochigomaCollections,state:&State,mvs:&mut Vec<LegalMove>
+		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut Vec<LegalMove>
 	) {
-		match *t {
+		match t {
 			Teban::Sente => {
 				match *mc {
 					MochigomaCollections::Pair(ref ms, _) => {
@@ -2272,7 +2272,7 @@ impl Rule {
 		}
 	}
 
-	pub fn legal_moves_all(t:&Teban,state:&State,mc:&MochigomaCollections)
+	pub fn legal_moves_all(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
@@ -2640,7 +2640,7 @@ impl Rule {
 	}
 
 	pub fn win_only_moves_with_point_and_kind(
-		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind
+		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 		Rule::win_only_moves_with_point_and_kind_and_buffer(t, state, x, y, kind, &mut mvs);
@@ -2648,7 +2648,7 @@ impl Rule {
 	}
 
 	pub fn win_only_moves_with_point_and_kind_and_buffer(
-		t:&Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
+		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
 	) {
 		let from = x * 9 + y;
 
@@ -2659,7 +2659,7 @@ impl Rule {
 		match kind {
 			SFu => {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2707,7 +2707,7 @@ impl Rule {
 			}
 			SKei => {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2772,7 +2772,7 @@ impl Rule {
 			},
 			SGin | SOu =>  {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2793,7 +2793,7 @@ impl Rule {
 			},
 			SFuN | SKyouN | SKeiN | SGinN | SKin => {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2804,7 +2804,7 @@ impl Rule {
 			},
 			GFu => {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2852,7 +2852,7 @@ impl Rule {
 			},
 			GKei => {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2927,7 +2927,7 @@ impl Rule {
 			},
 			GGin | GOu =>  {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2947,7 +2947,7 @@ impl Rule {
 			},
 			GFuN | GKyouN | GKeiN | GGinN | GKin => {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				) {
 					let to = p as u32;
 
@@ -2975,7 +2975,7 @@ impl Rule {
 		}
 	}
 
-	pub fn win_only_moves_with_point(t:&Teban,state:&State,x:u32,y:u32)
+	pub fn win_only_moves_with_point(t:Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
 		match &state.banmen {
 			&Banmen(ref kinds) => {
@@ -2984,28 +2984,28 @@ impl Rule {
 		}
 	}
 
-	pub fn win_only_moves_with_src(t:&Teban,state:&State,src:KomaSrcPosition)
+	pub fn win_only_moves_with_src(t:Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
 			KomaSrcPosition(x,y) => Rule::win_only_moves_with_point(t,state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves_with_dst_to(t:&Teban,state:&State,dst:KomaDstToPosition)
+	pub fn win_only_moves_with_dst_to(t:Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
 			KomaDstToPosition(x,y,_) => Rule::win_only_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves_with_dst_put(t:&Teban,state:&State,dst:KomaDstPutPosition)
+	pub fn win_only_moves_with_dst_put(t:Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
 			KomaDstPutPosition(x,y) => Rule::win_only_moves_with_point(t, state, 9 - x, y - 1)
 		}
 	}
 
-	pub fn win_only_moves(t:&Teban,state:&State)
+	pub fn win_only_moves(t:Teban,state:&State)
 		-> Vec<LegalMove> {
 		let mut mvs:Vec<LegalMove> = Vec::new();
 
@@ -3013,7 +3013,7 @@ impl Rule {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
+						let (x,y) = match t {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8 - y),
 						};
@@ -3028,7 +3028,7 @@ impl Rule {
 	}
 
 	pub fn oute_only_moves_with_point(
-		t:&Teban,state:&State,mc:&MochigomaCollections,x:u32,y:u32
+		t:Teban,state:&State,mc:&MochigomaCollections,x:u32,y:u32
 	) -> Vec<LegalMove> {
 		let mvs = Rule::win_only_moves_with_point(t,state,x,y);
 
@@ -3062,7 +3062,7 @@ impl Rule {
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn oute_only_moves_from_banmen(t:&Teban,state:&State,mc:&MochigomaCollections)
+	pub fn oute_only_moves_from_banmen(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mvs = Rule::win_only_moves(t,state);
 
@@ -3100,7 +3100,7 @@ impl Rule {
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,state:&State) -> Vec<LegalMove> {
+	pub fn oute_only_moves_from_mochigoma(t:Teban,mc:&MochigomaCollections,state:&State) -> Vec<LegalMove> {
 		Rule::legal_moves_from_mochigoma(t, mc, state)
 			.into_iter().filter(|mv| {
 				let mv = mv.to_applied_move();
@@ -3109,12 +3109,12 @@ impl Rule {
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
 
 						if Rule::is_mate_with_partial_state_and_from_and_kind(
-							t, &ps, m.dst(), KomaKind::from((*t,m.kind()))
+							t, &ps, m.dst(), KomaKind::from((t,m.kind()))
 						) {
 							return true;
 						}
 
-						if Rule::is_mate_with_partial_state_repeat_move_kinds(&t, &ps) {
+						if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
 							return true;
 						}
 
@@ -3125,7 +3125,7 @@ impl Rule {
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn oute_only_moves_all(t:&Teban,state:&State,mc:&MochigomaCollections)
+	pub fn oute_only_moves_all(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mvs = Rule::win_only_moves(t,state);
 
@@ -3149,7 +3149,7 @@ impl Rule {
 						(kind,m.dst())
 					},
 					AppliedMove::Put(m) => {
-						(KomaKind::from((*t,m.kind())),m.dst())
+						(KomaKind::from((t,m.kind())),m.dst())
 					}
 				};
 
@@ -3167,7 +3167,7 @@ impl Rule {
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn respond_oute_only_moves_all(t:&Teban,state:&State,mc:&MochigomaCollections)
+	pub fn respond_oute_only_moves_all(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		Rule::legal_moves_all(t, state, mc)
 			.into_iter().filter(|mv| {
@@ -3178,14 +3178,14 @@ impl Rule {
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
 
 						Rule::is_mate_with_partial_state_and_old_banmen_and_move(
-							&t.opposite(),&state.banmen,&ps,mv
+							t.opposite(),&state.banmen,&ps,mv
 						)
 					}
 				}
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn apply_move_to_partial_state_none_check(state:&State,t:&Teban,_:&MochigomaCollections,m:&AppliedMove)
+	pub fn apply_move_to_partial_state_none_check(state:&State,t:Teban,_:&MochigomaCollections,m:&AppliedMove)
 		-> PartialState {
 		let mut ps = state.to_partial_state();
 
@@ -3481,7 +3481,7 @@ impl Rule {
 							1
 						};
 
-						match *t {
+						match t {
 							Teban::Sente => {
 								match m.kind() {
 									MochigomaKind::Fu => {
@@ -3697,7 +3697,7 @@ impl Rule {
 		ps
 	}
 
-	pub fn apply_move_none_check(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove)
+	pub fn apply_move_none_check(state:&State,t:Teban,mc:&MochigomaCollections,m:&AppliedMove)
 		-> (State,MochigomaCollections,Option<MochigomaKind>) {
 		let ps = Rule::apply_move_to_partial_state_none_check(state,t,mc,m);
 		let (banmen,mc,o) = Rule::apply_move_to_banmen_and_mochigoma_none_check(
@@ -3707,7 +3707,7 @@ impl Rule {
 	}
 
 	pub fn apply_move_to_banmen_and_mochigoma_none_check(
-		banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove
+		banmen:&Banmen,t:Teban,mc:&MochigomaCollections,m:&AppliedMove
 	) -> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
 
 		let mut kinds = match banmen {
@@ -3789,7 +3789,7 @@ impl Rule {
 							Some(obtained) => {
 								match mc {
 									&MochigomaCollections::Pair(ref ms, ref mg) => {
-										match *t {
+										match t {
 											Teban::Sente => {
 												let mut ms = ms.clone();
 
@@ -3817,7 +3817,7 @@ impl Rule {
 										}
 									},
 									&MochigomaCollections::Empty => {
-										match *t {
+										match t {
 											Teban::Sente => {
 												let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 
@@ -3847,12 +3847,12 @@ impl Rule {
 				let dx = to as usize / 9;
 				let dy = to as usize - dx * 9;
 
-				kinds[dy][dx] = KomaKind::from((*t,k));
+				kinds[dy][dx] = KomaKind::from((t,k));
 
 				let mut mc = mc.clone();
 
 				match t {
-					&Teban::Sente => {
+					Teban::Sente => {
 						match mc {
 							MochigomaCollections::Pair(ref mut mc,_) => {
 								let c = match mc.get(&k) {
@@ -3866,7 +3866,7 @@ impl Rule {
 							_ => (),
 						}
 					},
-					&Teban::Gote => {
+					Teban::Gote => {
 						match mc {
 							MochigomaCollections::Pair(_,ref mut mc) => {
 								let c = match mc.get(&k) {
@@ -3889,11 +3889,11 @@ impl Rule {
 		(Banmen(kinds),nmc,obtained)
 	}
 
-	pub fn is_valid_move(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
+	pub fn is_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
 		true
 	}
 
-	pub fn apply_valid_move(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove)
+	pub fn apply_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:&AppliedMove)
 		-> Result<(State,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
 		if !Rule::is_valid_move(state, t, mc, m) {
@@ -3915,7 +3915,7 @@ impl Rule {
 		let mut state = state.clone();
 
 		for m in m {
-			match Rule::apply_move_none_check(&state,&teban,&mc,&m) {
+			match Rule::apply_move_none_check(&state,teban,&mc,&m) {
 				(next,nmc,o) => {
 					mhash = hasher.calc_main_hash(mhash,&teban,&state.banmen,&mc,m,&o);
 					shash = hasher.calc_sub_hash(shash,&teban,&state.banmen,&mc,m,&o);
@@ -3946,15 +3946,15 @@ impl Rule {
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut r:T,mut f:F)
 		-> (Teban,State,MochigomaCollections,T)
-		where F: FnMut(&Banmen,&Teban,
+		where F: FnMut(&Banmen,Teban,
 						&MochigomaCollections,&Option<AppliedMove>,
 						&Option<MochigomaKind>,T) -> T {
 		let mut state = state.clone();
 
 		for m in m {
-			match Rule::apply_move_none_check(&state,&teban,&mc,m) {
+			match Rule::apply_move_none_check(&state,teban,&mc,m) {
 				(next,nmc,o) => {
-					r = f(&state.banmen,&teban,&mc,&Some(*m),&o,r);
+					r = f(&state.banmen,teban,&mc,&Some(*m),&o,r);
 					state = next;
 					mc = nmc;
 					teban = teban.opposite();
@@ -3962,13 +3962,13 @@ impl Rule {
 			}
 		}
 
-		r = f(&state.banmen,&teban,&mc,&None,&None,r);
+		r = f(&state.banmen,teban,&mc,&None,&None,r);
 
 		(teban,state,mc,r)
 	}
 
-	pub fn is_nyugyoku_win(state:&State,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
-		if Rule::is_mate(&t.opposite(),state) {
+	pub fn is_nyugyoku_win(state:&State,t:Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
+		if Rule::is_mate(t.opposite(),state) {
 			return false
 		}
 
@@ -3978,7 +3978,7 @@ impl Rule {
 			}
 		}
 
-		let mut ou_position_board = match *t {
+		let mut ou_position_board = match t {
 			Teban::Sente => {
 				state.sente_ou_position_board
 			},
@@ -3997,7 +3997,7 @@ impl Rule {
 
 		match &state.banmen {
 			&Banmen(ref kinds) => {
-				match *t {
+				match t {
 					Teban::Sente => {
 						match mc {
 							&MochigomaCollections::Pair(ref mc, _) => {
@@ -4177,12 +4177,12 @@ impl Rule {
 		}
 	}
 
-	pub fn responded_oute(state:&State,t:&Teban,mc:&MochigomaCollections,m:&LegalMove)
+	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:&LegalMove)
 		-> Result<bool,SelfMatchRunningError> {
 
 		let o = t.opposite();
 
-		if !Rule::is_mate(&o, state) {
+		if !Rule::is_mate(o, state) {
 			return Err(SelfMatchRunningError::InvalidState(String::from(
 				"The argument m is not Move of oute."
 			)));
@@ -4192,10 +4192,10 @@ impl Rule {
 
 		let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &m);
 
-		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_move(&o, &state.banmen, &ps, m))
+		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_move(o, &state.banmen, &ps, m))
 	}
 
-	pub fn is_put_fu_and_mate(state:&State,teban:&Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
+	pub fn is_put_fu_and_mate(state:&State,teban:Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
 		match *m {
 			AppliedMove::Put(m) => {
 				let to = m.dst();
@@ -4215,15 +4215,15 @@ impl Rule {
 
 				let is_oute = Rule::is_mate_with_partial_state_and_point_and_kind(teban,&state.to_partial_state(),dx,dy,kind);
 
-				is_oute && Rule::legal_moves_all(&teban, state, &mc).into_iter().filter(|m| {
+				is_oute && Rule::legal_moves_all(teban, state, &mc).into_iter().filter(|m| {
 					match *m {
 						LegalMove::To(m) if m.obtained() == Some(ObtainKind::Ou) => true,
 						m @ _ => {
 							match Rule::apply_move_none_check(
-								state,&teban,&mc,&m.to_applied_move()
+								state,teban,&mc,&m.to_applied_move()
 							) {
 								(next,_,_) => {
-									!Rule::is_mate(&teban.opposite(),&next)
+									!Rule::is_mate(teban.opposite(),&next)
 								}
 							}
 						},
@@ -4234,10 +4234,10 @@ impl Rule {
 		}
 	}
 
-	pub fn is_win(state:&State,teban:&Teban,m:&AppliedMove) -> bool {
+	pub fn is_win(state:&State,teban:Teban,m:&AppliedMove) -> bool {
 		match *m {
 			AppliedMove::To(m) => {
-				match *teban {
+				match teban {
 					Teban::Sente => {
 						let to = m.dst();
 						let bitboard = unsafe {
@@ -4284,7 +4284,7 @@ impl Rule {
 		}
 	}
 
-	pub fn is_mate(t:&Teban,state:&State)
+	pub fn is_mate(t:Teban,state:&State)
 		-> bool {
 		let ps = state.to_partial_state();
 
@@ -4292,7 +4292,7 @@ impl Rule {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
+						let (x,y) = match t {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8 - y),
 						};
@@ -4308,19 +4308,19 @@ impl Rule {
 		false
 	}
 
-	pub fn is_mate_with_partial_state_and_point_and_kind(t:&Teban,ps:&PartialState,x:u32,y:u32,kind:KomaKind) -> bool {
+	pub fn is_mate_with_partial_state_and_point_and_kind(t:Teban,ps:&PartialState,x:u32,y:u32,kind:KomaKind) -> bool {
 		let from = x * 9 + y;
 
 		Rule::is_mate_with_partial_state_and_from_and_kind(t,ps,from,kind)
 	}
 
-	pub fn is_mate_with_partial_state_and_from_and_kind(t:&Teban,ps:&PartialState,from:u32,kind:KomaKind) -> bool {
+	pub fn is_mate_with_partial_state_and_from_and_kind(t:Teban,ps:&PartialState,from:u32,kind:KomaKind) -> bool {
 		let state = ps;
 
 		(match kind {
 			SFu => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				)
 			},
 			SKyou => {
@@ -4332,7 +4332,7 @@ impl Rule {
 			}
 			SKei => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				)
 			},
 			SKaku | SKakuN => {
@@ -4349,17 +4349,17 @@ impl Rule {
 			},
 			SGin | SOu =>  {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				)
 			},
 			SFuN | SKyouN | SKeiN | SGinN | SKin => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				)
 			},
 			GFu => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				)
 			},
 			GKyou => {
@@ -4371,7 +4371,7 @@ impl Rule {
 			},
 			GKei => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				)
 			},
 			GKaku | GKakuN => {
@@ -4388,20 +4388,20 @@ impl Rule {
 			},
 			GGin | GOu =>  {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				)
 			},
 			GFuN | GKyouN | GKeiN | GGinN | GKin => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					*t,state.gote_self_board,state.gote_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_ou_position_board,from,kind
 				)
 			},
 			Blank => None,
 		}).is_some()
 	}
 
-	pub fn is_mate_with_partial_state_repeat_move_kinds(t:&Teban,ps:&PartialState) -> bool {
-		match *t {
+	pub fn is_mate_with_partial_state_repeat_move_kinds(t:Teban,ps:&PartialState) -> bool {
+		match t {
 			Teban::Sente => {
 				let mut bitboard = ps.sente_hisha_board;
 
@@ -4492,7 +4492,7 @@ impl Rule {
 	}
 
 	pub fn is_mate_with_partial_state_and_old_banmen_and_move(
-		t:&Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
+		t:Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
 	) -> bool {
 		let from = match m {
 			AppliedMove::To(m) => m.src() as i32,
@@ -4520,7 +4520,7 @@ impl Rule {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
+						let (x,y) = match t {
 							Teban::Sente => (x,y),
 							Teban::Gote => (8 - x, 8 - y),
 						};
@@ -4536,7 +4536,7 @@ impl Rule {
 									kinds[sy as usize][sx as usize]
 								}
 								AppliedMove::Put(m) => {
-									KomaKind::from((*t,m.kind()))
+									KomaKind::from((t,m.kind()))
 								}
 							}
 						} else {
@@ -4572,7 +4572,7 @@ impl Rule {
 		return true;
 	}
 
-	pub fn check_sennichite_by_oute(state:&State,teban:&Teban,mhash:u64,shash:u64,
+	pub fn check_sennichite_by_oute(state:&State,teban:Teban,mhash:u64,shash:u64,
 									oute_kyokumen_hash_map:&mut Option<TwoKeyHashMap<u64,u32>>)
 		-> bool {
 

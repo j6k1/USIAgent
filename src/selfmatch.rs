@@ -714,12 +714,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 							let m = m.to_applied_move();
 
-							match Rule::apply_valid_move(&state,&teban,&mc,&m) {
+							match Rule::apply_valid_move(&state,teban,&mc,&m) {
 								Ok((next,nmc,o)) => {
 
 									if let Some(_) = prev_move {
-										if Rule::win_only_moves(&teban.opposite(),&state).len() > 0 {
-											if Rule::win_only_moves(&teban.opposite(),&next).len() > 0 {
+										if Rule::win_only_moves(teban.opposite(),&state).len() > 0 {
+											if Rule::win_only_moves(teban.opposite(),&next).len() > 0 {
 												on_gameend(
 													cs[(cs_index+1) % 2].clone(),
 													cs[cs_index].clone(),
@@ -736,7 +736,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										}
 									}
 
-									let is_win = Rule::is_win(&state,&teban,&m);
+									let is_win = Rule::is_win(&state,teban,&m);
 
 									mvs.push(m);
 
@@ -762,7 +762,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									state = next;
 
-									if Rule::is_put_fu_and_mate(&state,&teban.opposite(),&mc,&m) {
+									if Rule::is_put_fu_and_mate(&state,teban.opposite(),&mc,&m) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																		.map(|m| m.to_move())
 																		.collect::<Vec<Move>>());
@@ -778,7 +778,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									if !Rule::check_sennichite_by_oute(
 										&state,
-										&teban.opposite(),mhash,shash,
+										teban.opposite(),mhash,shash,
 										&mut oute_kyokumen_hash_maps[cs_index]
 									) {
 										kifu_writer(&sfen,&mvs.into_iter()
@@ -878,7 +878,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							}
 							break;
 						},
-						SelfMatchMessage::NotifyMove(BestMove::Win) if Rule::is_nyugyoku_win(&state,&teban,&mc,&current_time_limit)=> {
+						SelfMatchMessage::NotifyMove(BestMove::Win) if Rule::is_nyugyoku_win(&state,teban,&mc,&current_time_limit)=> {
 							kifu_writer(&sfen,&mvs.into_iter()
 													.map(|m| m.to_move())
 													.collect::<Vec<Move>>());
