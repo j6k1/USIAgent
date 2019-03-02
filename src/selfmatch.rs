@@ -104,8 +104,8 @@ impl SelfMatchKifuWriter<SelfMatchRunningError> for FileSfenKifuWriter {
 pub enum SelfMatchMessage {
 	Ready,
 	GameStart,
-	StartThink(Teban,Banmen,MochigomaCollections,u32,Vec<Move>),
-	StartPonderThink(Teban,Banmen,MochigomaCollections,u32,Vec<Move>),
+	StartThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>),
+	StartPonderThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>),
 	NotifyMove(BestMove),
 	PonderHit,
 	PonderNG,
@@ -424,8 +424,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
 			let cs = [cs1.clone(),cs2.clone()];
-			let mut prev_move:Option<Move> = None;
-			let mut ponders:[Option<Move>; 2] = [None,None];
+			let mut prev_move:Option<AppliedMove> = None;
+			let mut ponders:[Option<AppliedMove>; 2] = [None,None];
 
 			let on_error_handler_inner = on_error_handler.clone();
 			let quit_ready_inner = quit_ready.clone();
@@ -549,7 +549,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				};
 
 				let sfen = initial_position_creator();
-				let (teban, banmen, mc, n, mut mvs) = match position_parser.parse(&sfen.split(" ").collect::<Vec<&str>>()) {
+				let (teban, banmen, mc, n, mvs) = match position_parser.parse(&sfen.split(" ").collect::<Vec<&str>>()) {
 					Ok(mut position) => match position {
 						SystemEvent::Position(teban, p, n, m) => {
 							let(banmen,mc) = match p {
@@ -637,12 +637,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 				let (mhash, shash) = hasher.calc_initial_hash(&banmen,&ms,&mg);
 
+				let mut mvs = mvs.into_iter().map(|m| m.to_applied_move()).collect::<Vec<AppliedMove>>();
+
 				let (mut teban,
-					 mut banmen,
+					 mut state,
 					 mut mc,
 					 mut mhash,
 					 mut shash,
-					 mut kyokumen_hash_map) = Rule::apply_moves(&banmen,teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
+					 mut kyokumen_hash_map) = Rule::apply_moves(&State::new(banmen),teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
 
 				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u64,u32>>; 2] = [None,None];
 
@@ -676,7 +678,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						SelfMatchMessage::NotifyMove(BestMove::Move(m,pm)) => {
 							match self_match_event_queue.lock() {
 								Ok(mut self_match_event_queue) => {
-									self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&banmen,&m))?));
+									self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&state.get_banmen(),&m))?));
 								},
 								Err(ref e) => {
 									on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -693,7 +695,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 							if let Some(limit) = current_time_limit {
 								if limit < Instant::now() {
-									kifu_writer(&sfen,&mvs);
+									kifu_writer(&sfen,&mvs.into_iter().map(|m| m.to_move()).collect::<Vec<Move>>());
 									on_gameend(
 										cs[(cs_index+1) % 2].clone(),
 										cs[cs_index].clone(),
@@ -710,11 +712,13 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							);
 							current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
 
-							match Rule::apply_valid_move(&banmen,&teban,&mc,&m) {
+							let m = m.to_applied_move();
+
+							match Rule::apply_valid_move(&state,&teban,&mc,&m) {
 								Ok((next,nmc,o)) => {
 
 									if let Some(_) = prev_move {
-										if Rule::win_only_moves(&teban.opposite(),&banmen).len() > 0 {
+										if Rule::win_only_moves(&teban.opposite(),&state).len() > 0 {
 											if Rule::win_only_moves(&teban.opposite(),&next).len() > 0 {
 												on_gameend(
 													cs[(cs_index+1) % 2].clone(),
@@ -724,18 +728,22 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 													SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
 												)?;
 												mvs.push(m);
-												kifu_writer(&sfen,&mvs);
+												kifu_writer(&sfen,&mvs.into_iter()
+																		.map(|m| m.to_move())
+																		.collect::<Vec<Move>>());
 												break;
 											}
 										}
 									}
 
-									let is_win = Rule::is_win(&banmen,&teban,&m);
+									let is_win = Rule::is_win(&state,&teban,&m);
 
 									mvs.push(m);
 
 									if is_win {
-										kifu_writer(&sfen,&mvs);
+										kifu_writer(&sfen,&mvs.into_iter()
+																.map(|m| m.to_move())
+																.collect::<Vec<Move>>());
 										on_gameend(
 											cs[cs_index].clone(),
 											cs[(cs_index+1) % 2].clone(),
@@ -746,16 +754,18 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
-									mhash = hasher.calc_main_hash(mhash,&teban,&banmen,&mc,&m,&o);
-									shash = hasher.calc_sub_hash(shash,&teban,&banmen,&mc,&m,&o);
+									mhash = hasher.calc_main_hash(mhash,&teban,&state.get_banmen(),&mc,&m,&o);
+									shash = hasher.calc_sub_hash(shash,&teban,&state.get_banmen(),&mc,&m,&o);
 
 									mc = nmc;
 									teban = teban.opposite();
 
-									banmen = next;
+									state = next;
 
-									if Rule::is_put_fu_and_mate(&banmen,&teban.opposite(),&mc,&m) {
-										kifu_writer(&sfen,&mvs);
+									if Rule::is_put_fu_and_mate(&state,&teban.opposite(),&mc,&m) {
+										kifu_writer(&sfen,&mvs.into_iter()
+																		.map(|m| m.to_move())
+																		.collect::<Vec<Move>>());
 										on_gameend(
 											cs[(cs_index+1) % 2].clone(),
 											cs[cs_index].clone(),
@@ -767,11 +777,13 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 
 									if !Rule::check_sennichite_by_oute(
-										&banmen,
+										&state,
 										&teban.opposite(),mhash,shash,
 										&mut oute_kyokumen_hash_maps[cs_index]
 									) {
-										kifu_writer(&sfen,&mvs);
+										kifu_writer(&sfen,&mvs.into_iter()
+																.map(|m| m.to_move())
+																.collect::<Vec<Move>>());
 										on_gameend(
 											cs[(cs_index+1) % 2].clone(),
 											cs[cs_index].clone(),
@@ -783,9 +795,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 
 									if !Rule::check_sennichite(
-										&banmen,mhash,shash,&mut kyokumen_hash_map
+										&state,mhash,shash,&mut kyokumen_hash_map
 									) {
-										kifu_writer(&sfen,&mvs);
+										kifu_writer(&sfen,&mvs.into_iter()
+																.map(|m| m.to_move())
+																.collect::<Vec<Move>>());
 										on_gameend(
 											cs[(cs_index+1) % 2].clone(),
 											cs[cs_index].clone(),
@@ -796,13 +810,13 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
-									ponders[cs_index] = pm;
+									ponders[cs_index] = pm.map(|pm| pm.to_applied_move());
 
 									match pm {
 										Some(pm) => {
 											match mvs.clone() {
 												mut mvs => {
-													mvs.push(pm);
+													mvs.push(pm.to_applied_move());
 													cs[cs_index].send(
 														SelfMatchMessage::StartPonderThink(
 															teban_at_start.clone(),banmen_at_start.clone(),
@@ -817,7 +831,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								},
 								Err(_) => {
 									mvs.push(m);
-									kifu_writer(&sfen,&mvs);
+									kifu_writer(&sfen,&mvs.into_iter()
+															.map(|m| m.to_move())
+															.collect::<Vec<Move>>());
 									on_gameend(
 										cs[(cs_index+1) % 2].clone(),
 										cs[cs_index].clone(),
@@ -831,7 +847,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							prev_move = Some(m)
 						},
 						SelfMatchMessage::NotifyMove(BestMove::Resign) => {
-							kifu_writer(&sfen,&mvs);
+							kifu_writer(&sfen,&mvs.into_iter()
+													.map(|m| m.to_move())
+													.collect::<Vec<Move>>());
 							on_gameend(
 								cs[(cs_index+1) % 2].clone(),
 								cs[cs_index].clone(),
@@ -860,8 +878,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							}
 							break;
 						},
-						SelfMatchMessage::NotifyMove(BestMove::Win) if Rule::is_nyugyoku_win(&banmen,&teban,&mc,&current_time_limit)=> {
-							kifu_writer(&sfen,&mvs);
+						SelfMatchMessage::NotifyMove(BestMove::Win) if Rule::is_nyugyoku_win(&state,&teban,&mc,&current_time_limit)=> {
+							kifu_writer(&sfen,&mvs.into_iter()
+													.map(|m| m.to_move())
+													.collect::<Vec<Move>>());
 							on_gameend(
 								cs[cs_index].clone(),
 								cs[(cs_index+1) % 2].clone(),
@@ -872,7 +892,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							break;
 						},
 						SelfMatchMessage::NotifyMove(BestMove::Win) => {
-							kifu_writer(&sfen,&mvs);
+							kifu_writer(&sfen,&mvs.into_iter()
+													.map(|m| m.to_move())
+													.collect::<Vec<Move>>());
 							on_gameend(
 								cs[(cs_index+1) % 2].clone(),
 								cs[cs_index].clone(),
@@ -1019,7 +1041,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 										match player.lock() {
 											Ok(mut player) => {
-												match player.set_position(t, b, ms, mg, n, m) {
+												match player.set_position(t, b, ms, mg, n, m.into_iter().map(|m| {
+													m.to_move()
+												}).collect::<Vec<Move>>()) {
 													Ok(_) => (),
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -1058,7 +1082,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 										match player.lock() {
 											Ok(mut player) => {
-												match player.set_position(t, b, ms, mg, n, m) {
+												match player.set_position(t, b, ms, mg, n, m.into_iter().map(|m| {
+													m.to_move()
+												}).collect::<Vec<Move>>()) {
 													Ok(_) => (),
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();

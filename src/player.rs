@@ -115,28 +115,27 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	}
 
 	fn apply_moves<T,F>(&self,mut teban:Teban,
-						mut banmen:Banmen,
+						mut state:State,
 						mut mc:MochigomaCollections,
-						m:Vec<Move>,mut r:T,mut f:F)
-		-> (Teban,Banmen,MochigomaCollections,T)
+						m:Vec<AppliedMove>,mut r:T,mut f:F)
+		-> (Teban,State,MochigomaCollections,T)
 		where F: FnMut(&Self,&Teban,&Banmen,
-						&MochigomaCollections,&Option<Move>,
+						&MochigomaCollections,&Option<AppliedMove>,
 						&Option<MochigomaKind>,T) -> T {
 
 		for m in &m {
-			match Rule::apply_move_none_check(&banmen,&teban,&mc,&m) {
+			match Rule::apply_move_none_check(&state,&teban,&mc,&m) {
 				(next,nmc,o) => {
-					r = f(self,&teban,&banmen,&mc,&Some(*m),&o,r);
-					banmen = next;
+					r = f(self,&teban,&next.get_banmen(),&mc,&Some(*m),&o,r);
+					state = next;
 					mc = nmc;
 					teban = teban.opposite();
 				}
 			}
 		}
+		r = f(self,&teban,&state.get_banmen(),&mc,&None,&None,r);
 
-		r = f(self,&teban,&banmen,&mc,&None,&None,r);
-
-		(teban,banmen,mc,r)
+		(teban,state,mc,r)
 	}
 
 	fn get_update_inc(&self,tinc:&u32,limit:&Option<Instant>) -> Option<u32> {

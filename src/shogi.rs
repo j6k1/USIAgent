@@ -41,6 +41,49 @@ pub enum KomaKind {
 	GHishaN,
 	Blank,
 }
+impl KomaKind {
+	pub fn to_nari(&self) -> KomaKind {
+		match *self {
+			KomaKind::SFu => {
+				KomaKind::SFuN
+			},
+			KomaKind::SKyou => {
+				KomaKind::SKyouN
+			},
+			KomaKind::SKei => {
+				KomaKind::SKeiN
+			},
+			KomaKind::SGin => {
+				KomaKind::SGinN
+			},
+			KomaKind::SHisha => {
+				KomaKind::SHishaN
+			},
+			KomaKind::SKaku => {
+				KomaKind::SKakuN
+			},
+			KomaKind::GFu => {
+				KomaKind::GFuN
+			},
+			KomaKind::GKyou => {
+				KomaKind::GKyouN
+			},
+			KomaKind::GKei => {
+				KomaKind::GKeiN
+			},
+			KomaKind::GGin => {
+				KomaKind::GGinN
+			},
+			KomaKind::GHisha => {
+				KomaKind::GHishaN
+			},
+			KomaKind::GKaku => {
+				KomaKind::GKakuN
+			},
+			kind => kind
+		}
+	}
+}
 impl MaxIndex for KomaKind {
 	fn max_index() -> usize {
 		KomaKind::Blank as usize

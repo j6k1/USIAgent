@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::ops::BitOr;
 use std::ops::Not;
+use std::convert::From;
 
 use shogi::*;
 use hash::*;
@@ -275,6 +276,42 @@ impl From<LegalMove> for Move {
 		}
 	}
 }
+impl AppliedMove {
+	pub fn to_move(&self) -> Move {
+		Move::from(*self)
+	}
+}
+impl From<AppliedMove> for Move {
+	fn from(m:AppliedMove) -> Move {
+		match m {
+			AppliedMove::To(m) => {
+				let src = m.src();
+				let dst = m.dst();
+				let n = m.is_nari();
+				let sx = src / 9;
+				let sy = src - sx * 9;
+				let dx = dst / 9;
+				let dy = dst - dx * 9;
+				let sx = 9 - sx;
+				let sy = sy + 1;
+				let dx = 9 - dx;
+				let dy = dy + 1;
+
+				Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n))
+			},
+			AppliedMove::Put(m) => {
+				let dst = m.dst();
+				let kind = m.kind();
+				let dx = dst / 9;
+				let dy = dst - dx * 9;
+				let dx = 9 - dx;
+				let dy = dy + 1;
+
+				Move::Put(kind,KomaDstPutPosition(dx,dy))
+			}
+		}
+	}
+}
 impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
 	fn find(&self,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
 		match query {
@@ -526,6 +563,10 @@ impl State {
 		f(&self.banmen)
 	}
 
+	pub fn get_banmen(&self) -> &Banmen {
+		&self.banmen
+	}
+
 	pub fn to_partial_state(&self) -> PartialState {
 		PartialState {
 			sente_self_board: self.sente_self_board,
@@ -671,107 +712,6 @@ const DENY_MOVE_SENTE_FU_AND_KYOU_MASK: u128 = 0b000000001_000000001_000000001_0
 const DENY_MOVE_SENTE_KEI_MASK: u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
 const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
 const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
-enum NextMove {
-	Once(i32,i32),
-	Repeat(i32,i32),
-}
-const CANDIDATE:[&[NextMove]; 14] = [
-	// 歩
-	&[NextMove::Once(0,-1)],
-	// 香車
-	&[NextMove::Repeat(0,-1)],
-	// 桂馬
-	&[NextMove::Once(-1,-2),NextMove::Once(1,-2)],
-	// 銀
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(-1,1),
-		NextMove::Once(0,-1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,1)
-	],
-	// 金
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(-1,0),
-		NextMove::Once(0,-1),
-		NextMove::Once(0,1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,0)
-	],
-	// 角
-	&[NextMove::Repeat(-1,-1),
-		NextMove::Repeat(1,-1),
-		NextMove::Repeat(-1,1),
-		NextMove::Repeat(1,1)
-	],
-	// 飛車
-	&[NextMove::Repeat(0,-1),
-		NextMove::Repeat(0,1),
-		NextMove::Repeat(-1,0),
-		NextMove::Repeat(1,0)
-	],
-	// 王
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(-1,0),
-		NextMove::Once(-1,1),
-		NextMove::Once(0,-1),
-		NextMove::Once(0,1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,0),
-		NextMove::Once(1,1)
-	],
-	// 成歩
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(-1,0),
-		NextMove::Once(0,-1),
-		NextMove::Once(0,1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,0)
-	],
-	// 成香
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(-1,0),
-		NextMove::Once(0,-1),
-		NextMove::Once(0,1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,0)
-	],
-	// 成桂
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(-1,0),
-		NextMove::Once(0,-1),
-		NextMove::Once(0,1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,0)
-	],
-	// 成銀
-	&[NextMove::Once(-1,-1),
-		NextMove::Once(-1,0),
-		NextMove::Once(0,-1),
-		NextMove::Once(0,1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,0)
-	],
-	// 成角
-	&[NextMove::Repeat(-1,-1),
-		NextMove::Repeat(1,-1),
-		NextMove::Repeat(-1,1),
-		NextMove::Repeat(1,1),
-		NextMove::Once(-1,0),
-		NextMove::Once(0,-1),
-		NextMove::Once(0,1),
-		NextMove::Once(1,0)
-	],
-	// 成飛
-	&[NextMove::Repeat(0,-1),
-		NextMove::Repeat(0,1),
-		NextMove::Repeat(-1,0),
-		NextMove::Repeat(1,0),
-		NextMove::Once(-1,-1),
-		NextMove::Once(-1,1),
-		NextMove::Once(1,-1),
-		NextMove::Once(1,1)
-	],
-];
 /// 左上を(0,0)とした位置
 pub const BANMEN_START_POS:Banmen = Banmen([
 	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
@@ -2106,7 +2046,7 @@ impl Rule {
 						};
 
 						Rule::legal_moves_with_point_and_kind_and_buffer(
-							t, state, x as u32, y as u32, kinds[y][x], &mut mvs
+							t, state, x as u32, y as u32, kinds[y][x], mvs
 						);
 					}
 				}
@@ -2147,7 +2087,9 @@ impl Rule {
 
 									let mut candidate_bitboard = !candidate_bitboard;
 
-									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+									loop {
+										let p = Rule::pop_lsb(&mut candidate_bitboard);
+
 										if p == -1 {
 											break;
 										}
@@ -2159,7 +2101,6 @@ impl Rule {
 										};
 
 										let x = p / 9;
-										let y = p - x * 9;
 
 										if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & p_mask != 0 {
 											continue;
@@ -2183,7 +2124,9 @@ impl Rule {
 
 									let mut candidate_bitboard = !candidate_bitboard;
 
-									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+									loop {
+										let p = Rule::pop_lsb(&mut candidate_bitboard);
+
 										if p == -1 {
 											break;
 										}
@@ -2209,17 +2152,12 @@ impl Rule {
 
 									let mut candidate_bitboard = !candidate_bitboard;
 
-									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+									loop {
+										let p = Rule::pop_lsb(&mut candidate_bitboard);
+
 										if p == -1 {
 											break;
 										}
-
-
-										let p_mask = if p > 0 {
-											1 << p
-										} else {
-											1
-										};
 
 										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
 									}
@@ -2249,7 +2187,9 @@ impl Rule {
 
 									let mut candidate_bitboard = !candidate_bitboard;
 
-									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+									loop {
+										let p = Rule::pop_lsb(&mut candidate_bitboard);
+
 										if p == -1 {
 											break;
 										}
@@ -2266,7 +2206,6 @@ impl Rule {
 										}
 
 										let x = p / 9;
-										let y = p - x * 9;
 
 										let gote_fu_bitboard = unsafe {
 											(state.gote_fu_board.merged_bitboard >> x * 9) & 0b111111111
@@ -2286,7 +2225,9 @@ impl Rule {
 
 									let mut candidate_bitboard = !candidate_bitboard;
 
-									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+									loop {
+										let p = Rule::pop_lsb(&mut candidate_bitboard);
+
 										if p == -1 {
 											break;
 										}
@@ -2312,16 +2253,12 @@ impl Rule {
 
 									let mut candidate_bitboard = !candidate_bitboard;
 
-									while let p = Rule::pop_lsb(&mut candidate_bitboard) {
+									loop {
+										let p = Rule::pop_lsb(&mut candidate_bitboard);
+
 										if p == -1 {
 											break;
 										}
-
-										let p_mask = if p > 0 {
-											1 << p
-										} else {
-											1
-										};
 
 										mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
 									}
@@ -2663,7 +2600,7 @@ impl Rule {
 
 
 	pub fn win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
+		_:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
 	) -> Option<Square> {
 		let self_ou_bitboard = unsafe {
 			self_ou_bitboard.merged_bitboard
@@ -2683,7 +2620,7 @@ impl Rule {
 	}
 
 	pub fn win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
+		_:BitBoard,self_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
 	) -> Option<Square> {
 		let self_ou_bitboard = unsafe {
 			self_ou_bitboard.merged_bitboard
@@ -2859,12 +2796,6 @@ impl Rule {
 					*t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				) {
 					let to = p as u32;
-
-					let to_mask = if to > 0 {
-						1 << to
-					} else {
-						1
-					};
 
 					let o = Some(ObtainKind::Ou);
 
@@ -3096,97 +3027,165 @@ impl Rule {
 		mvs
 	}
 
-	pub fn oute_only_moves_with_point(t:&Teban,state:&State,mc:&MochigomaCollections,x:u32,y:u32)
-		-> Vec<LegalMove> {
+	pub fn oute_only_moves_with_point(
+		t:&Teban,state:&State,mc:&MochigomaCollections,x:u32,y:u32
+	) -> Vec<LegalMove> {
 		let mvs = Rule::win_only_moves_with_point(t,state,x,y);
 
 		if mvs.len() > 0 {
 			return mvs;
 		}
 
-		Rule::legal_moves_with_point(t, banmen, x, y)
-			.into_iter().filter(|m| {
-					match *m {
-						LegalMove::To(m) => {
-							match Rule::apply_move_none_check(banmen, t, mc,&Move::To(*s,*d)) {
-								(ref b,_,_) => Rule::win_only_moves(t,b).len() > 0
-							}
-						},
-						_ => false,
-					}
-			}).collect::<Vec<LegalMove>>()
-	}
+		let kind = match &state.banmen {
+			&Banmen(ref kinds) => kinds[y as usize][x as usize]
+		};
 
-	pub fn oute_only_moves_from_banmen(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
-		-> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		Rule::legal_moves_with_point(t, state, x, y)
+			.into_iter().filter(|mv| {
+				let mv = mv.to_applied_move();
+				match mv {
+					AppliedMove::To(m) => {
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
 
-		match banmen {
-			&Banmen(ref kinds) => {
-				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8 - x, 8- y),
-						};
-						mvs.append(&mut Rule::oute_only_moves_with_point(t, banmen, mc, x as u32, y as u32));
-					}
-				}
-			}
-		}
-		mvs
-	}
+						if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
+							return true;
+						}
 
-	pub fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
-		Rule::legal_moves_from_mochigoma(t, mc, b)
-			.into_iter().filter(|m| {
-				match m {
-					&LegalMove::Put(k,KomaDstPutPosition(x,y)) => {
-						Rule::win_only_moves_with_point_and_kind(t, b, 9 - x, y - 1, KomaKind::from((*t,k))).len() > 0
+						if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
+							return true;
+						}
+
+						false
 					},
-					_ => false,
+					_ => unreachable!(),
 				}
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
+	pub fn oute_only_moves_from_banmen(t:&Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		let mvs = Rule::win_only_moves(t,state);
 
-		match banmen {
-			&Banmen(ref kinds) => {
-				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len() {
-						let (x,y) = match *t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8 - x, 8- y),
-						};
-						mvs.append(&mut Rule::oute_only_moves_with_point(t, banmen, mc, x as u32, y as u32));
-					}
-				}
-			}
+		if mvs.len() > 0 {
+			return mvs;
 		}
-		mvs.append(&mut Rule::oute_only_moves_from_mochigoma(t, mc, banmen));
-		mvs
-	}
 
-	pub fn respond_oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
-		-> Vec<LegalMove> {
-		Rule::legal_moves_all(t, banmen, mc)
-			.into_iter().filter(|m| {
-					match m {
-						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
-						&LegalMove::To(ref s,ref d,_) => {
-							match Rule::apply_move_none_check(banmen,t,mc,&Move::To(*s,*d)) {
-								(ref b,_,_) => Rule::win_only_moves(&t.opposite(),b).len() == 0
-							}
-						},
-						_ => false,
-					}
+		Rule::legal_moves_from_banmen(t, state)
+			.into_iter().filter(|mv| {
+				let mv = mv.to_applied_move();
+				match mv {
+					AppliedMove::To(m) => {
+						let from = m.src();
+						let x = from / 9;
+						let y = from - x * 9;
+
+						let kind = match &state.banmen {
+							&Banmen(ref kinds) => kinds[y as usize][x as usize]
+						};
+
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+
+						if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
+							return true;
+						}
+
+						if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
+							return true;
+						}
+
+						false
+					},
+					_ => unreachable!(),
+				}
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn apply_move_to_partial_state_none_check(state:&State,t:&Teban,mc:&MochigomaCollections,m:&AppliedMove)
+	pub fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,state:&State) -> Vec<LegalMove> {
+		Rule::legal_moves_from_mochigoma(t, mc, state)
+			.into_iter().filter(|mv| {
+				let mv = mv.to_applied_move();
+				match mv {
+					AppliedMove::Put(m) => {
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+
+						if Rule::is_mate_with_partial_state_and_from_and_kind(
+							t, &ps, m.dst(), KomaKind::from((*t,m.kind()))
+						) {
+							return true;
+						}
+
+						if Rule::is_mate_with_partial_state_repeat_move_kinds(&t, &ps) {
+							return true;
+						}
+
+						false
+					},
+					_ => unreachable!()
+				}
+			}).collect::<Vec<LegalMove>>()
+	}
+
+	pub fn oute_only_moves_all(t:&Teban,state:&State,mc:&MochigomaCollections)
+		-> Vec<LegalMove> {
+		let mvs = Rule::win_only_moves(t,state);
+
+		if mvs.len() > 0 {
+			return mvs;
+		}
+
+		Rule::legal_moves_all(t, state, mc)
+			.into_iter().filter(|mv| {
+				let mv = mv.to_applied_move();
+				let (kind,dst) = match mv {
+					AppliedMove::To(m) => {
+						let from = m.src();
+						let x = from / 9;
+						let y = from - x * 9;
+
+						let kind = match &state.banmen {
+							&Banmen(ref kinds) => kinds[y as usize][x as usize]
+						};
+
+						(kind,m.dst())
+					},
+					AppliedMove::Put(m) => {
+						(KomaKind::from((*t,m.kind())),m.dst())
+					}
+				};
+
+				let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+
+				if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, dst, kind) {
+					return true;
+				}
+
+				if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
+					return true;
+				}
+
+				false
+			}).collect::<Vec<LegalMove>>()
+	}
+
+	pub fn respond_oute_only_moves_all(t:&Teban,state:&State,mc:&MochigomaCollections)
+		-> Vec<LegalMove> {
+		Rule::legal_moves_all(t, state, mc)
+			.into_iter().filter(|mv| {
+				match *mv {
+					LegalMove::To(m) if m.obtained() == Some(ObtainKind::Ou) => true,
+					mv => {
+						let mv = mv.to_applied_move();
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+
+						Rule::is_mate_with_partial_state_and_old_banmen_and_move(
+							&t.opposite(),&state.banmen,&ps,mv
+						)
+					}
+				}
+			}).collect::<Vec<LegalMove>>()
+	}
+
+	pub fn apply_move_to_partial_state_none_check(state:&State,t:&Teban,_:&MochigomaCollections,m:&AppliedMove)
 		-> PartialState {
 		let mut ps = state.to_partial_state();
 
@@ -3979,7 +3978,7 @@ impl Rule {
 			}
 		}
 
-		let ou_position_board = match *t {
+		let mut ou_position_board = match *t {
 			Teban::Sente => {
 				state.sente_ou_position_board
 			},
@@ -4177,192 +4176,25 @@ impl Rule {
 			}
 		}
 	}
-	/*
-	pub fn responded_oute(state:&State,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
+
+	pub fn responded_oute(state:&State,t:&Teban,mc:&MochigomaCollections,m:&LegalMove)
 		-> Result<bool,SelfMatchRunningError> {
 
 		let o = t.opposite();
 
-		if Rule::win_only_moves_with_dst_to(&o, state, m).len() == 0 {
-			&Move::To(_,ref dst) if Rule::win_only_moves_with_dst_to(&o, state, *dst).len() == 0 => false,
-			&Move::Put(_,ref dst) if Rule::win_only_moves_with_dst_put(&o, state, *dst).len() == 0 => false,
-			_ => true,
-		} {
+		if !Rule::is_mate(&o, state) {
 			return Err(SelfMatchRunningError::InvalidState(String::from(
 				"The argument m is not Move of oute."
 			)));
 		}
 
-		let (kind,x,y) = match m {
-			&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
-				match banmen {
-					&Banmen(ref kinds) => {
-						let (dx,dy) = ((9 - dx) as usize,(dy - 1) as usize);
-						(kinds[dy][dx],dx,dy)
-					}
-				}
-			},
-			&Move::Put(k,KomaDstPutPosition(dx,dy)) => {
-				(KomaKind::from((*t,k)),(9 - dx) as usize, (dy - 1) as usize)
-			}
-		};
+		let m = m.to_applied_move();
 
-		let mvs = match kind {
-			KomaKind::SKyou | KomaKind::GKyou |
-			KomaKind::SHisha | KomaKind::GHisha |
-			KomaKind::SHishaN | KomaKind::GHishaN |
-			KomaKind::SKaku | KomaKind::GKaku |
-			KomaKind::SKakuN | KomaKind::GKakuN => {
-				Rule::legal_moves_all(t, banmen, mc).into_iter().filter(|m| {
-					match m {
-						&LegalMove::To(_,_,Some(ObtainKind::Ou)) => true,
-						&LegalMove::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,_),_) => {
-							let (sx,sy) = ((9 - sx) as usize, (sy - 1) as usize);
-							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
+		let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &m);
 
-							let ou = match *t {
-								Teban::Sente => KomaKind::SOu,
-								Teban::Gote => KomaKind::GOu,
-							};
-
-							match banmen {
-								&Banmen(ref kinds) => {
-									if kinds[sy][sx] == ou {
-										true
-									} else {
-										let (tx,ty) = match banmen.find(&ou) {
-											Some(ref v) if v.len() > 0 => {
-												match v[0] {
-													KomaPosition(ox,oy) => {
-														((9 - ox) as usize, (oy - 1) as usize)
-													},
-												}
-											},
-											_ => {
-												return false;
-											}
-										};
-
-										if dx == x && dy == y {
-											true
-										} else if tx - x == 0 && ty < y {
-											dx == x && dy <= y && dy > ty
-										} else if tx - x == 0 {
-											dx == x && dy >= y && dy < ty
-										} else if ty - y == 0 && tx < x {
-											dy == y && dx <= x && dx > tx
-										} else if ty - y == 0 {
-											dy == y && dx >= x && dx < tx
-										} else if tx < x && ty < y {
-											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-													dx <= x && dx > tx &&
-													dy <= y && dy > ty
-										} else if tx > x && ty < y {
-											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-													dx >= x && dx < tx &&
-													dy <= y && dy < ty
-										} else if tx < x && ty > y {
-											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-													dx <= x && dx > tx &&
-													dy >= y && dy < ty
-										} else if tx > x && ty > y{
-											(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-													dx >= x && dx < tx &&
-													dy >= y && dy < ty
-										} else {
-											false
-										}
-									}
-								}
-							}
-						},
-						&LegalMove::Put(_,KomaDstPutPosition(dx,dy)) => {
-							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
-							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
-
-							let ou = match *t {
-								Teban::Sente => KomaKind::SOu,
-								Teban::Gote => KomaKind::GOu,
-							};
-
-							let (tx,ty) = match banmen.find(&ou) {
-								Some(ref v) if v.len() > 0 => {
-									match v[0] {
-										KomaPosition(ox,oy) => {
-											((9 - ox) as usize, (oy - 1) as usize)
-										}
-									}
-								},
-								_ => {
-									return false;
-								}
-							};
-
-							if tx - x == 0 && ty < y {
-								dx == x && dy <= y && dy > ty
-							} else if tx - x == 0 {
-								dx == x && dy >= y && dy < ty
-							} else if ty - y == 0 && tx < x {
-								dy == y && dx <= x && dx > tx
-							} else if ty - y == 0 {
-								dy == y && dx >= x && dx < tx
-							} else if tx < x && ty < y {
-								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-										dx <= x && dx > tx &&
-										dy <= y && dy > ty
-							} else if tx > x && ty < y {
-								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-										dx >= x && dx < tx &&
-										dy <= y && dy < ty
-							} else if tx < x && ty > y {
-								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-										dx <= x && dx > tx &&
-										dy >= y && dy < ty
-							} else if tx > x && ty > y{
-								(tx as i32 - dx as i32).abs() == (ty as i32 - dy as i32).abs() &&
-										dx >= x && dx < tx &&
-										dy >= y && dy < ty
-							} else {
-								false
-							}
-						}
-					}
-				}).collect::<Vec<LegalMove>>()
-			},
-			_ => {
-				Rule::legal_moves_all(t, banmen, mc).into_iter().filter(|m| {
-					match m {
-						&LegalMove::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,_),_) => {
-							let (dx,dy) = ((9 - dx) as usize, (dy - 1) as usize);
-							let (sx,sy) = ((9 - sx) as usize, (sy - 1) as usize);
-
-							let ou = match *t {
-								Teban::Sente => KomaKind::SOu,
-								Teban::Gote => KomaKind::GOu,
-							};
-
-							match banmen {
-								&Banmen(ref kinds) => {
-									kinds[sy][sx] == ou || (dx == x && dy == y)
-								}
-							}
-						},
-						_ => false
-					}
-				}).collect::<Vec<LegalMove>>()
-			}
-		};
-
-		Ok(match nm {
-			&Move::To(s,d) => {
-				mvs.find(&(s,d)).is_some()
-			},
-			&Move::Put(k,d) => {
-				mvs.find(&(k,d)).is_some()
-			}
-		})
+		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_move(&o, &state.banmen, &ps, m))
 	}
-	*/
+
 	pub fn is_put_fu_and_mate(state:&State,teban:&Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
 		match *m {
 			AppliedMove::Put(m) => {
@@ -4381,12 +4213,6 @@ impl Rule {
 					}
 				}
 
-				let to_mask = if to > 0 {
-					1 << to
-				} else {
-					1
-				};
-
 				let is_oute = Rule::is_mate_with_partial_state_and_point_and_kind(teban,&state.to_partial_state(),dx,dy,kind);
 
 				is_oute && Rule::legal_moves_all(&teban, state, &mc).into_iter().filter(|m| {
@@ -4396,10 +4222,9 @@ impl Rule {
 							match Rule::apply_move_none_check(
 								state,&teban,&mc,&m.to_applied_move()
 							) {
-								(next,nmc,o) if Rule::is_mate(&teban.opposite(),&next) => {
-									false
-								},
-								_ => true
+								(next,_,_) => {
+									!Rule::is_mate(&teban.opposite(),&next)
+								}
 							}
 						},
 					}
@@ -4409,19 +4234,49 @@ impl Rule {
 		}
 	}
 
-	pub fn is_win(banmen:&Banmen,teban:&Teban,m:&Move) -> bool {
-		match m {
-			&Move::To(_,KomaDstToPosition(dx,dy,_)) => {
-				match banmen {
-					&Banmen(ref kinds) => {
-						match teban {
-							&Teban::Sente => {
-								kinds[dy as usize - 1][9 - dx as usize] == KomaKind::GOu
-							},
-							&Teban::Gote => {
-								kinds[dy as usize - 1][9 - dx as usize] == KomaKind::SOu
+	pub fn is_win(state:&State,teban:&Teban,m:&AppliedMove) -> bool {
+		match *m {
+			AppliedMove::To(m) => {
+				match *teban {
+					Teban::Sente => {
+						let to = m.dst();
+						let bitboard = unsafe {
+							match state.gote_ou_position_board {
+								BitBoard {
+									merged_bitboard
+								} => {
+									merged_bitboard
+								}
 							}
-						}
+						};
+
+						let to_mask = if to == 0 {
+							1
+						} else {
+							1 << to
+						};
+
+						bitboard & to_mask != 0
+					},
+					Teban::Gote => {
+						let to = m.dst();
+						let bitboard = unsafe {
+							match state.sente_ou_position_board {
+								BitBoard {
+									merged_bitboard
+								} => {
+									merged_bitboard
+								}
+							}
+						};
+
+						let to_mask = if to == 0 {
+							1
+						} else {
+							1 << to
+						};
+
+						bitboard & to_mask != 0
 					}
 				}
 			},
@@ -4431,7 +4286,6 @@ impl Rule {
 
 	pub fn is_mate(t:&Teban,state:&State)
 		-> bool {
-		let mut mvs:Vec<LegalMove> = Vec::new();
 		let ps = state.to_partial_state();
 
 		match &state.banmen {
@@ -4456,6 +4310,11 @@ impl Rule {
 
 	pub fn is_mate_with_partial_state_and_point_and_kind(t:&Teban,ps:&PartialState,x:u32,y:u32,kind:KomaKind) -> bool {
 		let from = x * 9 + y;
+
+		Rule::is_mate_with_partial_state_and_from_and_kind(t,ps,from,kind)
+	}
+
+	pub fn is_mate_with_partial_state_and_from_and_kind(t:&Teban,ps:&PartialState,from:u32,kind:KomaKind) -> bool {
 		let state = ps;
 
 		(match kind {
@@ -4539,6 +4398,161 @@ impl Rule {
 			},
 			Blank => None,
 		}).is_some()
+	}
+
+	pub fn is_mate_with_partial_state_repeat_move_kinds(t:&Teban,ps:&PartialState) -> bool {
+		match *t {
+			Teban::Sente => {
+				let mut bitboard = ps.sente_hisha_board;
+
+				loop {
+					let p = Rule::pop_lsb(&mut bitboard);
+
+					if p == -1 {
+						break;
+					}
+
+					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, SHisha) {
+						return true;
+					}
+				}
+
+				let mut bitboard = ps.sente_kaku_board;
+
+				loop {
+					let p = Rule::pop_lsb(&mut bitboard);
+
+					if p == -1 {
+						break;
+					}
+
+					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, SKaku) {
+						return true;
+					}
+				}
+				let mut bitboard = ps.sente_kyou_board;
+
+				loop {
+					let p = Rule::pop_lsb(&mut bitboard);
+
+					if p == -1 {
+						break;
+					}
+
+					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, SKyou) {
+						return true;
+					}
+				}
+			},
+			Teban::Gote => {
+				let mut bitboard = ps.gote_hisha_board;
+
+				loop {
+					let p = Rule::pop_lsb(&mut bitboard);
+
+					if p == -1 {
+						break;
+					}
+
+					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, GHisha) {
+						return true;
+					}
+				}
+
+				let mut bitboard = ps.gote_kaku_board;
+
+				loop {
+					let p = Rule::pop_lsb(&mut bitboard);
+
+					if p == -1 {
+						break;
+					}
+
+					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, GKaku) {
+						return true;
+					}
+				}
+				let mut bitboard = ps.gote_kyou_board;
+
+				loop {
+					let p = Rule::pop_lsb(&mut bitboard);
+
+					if p == -1 {
+						break;
+					}
+
+					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, GKyou) {
+						return true;
+					}
+				}
+			}
+		}
+
+		false
+	}
+
+	pub fn is_mate_with_partial_state_and_old_banmen_and_move(
+		t:&Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
+	) -> bool {
+		let from = match m {
+			AppliedMove::To(m) => m.src() as i32,
+			_ => -1,
+		};
+
+		let (sx,sy) = if from != -1 {
+			let sx = from / 9;
+			let sy = from - sx * 9;
+
+			(sx as i32,sy as i32)
+		} else {
+			(-1,-1)
+		};
+
+		let to = match m {
+			AppliedMove::To(m) => m.dst(),
+			AppliedMove::Put(m) => m.dst(),
+		};
+
+		let dx = to as usize / 9;
+		let dy = to as usize - dx * 9;
+
+		match banmen {
+			&Banmen(ref kinds) => {
+				for y in 0..kinds.len() {
+					for x in 0..kinds[y].len() {
+						let (x,y) = match *t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8 - y),
+						};
+
+						let kind = if x as i32 == sx && y as i32 == sy {
+							Blank
+						} else if x == dx && y == dy {
+							match m {
+								AppliedMove::To(m) if m.is_nari() => {
+									kinds[sy as usize][sx as usize].to_nari()
+								},
+								AppliedMove::To(_) => {
+									kinds[sy as usize][sx as usize]
+								}
+								AppliedMove::Put(m) => {
+									KomaKind::from((*t,m.kind()))
+								}
+							}
+						} else {
+							kinds[sy as usize][sx as usize]
+						};
+
+						if Rule::is_mate_with_partial_state_and_point_and_kind(
+							t, &ps, x as u32, y as u32, kind
+						) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		false
 	}
 
 	pub fn check_sennichite(_:&State,mhash:u64,shash:u64,
