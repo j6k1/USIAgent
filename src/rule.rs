@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::ops::BitOr;
 use std::ops::Not;
-use std::convert::From;
 
 use shogi::*;
 use hash::*;
@@ -241,8 +240,8 @@ impl From<Move> for AppliedMove {
 	}
 }
 impl LegalMove {
-	pub fn to_applied_move(&self) -> AppliedMove {
-		AppliedMove::from(*self)
+	pub fn to_applied_move(self) -> AppliedMove {
+		AppliedMove::from(self)
 	}
 }
 impl From<LegalMove> for Move {
@@ -277,8 +276,8 @@ impl From<LegalMove> for Move {
 	}
 }
 impl AppliedMove {
-	pub fn to_move(&self) -> Move {
-		Move::from(*self)
+	pub fn to_move(self) -> Move {
+		Move::from(self)
 	}
 }
 impl From<AppliedMove> for Move {
@@ -3045,7 +3044,7 @@ impl Rule {
 				let mv = mv.to_applied_move();
 				match mv {
 					AppliedMove::To(m) => {
-						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
 						if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
 							return true;
@@ -3083,7 +3082,7 @@ impl Rule {
 							&Banmen(ref kinds) => kinds[y as usize][x as usize]
 						};
 
-						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
 						if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
 							return true;
@@ -3106,7 +3105,7 @@ impl Rule {
 				let mv = mv.to_applied_move();
 				match mv {
 					AppliedMove::Put(m) => {
-						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
 						if Rule::is_mate_with_partial_state_and_from_and_kind(
 							t, &ps, m.dst(), KomaKind::from((t,m.kind()))
@@ -3153,7 +3152,7 @@ impl Rule {
 					}
 				};
 
-				let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+				let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
 				if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, dst, kind) {
 					return true;
@@ -3175,7 +3174,7 @@ impl Rule {
 					LegalMove::To(m) if m.obtained() == Some(ObtainKind::Ou) => true,
 					mv => {
 						let mv = mv.to_applied_move();
-						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &mv);
+						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
 						Rule::is_mate_with_partial_state_and_old_banmen_and_move(
 							t.opposite(),&state.banmen,&ps,mv
@@ -3185,13 +3184,13 @@ impl Rule {
 			}).collect::<Vec<LegalMove>>()
 	}
 
-	pub fn apply_move_to_partial_state_none_check(state:&State,t:Teban,_:&MochigomaCollections,m:&AppliedMove)
+	pub fn apply_move_to_partial_state_none_check(state:&State,t:Teban,_:&MochigomaCollections,m:AppliedMove)
 		-> PartialState {
 		let mut ps = state.to_partial_state();
 
 		match &state.banmen {
 			&Banmen(ref kinds) => {
-				match *m {
+				match m {
 					AppliedMove::To(m) => {
 						let from = m.src();
 						let sy = from / 9;
@@ -3697,7 +3696,7 @@ impl Rule {
 		ps
 	}
 
-	pub fn apply_move_none_check(state:&State,t:Teban,mc:&MochigomaCollections,m:&AppliedMove)
+	pub fn apply_move_none_check(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> (State,MochigomaCollections,Option<MochigomaKind>) {
 		let ps = Rule::apply_move_to_partial_state_none_check(state,t,mc,m);
 		let (banmen,mc,o) = Rule::apply_move_to_banmen_and_mochigoma_none_check(
@@ -3707,7 +3706,7 @@ impl Rule {
 	}
 
 	pub fn apply_move_to_banmen_and_mochigoma_none_check(
-		banmen:&Banmen,t:Teban,mc:&MochigomaCollections,m:&AppliedMove
+		banmen:&Banmen,t:Teban,mc:&MochigomaCollections,m:AppliedMove
 	) -> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
 
 		let mut kinds = match banmen {
@@ -3715,7 +3714,7 @@ impl Rule {
 		};
 
 		let (nmc,obtained) = match m {
-			&AppliedMove::To(m) => {
+			AppliedMove::To(m) => {
 				let from = m.src();
 				let to = m.dst();
 				let n = m.is_nari();
@@ -3840,7 +3839,7 @@ impl Rule {
 					}
 				}
 			},
-			&AppliedMove::Put(m) => {
+			AppliedMove::Put(m) => {
 				let to = m.dst();
 				let k = m.kind();
 
@@ -3889,11 +3888,11 @@ impl Rule {
 		(Banmen(kinds),nmc,obtained)
 	}
 
-	pub fn is_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
+	pub fn is_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
 		true
 	}
 
-	pub fn apply_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:&AppliedMove)
+	pub fn apply_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<(State,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
 		if !Rule::is_valid_move(state, t, mc, m) {
@@ -3915,7 +3914,7 @@ impl Rule {
 		let mut state = state.clone();
 
 		for m in m {
-			match Rule::apply_move_none_check(&state,teban,&mc,&m) {
+			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
 				(next,nmc,o) => {
 					mhash = hasher.calc_main_hash(mhash,&teban,&state.banmen,&mc,m,&o);
 					shash = hasher.calc_sub_hash(shash,&teban,&state.banmen,&mc,m,&o);
@@ -3952,7 +3951,7 @@ impl Rule {
 		let mut state = state.clone();
 
 		for m in m {
-			match Rule::apply_move_none_check(&state,teban,&mc,m) {
+			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
 				(next,nmc,o) => {
 					r = f(&state.banmen,teban,&mc,&Some(*m),&o,r);
 					state = next;
@@ -4177,7 +4176,7 @@ impl Rule {
 		}
 	}
 
-	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:&LegalMove)
+	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<bool,SelfMatchRunningError> {
 
 		let o = t.opposite();
@@ -4188,15 +4187,13 @@ impl Rule {
 			)));
 		}
 
-		let m = m.to_applied_move();
-
-		let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, &m);
+		let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, m);
 
 		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_move(o, &state.banmen, &ps, m))
 	}
 
-	pub fn is_put_fu_and_mate(state:&State,teban:Teban,mc:&MochigomaCollections,m:&AppliedMove) -> bool {
-		match *m {
+	pub fn is_put_fu_and_mate(state:&State,teban:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
+		match m {
 			AppliedMove::Put(m) => {
 				let to = m.dst();
 				let dx = to / 9;
@@ -4220,7 +4217,7 @@ impl Rule {
 						LegalMove::To(m) if m.obtained() == Some(ObtainKind::Ou) => true,
 						m @ _ => {
 							match Rule::apply_move_none_check(
-								state,teban,&mc,&m.to_applied_move()
+								state,teban,&mc,m.to_applied_move()
 							) {
 								(next,_,_) => {
 									!Rule::is_mate(teban.opposite(),&next)
@@ -4234,8 +4231,8 @@ impl Rule {
 		}
 	}
 
-	pub fn is_win(state:&State,teban:Teban,m:&AppliedMove) -> bool {
-		match *m {
+	pub fn is_win(state:&State,teban:Teban,m:AppliedMove) -> bool {
+		match m {
 			AppliedMove::To(m) => {
 				match teban {
 					Teban::Sente => {

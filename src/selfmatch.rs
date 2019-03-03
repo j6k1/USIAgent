@@ -714,7 +714,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 							let m = m.to_applied_move();
 
-							match Rule::apply_valid_move(&state,teban,&mc,&m) {
+							match Rule::apply_valid_move(&state,teban,&mc,m) {
 								Ok((next,nmc,o)) => {
 
 									if let Some(_) = prev_move {
@@ -736,7 +736,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										}
 									}
 
-									let is_win = Rule::is_win(&state,teban,&m);
+									let is_win = Rule::is_win(&state,teban,m);
 
 									mvs.push(m);
 
@@ -762,7 +762,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									state = next;
 
-									if Rule::is_put_fu_and_mate(&state,teban.opposite(),&mc,&m) {
+									if Rule::is_put_fu_and_mate(&state,teban.opposite(),&mc,m) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																		.map(|m| m.to_move())
 																		.collect::<Vec<Move>>());

@@ -124,7 +124,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 						&Option<MochigomaKind>,T) -> T {
 
 		for m in &m {
-			match Rule::apply_move_none_check(&state,teban,&mc,&m) {
+			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
 				(next,nmc,o) => {
 					r = f(self,teban,&next.get_banmen(),&mc,&Some(*m),&o,r);
 					state = next;
