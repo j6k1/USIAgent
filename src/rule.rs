@@ -1447,7 +1447,7 @@ impl Rule {
 
 		let board = unsafe {
 			BitBoard {
-				merged_bitboard: (bitboard.merged_bitboard << board_x * 9) & 0b111111111
+				merged_bitboard: (bitboard.merged_bitboard >> board_x * 9) & 0b111111111
 			}
 		};
 
