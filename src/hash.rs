@@ -142,11 +142,11 @@ impl<T> KyokumenHash<T>
 	}
 
 	fn calc_hash<AF,PF>(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,
-												m:&AppliedMove,obtained:&Option<MochigomaKind>,add:AF,pull:PF)
+												m:AppliedMove,obtained:&Option<MochigomaKind>,add:AF,pull:PF)
 		-> T where AF: Fn(T,T) -> T, PF: Fn(T,T) -> T {
 		match b {
 			&Banmen(ref kinds) => {
-				match *m {
+				match m {
 					AppliedMove::To(m) => {
 						let from = m.src();
 						let to = m.dst();
@@ -298,11 +298,11 @@ impl<T> KyokumenHash<T>
 		}
 	}
 
-	pub fn calc_main_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&AppliedMove,obtained:&Option<MochigomaKind>) -> T {
+	pub fn calc_main_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| h ^ v, |h,v| h ^ v)
 	}
 
-	pub fn calc_sub_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:&AppliedMove,obtained:&Option<MochigomaKind>) -> T {
+	pub fn calc_sub_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| {
 			let h = Wrapping(h);
 			let v = Wrapping(v);

@@ -754,8 +754,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
-									mhash = hasher.calc_main_hash(mhash,&teban,&state.get_banmen(),&mc,&m,&o);
-									shash = hasher.calc_sub_hash(shash,&teban,&state.get_banmen(),&mc,&m,&o);
+									mhash = hasher.calc_main_hash(mhash,&teban,&state.get_banmen(),&mc,m,&o);
+									shash = hasher.calc_sub_hash(shash,&teban,&state.get_banmen(),&mc,m,&o);
 
 									mc = nmc;
 									teban = teban.opposite();

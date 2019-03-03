@@ -101,7 +101,8 @@ fn test_find_obtainkind_from_legal_moves() {
 	for k in &OBTAINKINDS {
 		let mut mvs:Vec<rule::LegalMove> = Vec::new();
 
-		mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(*k)));
+//		mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(*k)));
+		mvs.push(rule::LegalMove::To(rule::LegalMoveTo::new((9-4)*9,(9-3)*9,false,Some(*k))));
 
 		assert_eq!(vec![Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false))],
 			mvs.find(k).unwrap()
@@ -111,8 +112,10 @@ fn test_find_obtainkind_from_legal_moves() {
 	for k in &OBTAINKINDS {
 		let mut mvs:Vec<rule::LegalMove> = Vec::new();
 
-		mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(*k)));
-		mvs.push(rule::LegalMove::To(KomaSrcPosition(2,4),KomaDstToPosition(2,3,false),Some(*k)));
+//		mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(*k)));
+//		mvs.push(rule::LegalMove::To(KomaSrcPosition(2,4),KomaDstToPosition(2,3,false),Some(*k)));
+		mvs.push(rule::LegalMove::To(rule::LegalMoveTo::new((9-4)*9,(9-3)*9,false,Some(*k))));
+		mvs.push(rule::LegalMove::To(rule::LegalMoveTo::new((9-4)*9+1,(9-3)*9+1,false,Some(*k))));
 
 		assert_eq!(
 			vec![Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false)),
@@ -124,14 +127,16 @@ fn test_find_obtainkind_from_legal_moves() {
 	for k in OBTAINKINDS.iter().skip(1) {
 		let mut mvs:Vec<rule::LegalMove> = Vec::new();
 
-		mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(*k)));
+//		mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(*k)));
+		mvs.push(rule::LegalMove::To(rule::LegalMoveTo::new((9-4)*9,(9-3)*9,false,Some(*k))));
 
 		assert_eq!(None,mvs.find(&ObtainKind::Fu));
 	}
 
 	let mut mvs:Vec<rule::LegalMove> = Vec::new();
 
-	mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(ObtainKind::Fu)));
+//	mvs.push(rule::LegalMove::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false),Some(ObtainKind::Fu)));
+	mvs.push(rule::LegalMove::To(rule::LegalMoveTo::new((9-4)*9,(9-3)*9,false,Some(ObtainKind::Fu))));
 
 	for k in OBTAINKINDS.iter().skip(1) {
 		assert_eq!(None,mvs.find(k));
