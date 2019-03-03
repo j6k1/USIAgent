@@ -1052,7 +1052,7 @@ impl Rule {
 		mvs
 	}
 
-	pub fn calc_forward_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
+	pub fn calc_bitboard_forward_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
 		let (row_offset,offset,row_width) = slide_info;
 
 		if row_offset == -1 {
@@ -1080,17 +1080,17 @@ impl Rule {
 	pub fn calc_to_left_bottom_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
 
-		Rule::calc_back_move_count_of_kaku(r_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_back_move_count_of_kaku(r_diag_bitboard,from,slide_info)
 	}
 
 	#[inline]
 	pub fn calc_to_right_bottom_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
 
-		Rule::calc_forward_move_count_of_kaku(l_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_forward_move_count_of_kaku(l_diag_bitboard,from,slide_info)
 	}
 
-	pub fn calc_back_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
+	pub fn calc_bitboard_back_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
 		let (row_offset,mask_row_offset,offset,row_width) = match slide_info {
 			(row_offset,offset,row_width) => {
 				if row_offset == -1 {
@@ -1123,14 +1123,14 @@ impl Rule {
 	pub fn calc_to_right_top_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
 
-		Rule::calc_forward_move_count_of_kaku(r_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_forward_move_count_of_kaku(r_diag_bitboard,from,slide_info)
 	}
 
 	#[inline]
 	pub fn calc_to_left_top_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
 
-		Rule::calc_back_move_count_of_kaku(l_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_back_move_count_of_kaku(l_diag_bitboard,from,slide_info)
 	}
 
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
