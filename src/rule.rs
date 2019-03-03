@@ -495,7 +495,7 @@ impl State {
 							sente_opponent_board ^= 1 << (x * 9 + y + 1);
 						}
 
-						let i = y * 9 + x;
+						let i = x * 9 + y;
 
 						let li = DIAG_LEFT_ROTATE_MAP[i];
 
@@ -596,7 +596,7 @@ impl PartialState {
 const CANDIDATE_BITS:[u128; 14] = [
 	// 歩
 	0b000000000_010000000,
-	// 桂馬(合法手の計算ではこの値は利用しない)
+	// 香車(この値は利用しない)
 	0b0,
 	// 桂馬
 	0b100000000_000000000_100000000,
@@ -604,9 +604,9 @@ const CANDIDATE_BITS:[u128; 14] = [
 	0b010100000_010000000_010100000,
 	// 金
 	0b011000000_010100000_011000000,
-	// 角(合法手の計算ではこの値は利用しない)
+	// 角(この値は利用しない)
 	0b0,
-	// 飛車(合法手の計算ではこの値は利用しない)
+	// 飛車(この値は利用しない)
 	0b0,
 	// 王
 	0b011100000_010100000_011100000,
@@ -628,25 +628,36 @@ const BOTTOM_MASK: u128 = 0b111000000_111000000_111000000;
 const RIGHT_MASK: u128 = 0b111111111_111111111_000000000;
 const DIAG_LEFT_ROTATE_MAP:[i32; 81] = [
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,
-	-1,21,15,10, 6, 3, 1, 0,-1,
-	-1,28,22,16,11, 7, 4, 2,-1,
-	-1,34,29,23,17,12, 8, 5,-1,
-	-1,39,35,30,24,18,13, 9,-1,
-	-1,43,40,36,31,25,19,14,-1,
-	-1,46,44,41,37,32,26,20,-1,
-	-1,48,47,45,42,38,33,27,-1,
+	-1,21,28,34,39,43,46,48,-1,
+	-1,15,22,29,35,40,44,47,-1,
+	-1,10,16,23,30,36,41,45,-1,
+	-1, 6,11,17,24,31,37,42,-1,
+	-1, 3, 7,12,18,25,32,38,-1,
+	-1, 1, 4, 8,13,19,26,33,-1,
+	-1, 0, 2, 5, 9,14,20,27,-1,
 	-1,-1,-1,-1,-1,-1,-1,-1,-1
 ];
 const DIAG_RIGHT_ROTATE_MAP:[i32; 81] = [
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,
-	-1, 0, 2, 5, 9,14,20,27,-1,
-	-1, 1, 4, 8,13,19,26,33,-1,
-	-1, 3, 7,12,18,25,32,38,-1,
-	-1, 6,11,17,24,31,37,42,-1,
-	-1,10,16,23,30,36,41,45,-1,
-	-1,15,22,29,35,40,44,47,-1,
-	-1,21,28,34,39,43,46,48,-1,
+	-1, 0, 1, 3, 6,10,15,21,-1,
+	-1, 2, 4, 7,11,16,22,28,-1,
+	-1, 5, 8,12,17,23,29,34,-1,
+	-1, 9,13,18,24,30,35,39,-1,
+	-1,14,19,25,31,36,40,43,-1,
+	-1,20,26,32,37,41,44,46,-1,
+	-1,27,33,38,42,45,47,48,-1,
 	-1,-1,-1,-1,-1,-1,-1,-1,-1
+];
+const DIAG_LEFT_BITBOARD_SLIDE_INFO: [(i32,u32,u32); 81] = [
+	(21, 8, 9),(28, 7, 8),(34, 6, 7),(39, 5, 6),(43, 4, 5),(46, 3, 4),(48, 2, 3),(-1, 0, 2),(-1, 0, 1),
+	(15, 7, 8),(21, 7, 9),(28, 6, 8),(34, 5, 7),(39, 4, 6),(43, 3, 5),(46, 2, 4),(48, 1, 3),(-1, 0, 2),
+	(10, 6, 7),(15, 6, 8),(21, 6, 9),(28, 5, 8),(34, 4, 7),(39, 3, 6),(43, 2, 5),(46, 1, 4),(48, 0, 3),
+	( 6, 5, 6),(10, 5, 7),(15, 5, 8),(21, 5, 9),(28, 4, 8),(34, 3, 7),(39, 2, 6),(43, 1, 5),(46, 0, 4),
+	( 3, 4, 5),( 6, 4, 6),(10, 4, 7),(15, 4, 8),(21, 4, 9),(28, 3, 8),(34, 2, 7),(39, 1, 6),(43, 0, 5),
+	( 1, 3, 4),( 3, 3, 5),( 6, 3, 6),(10, 3, 7),(15, 3, 8),(21, 3, 9),(28, 2, 8),(34, 1, 7),(39, 0, 6),
+	( 0, 2, 3),( 1, 2, 4),( 3, 2, 5),( 6, 2, 6),(10, 2, 7),(15, 2, 8),(21, 2, 9),(28, 1, 8),(34, 0, 7),
+	(-1, 1, 2),( 0, 1, 3),( 1, 2, 4),( 3, 1, 5),( 6, 1, 6),(10, 1, 7),(15, 1, 8),(21, 1, 9),(28, 0, 8),
+	(-1, 0, 1),(-1, 0, 2),( 0, 0, 3),( 1, 0, 4),( 3, 0, 5),( 6, 0, 6),(10, 0, 7),(15, 0, 8),(21, 0, 9)
 ];
 const DIAG_RIGHT_BITBOARD_SLIDE_INFO: [(i32,u32,u32); 81] = [
 	(-1, 0, 1),(-1, 1, 2),( 0, 2, 3),( 1, 3, 4),( 3, 4, 5),( 6, 5, 6),(10, 6, 7),(15, 7, 8),(21, 8, 9),
@@ -736,7 +747,11 @@ impl Rule {
 		let x = from / 9;
 		let y = from - x * 9;
 
-		let mut mask = CANDIDATE_BITS[kind as usize];
+		let mut mask = if kind < GFu {
+			CANDIDATE_BITS[kind as usize]
+		} else {
+			CANDIDATE_BITS[kind as usize - 14]
+		};
 
 		if y == 0 || ((kind == SKei || kind == GKei) && y <= 1) {
 			mask = mask & TOP_MASK;
@@ -1037,12 +1052,8 @@ impl Rule {
 		mvs
 	}
 
-	pub fn calc_to_bottom_move_count_of_kaku(diag_bitboard:u64,from:u32) -> u32 {
-		let (row_offset,offset,row_width) = match DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize] {
-			(row_offset,offset,row_width) => {
-				(row_offset,offset,row_width)
-			}
-		};
+	pub fn calc_forward_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
+		let (row_offset,offset,row_width) = slide_info;
 
 		if row_offset == -1 {
 			return 0;
@@ -1067,25 +1078,20 @@ impl Rule {
 
 	#[inline]
 	pub fn calc_to_left_bottom_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
-		Rule::calc_to_bottom_move_count_of_kaku(r_diag_bitboard,from)
+		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
+
+		Rule::calc_back_move_count_of_kaku(r_diag_bitboard,from,slide_info)
 	}
 
 	#[inline]
 	pub fn calc_to_right_bottom_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
-		let x = from / 9;
-		let y = from - x * 9;
+		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
 
-		let (x,y) = {
-			(y,8-x)
-		};
-
-		let from = y * 9 + x;
-
-		Rule::calc_to_bottom_move_count_of_kaku(l_diag_bitboard,from)
+		Rule::calc_forward_move_count_of_kaku(l_diag_bitboard,from,slide_info)
 	}
 
-	pub fn calc_to_top_move_count_of_kaku(diag_bitboard:u64,from:u32) -> u32 {
-		let (row_offset,mask_row_offset,offset,row_width) = match DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize] {
+	pub fn calc_back_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
+		let (row_offset,mask_row_offset,offset,row_width) = match slide_info {
 			(row_offset,offset,row_width) => {
 				if row_offset == -1 {
 					return 0;
@@ -1115,21 +1121,16 @@ impl Rule {
 
 	#[inline]
 	pub fn calc_to_right_top_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
-		Rule::calc_to_top_move_count_of_kaku(r_diag_bitboard,from)
+		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
+
+		Rule::calc_forward_move_count_of_kaku(r_diag_bitboard,from,slide_info)
 	}
 
 	#[inline]
 	pub fn calc_to_left_top_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
-		let x = from / 9;
-		let y = from - x * 9;
+		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
 
-		let (x,y) = {
-			(y,8-x)
-		};
-
-		let from = y * 9 + x;
-
-		Rule::calc_to_top_move_count_of_kaku(l_diag_bitboard,from)
+		Rule::calc_back_move_count_of_kaku(l_diag_bitboard,from,slide_info)
 	}
 
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
