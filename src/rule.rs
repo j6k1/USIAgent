@@ -3889,7 +3889,522 @@ impl Rule {
 	}
 
 	pub fn is_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
-		true
+		match m {
+			AppliedMove::To(m) => {
+				let from = m.src();
+
+				let x = from / 9;
+				let y = from - x * 9;
+
+				let kind = match &state.banmen {
+					&Banmen(ref kinds) => kinds[y as usize][x as usize]
+				};
+
+				if kind == Blank {
+					return false;
+				}
+
+				if m.is_nari() {
+					match kind {
+						SFuN | SKyouN | SGinN | SHishaN | SKakuN => {
+							return false;
+						},
+						GFuN | GKyouN | GGinN | GHishaN | GKakuN => {
+							return false;
+						},
+						_ => ()
+					}
+				} else {
+					let to_mask = if m.dst() == 0 {
+						1
+					} else {
+						1 << m.dst()
+					};
+
+					match kind {
+						SFu | SKyou => {
+							if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & to_mask != 0 {
+								return false;
+							}
+						},
+						SKei => {
+							if DENY_MOVE_SENTE_KEI_MASK & to_mask != 0 {
+								return false;
+							}
+						},
+						GFu | GKyou => {
+							if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & to_mask != 0 {
+								return false;
+							}
+						},
+						GKei => {
+							if DENY_MOVE_GOTE_KEI_MASK & to_mask != 0 {
+								return false;
+							}
+						},
+						_ => (),
+					}
+				}
+
+				let (from,to,self_occupied) = if kind >= GFu {
+					(80 - from, 80 - m.dst(), state.gote_self_board)
+				} else {
+					(from, m.dst(), state.sente_self_board)
+				};
+
+				match kind {
+					SFu | SKei | SGin | SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN |
+					GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN => {
+						let mut mask = CANDIDATE_BITS[kind as usize];
+
+						if y == 0 || ((kind == SKei || kind == GKei) && y <= 1) {
+							mask = mask & TOP_MASK;
+						} else if y == 8 {
+							mask = mask & BOTTOM_MASK;
+						}
+
+						if x == 8 {
+							mask = mask & RIGHT_MASK;
+						}
+
+						let mask = mask as u128;
+
+						let self_occupied = unsafe {
+							match self_occupied {
+								BitBoard { merged_bitboard } => {
+									merged_bitboard
+								}
+							}
+						};
+
+						let mut board = !self_occupied;
+
+						if from < 10 {
+							board &= mask >> (11 - from - 1);
+						} else if from == 10 {
+							board &= mask;
+						} else {
+							board &= mask << (from - 11 + 1);
+						}
+
+						if (board & (1 << (to + 1))) != 1 {
+							return true;
+						}
+					},
+					SKyou | SHisha | SKaku | GKyou | GHisha | GKaku | Blank => (),
+				}
+
+				match kind {
+					SKyou | GKyou => {
+						let from = m.src();
+						let to = m.dst();
+
+						let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+						let self_occupied = if kind >= GFu {
+							unsafe { state.gote_self_board.merged_bitboard }
+						} else {
+							unsafe { state.sente_self_board.merged_bitboard }
+						};
+
+						let count = Rule::calc_forward_move_repeat_count(bitboard,from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p -= 1;
+
+							if p == to {
+								return true;
+							} else if p < to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p -= 1;
+
+							if p == to {
+								return true;
+							}
+						}
+
+						let count = Rule::calc_back_move_repeat_count(bitboard,from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p += 1;
+
+							if p == to {
+								return true;
+							} else if p > to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p += 1;
+
+							if p == to {
+								return true;
+							}
+						}
+					},
+					SKaku | SKakuN | GKaku | GKakuN => {
+						let from = m.src();
+						let to = m.dst();
+
+						let self_occupied = if kind >= GFu {
+							state.gote_self_board
+						} else {
+							state.sente_self_board
+						};
+
+						let self_occupied = unsafe {
+							match self_occupied {
+								BitBoard { merged_bitboard } => {
+									merged_bitboard
+								}
+							}
+						};
+
+						let board = unsafe {
+							*state.diag_board.bitboard.get_unchecked(0)
+						};
+
+						let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p -= 10;
+
+							if p == to {
+								return true;
+							} else if p < to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p -= 10;
+
+							if p == to {
+								return true;
+							}
+						}
+
+						let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p += 10;
+
+							if p == to {
+								return true;
+							} else if p > to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p += 10;
+
+							if p == to {
+								return true;
+							}
+						}
+
+						let board = unsafe {
+							*state.diag_board.bitboard.get_unchecked(1)
+						};
+
+						let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p -= 8;
+
+							if p == to {
+								return true;
+							} else if p < to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p -= 8;
+
+							if p == to {
+								return true;
+							}
+						}
+
+						let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p += 8;
+
+							if p == to {
+								return true;
+							} else if p > to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p += 8;
+
+							if p == to {
+								return true;
+							}
+						}
+					},
+					SHisha | SHishaN | GHisha | GHishaN => {
+						let from = m.src();
+						let to = m.dst();
+
+						let bitboard = state.sente_self_board | state.sente_opponent_board;
+
+						let self_occupied = if kind >= GFu {
+							state.gote_self_board
+						} else {
+							state.sente_self_board
+						};
+
+						let self_occupied = unsafe {
+							match self_occupied {
+								BitBoard { merged_bitboard } => {
+									merged_bitboard
+								}
+							}
+						};
+
+						let count = Rule::calc_to_top_move_count_of_hisha(bitboard,from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p -= 1;
+
+							if p == to {
+								return true;
+							} else if p < to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p -= 1;
+
+							if p == to {
+								return true;
+							}
+						}
+
+						let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p += 1;
+
+							if p == to {
+								return true;
+							} else if p > to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p += 1;
+
+							if p == to {
+								return true;
+							}
+						}
+
+						let count = Rule::calc_to_left_move_count_of_hisha(state.rotate_board,from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p -= 9;
+
+							if p == to {
+								return true;
+							} else if p < to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p -= 9;
+
+							if p == to {
+								return true;
+							}
+						}
+
+						let count = Rule::calc_to_right_move_count_of_hisha(state.rotate_board,from);
+
+						let mut p = from;
+
+						for _ in 0..(count - 1) {
+							p += 9;
+
+							if p == to {
+								return true;
+							} else if p > to {
+								return false;
+							}
+						}
+
+						if kind >= GFu && self_occupied & (1 << (80 - p + 1)) != 1 {
+							return false;
+						} else if self_occupied & (1 << (p + 1)) != 1 {
+							return false;
+						} else {
+							p += 9;
+
+							if p == to {
+								return true;
+							}
+						}
+					},
+					_ => (),
+				}
+
+				false
+			},
+			AppliedMove::Put(m) => {
+				let to = m.dst();
+
+				let to_mask = 1 << (to + 1);
+
+				let occupied = state.sente_self_board | state.sente_opponent_board;
+
+				let occupied = unsafe {
+					match occupied {
+						BitBoard {merged_bitboard } => {
+							merged_bitboard
+						}
+					}
+				};
+
+				if (occupied & to_mask) != 0 {
+					return false;
+				}
+
+				let mc = match t{
+					Teban::Sente => {
+						match mc {
+							&MochigomaCollections::Empty => {
+								return false;
+							},
+							&MochigomaCollections::Pair(ref ms,_) => {
+								ms
+							}
+						}
+					},
+					Teban::Gote => {
+						match mc {
+							&MochigomaCollections::Empty => {
+								return false;
+							},
+							&MochigomaCollections::Pair(_,ref mg) => {
+								mg
+							}
+						}
+					}
+				};
+
+				let kind = m.kind();
+
+				match mc.get(&kind) {
+					Some(0) | None => {
+						return false;
+					},
+					_ => ()
+				}
+
+				match t {
+					Teban::Sente => {
+						match kind {
+							MochigomaKind::Fu | MochigomaKind::Kyou  => {
+								if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & to_mask != 0 {
+									return false;
+								}
+							},
+							MochigomaKind::Kei => {
+								if DENY_MOVE_SENTE_KEI_MASK & to_mask != 0 {
+									return false;
+								}
+							},
+							_ => (),
+						}
+					},
+					Teban::Gote => {
+						match kind {
+							MochigomaKind::Fu | MochigomaKind::Kyou  => {
+								if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & to_mask != 0 {
+									return false;
+								}
+							},
+							MochigomaKind::Kei => {
+								if DENY_MOVE_GOTE_KEI_MASK & to_mask != 0 {
+									return false;
+								}
+							},
+							_ => (),
+						}
+					}
+				}
+
+				true
+			}
+		}
 	}
 
 	pub fn apply_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
