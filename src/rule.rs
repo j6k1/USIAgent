@@ -1544,7 +1544,7 @@ impl Rule {
 			SGin | SHisha | SKaku => (SENTE_NARI_MASK << 1,0),
 			GFu | GKyou => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_FU_AND_KYOU_MASK << 1),
 			GKei => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_KEI_MASK << 1),
-			GGin | GHisha | GKaku => (GOTE_NARI_MASK,0),
+			GGin | GHisha | GKaku => (GOTE_NARI_MASK << 1,0),
 			SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN => {
 				(0,0)
 			},
