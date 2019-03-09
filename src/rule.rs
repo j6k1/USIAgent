@@ -1832,8 +1832,8 @@ impl Rule {
 							}
 
 							let deny_move_bitboard = match *m {
-								MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
-								MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK,
+								MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1,
+								MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK << 1,
 								_ => 0
 							};
 
@@ -1850,7 +1850,7 @@ impl Rule {
 									break;
 								}
 
-								let p_mask = 1 << p;
+								let p_mask = 1 << (p + 1);
 
 								let x = p / 9;
 
@@ -1885,8 +1885,8 @@ impl Rule {
 							}
 
 							let deny_move_bitboard = match *m {
-								MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
-								MochigomaKind::Kei => DENY_MOVE_GOTE_KEI_MASK,
+								MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_GOTE_FU_AND_KYOU_MASK << 1,
+								MochigomaKind::Kei => DENY_MOVE_GOTE_KEI_MASK << 1,
 								_ => 0
 							};
 
@@ -1904,7 +1904,7 @@ impl Rule {
 								}
 
 
-								let p_mask = 1 << p;
+								let p_mask = 1 << (p + 1);
 
 								if deny_move_bitboard & p_mask != 0 {
 									continue;
