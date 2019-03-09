@@ -96,7 +96,7 @@ impl LegalMoveTo {
 		LegalMoveTo(
 			obtaind.map_or(0, |o| o as u32 + 1) << 15 |
 			n << 14 |
-			(to << 7) & 0b1111111 |
+			(to & 0b1111111) << 7 |
 			src & 0b1111111
 		)
 	}
@@ -132,7 +132,7 @@ pub struct LegalMovePut(u32);
 impl LegalMovePut {
 	pub fn new(kind:MochigomaKind,to:u32) -> LegalMovePut {
 		LegalMovePut(
-			(to << 3) & 0b1111111 |
+			(to & 0b1111111) << 3 |
 			(kind as u32) & 0b111
 		)
 	}
@@ -1539,17 +1539,17 @@ impl Rule {
 		};
 
 		let (nari_mask,deny_move_mask) = match kind {
-			SFu | SKyou => (SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK),
-			SKei => (SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK),
-			SGin | SHisha | SKaku => (SENTE_NARI_MASK,0),
-			GFu | GKyou => (GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK),
-			GKei => (GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK),
+			SFu | SKyou => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1),
+			SKei => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_KEI_MASK << 1),
+			SGin | SHisha | SKaku => (SENTE_NARI_MASK << 1,0),
+			GFu | GKyou => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_FU_AND_KYOU_MASK << 1),
+			GKei => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_KEI_MASK << 1),
 			GGin | GHisha | GKaku => (GOTE_NARI_MASK,0),
 			SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN => {
-				return;
+				(0,0)
 			},
 			GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN => {
-				return;
+				(0,0)
 			},
 			Blank => {
 				return;
