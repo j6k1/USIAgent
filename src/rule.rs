@@ -1567,6 +1567,16 @@ impl Rule {
 		match kind {
 			SFu | SKei | SGin | SKin | SOu | SFuN | SKyouN | SKeiN | SGinN |
 			GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN => {
+				match t {
+					Teban::Sente if kind >= GFu => {
+						return;
+					},
+					Teban::Gote if kind < GFu => {
+						return;
+					},
+					_ => (),
+				}
+
 				for m in Rule::legal_moves_once_with_point_and_kind_and_bitboard(
 					t,self_bitboard,from,kind
 				) {
@@ -1594,7 +1604,7 @@ impl Rule {
 					}
 				}
 			},
-			SKyou => {
+			SKyou if t == Teban::Sente => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				for m in Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard(
@@ -1624,7 +1634,7 @@ impl Rule {
 					}
 				}
 			}
-			SKaku | SKakuN => {
+			SKaku | SKakuN if t == Teban::Sente => {
 				for m in Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard(
 					self_bitboard, state.part.diag_board, from, kind
 				) {
@@ -1649,7 +1659,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			SHisha | SHishaN => {
+			SHisha | SHishaN if t == Teban::Sente => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				for m in Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
@@ -1676,7 +1686,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			GKyou => {
+			GKyou if t == Teban::Gote => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				for m in Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard(
@@ -1706,7 +1716,7 @@ impl Rule {
 					}
 				}
 			},
-			GKaku | GKakuN => {
+			GKaku | GKakuN if t == Teban::Gote => {
 				for m in Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard(
 					self_bitboard, state.part.diag_board, from, kind
 				) {
@@ -1731,7 +1741,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			GHisha | GHishaN => {
+			GHisha | GHishaN if t == Teban::Gote => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				for m in Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard(
@@ -1758,7 +1768,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			Blank => (),
+			_ => (),
 		}
 	}
 
@@ -2323,6 +2333,16 @@ impl Rule {
 		match kind {
 			SFu | SKei | SGin | SKin | SOu | SFuN | SKyouN | SKeiN | SGinN |
 			GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN => {
+				match t {
+					Teban::Sente if kind >= GFu => {
+						return;
+					},
+					Teban::Gote if kind < GFu => {
+						return;
+					},
+					_ => (),
+				}
+
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 					t,self_bitboard,ou_position_board,from,kind
 				) {
@@ -2341,7 +2361,7 @@ impl Rule {
 					}
 				}
 			},
-			SKyou => {
+			SKyou if t == Teban::Sente => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				if let Some(p) = Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
@@ -2362,7 +2382,7 @@ impl Rule {
 					}
 				}
 			}
-			SKaku | SKakuN => {
+			SKaku | SKakuN if t == Teban::Sente => {
 				if let Some(p) = Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
 					self_bitboard, ou_position_board,
 					state.part.diag_board, from, kind
@@ -2379,7 +2399,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			SHisha | SHishaN => {
+			SHisha | SHishaN if t == Teban::Sente => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				if let Some(p) = Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
@@ -2399,7 +2419,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			GKyou => {
+			GKyou if t == Teban::Gote => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				if let Some(p) = Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
@@ -2420,7 +2440,7 @@ impl Rule {
 					}
 				}
 			},
-			GKaku | GKakuN => {
+			GKaku | GKakuN if t == Teban::Gote => {
 				if let Some(p) = Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
 					self_bitboard,
 					ou_position_board,
@@ -2438,7 +2458,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			GHisha | GHishaN => {
+			GHisha | GHishaN if t == Teban::Gote => {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				if let Some(p) = Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
@@ -2459,7 +2479,7 @@ impl Rule {
 					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 				}
 			},
-			Blank => (),
+			_ => (),
 		}
 	}
 
