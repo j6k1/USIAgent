@@ -1571,11 +1571,13 @@ impl Rule {
 					t,self_bitboard,from,kind
 				) {
 					let to = m as u32;
+					let dx = to / 9;
+					let dy = to - dx * 9;
 
 					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
-						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+						match ObtainKind::try_from(kinds[dy as usize][dx as usize]) {
 							Ok(obtained) => Some(obtained),
 							Err(_) => None,
 						}
@@ -1599,11 +1601,13 @@ impl Rule {
 					self_bitboard, bitboard, from
 				) {
 					let to = m as u32;
+					let dx = to / 9;
+					let dy = to - dx * 9;
 
 					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
-						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+						match ObtainKind::try_from(kinds[dy as usize][dx as usize]) {
 							Ok(obtained) => Some(obtained),
 							Err(_) => None,
 						}
@@ -1625,11 +1629,13 @@ impl Rule {
 					self_bitboard, state.part.diag_board, from, kind
 				) {
 					let to = m as u32;
+					let dx = to / 9;
+					let dy = to - dx * 9;
 
 					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
-						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+						match ObtainKind::try_from(kinds[dy as usize][dx as usize]) {
 							Ok(obtained) => Some(obtained),
 							Err(_) => None,
 						}
@@ -1650,11 +1656,13 @@ impl Rule {
 					self_bitboard, bitboard, state.part.rotate_board, from, kind
 				) {
 					let to = m as u32;
+					let dx = to / 9;
+					let dy = to - dx * 9;
 
 					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
-						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+						match ObtainKind::try_from(kinds[dy as usize][dx as usize]) {
 							Ok(obtained) => Some(obtained),
 							Err(_) => None,
 						}
@@ -1675,11 +1683,13 @@ impl Rule {
 					self_bitboard, bitboard, from
 				) {
 					let to = m as u32;
+					let dx = to / 9;
+					let dy = to - dx * 9;
 
 					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
-						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+						match ObtainKind::try_from(kinds[dy as usize][dx as usize]) {
 							Ok(obtained) => Some(obtained),
 							Err(_) => None,
 						}
@@ -1701,11 +1711,13 @@ impl Rule {
 					self_bitboard, state.part.diag_board, from, kind
 				) {
 					let to = m as u32;
+					let dx = to / 9;
+					let dy = to - dx * 9;
 
 					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
-						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+						match ObtainKind::try_from(kinds[dy as usize][dx as usize]) {
 							Ok(obtained) => Some(obtained),
 							Err(_) => None,
 						}
@@ -1726,11 +1738,13 @@ impl Rule {
 					self_bitboard, bitboard, state.part.rotate_board, from, kind
 				) {
 					let to = m as u32;
+					let dx = to / 9;
+					let dy = to - dx * 9;
 
 					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
-						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
+						match ObtainKind::try_from(kinds[dy as usize][dx as usize]) {
 							Ok(obtained) => Some(obtained),
 							Err(_) => None,
 						}
