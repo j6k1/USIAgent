@@ -668,7 +668,18 @@ const DIAG_RIGHT_BITBOARD_SLIDE_INFO: [(i32,u32,u32); 81] = [
 	(15, 0, 8),(21, 1, 9),(28, 1, 8),(34, 1, 7),(39, 1, 6),(43, 1, 5),(46, 1, 4),(48, 1, 3),(-1, 0, 2),
 	(21, 0, 9),(28, 0, 8),(34, 0, 7),(39, 0, 6),(43, 0, 5),(46, 0, 4),(48, 0, 3),(-1, 0, 2),(-1, 0, 1)
 ];
-const DIAG_BITBOARD_MASK: [u64; 81] = [
+const DIAG_LEFT_BITBOARD_MASK: [u64; 81] = [
+	0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,
+	0b0,0b1111111,0b111111,0b1111,0b1,0b111,0b11,0b1,0b0,
+	0b0,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b0,
+	0b0,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b0,
+	0b0,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b0,
+	0b0,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b0,
+	0b0,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b0,
+	0b0,0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b0,
+	0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0
+];
+const DIAG_RIGHT_BITBOARD_MASK: [u64; 81] = [
 	0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,0b0,
 	0b0,0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b0,
 	0b0,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b0,
@@ -961,7 +972,7 @@ impl Rule {
 
 			to += 10;
 
-			if self_occupied & 1 << (80 - to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -988,7 +999,7 @@ impl Rule {
 
 			to += 8;
 
-			if self_occupied & 1 << (80 - to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1015,7 +1026,7 @@ impl Rule {
 
 			to -= 8;
 
-			if self_occupied & 1 << (80 - to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1042,7 +1053,7 @@ impl Rule {
 
 			to -= 10;
 
-			if self_occupied & 1 << (80 - to + 1) == 0 {
+			if self_occupied & 1 << (to + 1) == 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1056,13 +1067,13 @@ impl Rule {
 		mvs
 	}
 
-	pub fn calc_bitboard_forward_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
+	pub fn calc_bitboard_forward_move_count_of_kaku(diag_bitboard:u64,_:u32,slide_info:(i32,u32,u32),mask:u64) -> u32 {
 		let (row_offset,offset,row_width) = slide_info;
 
 		if row_offset == -1 {
 			0
 		} else {
-			let row = (diag_bitboard >> row_offset) & DIAG_BITBOARD_MASK[from as usize];
+			let row = (diag_bitboard >> row_offset) & mask;
 
 			let row = row >> offset + 1;
 
@@ -1079,28 +1090,31 @@ impl Rule {
 	#[inline]
 	pub fn calc_to_left_bottom_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
+		let bitboard_mask = DIAG_RIGHT_BITBOARD_MASK[from as usize];
 
-		Rule::calc_bitboard_back_move_count_of_kaku(r_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_back_move_count_of_kaku(r_diag_bitboard,from,slide_info,bitboard_mask)
 	}
 
 	#[inline]
 	pub fn calc_to_right_bottom_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
+		let bitboard_mask = DIAG_LEFT_BITBOARD_MASK[from as usize];
 
-		Rule::calc_bitboard_forward_move_count_of_kaku(l_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_forward_move_count_of_kaku(l_diag_bitboard,from,slide_info,bitboard_mask)
 	}
 
-	pub fn calc_bitboard_back_move_count_of_kaku(diag_bitboard:u64,from:u32,slide_info:(i32,u32,u32)) -> u32 {
-		let (row_offset,offset,row_width) = match slide_info {
+	pub fn calc_bitboard_back_move_count_of_kaku(diag_bitboard:u64,_:u32,slide_info:(i32,u32,u32),mask:u64) -> u32 {
+		let (row_offset,offset,row_width,mask) = match slide_info {
 			(row_offset,offset,row_width) => {
 				if row_offset == -1 {
 					return 0;
 				}
 
 				(
-					64 - (row_offset - row_width as i32),
+					64 - (row_offset + row_width as i32),
 					row_width - 1 - offset,
-					row_width
+					row_width,
+					mask << (64 - row_width)
 				)
 			}
 		};
@@ -1108,9 +1122,7 @@ impl Rule {
 		if row_offset == -1 {
 			0
 		} else {
-			let row = (diag_bitboard << row_offset) & (DIAG_BITBOARD_MASK[from as usize] << row_offset);
-
-			let row = row << offset - 1;
+			let row = (diag_bitboard << row_offset - 1) & mask;
 
 			let l = if row == 0 {
 				row_width - (row_width - offset)
@@ -1125,15 +1137,17 @@ impl Rule {
 	#[inline]
 	pub fn calc_to_right_top_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
+		let bitboard_mask = DIAG_RIGHT_BITBOARD_MASK[from as usize];
 
-		Rule::calc_bitboard_forward_move_count_of_kaku(r_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_forward_move_count_of_kaku(r_diag_bitboard,from,slide_info,bitboard_mask)
 	}
 
 	#[inline]
 	pub fn calc_to_left_top_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
 		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
+		let bitboard_mask = DIAG_LEFT_BITBOARD_MASK[from as usize];
 
-		Rule::calc_bitboard_back_move_count_of_kaku(l_diag_bitboard,from,slide_info)
+		Rule::calc_bitboard_back_move_count_of_kaku(l_diag_bitboard,from,slide_info,bitboard_mask)
 	}
 
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard(
@@ -1445,12 +1459,11 @@ impl Rule {
 	pub fn calc_back_move_repeat_count(bitboard:BitBoard,board_x:u32,board_y:u32) -> u32 {
 		let board = unsafe {
 			BitBoard {
-				merged_bitboard: (bitboard.merged_bitboard >> board_x * 9) & 0b111111111
+				merged_bitboard: (bitboard.merged_bitboard >> (8 - board_x) * 9 + board_y) & 0b111111111
 			}
 		};
 
-		let board = unsafe { *board.bitboard.get_unchecked(0) };
-		let board = board >> (board_y + 1);
+		let board = unsafe { *board.bitboard.get_unchecked(1) };
 
 		if board == 0 {
 			8 - board_y
