@@ -774,8 +774,6 @@ impl Rule {
 			mask = mask & RIGHT_MASK;
 		}
 		
-		mask &= !1;
-		
 		let mask = mask as u128;
 		let self_occupied = unsafe {
 			match self_occupied {
@@ -785,7 +783,7 @@ impl Rule {
 			}
 		};
 
-		let mut board = !self_occupied;
+		let mut board = !self_occupied & !1;
 
 		if from < 10 {
 			board &= mask >> (11 - from - 1);
