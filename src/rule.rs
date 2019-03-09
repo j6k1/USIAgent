@@ -593,33 +593,33 @@ impl PartialState {
 }
 const CANDIDATE_BITS:[u128; 14] = [
 	// 歩
-	0b000000000_010000000,
+	0b000000000_000000010_000000000,
 	// 香車(この値は利用しない)
 	0b0,
 	// 桂馬
-	0b100000000_000000000_100000000,
+	0b000000001_000000000_000000001,
 	// 銀
-	0b010100000_010000000_010100000,
+	0b000001010_000000010_000001010,
 	// 金
-	0b011000000_010100000_011000000,
+	0b000000110_000001010_000000110,
 	// 角(この値は利用しない)
 	0b0,
 	// 飛車(この値は利用しない)
 	0b0,
 	// 王
-	0b011100000_010100000_011100000,
+	0b000001110_000001010_000001110,
 	// 成歩
-	0b011000000_010100000_011000000,
+	0b000000110_000001010_000000110,
 	// 成香
-	0b011000000_010100000_011000000,
+	0b000000110_000001010_000000110,
 	// 成桂
-	0b011000000_010100000_011000000,
+	0b000000110_000001010_000000110,
 	// 成銀
-	0b011000000_010100000_011000000,
+	0b000000110_000001010_000000110,
 	// 成角(一マスだけ進める手だけここに定義)
-	0b001000000_010100000_001000000,
+	0b000000010_000001010_000000010,
 	// 成飛(一マスだけ進める手だけここに定義)
-	0b010100000_000000000_010100000
+	0b000001010_000000000_000001010
 ];
 const TOP_MASK: u128 = 0b111111100_111111100_111111100;
 const BOTTOM_MASK: u128 = 0b000000111_000000111_000000111;
@@ -758,8 +758,10 @@ impl Rule {
 
 		let mut mask = if kind < GFu {
 			CANDIDATE_BITS[kind as usize]
-		} else {
+		} else if kind < Blank {
 			CANDIDATE_BITS[kind as usize - 14]
+		} else {
+			return BitBoard { merged_bitboard: 0 };
 		};
 
 		if y == 0 || ((kind == SKei || kind == GKei) && y <= 1) {
@@ -801,7 +803,6 @@ impl Rule {
 
 		loop {
 			let p = Rule::pop_lsb(&mut board);
-
 			if p == -1 {
 				break;
 			} else if teban == Teban::Sente {
@@ -1512,7 +1513,6 @@ impl Rule {
 			unsafe {
 				*(bitboard.bitboard.get_unchecked_mut(1)) &= br - 1;
 			}
-
 			return p + 63;
 		} else {
 			return -1;
@@ -1572,7 +1572,7 @@ impl Rule {
 				) {
 					let to = m as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
 						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
@@ -1600,7 +1600,7 @@ impl Rule {
 				) {
 					let to = m as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
 						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
@@ -1626,7 +1626,7 @@ impl Rule {
 				) {
 					let to = m as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
 						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
@@ -1651,7 +1651,7 @@ impl Rule {
 				) {
 					let to = m as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
 						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
@@ -1676,7 +1676,7 @@ impl Rule {
 				) {
 					let to = m as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
 						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
@@ -1702,7 +1702,7 @@ impl Rule {
 				) {
 					let to = m as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
 						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
@@ -1727,7 +1727,7 @@ impl Rule {
 				) {
 					let to = m as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = if opponent_bitboard & to_mask != 0 {
 						match ObtainKind::try_from(kinds[y as usize][x as usize]) {
