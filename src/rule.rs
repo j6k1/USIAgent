@@ -2286,12 +2286,12 @@ impl Rule {
 		let from = x * 9 + y;
 
 		let (nari_mask,deny_move_mask) = match kind {
-			SFu | SKyou => (SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK),
-			SKei => (SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK),
-			SGin | SHisha | SKaku => (SENTE_NARI_MASK,0),
-			GFu | GKyou => (GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK),
-			GKei => (GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK),
-			GGin | GHisha | GKaku => (GOTE_NARI_MASK,0),
+			SFu | SKyou => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1),
+			SKei => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_KEI_MASK << 1),
+			SGin | SHisha | SKaku => (SENTE_NARI_MASK << 1,0),
+			GFu | GKyou => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_FU_AND_KYOU_MASK << 1),
+			GKei => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_KEI_MASK << 1),
+			GGin | GHisha | GKaku => (GOTE_NARI_MASK << 1,0),
 			SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN |
 			GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN | Blank => {
 				return;
@@ -2314,7 +2314,7 @@ impl Rule {
 				) {
 					let to = p as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = Some(ObtainKind::Ou);
 
@@ -2335,7 +2335,7 @@ impl Rule {
 				) {
 					let to = p as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = Some(ObtainKind::Ou);
 
@@ -2355,7 +2355,7 @@ impl Rule {
 				) {
 					let to = p as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = Some(ObtainKind::Ou);
 
@@ -2375,7 +2375,7 @@ impl Rule {
 				) {
 					let to = p as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = Some(ObtainKind::Ou);
 
@@ -2393,7 +2393,7 @@ impl Rule {
 				) {
 					let to = p as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = Some(ObtainKind::Ou);
 
@@ -2414,7 +2414,7 @@ impl Rule {
 				) {
 					let to = p as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = Some(ObtainKind::Ou);
 
@@ -2434,7 +2434,7 @@ impl Rule {
 				) {
 					let to = p as u32;
 
-					let to_mask = 1 << to;
+					let to_mask = 1 << (to + 1);
 
 					let o = Some(ObtainKind::Ou);
 
