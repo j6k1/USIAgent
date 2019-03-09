@@ -5114,7 +5114,6 @@ fn test_legal_moves_banmen_with_kin_corner_gote_impl(kind:KomaKind) {
 			}).collect::<Vec<LegalMove>>()
 		)
 	}
-
 }
 fn test_legal_moves_banmen_with_kin_7_squares_sente_impl(kind:KomaKind) {
 	const OFFSETS:[(i32,i32); 6] = [

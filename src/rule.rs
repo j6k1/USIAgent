@@ -491,7 +491,7 @@ impl State {
 							sente_self_board ^= 1 << (x * 9 + y + 1);
 							gote_opponent_board ^= 1 << ((8 - x) * 9 + (8 - y) + 1);
 						} else if kind >= GFu && kind < Blank {
-							gote_self_board ^= 1 << ((8 - x) * 9 + (8- y) + 1);
+							gote_self_board ^= 1 << ((8 - x) * 9 + (8 - y) + 1);
 							sente_opponent_board ^= 1 << (x * 9 + y + 1);
 						}
 
@@ -773,7 +773,9 @@ impl Rule {
 		if x == 8 {
 			mask = mask & RIGHT_MASK;
 		}
-
+		
+		mask &= !1;
+		
 		let mask = mask as u128;
 		let self_occupied = unsafe {
 			match self_occupied {
@@ -1504,14 +1506,13 @@ impl Rule {
 		if bl != 0 {
 			let p = bl.trailing_zeros() as Square;
 			unsafe {
-				*(bitboard.bitboard.get_unchecked_mut(0)) &= bl - 1;
+				*(bitboard.bitboard.get_unchecked_mut(0)) = bl & (bl - 1);
 			}
-
 			return p - 1;
 		} else if br != 0 {
 			let p = br.trailing_zeros() as Square;
 			unsafe {
-				*(bitboard.bitboard.get_unchecked_mut(1)) &= br - 1;
+				*(bitboard.bitboard.get_unchecked_mut(1)) = br & (br - 1);
 			}
 			return p + 63;
 		} else {
