@@ -4506,7 +4506,7 @@ mod tests {
 			let x = i / 9;
 			let y = i - x * 9;
 
-			if x < 3 && y <= 3 {
+			if x < 3 && y <= 2 {
 				assert!(BOTTOM_MASK & 1 << i != 0);
 			} else {
 				assert!(BOTTOM_MASK & 1 << i == 0);
@@ -4518,12 +4518,11 @@ mod tests {
 	fn const_test_right_mask() {
 		for i in 0..128 {
 			let x = i / 9;
-			let y = i - x * 9;
 
-			if x == 3 {
-				assert!(BOTTOM_MASK & 1 << i != 0);
+			if x <= 1 {
+				assert!(RIGHT_MASK & 1 << i != 0);
 			} else {
-				assert!(BOTTOM_MASK & 1 << i == 0);
+				assert!(RIGHT_MASK & 1 << i == 0);
 			}
 		}
 	}
