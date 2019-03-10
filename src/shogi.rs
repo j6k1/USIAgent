@@ -103,9 +103,12 @@ impl Banmen {
 impl fmt::Debug for Banmen {
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		match *self {
-			Banmen(ref v) => write!(f, "Banmen[{}]", v.iter()
-												.map(|k| format!("{:?}", k))
-												.collect::<Vec<String>>().join(" "))
+			Banmen(ref v) => write!(f, "Banmen[\n{}\n]",
+									v.iter()
+									.map(|&row| {
+										format!("  [{}]", row.iter().map(|&k| format!("{:?}", k)).collect::<Vec<String>>().join(", "))
+									})
+									.collect::<Vec<String>>().join("\n"))
 		}
 	}
 }
