@@ -77,22 +77,22 @@ impl From<u32> for MochigomaKind {
 		}
 	}
 }
-pub trait ToPoint {
-	fn to_point(self) -> (u32,u32);
+pub trait SquareToPoint {
+	fn square_to_point(self) -> (u32,u32);
 }
 type Square = i32;
-impl ToPoint for Square {
+impl SquareToPoint for Square {
 	#[inline]
-	fn to_point(self) -> (u32,u32) {
+	fn square_to_point(self) -> (u32,u32) {
 		let x = self / 9;
 		let y = self - x * 9;
 
 		(x as u32,y as u32)
 	}
 }
-impl ToPoint for u32 {
+impl SquareToPoint for u32 {
 	#[inline]
-	fn to_point(self) -> (u32,u32) {
+	fn square_to_point(self) -> (u32,u32) {
 		let x = self / 9;
 		let y = self - x * 9;
 
@@ -272,10 +272,9 @@ impl From<LegalMove> for Move {
 				let src = m.src();
 				let dst = m.dst();
 				let n = m.is_nari();
-				let sx = src / 9;
-				let sy = src - sx * 9;
-				let dx = dst / 9;
-				let dy = dst - dx * 9;
+				let (sx,sy) = src.square_to_point();
+				let (dx,dy) = dst.square_to_point();
+
 				let sx = 9 - sx;
 				let sy = sy + 1;
 				let dx = 9 - dx;
@@ -286,8 +285,7 @@ impl From<LegalMove> for Move {
 			LegalMove::Put(m) => {
 				let dst = m.dst();
 				let kind = m.kind();
-				let dx = dst / 9;
-				let dy = dst - dx * 9;
+				let (dx,dy) = dst.square_to_point();
 				let dx = 9 - dx;
 				let dy = dy + 1;
 
@@ -308,10 +306,8 @@ impl From<AppliedMove> for Move {
 				let src = m.src();
 				let dst = m.dst();
 				let n = m.is_nari();
-				let sx = src / 9;
-				let sy = src - sx * 9;
-				let dx = dst / 9;
-				let dy = dst - dx * 9;
+				let (sx,sy) = src.square_to_point();
+				let (dx,dy) = dst.square_to_point();
 				let sx = 9 - sx;
 				let sy = sy + 1;
 				let dx = 9 - dx;
@@ -322,8 +318,7 @@ impl From<AppliedMove> for Move {
 			AppliedMove::Put(m) => {
 				let dst = m.dst();
 				let kind = m.kind();
-				let dx = dst / 9;
-				let dy = dst - dx * 9;
+				let (dx,dy) = dst.square_to_point();
 				let dx = 9 - dx;
 				let dy = dy + 1;
 
@@ -1568,7 +1563,7 @@ impl Rule {
 					t,self_bitboard,from,kind
 				) {
 					let to = m as u32;
-					let (dx,dy) = to.to_point();
+					let (dx,dy) = to.square_to_point();
 
 					let to_mask = 1 << (to + 1);
 
@@ -1594,7 +1589,7 @@ impl Rule {
 					self_bitboard, bitboard, from
 				) {
 					let to = m as u32;
-					let (dx,dy) = to.to_point();
+					let (dx,dy) = to.square_to_point();
 
 					let to_mask = 1 << (to + 1);
 
@@ -1618,7 +1613,7 @@ impl Rule {
 					self_bitboard, state.part.diag_board, from, kind
 				) {
 					let to = m as u32;
-					let (dx,dy) = to.to_point();
+					let (dx,dy) = to.square_to_point();
 
 					let to_mask = 1 << (to + 1);
 
@@ -1641,7 +1636,7 @@ impl Rule {
 					self_bitboard, bitboard, state.part.rotate_board, from, kind
 				) {
 					let to = m as u32;
-					let (dx,dy) = to.to_point();
+					let (dx,dy) = to.square_to_point();
 
 					let to_mask = 1 << (to + 1);
 
@@ -1664,7 +1659,7 @@ impl Rule {
 					self_bitboard, bitboard, from
 				) {
 					let to = m as u32;
-					let (dx,dy) = to.to_point();
+					let (dx,dy) = to.square_to_point();
 
 					let to_mask = 1 << (to + 1);
 
@@ -1688,7 +1683,7 @@ impl Rule {
 					self_bitboard, state.part.diag_board, from, kind
 				) {
 					let to = m as u32;
-					let (dx,dy) = to.to_point();
+					let (dx,dy) = to.square_to_point();
 
 					let to_mask = 1 << (to + 1);
 
@@ -1711,7 +1706,7 @@ impl Rule {
 					self_bitboard, bitboard, state.part.rotate_board, from, kind
 				) {
 					let to = m as u32;
-					let (dx,dy) = to.to_point();
+					let (dx,dy) = to.square_to_point();
 
 					let to_mask = 1 << (to + 1);
 
@@ -2096,7 +2091,7 @@ impl Rule {
 			opponent_ou_bitboard.merged_bitboard
 		};
 
-		let (x,y) = from.to_point();
+		let (x,y) = from.square_to_point();
 
 		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
 
@@ -2154,7 +2149,7 @@ impl Rule {
 			opponent_ou_bitboard.merged_bitboard
 		};
 
-		let (x,y) = from.to_point();
+		let (x,y) = from.square_to_point();
 
 		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
 
@@ -2213,7 +2208,7 @@ impl Rule {
 			opponent_ou_bitboard.merged_bitboard
 		};
 
-		let (x,y) = from.to_point();
+		let (x,y) = from.square_to_point();
 
 		let count = Rule::calc_forward_move_repeat_count(bitboard,x,y);
 
@@ -2235,7 +2230,7 @@ impl Rule {
 			opponent_ou_bitboard.merged_bitboard
 		};
 
-		let (x,y) = from.to_point();
+		let (x,y) = from.square_to_point();
 
 		let count = Rule::calc_back_move_repeat_count(bitboard,x,y);
 
@@ -2538,7 +2533,7 @@ impl Rule {
 				match mv {
 					AppliedMove::To(m) => {
 						let from = m.src();
-						let (x,y) = from.to_point();
+						let (x,y) = from.square_to_point();
 
 						let kind = match &state.banmen {
 							&Banmen(ref kinds) => kinds[y as usize][x as usize]
@@ -2600,7 +2595,7 @@ impl Rule {
 				let (kind,dst) = match mv {
 					AppliedMove::To(m) => {
 						let from = m.src();
-						let (x,y) = from.to_point();
+						let (x,y) = from.square_to_point();
 
 						let kind = match &state.banmen {
 							&Banmen(ref kinds) => kinds[y as usize][x as usize]
@@ -2654,7 +2649,7 @@ impl Rule {
 				match m {
 					AppliedMove::To(m) => {
 						let from = m.src();
-						let (sx,sy) = from.to_point();
+						let (sx,sy) = from.square_to_point();
 						let to = m.dst();
 
 						let from_mask = 1 << (from + 1);
@@ -2912,7 +2907,7 @@ impl Rule {
 							}
 						}
 
-						let (dx,dy) = to.to_point();
+						let (dx,dy) = to.square_to_point();
 
 						let to_mask = 1 << (dy * 9 + dx + 1);
 
@@ -2975,8 +2970,8 @@ impl Rule {
 				let to = m.dst();
 				let n = m.is_nari();
 
-				let (sx,sy) = from.to_point();
-				let (dx,dy) = to.to_point();
+				let (sx,sy) = from.square_to_point();
+				let (dx,dy) = to.square_to_point();
 
 				let sx = sx as usize;
 				let sy = sy as usize;
@@ -3102,7 +3097,7 @@ impl Rule {
 				let to = m.dst();
 				let k = m.kind();
 
-				let (dx,dy) = to.to_point();
+				let (dx,dy) = to.square_to_point();
 				let dx = dx as usize;
 				let dy = dy as usize;
 
@@ -3153,7 +3148,7 @@ impl Rule {
 			AppliedMove::To(m) => {
 				let from = m.src();
 
-				let (x,y) = from.to_point();
+				let (x,y) = from.square_to_point();
 
 				let kind = match &state.banmen {
 					&Banmen(ref kinds) => kinds[y as usize][x as usize]
@@ -3220,7 +3215,7 @@ impl Rule {
 						let from = m.src();
 						let to = m.dst();
 
-						let (x,y) = from.to_point();
+						let (x,y) = from.square_to_point();
 
 						let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
@@ -3408,7 +3403,7 @@ impl Rule {
 						let from = m.src();
 						let to = m.dst();
 
-						let (x,y) = from.to_point();
+						let (x,y) = from.square_to_point();
 
 						let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
@@ -4011,19 +4006,19 @@ impl Rule {
 					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				)
 			},
-			SKyou => {
+			SKyou if t == Teban::Sente => {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
 					state.sente_self_board, state.sente_ou_position_board, bitboard, from
 				)
 			}
-			SKaku | SKakuN => {
+			SKaku | SKakuN if t == Teban::Sente => {
 				Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
 					state.sente_self_board, state.sente_ou_position_board, state.diag_board, from, kind
 				)
 			},
-			SHisha | SHishaN => {
+			SHisha | SHishaN if t == Teban::Sente => {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
@@ -4035,19 +4030,19 @@ impl Rule {
 					t,state.sente_self_board,state.sente_ou_position_board,from,kind
 				)
 			},
-			GKyou => {
+			GKyou if t == Teban::Gote => {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
 					state.gote_self_board, state.gote_ou_position_board, bitboard, from
 				)
 			},
-			GKaku | GKakuN => {
+			GKaku | GKakuN if t == Teban::Gote => {
 				Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
 					state.gote_self_board, state.gote_ou_position_board, state.diag_board, from, kind
 				)
 			},
-			GHisha | GHishaN => {
+			GHisha | GHishaN if t == Teban::Gote => {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
@@ -4158,7 +4153,7 @@ impl Rule {
 		};
 
 		let (sx,sy) = if from != -1 {
-			let (sx,sy) = from.to_point();
+			let (sx,sy) = from.square_to_point();
 			(sx as i32,sy as i32)
 		} else {
 			(-1,-1)
@@ -4169,7 +4164,7 @@ impl Rule {
 			AppliedMove::Put(m) => m.dst(),
 		};
 
-		let (dx,dy) = to.to_point();
+		let (dx,dy) = to.square_to_point();
 		let dx = dx as usize;
 		let dy = dy as usize;
 
