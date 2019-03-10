@@ -617,7 +617,7 @@ const CANDIDATE_BITS:[u128; 14] = [
 	// 成銀
 	0b000000110_000001010_000000110,
 	// 成角(一マスだけ進める手だけここに定義)
-	0b000000010_000001010_000000010,
+	0b000000100_000001010_000000100,
 	// 成飛(一マスだけ進める手だけここに定義)
 	0b000001010_000000000_000001010
 ];
@@ -773,7 +773,7 @@ impl Rule {
 		if x == 8 {
 			mask = mask & RIGHT_MASK;
 		}
-		
+
 		let mask = mask as u128;
 		let self_occupied = unsafe {
 			match self_occupied {
@@ -1112,8 +1112,8 @@ impl Rule {
 				}
 
 				(
-					64 - (row_offset + row_width as i32),
-					row_width - 1 - offset,
+					63 - (row_offset + row_width as i32 - 1),
+					offset,
 					row_width,
 					mask << (64 - row_width)
 				)
@@ -1123,15 +1123,14 @@ impl Rule {
 		if row_offset == -1 {
 			0
 		} else {
-			let row = (diag_bitboard << row_offset - 1) & mask;
+			let row = (diag_bitboard << row_offset) & mask;
+			let row = row << offset;
 
-			let l = if row == 0 {
-				row_width - (row_width - offset)
+			if row == 0 {
+				row_width - offset + 1
 			} else {
 				row.leading_zeros() + 1
-			};
-
-			l
+			}
 		}
 	}
 
@@ -1286,7 +1285,7 @@ impl Rule {
 				self_occupied.merged_bitboard
 			};
 
-			if self_occupied & 1 << (80 - to + 1) != 0 {
+			if self_occupied & 1 << (to + 1) != 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1309,7 +1308,7 @@ impl Rule {
 				self_occupied.merged_bitboard
 			};
 
-			if self_occupied & 1 << (80 - to + 1) != 0 {
+			if self_occupied & 1 << (to + 1) != 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1332,7 +1331,7 @@ impl Rule {
 				self_occupied.merged_bitboard
 			};
 
-			if self_occupied & 1 << (80 - to + 1) != 0 {
+			if self_occupied & 1 << (to + 1) != 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1355,7 +1354,7 @@ impl Rule {
 				self_occupied.merged_bitboard
 			};
 
-			if self_occupied & 1 << (80 - to + 1) != 0 {
+			if self_occupied & 1 << (to + 1) != 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1381,12 +1380,12 @@ impl Rule {
 
 	#[inline]
 	pub fn calc_to_left_move_count_of_hisha(bitboard:BitBoard,x:u32,y:u32) -> u32 {
-		Rule::calc_back_move_repeat_count(bitboard,y,x)
+		Rule::calc_forward_move_repeat_count(bitboard,y,x)
 	}
 
 	#[inline]
 	pub fn calc_to_right_move_count_of_hisha(bitboard:BitBoard,x:u32,y:u32) -> u32 {
-		Rule::calc_forward_move_repeat_count(bitboard,y,x)
+		Rule::calc_back_move_repeat_count(bitboard,y,x)
 	}
 
 	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard(
@@ -1449,7 +1448,7 @@ impl Rule {
 				self_occupied.merged_bitboard
 			};
 
-			if self_occupied & 1 << (80 - to + 1) != 0 {
+			if self_occupied & 1 << (to + 1) != 0 {
 				mvs.push(to as Square);
 			}
 		}
@@ -1458,13 +1457,18 @@ impl Rule {
 	}
 
 	pub fn calc_back_move_repeat_count(bitboard:BitBoard,board_x:u32,board_y:u32) -> u32 {
+		if board_y == 8 {
+			return 0;
+		}
+
 		let board = unsafe {
 			BitBoard {
-				merged_bitboard: (bitboard.merged_bitboard >> (8 - board_x) * 9 + board_y) & 0b111111111
+				merged_bitboard: ((bitboard.merged_bitboard >> (board_x * 9 + 1))) & 0b111111111
 			}
 		};
 
-		let board = unsafe { *board.bitboard.get_unchecked(1) };
+		let board = unsafe { *board.bitboard.get_unchecked(0) };
+		let board = board >> board_y + 1;
 
 		if board == 0 {
 			8 - board_y
@@ -1474,11 +1478,15 @@ impl Rule {
 	}
 
 	pub fn calc_forward_move_repeat_count(bitboard:BitBoard,board_x:u32,board_y:u32) -> u32 {
+		if board_y == 0 {
+			return 0;
+		}
+
 		let board = unsafe {
 			BitBoard {
 				merged_bitboard: (
 					(bitboard.merged_bitboard << (127 - 8 - board_x * 9))
-				) & 0b111111111 << 119
+				) & 0b111111111 << 118
 			}
 		};
 
