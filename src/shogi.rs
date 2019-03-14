@@ -83,6 +83,16 @@ impl KomaKind {
 			kind => kind
 		}
 	}
+
+	pub fn is_nari(&self) -> bool {
+		match *self {
+			KomaKind::SFuN | KomaKind::SKyouN | KomaKind::SKeiN | KomaKind::SGinN | KomaKind::SHishaN | KomaKind::SKakuN |
+			KomaKind::GFuN | KomaKind::GKyouN | KomaKind::GKeiN | KomaKind::GGinN | KomaKind::GHishaN | KomaKind::GKakuN => {
+				true
+			},
+			_ => false
+		}
+	}
 }
 impl MaxIndex for KomaKind {
 	fn max_index() -> usize {
