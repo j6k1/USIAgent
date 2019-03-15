@@ -817,7 +817,7 @@ impl Rule {
 		mvs:&mut Vec<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let to = m as u32;
-		let to_mask = 1 << (to + 1);
+		let to_mask = 1 << to;
 
 		let to = if inverse_position {
 			80 - to
@@ -825,11 +825,13 @@ impl Rule {
 			to
 		};
 
-		if nari_mask & to_mask != 0 {
+		let nari = kind.is_nari();
+
+		if !nari && nari_mask & to_mask != 0 {
 			mvs.push(move_builder(from, to, true));
 		}
 
-		if !kind.is_nari() && deny_move_mask & to_mask == 0 {
+		if nari || deny_move_mask & to_mask == 0 {
 			mvs.push(move_builder(from, to, false));
 		}
 	}
