@@ -815,24 +815,23 @@ impl Rule {
 		inverse_position:bool,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let to = m as u32;
-		let to_mask = 1 << to;
-
-		let to = if inverse_position {
-			80 - to
+		
+		let to_mask = if inverse_position {
+			1 << (80 - to)
 		} else {
-			to
+			1 << to
 		};
 
 		let nari = kind.is_nari();
 
 		if !nari && nari_mask & to_mask != 0 {
-			mvs.push(move_builder(from, to, true));
+			mvs.push(move_builder(from, to, true, inverse_position));
 		}
 
 		if nari || deny_move_mask & to_mask == 0 {
-			mvs.push(move_builder(from, to, false));
+			mvs.push(move_builder(from, to, false, inverse_position));
 		}
 	}
 
@@ -845,7 +844,7 @@ impl Rule {
 		inverse_position:bool,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits(teban, self_occupied, from, kind);
 
 		loop {
@@ -869,7 +868,7 @@ impl Rule {
 		deny_move_mask:u128,
 		inverse_position:bool,
 		move_builder:&F
-	) -> Vec<LegalMove> where F: Fn(u32,u32,bool) -> LegalMove {
+	) -> Vec<LegalMove> where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let mut mvs:Vec<LegalMove> = Vec::with_capacity(8);
 
 		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
@@ -886,7 +885,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let board = unsafe {
 			*diag_bitboard.bitboard.get_unchecked(0)
 		};
@@ -1018,7 +1017,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let board = unsafe {
 			*diag_bitboard.bitboard.get_unchecked(0)
 		};
@@ -1232,7 +1231,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1354,7 +1353,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1492,7 +1491,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1529,7 +1528,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1641,13 +1640,21 @@ impl Rule {
 		mvs
 	}
 
-	pub fn default_moveto_builder<'a>(banmen:&'a Banmen,opponent_bitboard:u128) -> impl Fn(u32,u32,bool) -> LegalMove + 'a {
-		move |from,to,nari| {
+	pub fn default_moveto_builder<'a>(banmen:&'a Banmen,opponent_bitboard:u128) -> impl Fn(u32,u32,bool,bool) -> LegalMove + 'a {
+		move |from,to,nari,inverse_position| {
+			let to_mask = 1 << (to + 1);
+
+			let to = if inverse_position {
+				80 - to
+			} else {
+				to
+			};
+
 			let (dx,dy) = to.square_to_point();
 
 			let o = match banmen {
 				&Banmen(ref kinds) => {
-					if opponent_bitboard & (1 << (to + 1)) != 0 {
+					if opponent_bitboard & to_mask != 0 {
 						ObtainKind::try_from(kinds[dy as usize][dx as usize]).ok()
 					} else {
 						None
@@ -1667,12 +1674,12 @@ impl Rule {
 		let from = x * 9 + y;
 
 		let (nari_mask,deny_move_mask) = match kind {
-			SFu | SKyou => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1),
-			SKei => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_KEI_MASK << 1),
-			SGin | SHisha | SKaku => (SENTE_NARI_MASK << 1,0),
-			GFu | GKyou => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_FU_AND_KYOU_MASK << 1),
-			GKei => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_KEI_MASK << 1),
-			GGin | GHisha | GKaku => (GOTE_NARI_MASK << 1,0),
+			SFu | SKyou => (SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK),
+			SKei => (SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK),
+			SGin | SHisha | SKaku => (SENTE_NARI_MASK,0),
+			GFu | GKyou => (GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK),
+			GKei => (GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK),
+			GGin | GHisha | GKaku => (GOTE_NARI_MASK,0),
 			SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN => {
 				(0,0)
 			},
