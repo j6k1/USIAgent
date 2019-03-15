@@ -1224,6 +1224,7 @@ impl Rule {
 
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
+		self_occupied_for_repeat_move:BitBoard,
 		bitboard:BitBoard,
 		rotate_bitboard:BitBoard,
 		from:u32,kind:KomaKind,
@@ -1251,9 +1252,9 @@ impl Rule {
 
 			to -= 1;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1276,9 +1277,9 @@ impl Rule {
 
 			to += 1;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1301,11 +1302,9 @@ impl Rule {
 
 			to -= 9;
 
-			let self_occupied = unsafe {
-				self_occupied.merged_bitboard
-			};
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1328,9 +1327,9 @@ impl Rule {
 
 			to += 9;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1346,6 +1345,7 @@ impl Rule {
 
 	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
+		self_occupied_for_repeat_move:BitBoard,
 		bitboard:BitBoard,
 		rotate_bitboard:BitBoard,
 		from:u32,kind:KomaKind,
@@ -1373,9 +1373,9 @@ impl Rule {
 
 			to += 1;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1398,9 +1398,9 @@ impl Rule {
 
 			to -= 1;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1423,9 +1423,9 @@ impl Rule {
 
 			to += 9;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1448,9 +1448,9 @@ impl Rule {
 
 			to -= 9;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1485,7 +1485,7 @@ impl Rule {
 	}
 
 	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
-		self_occupied:BitBoard,
+		self_occupied_for_repeat_move:BitBoard,
 		bitboard:BitBoard,from:u32,
 		nari_mask:u128,
 		deny_move_mask:u128,
@@ -1511,9 +1511,9 @@ impl Rule {
 
 			to -= 1;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,SKyou,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1522,7 +1522,7 @@ impl Rule {
 	}
 
 	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
-		self_occupied:BitBoard,
+		self_occupied_for_repeat_move:BitBoard,
 		bitboard:BitBoard,from:u32,
 		nari_mask:u128,
 		deny_move_mask:u128,
@@ -1548,9 +1548,9 @@ impl Rule {
 
 			to += 1;
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			if self_occupied & 1 << (to + 1) != 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,GKyou,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
@@ -1587,8 +1587,8 @@ impl Rule {
 		let board = unsafe {
 			BitBoard {
 				merged_bitboard: (
-					(bitboard.merged_bitboard << (127 - 8 - board_x * 9))
-				) & 0b111111111 << 118
+					(bitboard.merged_bitboard << (127 - 8 - board_x * 9 - 1))
+				) & (0b111111111 << 118)
 			}
 		};
 
@@ -1691,10 +1691,16 @@ impl Rule {
 			}
 		};
 
-		let (self_bitboard,opponent_bitboard) = if kind < GFu {
-			(state.part.sente_self_board, unsafe { state.part.sente_opponent_board.merged_bitboard })
+		let (self_bitboard,self_bitboard_for_repeat_move,opponent_bitboard) = if kind < GFu {
+			(state.part.sente_self_board, 
+				state.part.sente_self_board,
+				unsafe { state.part.sente_opponent_board.merged_bitboard }
+			)
 		} else if kind < Blank {
-			(state.part.gote_self_board, unsafe { state.part.gote_opponent_board.merged_bitboard })
+			(state.part.gote_self_board, 
+				state.part.sente_opponent_board,
+				unsafe { state.part.gote_opponent_board.merged_bitboard }
+			)
 		} else {
 			return;
 		};
@@ -1724,7 +1730,8 @@ impl Rule {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, bitboard,from,
+					self_bitboard_for_repeat_move,
+					bitboard,from,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -1742,7 +1749,8 @@ impl Rule {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, bitboard, state.part.rotate_board,from,kind,
+					self_bitboard, self_bitboard_for_repeat_move,
+					bitboard, state.part.rotate_board,from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -1752,7 +1760,8 @@ impl Rule {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard,bitboard,from,
+					self_bitboard_for_repeat_move,
+					bitboard,from,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -1770,7 +1779,8 @@ impl Rule {
 				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
 				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, bitboard, state.part.rotate_board,from,kind,
+					self_bitboard, self_bitboard_for_repeat_move,
+					bitboard, state.part.rotate_board,from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
