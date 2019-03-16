@@ -886,6 +886,7 @@ impl Rule {
 
 	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
+		self_occupied_for_repeat_move:BitBoard,
 		diag_bitboard:BitBoard,
 		from:u32,kind:KomaKind,
 		nari_mask:u128,
@@ -911,11 +912,11 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
 			to -= 10;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -933,18 +934,18 @@ impl Rule {
 			let mut to = from;
 
 			while c < count {
-				to -= 8;
+				to += 8;
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 				c += 1;
 			}
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			to -= 8;
+			to += 8;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -962,18 +963,18 @@ impl Rule {
 			let mut to = from;
 
 			while c < count {
-				to +=8;
+				to -=8;
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 				c += 1;
 			}
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			to += 8;
+			to -= 8;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -998,11 +999,11 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied = unsafe {self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe {self_occupied_for_repeat_move.merged_bitboard };
 
 			to += 10;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1018,6 +1019,7 @@ impl Rule {
 
 	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
+		self_occupied_for_repeat_move:BitBoard,
 		diag_bitboard:BitBoard,
 		from:u32,kind:KomaKind,
 		nari_mask:u128,
@@ -1043,11 +1045,11 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
 			to += 10;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1065,18 +1067,18 @@ impl Rule {
 			let mut to = from;
 
 			while c < count {
-				to += 8;
+				to -= 8;
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 				c += 1;
 			}
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			to += 8;
+			to -= 8;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1094,18 +1096,18 @@ impl Rule {
 			let mut to = from;
 
 			while c < count {
-				to -= 8;
+				to += 8;
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 				c += 1;
 			}
 
-			let self_occupied = unsafe { self_occupied.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
-			to -= 8;
+			to += 8;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1130,13 +1132,11 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied = unsafe {
-				self_occupied.merged_bitboard
-			};
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
 			to -= 10;
 
-			if self_occupied & 1 << (to + 1) == 0 {
+			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
 					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
@@ -1153,15 +1153,17 @@ impl Rule {
 	fn calc_bitboard_forward_move_count_of_kaku(diag_bitboard:u64,_:u32,slide_info:(i32,u32,u32),mask:u64) -> u32 {
 		let (row_offset,offset,row_width) = slide_info;
 
-		if row_offset == -1 || offset == 8 {
+		if offset == row_width - 1 {
 			0
+		} else if row_offset == -1 {
+			row_width - 1
 		} else {
 			let row = (diag_bitboard >> row_offset) & mask;
 
 			let row = row >> offset;
 
 			if row == 0 {
-				row_width - offset - 1
+				row_width - 1 - offset
 			} else {
 				row.trailing_zeros() + 1
 			}
@@ -1185,31 +1187,30 @@ impl Rule {
 	}
 
 	fn calc_bitboard_back_move_count_of_kaku(diag_bitboard:u64,_:u32,slide_info:(i32,u32,u32),mask:u64) -> u32 {
-		let (row_offset,offset,mask) = match slide_info {
+		let (row_width,row_offset,offset,mask) = match slide_info {
 			(row_offset,offset,row_width) => {
-				if row_offset == -1 || offset == 0 {
+				if offset == 0 {
 					return 0;
+				} else if row_offset == -1 {
+					return row_width - 1
 				}
 
 				(
-					63 - (row_offset + row_width as i32 - 3),
+					row_width,
+					63 - row_offset - (row_width as i32 - 2 - 1),
 					offset,
-					mask << (64 - (row_width - 2))
+					mask << (63 - (row_width as i32 - 2 - 1)),
 				)
 			}
 		};
 
-		if row_offset == -1 {
-			0
-		} else {
-			let row = (diag_bitboard << row_offset) & mask;
-			let row = row << offset + 1;
+		let row = (diag_bitboard << row_offset) & mask;
+		let row = row << (row_width - 1 - offset);
 
-			if row == 0 {
-				offset
-			} else {
-				row.leading_zeros() + 1
-			}
+		if row == 0 {
+			offset
+		} else {
+			row.leading_zeros() + 1
 		}
 	}
 
@@ -1740,7 +1741,8 @@ impl Rule {
 			}
 			SKaku | SKakuN if t == Teban::Sente => {
 				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, state.part.diag_board,from,kind,
+					self_bitboard, self_bitboard_for_repeat_move,
+					state.part.diag_board,from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -1770,7 +1772,8 @@ impl Rule {
 			},
 			GKaku | GKakuN if t == Teban::Gote => {
 				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, state.part.diag_board,from,kind,
+					self_bitboard, self_bitboard_for_repeat_move,
+					state.part.diag_board,from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
