@@ -820,23 +820,25 @@ impl Rule {
 		inverse_position:bool,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let to = m as u32;
 		
-		let to_mask = if inverse_position {
-			1 << (80 - to)
+		let to = if inverse_position {
+			80 - to
 		} else {
-			1 << to
+			to
 		};
+
+		let to_mask = 1 << to;
 
 		let nari = kind.is_nari();
 
 		if !nari && nari_mask & to_mask != 0 {
-			mvs.push(move_builder(from, to, true, inverse_position));
+			mvs.push(move_builder(from, to, true));
 		}
 
 		if nari || deny_move_mask & to_mask == 0 {
-			mvs.push(move_builder(from, to, false, inverse_position));
+			mvs.push(move_builder(from, to, false));
 		}
 	}
 
@@ -849,7 +851,7 @@ impl Rule {
 		inverse_position:bool,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits(teban, self_occupied, from, kind);
 
 		loop {
@@ -873,7 +875,7 @@ impl Rule {
 		deny_move_mask:u128,
 		inverse_position:bool,
 		move_builder:&F
-	) -> Vec<LegalMove> where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) -> Vec<LegalMove> where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut mvs:Vec<LegalMove> = Vec::with_capacity(8);
 
 		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
@@ -890,7 +892,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let board = unsafe {
 			*diag_bitboard.bitboard.get_unchecked(0)
 		};
@@ -1022,7 +1024,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let board = unsafe {
 			*diag_bitboard.bitboard.get_unchecked(0)
 		};
@@ -1237,7 +1239,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1358,7 +1360,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1496,7 +1498,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1533,7 +1535,7 @@ impl Rule {
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
-	) where F: Fn(u32,u32,bool,bool) -> LegalMove {
+	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let x = from / 9;
 		let y = from - x * 9;
 
@@ -1645,15 +1647,9 @@ impl Rule {
 		mvs
 	}
 
-	pub fn default_moveto_builder<'a>(banmen:&'a Banmen,opponent_bitboard:u128) -> impl Fn(u32,u32,bool,bool) -> LegalMove + 'a {
-		move |from,to,nari,inverse_position| {
+	pub fn default_moveto_builder<'a>(banmen:&'a Banmen,opponent_bitboard:u128) -> impl Fn(u32,u32,bool) -> LegalMove + 'a {
+		move |from,to,nari| {
 			let to_mask = 1 << (to + 1);
-
-			let to = if inverse_position {
-				80 - to
-			} else {
-				to
-			};
 
 			let (dx,dy) = to.square_to_point();
 
@@ -1704,7 +1700,7 @@ impl Rule {
 		} else if kind < Blank {
 			(state.part.gote_self_board, 
 				state.part.sente_opponent_board,
-				unsafe { state.part.gote_opponent_board.merged_bitboard }
+				unsafe { state.part.sente_self_board.merged_bitboard }
 			)
 		} else {
 			return;
