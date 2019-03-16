@@ -511,31 +511,36 @@ impl State {
 							sente_opponent_board ^= 1 << (x * 9 + y + 1);
 						}
 
-						let i = x * 9 + y;
+						match kind {
+							Blank => (),
+							_ => {
+								let i = x * 9 + y;
 
-						let li = DIAG_LEFT_ROTATE_MAP[i];
+								let li = DIAG_LEFT_ROTATE_MAP[i];
 
-						let lmask = if li == -1 {
-							0
-						} else {
-							1 << li
-						};
+								let lmask = if li == -1 {
+									0
+								} else {
+									1 << li
+								};
 
-						let ri = DIAG_RIGHT_ROTATE_MAP[i];
+								let ri = DIAG_RIGHT_ROTATE_MAP[i];
 
-						let rmask = if ri == -1 {
-							0
-						} else {
-							1 << ri + 64
-						};
+								let rmask = if ri == -1 {
+									0
+								} else {
+									1 << ri + 64
+								};
 
-						diag_board ^= lmask | rmask;
+								diag_board ^= lmask | rmask;
 
-						let (x,y) = {
-							(y,x)
-						};
+								let (x,y) = {
+									(y,x)
+								};
 
-						rotate_board ^= 1 << (x * 9 + y + 1);
+								rotate_board ^= 1 << (x * 9 + y + 1);
+							}
+						}
 					}
 				}
 			}
@@ -1570,7 +1575,7 @@ impl Rule {
 		};
 
 		let board = unsafe { *board.bitboard.get_unchecked(0) };
-		let board = board >> board_y + 1;
+		let board = board >> (board_y + 1);
 
 		if board == 0 {
 			8 - board_y
@@ -2822,8 +2827,7 @@ impl Rule {
 							Blank => (),
 						}
 
-						let dx = to / 9;
-						let dy = to - dx * 9;
+						let (dx,dy) = to.square_to_point();
 
 						let from_mask = 1 << (sy * 9 + sx + 1);
 
