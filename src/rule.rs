@@ -1559,7 +1559,7 @@ impl Rule {
 
 			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,GKyou,nari_mask,deny_move_mask,true,move_builder,mvs
+					to as Square,from,GKyou,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
@@ -1595,7 +1595,7 @@ impl Rule {
 			BitBoard {
 				merged_bitboard: (
 					(bitboard.merged_bitboard << (127 - 8 - board_x * 9 - 1))
-				) & (0b111111111 << 118)
+				) & (0b111111111 << 119)
 			}
 		};
 
