@@ -953,7 +953,7 @@ impl Rule {
 		}
 
 		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
+			*diag_bitboard.bitboard.get_unchecked(1)
 		};
 
 		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
@@ -999,7 +999,7 @@ impl Rule {
 				c += 1;
 			}
 
-			let self_occupied_for_repeat_move = unsafe {self_occupied_for_repeat_move.merged_bitboard };
+			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
 
 			to += 10;
 
@@ -1205,7 +1205,8 @@ impl Rule {
 		};
 
 		let row = (diag_bitboard << row_offset) & mask;
-		let row = row << (row_width - 1 - offset);
+
+		let row = row << ((row_width - 2) - (offset - 1));
 
 		if row == 0 {
 			offset
