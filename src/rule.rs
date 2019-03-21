@@ -2736,7 +2736,7 @@ impl Rule {
 
 						let kind = kinds[sy as usize][sx as usize];
 
-						if kind < GFu {
+						let obtained = if kind < GFu {
 							ps.sente_self_board = unsafe {
 								BitBoard {
 									merged_bitboard: ps.sente_self_board.merged_bitboard ^ (from_mask  | to_mask)
@@ -2747,6 +2747,8 @@ impl Rule {
 									merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (inverse_from_mask | inverse_to_mask)
 								}
 							};
+
+							(unsafe { ps.sente_opponent_board.merged_bitboard } & to_mask != 0)
 						} else if kind < Blank {
 							ps.gote_self_board = unsafe {
 								BitBoard {
@@ -2758,7 +2760,11 @@ impl Rule {
 									merged_bitboard: ps.sente_opponent_board.merged_bitboard ^ (from_mask  | to_mask)
 								}
 							};
-						}
+
+							(unsafe { ps.gote_opponent_board.merged_bitboard } & inverse_to_mask != 0)
+						} else {
+							false
+						};
 
 						match kind {
 							SFu => {
@@ -2844,7 +2850,7 @@ impl Rule {
 
 						ps.rotate_board = unsafe {
 							BitBoard {
-								merged_bitboard: ps.rotate_board.merged_bitboard ^ (from_mask  | to_mask)
+								merged_bitboard: (ps.rotate_board.merged_bitboard ^ from_mask) | to_mask
 							}
 						};
 
@@ -2883,10 +2889,66 @@ impl Rule {
 						ps.diag_board = unsafe {
 							BitBoard {
 								merged_bitboard: ps.diag_board.merged_bitboard ^ (
-									from_mask_l | to_mask_l | from_mask_r | to_mask_r
-								)
+									from_mask_l |from_mask_r
+								) | (to_mask_l | to_mask_r)
 							}
 						};
+
+						if obtained {
+							if kind < GFu {
+								ps.gote_fu_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_fu_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.gote_kyou_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_kyou_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.gote_hisha_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_hisha_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.gote_kaku_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_kaku_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.gote_ou_position_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_ou_position_board.merged_bitboard & !to_mask
+									}
+								};
+							} else if kind < Blank {
+								ps.sente_fu_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_fu_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.sente_kyou_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_kyou_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.sente_hisha_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_hisha_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.sente_kaku_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_kaku_board.merged_bitboard & !to_mask
+									}
+								};
+								ps.sente_ou_position_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_ou_position_board.merged_bitboard & !to_mask
+									}
+								};
+							}
+						}
 					},
 					AppliedMove::Put(m) => {
 						let to = m.dst();

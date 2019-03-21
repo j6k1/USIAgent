@@ -8550,6 +8550,7 @@ fn test_apply_move_none_check_sente() {
 			Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,false))
 		],
 		vec![
+			Move::To(KomaSrcPosition(9-2,1+0),KomaDstToPosition(9-2,1+1,false)),
 			Move::To(KomaSrcPosition(9-2,1+1),KomaDstToPosition(9-2,2+1,false))
 		]
 	];
@@ -8558,14 +8559,14 @@ fn test_apply_move_none_check_sente() {
 	let mut state = State::new(banmen.clone());
 
 	let mut teban = Teban::Sente;
-	let mut mc = MochigomaCollections::Empty;
+	let mut omc = MochigomaCollections::Empty;
 
 	for m in &mvs {
 		for m in m {
-			match apply_move_none_check(&banmen,&teban,&mc,m) {
+			match apply_move_none_check(&banmen,&teban,&omc,m) {
 				(next,nmc,_) => {
 					banmen = next;
-					mc = nmc;
+					omc = nmc;
 				}
 			}
 		}
@@ -8587,7 +8588,7 @@ fn test_apply_move_none_check_sente() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
+	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&omc),
 		Rule::legal_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -8605,6 +8606,7 @@ fn test_apply_move_none_check_gote() {
 			Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,false))
 		],
 		vec![
+			Move::To(KomaSrcPosition(9-2,1+0),KomaDstToPosition(9-2,1+1,false)),
 			Move::To(KomaSrcPosition(9-2,1+1),KomaDstToPosition(9-2,2+1,false))
 		]
 	];
@@ -8625,14 +8627,14 @@ fn test_apply_move_none_check_gote() {
 	let mut banmen = BANMEN_START_POS.clone();
 	let mut state = State::new(banmen.clone());
 	let mut teban = Teban::Gote;
-	let mut mc = MochigomaCollections::Empty;
+	let mut omc = MochigomaCollections::Empty;
 
 	for m in &mvs {
 		for m in m {
-			match apply_move_none_check(&banmen,&teban,&mc,m) {
+			match apply_move_none_check(&banmen,&teban,&omc,m) {
 				(next,nmc,_) => {
 					banmen = next;
-					mc = nmc;
+					omc = nmc;
 				}
 			}
 		}
@@ -8653,7 +8655,7 @@ fn test_apply_move_none_check_gote() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),
+	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&omc),
 		Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
