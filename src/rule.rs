@@ -242,7 +242,7 @@ impl From<Move> for AppliedMove {
 
 				AppliedMove::To(AppliedMoveTo(
 					n << 14 |
-					(dst << 7) & 0b1111111 |
+					(dst & 0b1111111) << 7 |
 					src & 0b1111111
 				))
 			},
@@ -253,7 +253,7 @@ impl From<Move> for AppliedMove {
 				let dst = x * 9 + y;
 
 				AppliedMove::Put(AppliedMovePut(
-					(dst << 3) & 0b1111111 |
+					(dst & 0b1111111) << 3 |
 					(kind as u32) & 0111
 				))
 			}
@@ -2727,8 +2727,12 @@ impl Rule {
 						let to = m.dst();
 
 						let from_mask = 1 << (from + 1);
-
+						
 						let to_mask = 1 << (to + 1);
+
+						let inverse_from_mask = 1 << (80 - from + 1);
+
+						let inverse_to_mask = 1 << (80 - to + 1);
 
 						let kind = kinds[sy as usize][sx as usize];
 
@@ -2740,13 +2744,13 @@ impl Rule {
 							};
 							ps.gote_opponent_board = unsafe {
 								BitBoard {
-									merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ ((1 << (81 - from + 1)) | (1 << (81 - to + 1)))
+									merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (inverse_from_mask | inverse_to_mask)
 								}
 							};
 						} else if kind < Blank {
 							ps.gote_self_board = unsafe {
 								BitBoard {
-									merged_bitboard: ps.gote_self_board.merged_bitboard ^ ((1 << (81 - from + 1)) | (1 << (81 - to + 1)))
+									merged_bitboard: ps.gote_self_board.merged_bitboard ^ (inverse_from_mask | inverse_to_mask)
 								}
 							};
 							ps.sente_opponent_board = unsafe {
@@ -2868,7 +2872,7 @@ impl Rule {
 							1 << (from_r + 64)
 						};
 
-						let to_r = DIAG_LEFT_ROTATE_MAP[to as usize];
+						let to_r = DIAG_RIGHT_ROTATE_MAP[to as usize];
 
 						let to_mask_r = if to_r < 0 {
 							0
@@ -2888,6 +2892,7 @@ impl Rule {
 						let to = m.dst();
 
 						let to_mask = 1 << (to + 1);
+						let inverse_to_mask = 1 << (80 - to + 1);
 
 						match t {
 							Teban::Sente => {
@@ -2898,7 +2903,7 @@ impl Rule {
 								};
 								ps.gote_opponent_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ (1 << (81 - to + 1))
+										merged_bitboard: ps.gote_opponent_board.merged_bitboard ^ inverse_to_mask
 									}
 								};
 
@@ -2937,7 +2942,7 @@ impl Rule {
 							Teban::Gote => {
 								ps.gote_self_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_self_board.merged_bitboard ^ (1 << (81 - to + 1))
+										merged_bitboard: ps.gote_self_board.merged_bitboard ^ inverse_to_mask
 									}
 								};
 								ps.sente_opponent_board = unsafe {
@@ -2998,7 +3003,7 @@ impl Rule {
 							1 << to_l
 						};
 
-						let to_r = DIAG_LEFT_ROTATE_MAP[to as usize];
+						let to_r = DIAG_RIGHT_ROTATE_MAP[to as usize];
 
 						let to_mask_r = if to_r < 0 {
 							0
