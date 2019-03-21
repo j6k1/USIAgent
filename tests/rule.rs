@@ -7138,7 +7138,7 @@ fn test_legal_moves_banmen_with_ou_8_squares_and_contiguous_opponent_gote() {
 fn test_legal_moves_from_mochigoma_with_fu_sente() {
 	let mut banmen = rule::BANMEN_START_POS.clone();
 
-	banmen.0[2][8] = Blank;
+	banmen.0[6][8] = Blank;
 	banmen.0[0][8] = Blank;
 	banmen.0[3][8] = GKyou;
 
@@ -7158,7 +7158,7 @@ fn test_legal_moves_from_mochigoma_with_fu_sente() {
 fn test_legal_moves_from_mochigoma_with_fu_gote() {
 	let mut banmen = rule::BANMEN_START_POS.clone();
 
-	banmen.0[8-2][8-8] = Blank;
+	banmen.0[8-6][8-8] = Blank;
 	banmen.0[8-0][8-8] = Blank;
 	banmen.0[8-3][8-8] = SKyou;
 
@@ -9421,8 +9421,8 @@ fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Ve
 				MochigomaCollections::Pair(ref ms, _) => {
 					match b {
 						&Banmen(ref kinds) => {
-							for y in 0..kinds.len() {
-								for x in 0..kinds[y].len() {
+							for x in 0..9 {
+								for y in 0..9 {
 									for m in &MOCHIGOMA_KINDS {
 										match ms.get(&m) {
 											None | Some(&0) => {
@@ -9486,8 +9486,8 @@ fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Ve
 				MochigomaCollections::Pair(_, ref mg) => {
 					match b {
 						&Banmen(ref kinds) => {
-							for y in 0..kinds.len() {
-								for x in 0..kinds[y].len() {
+							for x in 0..9 {
+								for y in 0..9 {
 									let (x,y) = (8 - x, 8 - y);
 									for m in &MOCHIGOMA_KINDS {
 										match mg.get(&m) {
