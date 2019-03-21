@@ -9419,17 +9419,17 @@ fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Ve
 		Teban::Sente => {
 			match *mc {
 				MochigomaCollections::Pair(ref ms, _) => {
-					match b {
-						&Banmen(ref kinds) => {
-							for x in 0..9 {
-								for y in 0..9 {
-									for m in &MOCHIGOMA_KINDS {
-										match ms.get(&m) {
-											None | Some(&0) => {
-												continue;
-											},
-											Some(_) => (),
-										}
+					for m in &MOCHIGOMA_KINDS {
+						match ms.get(&m) {
+							None | Some(&0) => {
+								continue;
+							},
+							Some(_) => (),
+						}
+						match b {
+							&Banmen(ref kinds) => {
+								for x in 0..9 {
+									for y in 0..9 {
 										match m {
 											&MochigomaKind::Fu => {
 												match kinds[y][x] {
@@ -9484,18 +9484,18 @@ fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Ve
 		Teban::Gote => {
 			match *mc {
 				MochigomaCollections::Pair(_, ref mg) => {
-					match b {
-						&Banmen(ref kinds) => {
-							for x in 0..9 {
-								for y in 0..9 {
-									let (x,y) = (8 - x, 8 - y);
-									for m in &MOCHIGOMA_KINDS {
-										match mg.get(&m) {
-											None | Some(&0) => {
-												continue;
-											},
-											Some(_) => (),
-										}
+					for m in &MOCHIGOMA_KINDS {
+						match mg.get(&m) {
+							None | Some(&0) => {
+								continue;
+							},
+							Some(_) => (),
+						}
+						match b {
+							&Banmen(ref kinds) => {
+								for x in 0..9 {
+									for y in 0..9 {
+										let (x,y) = (8 - x, 8 - y);
 										match m {
 											&MochigomaKind::Fu => {
 												match kinds[y][x] {

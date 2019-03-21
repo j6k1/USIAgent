@@ -1909,10 +1909,10 @@ impl Rule {
 								}
 
 								let sente_fu_bitboard = unsafe {
-									(state.part.sente_fu_board.merged_bitboard >> 1) & 0b111111111 << x * 9
+									(state.part.sente_fu_board.merged_bitboard >> 1)
 								};
 
-								if *m == MochigomaKind::Fu && sente_fu_bitboard & 0b111111111 << x != 0 {
+								if *m == MochigomaKind::Fu && sente_fu_bitboard & 0b111111111 << x * 9 != 0 {
 									continue;
 								}
 
@@ -1965,10 +1965,10 @@ impl Rule {
 								let x = (80 - p) / 9;
 
 								let gote_fu_bitboard = unsafe {
-									(state.part.gote_fu_board.merged_bitboard >> 1) & 0b111111111 << x * 9
+									(state.part.gote_fu_board.merged_bitboard >> 1)
 								};
 
-								if *m == MochigomaKind::Fu && gote_fu_bitboard & 0b111111111 << x != 0 {
+								if *m == MochigomaKind::Fu && gote_fu_bitboard & 0b111111111 << x * 9 != 0 {
 									continue;
 								}
 
