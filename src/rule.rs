@@ -1899,116 +1899,96 @@ impl Rule {
 	pub fn legal_moves_from_mochigoma_with_buffer(
 		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut Vec<LegalMove>
 	) {
-		match t {
-			Teban::Sente => {
-				match *mc {
-					MochigomaCollections::Pair(ref ms, _) => {
-						for m in &MOCHIGOMA_KINDS {
-							match ms.get(&m) {
-								None | Some(&0) => {
-									continue;
-								},
-								Some(_) => (),
-							}
-
-							let deny_move_bitboard = match *m {
-								MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
-								MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK,
-								_ => 0
-							};
-
-							let candidate_bitboard = {
-								state.part.sente_self_board | state.part.sente_opponent_board
-							};
-
-							let mut candidate_bitboard = BitBoard {
-								merged_bitboard: unsafe { !candidate_bitboard.merged_bitboard & BANMEN_MASK }
-							};
-
-							loop {
-								let p = Rule::pop_lsb(&mut candidate_bitboard);
-
-								if p == -1 {
-									break;
-								}
-
-								let p_mask = 1 << p;
-
-								let x = p / 9;
-
-								if deny_move_bitboard & p_mask != 0 {
-									continue;
-								}
-
-								let sente_fu_bitboard = unsafe {
-									(state.part.sente_fu_board.merged_bitboard >> 1)
-								};
-
-								if *m == MochigomaKind::Fu && sente_fu_bitboard & 0b111111111 << x * 9 != 0 {
-									continue;
-								}
-
-								mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
-							}
-						}
+		let mc = match mc {
+			&MochigomaCollections::Pair(ref ms, ref mg) => {
+				match t {
+					Teban::Sente => {
+						ms
 					},
-					MochigomaCollections::Empty => (),
+					Teban::Gote => {
+						mg
+					}
 				}
 			},
-			Teban::Gote => {
-				match *mc {
-					MochigomaCollections::Pair(_, ref mg) => {
-						for m in &MOCHIGOMA_KINDS {
-							match mg.get(&m) {
-								None | Some(&0) => {
-									continue;
-								},
-								Some(_) => (),
-							}
+			&MochigomaCollections::Empty => {
+				return;
+			}
+		};
 
-							let deny_move_bitboard = match *m {
-								MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
-								MochigomaKind::Kei => DENY_MOVE_GOTE_KEI_MASK,
-								_ => 0
-							};
+		for m in &MOCHIGOMA_KINDS {
+			match mc.get(&m) {
+				None | Some(&0) => {
+					continue;
+				},
+				Some(_) => (),
+			}
 
-							let candidate_bitboard = {
-								state.part.gote_self_board | state.part.gote_opponent_board
-							};
+			let (deny_move_bitboard,candidate_bitboard,fu_bitboard) = match t {
+				Teban::Sente => {
+					let deny_move_bitboard = match *m {
+						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+						MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK,
+						_ => 0
+					};
 
-							let mut candidate_bitboard = BitBoard {
-								merged_bitboard: unsafe { !candidate_bitboard.merged_bitboard & BANMEN_MASK }
-							};
+					let candidate_bitboard = {
+						state.part.sente_self_board | state.part.sente_opponent_board
+					};
 
-							loop {
-								let p = Rule::pop_lsb(&mut candidate_bitboard);
+					let sente_fu_bitboard = unsafe {
+						(state.part.sente_fu_board.merged_bitboard >> 1)
+					};
+					
+					(deny_move_bitboard,candidate_bitboard,sente_fu_bitboard)
+				},
+				Teban::Gote => {
+					let deny_move_bitboard = match *m {
+						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
+						MochigomaKind::Kei => DENY_MOVE_GOTE_KEI_MASK,
+						_ => 0
+					};
 
-								if p == -1 {
-									break;
-								}
+					let candidate_bitboard = {
+						state.part.gote_self_board | state.part.gote_opponent_board
+					};
 
+					let gote_fu_bitboard = unsafe {
+						(state.part.gote_fu_board.merged_bitboard >> 1)
+					};
 
-								let p_mask = 1 << 80 - p;
+					(deny_move_bitboard,candidate_bitboard,gote_fu_bitboard)
+				}
+			};
 
-								if deny_move_bitboard & p_mask != 0 {
-									continue;
-								}
+			let mut candidate_bitboard = BitBoard {
+				merged_bitboard: unsafe { !candidate_bitboard.merged_bitboard & BANMEN_MASK }
+			};
 
-								let x = (80 - p) / 9;
+			loop {
+				let p = Rule::pop_lsb(&mut candidate_bitboard);
 
-								let gote_fu_bitboard = unsafe {
-									(state.part.gote_fu_board.merged_bitboard >> 1)
-								};
+				if p == -1 {
+					break;
+				}
 
-								if *m == MochigomaKind::Fu && gote_fu_bitboard & 0b111111111 << x * 9 != 0 {
-									continue;
-								}
+				let (x,p_mask) = if t == Teban::Sente {
+					(p / 9,1 << p)
+				} else {
+					((80 - p) / 9, 1 << (80 - p))
+				};
 
-								mvs.push(LegalMove::Put(LegalMovePut::new(*m,80 - p as u32)));
-							}
-						}
-					},
-					MochigomaCollections::Empty => (),
+				if deny_move_bitboard & p_mask != 0 {
+					continue;
+				}
+
+				if *m == MochigomaKind::Fu && fu_bitboard & 0b111111111 << x * 9 != 0 {
+					continue;
+				}
+
+				if t == Teban::Sente {
+					mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
+				} else {
+					mvs.push(LegalMove::Put(LegalMovePut::new(*m,80 - p as u32)));
 				}
 			}
 		}
