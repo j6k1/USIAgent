@@ -494,7 +494,7 @@ impl State {
 							SKyou => sente_kyou_board ^= 1 << (x * 9 + y + 1),
 							SKaku => sente_kaku_board ^= 1 << (x * 9 + y + 1),
 							SHisha => sente_hisha_board ^= 1 << (x * 9 + y + 1),
-							SOu => sente_ou_position_board ^= 1 << (x * 9 + y + 1),
+							SOu => sente_ou_position_board ^= 1 << ((8 - x) * 9 + (8 - y) + 1),
 							GFu => gote_fu_board ^= 1 << (x * 9 + y + 1),
 							GKyou => gote_kyou_board ^= 1 << (x * 9 + y + 1),
 							GKaku => gote_kaku_board ^= 1 << (x * 9 + y + 1),
@@ -840,6 +840,38 @@ impl Rule {
 
 		if nari || deny_move_mask & to_mask == 0 {
 			mvs.push(move_builder(from, to, false));
+		}
+	}
+
+	fn append_win_only_move(
+		m:Square,
+		from:u32,
+		kind:KomaKind,
+		nari_mask:u128,
+		deny_move_mask:u128,
+		inverse_position:bool,
+		mvs:&mut Vec<LegalMove>
+	) {
+		let to = m as u32;
+
+		let to = if inverse_position {
+			80 - to
+		} else {
+			to
+		};
+
+		let to_mask = 1 << to;
+
+		let nari = kind.is_nari();
+
+		let o = Some(ObtainKind::Ou);
+
+		if !nari && nari_mask & to_mask != 0 {
+			mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+		}
+
+		if deny_move_mask & to_mask == 0 {
+			mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
 		}
 	}
 
@@ -2004,17 +2036,17 @@ impl Rule {
 			let mut board = BitBoard { merged_bitboard: opponent_ou_bitboard };
 			let p = Rule::pop_lsb(&mut board);
 
-			match teban {
-				Teban::Sente => Some(p),
-				Teban::Gote => Some(80 - p),
-			}
+			Some(p)
 		} else {
 			None
 		}
 	}
 
 	pub fn win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,opponent_ou_bitboard:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+		self_occupied:BitBoard,
+		opponent_ou_bitboard:BitBoard,
+		diag_bitboard:BitBoard,
+		from:u32,kind:KomaKind
 	) -> Option<Square> {
 		let opponent_ou_bitboard_raw = unsafe {
 			opponent_ou_bitboard.merged_bitboard
@@ -2041,7 +2073,7 @@ impl Rule {
 		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
 
 		if count > 0 {
-			let p = from - 8 * count;
+			let p = from + 8 * count;
 
 			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
 				return Some(p as Square);
@@ -2055,7 +2087,7 @@ impl Rule {
 		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
 
 		if count > 0 {
-			let p = from + 8 * count;
+			let p = from - 8 * count;
 
 			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
 				return Some(p as Square);
@@ -2086,7 +2118,10 @@ impl Rule {
 	}
 
 	pub fn win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,opponent_ou_bitboard:BitBoard,diag_bitboard:BitBoard,from:u32,kind:KomaKind
+		self_occupied:BitBoard,
+		opponent_ou_bitboard:BitBoard,
+		diag_bitboard:BitBoard,
+		from:u32,kind:KomaKind
 	) -> Option<Square> {
 		let opponent_ou_bitboard_raw = unsafe {
 			opponent_ou_bitboard.merged_bitboard
@@ -2101,7 +2136,7 @@ impl Rule {
 		if count > 0 {
 			let p = from + 10 * count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2113,9 +2148,9 @@ impl Rule {
 		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
 
 		if count > 0 {
-			let p = from + 8 * count;
+			let p = from - 8 * count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2127,9 +2162,9 @@ impl Rule {
 		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
 
 		if count > 0 {
-			let p = from - 8 * count;
+			let p = from + 8 * count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2143,7 +2178,7 @@ impl Rule {
 		if count > 0 {
 			let p = from - 10 * count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2159,7 +2194,11 @@ impl Rule {
 
 
 	pub fn win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,opponent_ou_bitboard:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
+		self_occupied:BitBoard,
+		opponent_ou_bitboard:BitBoard,
+		bitboard:BitBoard,
+		rotate_bitboard:BitBoard,
+		from:u32,kind:KomaKind
 	) -> Option<Square> {
 		let opponent_ou_bitboard_raw = unsafe {
 			opponent_ou_bitboard.merged_bitboard
@@ -2217,7 +2256,11 @@ impl Rule {
 	}
 
 	pub fn win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,opponent_ou_bitboard:BitBoard,bitboard:BitBoard,rotate_bitboard:BitBoard,from:u32,kind:KomaKind
+		self_occupied:BitBoard,
+		opponent_ou_bitboard:BitBoard,
+		bitboard:BitBoard,
+		rotate_bitboard:BitBoard,
+		from:u32,kind:KomaKind
 	) -> Option<Square> {
 		let opponent_ou_bitboard_raw = unsafe {
 			opponent_ou_bitboard.merged_bitboard
@@ -2230,7 +2273,7 @@ impl Rule {
 		if count > 0 {
 			let p = from + count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2240,7 +2283,7 @@ impl Rule {
 		if count > 0 {
 			let p = from - count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2250,7 +2293,7 @@ impl Rule {
 		if count > 0 {
 			let p = from + 9 * count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2260,7 +2303,7 @@ impl Rule {
 		if count > 0 {
 			let p = from - 9 * count;
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2311,7 +2354,7 @@ impl Rule {
 		if count > 0 {
 			let p = from + count;
 
-			if opponent_ou_bitboard & (1 << (p + 1)) != 0 {
+			if opponent_ou_bitboard & (1 << (80 - p + 1)) != 0 {
 				return Some(p as Square);
 			}
 		}
@@ -2333,14 +2376,17 @@ impl Rule {
 		let from = x * 9 + y;
 
 		let (nari_mask,deny_move_mask) = match kind {
-			SFu | SKyou => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1),
-			SKei => (SENTE_NARI_MASK << 1,DENY_MOVE_SENTE_KEI_MASK << 1),
-			SGin | SHisha | SKaku => (SENTE_NARI_MASK << 1,0),
-			GFu | GKyou => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_FU_AND_KYOU_MASK << 1),
-			GKei => (GOTE_NARI_MASK << 1,DENY_MOVE_GOTE_KEI_MASK << 1),
-			GGin | GHisha | GKaku => (GOTE_NARI_MASK << 1,0),
+			SFu | SKyou => (SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK),
+			SKei => (SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK),
+			SGin | SHisha | SKaku => (SENTE_NARI_MASK,0),
+			GFu | GKyou => (GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK),
+			GKei => (GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK),
+			GGin | GHisha | GKaku => (GOTE_NARI_MASK,0),
 			SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN |
-			GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN | Blank => {
+			GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN => {
+				(0,0)
+			},
+			Blank => {
 				return;
 			}
 		};
@@ -2369,19 +2415,7 @@ impl Rule {
 				if let Some(p) = Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 					t,self_bitboard,ou_position_board,from,kind
 				) {
-					let to = p as u32;
-
-					let to_mask = 1 << (to + 1);
-
-					let o = Some(ObtainKind::Ou);
-
-					if nari_mask & to_mask != 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
-					}
-
-					if deny_move_mask & to_mask == 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
-					}
+					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,t == Teban::Gote, mvs);
 				}
 			},
 			SKyou if t == Teban::Sente => {
@@ -2390,19 +2424,7 @@ impl Rule {
 				if let Some(p) = Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
 					self_bitboard, ou_position_board, bitboard, from
 				) {
-					let to = p as u32;
-
-					let to_mask = 1 << (to + 1);
-
-					let o = Some(ObtainKind::Ou);
-
-					if nari_mask & to_mask != 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
-					}
-
-					if deny_move_mask & to_mask == 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
-					}
+					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			}
 			SKaku | SKakuN if t == Teban::Sente => {
@@ -2410,16 +2432,7 @@ impl Rule {
 					self_bitboard, ou_position_board,
 					state.part.diag_board, from, kind
 				) {
-					let to = p as u32;
-
-					let to_mask = 1 << (to + 1);
-
-					let o = Some(ObtainKind::Ou);
-
-					if kind == SKaku && nari_mask & to_mask != 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
-					}
-					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			SHisha | SHishaN if t == Teban::Sente => {
@@ -2430,16 +2443,7 @@ impl Rule {
 					ou_position_board,
 					bitboard, state.part.rotate_board, from, kind
 				) {
-					let to = p as u32;
-
-					let to_mask = 1 << (to + 1);
-
-					let o = Some(ObtainKind::Ou);
-
-					if kind == SHisha && nari_mask & to_mask != 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
-					}
-					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			GKyou if t == Teban::Gote => {
@@ -2448,19 +2452,7 @@ impl Rule {
 				if let Some(p) = Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
 					self_bitboard, ou_position_board, bitboard, from
 				) {
-					let to = p as u32;
-
-					let to_mask = 1 << (to + 1);
-
-					let o = Some(ObtainKind::Ou);
-
-					if nari_mask & to_mask != 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
-					}
-
-					if deny_move_mask & to_mask == 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
-					}
+					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			GKaku | GKakuN if t == Teban::Gote => {
@@ -2469,16 +2461,7 @@ impl Rule {
 					ou_position_board,
 					state.part.diag_board, from, kind
 				) {
-					let to = p as u32;
-
-					let to_mask = 1 << (to + 1);
-
-					let o = Some(ObtainKind::Ou);
-
-					if kind == GKaku && nari_mask & to_mask != 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
-					}
-					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			GHisha | GHishaN if t == Teban::Gote => {
@@ -2489,17 +2472,7 @@ impl Rule {
 					ou_position_board,
 					bitboard, state.part.rotate_board, from, kind
 				) {
-					let to = p as u32;
-
-					let to_mask = 1 << (to + 1);
-
-					let o = Some(ObtainKind::Ou);
-
-					if kind == GHisha && nari_mask & to_mask != 0 {
-						mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
-					}
-
-					mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			_ => (),
