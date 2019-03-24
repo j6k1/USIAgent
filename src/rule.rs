@@ -3376,7 +3376,7 @@ impl Rule {
 
 						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GKaku || kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p -= 10;
@@ -3402,7 +3402,7 @@ impl Rule {
 
 						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GKaku || kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p += 10;
@@ -3432,7 +3432,7 @@ impl Rule {
 
 						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GKaku || kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p += 8;
@@ -3458,7 +3458,7 @@ impl Rule {
 
 						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GKaku || kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p -= 8;
@@ -3492,7 +3492,7 @@ impl Rule {
 
 						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GHisha || kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p -= 1;
@@ -3518,7 +3518,7 @@ impl Rule {
 
 						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GHisha || kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p += 1;
@@ -3545,7 +3545,7 @@ impl Rule {
 
 						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GHisha || kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p -= 9;
@@ -3571,7 +3571,7 @@ impl Rule {
 
 						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
+						} else if (kind == GHisha || kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p += 9;
