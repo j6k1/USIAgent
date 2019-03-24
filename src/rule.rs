@@ -2848,56 +2848,58 @@ impl Rule {
 						};
 
 						if obtained {
+							let obtained_mask = !to_mask;
+
 							if kind < GFu {
 								ps.gote_fu_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_fu_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.gote_fu_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.gote_kyou_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_kyou_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.gote_kyou_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.gote_hisha_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_hisha_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.gote_hisha_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.gote_kaku_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_kaku_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.gote_kaku_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.gote_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_ou_position_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.gote_ou_position_board.merged_bitboard & obtained_mask
 									}
 								};
 							} else if kind < Blank {
 								ps.sente_fu_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.sente_fu_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.sente_fu_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.sente_kyou_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.sente_kyou_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.sente_kyou_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.sente_hisha_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.sente_hisha_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.sente_hisha_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.sente_kaku_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.sente_kaku_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.sente_kaku_board.merged_bitboard & obtained_mask
 									}
 								};
 								ps.sente_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.sente_ou_position_board.merged_bitboard & !to_mask
+										merged_bitboard: ps.sente_ou_position_board.merged_bitboard & obtained_mask
 									}
 								};
 							}
