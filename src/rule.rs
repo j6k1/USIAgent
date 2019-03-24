@@ -1938,7 +1938,7 @@ impl Rule {
 					let sente_fu_bitboard = unsafe {
 						(state.part.sente_fu_board.merged_bitboard >> 1)
 					};
-					
+
 					(deny_move_bitboard,candidate_bitboard,sente_fu_bitboard)
 				},
 				Teban::Gote => {
@@ -2680,7 +2680,7 @@ impl Rule {
 						let to = m.dst();
 
 						let from_mask = 1 << (from + 1);
-						
+
 						let to_mask = 1 << (to + 1);
 
 						let inverse_from_mask = 1 << (80 - from + 1);
@@ -3293,75 +3293,59 @@ impl Rule {
 					SKyou | SHisha | SKaku | GKyou | GHisha | GKaku | Blank => (),
 				}
 
-				let self_occupied = if kind < GFu {
-					state.part.sente_self_board
-				} else if kind < Blank {
-					state.part.gote_self_board
-				} else {
-					return false;
-				};
-
 				let self_occupied = unsafe { self_occupied.merged_bitboard };
 
 				match kind {
 					SKyou | GKyou => {
 						let from = m.src();
-						let to = m.dst();
+						let to = m.dst() as i32;
 
 						let (x,y) = from.square_to_point();
 
 						let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
-						let count = Rule::calc_forward_move_repeat_count(bitboard,x,y);
+						let count = if kind == SKyou {
+							Rule::calc_forward_move_repeat_count(bitboard,x,y)
+						} else {
+							Rule::calc_back_move_repeat_count(bitboard,x,y)
+						};
 
-						let mut p = from;
+						let offset = if kind == SKyou {
+							-1 as i32
+						} else {
+							1 as i32
+						};
 
-						for _ in 0..(count - 1) {
-							p -= 1;
+						let mut p = from as i32;
 
-							if p == to {
-								return true;
-							} else if p < to {
-								return false;
+						if kind == SKyou {
+							for _ in 0..(count - 1) {
+								p += offset;
+
+								if p == to {
+									return true;
+								} else if p < to {
+									return false;
+								}
+							}
+						} else {
+							for _ in 0..(count - 1) {
+								p += offset;
+
+								if p == to {
+									return true;
+								} else if p > to {
+									return false;
+								}
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if kind == SKyou && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if kind == GKyou && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
-							p -= 1;
-
-							if p == to {
-								return true;
-							}
-						}
-
-						let count = Rule::calc_back_move_repeat_count(bitboard,x,y);
-
-						let mut p = from;
-
-						for _ in 0..(count - 1) {
-							p += 1;
-
-							if p == to {
-								return true;
-							} else if p > to {
-								return false;
-							}
-						}
-
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
-						} else {
-							p += 1;
+							p += offset;
 
 							if p == to {
 								return true;
@@ -3390,11 +3374,9 @@ impl Rule {
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p -= 10;
@@ -3418,11 +3400,9 @@ impl Rule {
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p += 10;
@@ -3441,23 +3421,21 @@ impl Rule {
 						let mut p = from;
 
 						for _ in 0..(count - 1) {
-							p -= 8;
+							p += 8;
 
 							if p == to {
 								return true;
-							} else if p < to {
+							} else if p > to {
 								return false;
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
-							p -= 8;
+							p += 8;
 
 							if p == to {
 								return true;
@@ -3469,23 +3447,21 @@ impl Rule {
 						let mut p = from;
 
 						for _ in 0..(count - 1) {
-							p += 8;
+							p -= 8;
 
 							if p == to {
 								return true;
-							} else if p > to {
+							} else if p < to {
 								return false;
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if (kind == SKaku || kind == SKakuN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GKaku &|| kind == GKakuN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
-							p += 8;
+							p -= 8;
 
 							if p == to {
 								return true;
@@ -3514,11 +3490,9 @@ impl Rule {
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p -= 1;
@@ -3542,11 +3516,9 @@ impl Rule {
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p += 1;
@@ -3570,11 +3542,10 @@ impl Rule {
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+
+						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p -= 9;
@@ -3598,11 +3569,9 @@ impl Rule {
 							}
 						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
+						if (kind == SHisha || kind == SHishaN) && self_occupied & (1 << (p + 1)) != 1 {
 							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
+						} else if (kind == GHisha &|| kind == GHishaN) && self_occupied & (1 << (80 - p + 1)) != 1 {
 							return false;
 						} else {
 							p += 9;
@@ -3799,8 +3768,7 @@ impl Rule {
 			return false;
 		}
 
-		let ox = p / 9;
-		let oy = p - ox * 9;
+		let (_,oy) = p.square_to_point();
 
 		match &state.banmen {
 			&Banmen(ref kinds) => {
@@ -4004,8 +3972,7 @@ impl Rule {
 		match m {
 			AppliedMove::Put(m) => {
 				let to = m.dst();
-				let dx = to / 9;
-				let dy = to - dx * 9;
+				let (dx,dy) = to.square_to_point();
 
 				let kind = match &state.banmen {
 					&Banmen(ref kinds) => kinds[dy as usize][dx as usize]
@@ -4041,7 +4008,7 @@ impl Rule {
 				match teban {
 					Teban::Sente => {
 						let to = m.dst();
-						let bitboard = unsafe { state.part.gote_ou_position_board.merged_bitboard };
+						let bitboard = unsafe { state.part.sente_ou_position_board.merged_bitboard };
 
 						let to_mask = 1 << (to + 1);
 
@@ -4049,9 +4016,9 @@ impl Rule {
 					},
 					Teban::Gote => {
 						let to = m.dst();
-						let bitboard = unsafe { state.part.sente_ou_position_board.merged_bitboard };
+						let bitboard = unsafe { state.part.gote_ou_position_board.merged_bitboard };
 
-						let to_mask = 1 << (to + 1);
+						let to_mask = 1 << (80 - to + 1);
 
 						bitboard & to_mask != 0
 					}
@@ -4285,7 +4252,7 @@ impl Rule {
 								}
 							}
 						} else {
-							kinds[sy as usize][sx as usize]
+							kinds[y as usize][x as usize]
 						};
 
 						if Rule::is_mate_with_partial_state_and_point_and_kind(
