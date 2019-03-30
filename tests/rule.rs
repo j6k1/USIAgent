@@ -8829,7 +8829,7 @@ fn test_oute_only_moves_win_only_result_none_moves_with_kyou_occupied_self_gote(
 	}
 }
 #[test]
-fn test_oute_only_moves_moves_with_kyou_occupied_opponent_sente() {
+fn test_oute_only_moves_with_kyou_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 2] = [
@@ -8851,10 +8851,16 @@ fn test_oute_only_moves_moves_with_kyou_occupied_opponent_sente() {
 		banmen.0[p.1][p.0] = SKyou;
 		banmen.0[o.1][o.0] = GFu;
 
-		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((p.1 as u32, p.0 as u32),(o.1 as u32, o.0 as u32, true),Some(ObtainKind::Fu)),
-			((p.1 as u32, p.0 as u32),(o.1 as u32, o.0 as u32, false),Some(ObtainKind::Fu)),
-		];
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = if p.1 <= 2 || o.1 <= 2 {
+			vec![
+				((p.0 as u32, p.1 as u32),(o.0 as u32, o.1 as u32, true),Some(ObtainKind::Fu)),
+				((p.0 as u32, p.1 as u32),(o.0 as u32, o.1 as u32, false),Some(ObtainKind::Fu)),
+			]
+		} else {
+			vec![
+				((p.0 as u32, p.1 as u32),(o.0 as u32, o.1 as u32, false),Some(ObtainKind::Fu))
+			]
+		};
 
 		assert_eq!(answer.into_iter().map(|m| {
 				LegalMove::from(m)
@@ -8866,7 +8872,7 @@ fn test_oute_only_moves_moves_with_kyou_occupied_opponent_sente() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kyou_occupied_opponent_gote() {
+fn test_oute_only_moves_with_kyou_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 2] = [
@@ -8888,10 +8894,16 @@ fn test_oute_only_moves_none_moves_with_kyou_occupied_opponent_gote() {
 		banmen.0[8-p.1][8-p.0] = GKyou;
 		banmen.0[8-o.1][8-o.0] = SFu;
 
-		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((8-p.1 as u32, 8-p.0 as u32),(8-o.1 as u32, 8-o.0 as u32,true),Some(ObtainKind::Fu)),
-			((8-p.1 as u32, 8-p.0 as u32),(8-o.1 as u32, 8-o.0 as u32,false),Some(ObtainKind::Fu)),
-		];
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = if (8 - p.1) >= 6 || (8 - o.1) >= 6 {
+			vec![
+				((8-p.0 as u32, 8-p.1 as u32),(8-o.0 as u32, 8-o.1 as u32,true),Some(ObtainKind::Fu)),
+				((8-p.0 as u32, 8-p.1 as u32),(8-o.0 as u32, 8-o.1 as u32,false),Some(ObtainKind::Fu)),
+			]
+		} else {
+			vec![
+				((8-p.0 as u32, 8-p.1 as u32),(8-o.0 as u32, 8-o.1 as u32,false),Some(ObtainKind::Fu))
+			]
+		};
 
 		assert_eq!(answer.into_iter().map(|m| {
 				LegalMove::from(m)
@@ -9269,7 +9281,7 @@ fn test_oute_only_moves_win_only_result_none_moves_with_hisha_occupied_self_gote
 	}
 }
 #[test]
-fn test_oute_only_moves_moves_with_hisha_occupied_opponent_sente() {
+fn test_oute_only_moves_with_hisha_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 4] = [
@@ -9291,10 +9303,16 @@ fn test_oute_only_moves_moves_with_hisha_occupied_opponent_sente() {
 		banmen.0[p.1][p.0] = SHisha;
 		banmen.0[o.1][o.0] = GFu;
 
-		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((p.1 as u32, p.0 as u32),(o.1 as u32, o.0 as u32, true),Some(ObtainKind::Fu)),
-			((p.1 as u32, p.0 as u32),(o.1 as u32, o.0 as u32, false),Some(ObtainKind::Fu)),
-		];
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = if p.1 <= 2 || o.1 <= 2 {
+			vec![
+				((p.0 as u32, p.1 as u32),(o.0 as u32, o.1 as u32, true),Some(ObtainKind::Fu)),
+				((p.0 as u32, p.1 as u32),(o.0 as u32, o.1 as u32, false),Some(ObtainKind::Fu)),
+			]
+		} else {
+			vec![
+				((p.0 as u32, p.1 as u32),(o.0 as u32, o.1 as u32, false),Some(ObtainKind::Fu))
+			]	
+		};
 
 		assert_eq!(answer.into_iter().map(|m| {
 				LegalMove::from(m)
@@ -9306,7 +9324,7 @@ fn test_oute_only_moves_moves_with_hisha_occupied_opponent_sente() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_occupied_opponent_gote() {
+fn test_oute_only_moves_with_hisha_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 4] = [
@@ -9328,10 +9346,16 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_opponent_gote() {
 		banmen.0[8-p.1][8-p.0] = GHisha;
 		banmen.0[8-o.1][8-o.0] = SFu;
 
-		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((8-p.1 as u32, 8-p.0 as u32),(8-o.1 as u32, 8-o.0 as u32,true),Some(ObtainKind::Fu)),
-			((8-p.1 as u32, 8-p.0 as u32),(8-o.1 as u32, 8-o.0 as u32,false),Some(ObtainKind::Fu)),
-		];
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = if (8 - p.1) >= 6 || (8 - o.1) >= 6 {
+			vec![
+				((8-p.0 as u32, 8-p.1 as u32),(8-o.0 as u32, 8-o.1 as u32,true),Some(ObtainKind::Fu)),
+				((8-p.0 as u32, 8-p.1 as u32),(8-o.0 as u32, 8-o.1 as u32,false),Some(ObtainKind::Fu)),
+			]
+		} else {
+			vec![
+				((8-p.0 as u32, 8-p.1 as u32),(8-o.0 as u32, 8-o.1 as u32,false),Some(ObtainKind::Fu))
+			]
+		};
 
 		assert_eq!(answer.into_iter().map(|m| {
 				LegalMove::from(m)
@@ -9511,7 +9535,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_sente() {
 	];
 
 	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(1,2),(7,6),(1,6),(1,7)
+		(1,3),(7,5),(1,6),(1,7)
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
@@ -9525,10 +9549,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_sente() {
 		banmen.0[p.1][p.0] = SHishaN;
 		banmen.0[o.1][o.0] = SFu;
 
-		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((p.1 as u32, p.0 as u32),(o.1 as u32, o.0 as u32, true),Some(ObtainKind::Fu)),
-			((p.1 as u32, p.0 as u32),(o.1 as u32, o.0 as u32, false),Some(ObtainKind::Fu)),
-		];
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
 		assert_eq!(answer.into_iter().map(|m| {
 				LegalMove::from(m)
@@ -9548,7 +9569,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_gote() {
 	];
 
 	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(1,2),(7,6),(1,6),(1,7)
+		(1,3),(7,5),(1,6),(1,7)
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
@@ -9562,10 +9583,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_gote() {
 		banmen.0[8-p.1][8-p.0] = GHishaN;
 		banmen.0[8-o.1][8-o.0] = GFu;
 
-		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((8-t.1 as u32,8-t.0 as u32),(8-o.1 as u32, 8-o.0 as u32,true), Some(ObtainKind::Fu)),
-			((8-t.1 as u32,8-t.0 as u32),(8-o.1 as u32, 8-o.0 as u32,false), Some(ObtainKind::Fu)),
-		];
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
 		assert_eq!(answer.into_iter().map(|m| {
 				LegalMove::from(m)
@@ -9577,7 +9595,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_gote() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_opponent_sente() {
+fn test_oute_only_moves_with_hisha_nari_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 4] = [
@@ -9600,8 +9618,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_opponent_sente() {
 		banmen.0[o.1][o.0] = GFu;
 
 		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((p.1 as u32,p.0 as u32),(o.1 as u32,o.0 as u32,true),Some(ObtainKind::Fu)),
-			((p.1 as u32,p.0 as u32),(o.1 as u32,o.0 as u32,false),Some(ObtainKind::Fu)),
+			((p.0 as u32,p.1 as u32),(o.0 as u32,o.1 as u32,false),Some(ObtainKind::Fu))
 		];
 
 		assert_eq!(answer.into_iter().map(|m| {
@@ -9614,7 +9631,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_opponent_sente() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_opponent_gote() {
+fn test_oute_only_moves_with_hisha_nari_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 4] = [
@@ -9636,9 +9653,8 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_opponent_gote() {
 		banmen.0[8-p.1][8-p.0] = GHishaN;
 		banmen.0[8-o.1][8-o.0] = SFu;
 
-		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
-			((8-p.1 as u32,8-p.0 as u32),(8-o.1 as u32,8-o.0 as u32,true),Some(ObtainKind::Fu)),
-			((8-p.1 as u32,8-p.0 as u32),(8-o.1 as u32,8-o.0 as u32,false),Some(ObtainKind::Fu)),
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> =	vec![
+			((8-p.0 as u32,8-p.1 as u32),(8-o.0 as u32,8-o.1 as u32,false),Some(ObtainKind::Fu)),
 		];
 
 		assert_eq!(answer.into_iter().map(|m| {
