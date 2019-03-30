@@ -2751,7 +2751,7 @@ impl Rule {
 							SOu => {
 								ps.gote_opponent_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard ^ (from_mask | to_mask)
+										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard ^ (inverse_from_mask | inverse_to_mask)
 									}
 								};
 							},
@@ -2794,58 +2794,6 @@ impl Rule {
 							GKei | GGin | GKin | GFuN | GKyouN | GKeiN | GGinN => (),
 							Blank => (),
 						}
-
-						let (dx,dy) = to.square_to_point();
-
-						let from_mask = 1 << (sy * 9 + sx + 1);
-
-						let to_mask = 1 << (dy * 9 + dx + 1);
-
-						ps.rotate_board = unsafe {
-							BitBoard {
-								merged_bitboard: (ps.rotate_board.merged_bitboard ^ from_mask) | to_mask
-							}
-						};
-
-						let from_l = DIAG_LEFT_ROTATE_MAP[from as usize];
-
-						let from_mask_l = if from_l < 0 {
-							0
-						} else {
-							1 << from_l
-						};
-
-						let to_l = DIAG_LEFT_ROTATE_MAP[to as usize];
-
-						let to_mask_l = if to_l < 0 {
-							0
-						} else {
-							1 << to_l
-						};
-
-						let from_r = DIAG_RIGHT_ROTATE_MAP[from as usize];
-
-						let from_mask_r = if from_r < 0 {
-							0
-						} else {
-							1 << (from_r + 64)
-						};
-
-						let to_r = DIAG_RIGHT_ROTATE_MAP[to as usize];
-
-						let to_mask_r = if to_r < 0 {
-							0
-						} else {
-							1 << (to_r + 64)
-						};
-
-						ps.diag_board = unsafe {
-							BitBoard {
-								merged_bitboard: ps.diag_board.merged_bitboard ^ (
-									from_mask_l |from_mask_r
-								) | (to_mask_l | to_mask_r)
-							}
-						};
 
 						if obtained {
 							let obtained_mask = !to_mask;
@@ -2899,11 +2847,63 @@ impl Rule {
 								};
 								ps.gote_opponent_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & obtained_mask
+										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & !inverse_to_mask
 									}
 								};
 							}
 						}
+
+						let (dx,dy) = to.square_to_point();
+
+						let from_mask = 1 << (sy * 9 + sx + 1);
+
+						let to_mask = 1 << (dy * 9 + dx + 1);
+
+						ps.rotate_board = unsafe {
+							BitBoard {
+								merged_bitboard: (ps.rotate_board.merged_bitboard ^ from_mask) | to_mask
+							}
+						};
+
+						let from_l = DIAG_LEFT_ROTATE_MAP[from as usize];
+
+						let from_mask_l = if from_l < 0 {
+							0
+						} else {
+							1 << from_l
+						};
+
+						let to_l = DIAG_LEFT_ROTATE_MAP[to as usize];
+
+						let to_mask_l = if to_l < 0 {
+							0
+						} else {
+							1 << to_l
+						};
+
+						let from_r = DIAG_RIGHT_ROTATE_MAP[from as usize];
+
+						let from_mask_r = if from_r < 0 {
+							0
+						} else {
+							1 << (from_r + 64)
+						};
+
+						let to_r = DIAG_RIGHT_ROTATE_MAP[to as usize];
+
+						let to_mask_r = if to_r < 0 {
+							0
+						} else {
+							1 << (to_r + 64)
+						};
+
+						ps.diag_board = unsafe {
+							BitBoard {
+								merged_bitboard: ps.diag_board.merged_bitboard ^ (
+									from_mask_l |from_mask_r
+								) | (to_mask_l | to_mask_r)
+							}
+						};
 					},
 					AppliedMove::Put(m) => {
 						let to = m.dst();
@@ -4081,26 +4081,26 @@ impl Rule {
 		(match kind {
 			SFu | SKei | SGin | SKin | SOu | SFuN | SKyouN | SKeiN | SGinN if t == Teban::Sente => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					t,state.sente_self_board,state.gote_opponent_ou_position_board,from,kind
+					t,state.sente_self_board,state.sente_opponent_ou_position_board,from,kind
 				)
 			},
 			SKyou if t == Teban::Sente => {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
-					state.sente_self_board, state.gote_opponent_ou_position_board, bitboard, from
+					state.sente_self_board, state.sente_opponent_ou_position_board, bitboard, from
 				)
 			}
 			SKaku | SKakuN if t == Teban::Sente => {
 				Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
-					state.sente_self_board, state.gote_opponent_ou_position_board, state.diag_board, from, kind
+					state.sente_self_board, state.sente_opponent_ou_position_board, state.diag_board, from, kind
 				)
 			},
 			SHisha | SHishaN if t == Teban::Sente => {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
-					state.sente_self_board, state.gote_opponent_ou_position_board, bitboard, state.rotate_board, from, kind
+					state.sente_self_board, state.sente_opponent_ou_position_board, bitboard, state.rotate_board, from, kind
 				)
 			},
 			GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN if t == Teban::Gote => {
@@ -4112,19 +4112,19 @@ impl Rule {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
-					state.gote_self_board, state.sente_opponent_ou_position_board, bitboard, from
+					state.gote_self_board, state.gote_opponent_ou_position_board, bitboard, from
 				)
 			},
 			GKaku | GKakuN if t == Teban::Gote => {
 				Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
-					state.gote_self_board, state.sente_opponent_ou_position_board, state.diag_board, from, kind
+					state.gote_self_board, state.gote_opponent_ou_position_board, state.diag_board, from, kind
 				)
 			},
 			GHisha | GHishaN if t == Teban::Gote => {
 				let bitboard = state.sente_self_board | state.sente_opponent_board;
 
 				Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
-					state.gote_self_board, state.sente_opponent_ou_position_board, bitboard, state.rotate_board, from, kind
+					state.gote_self_board, state.gote_opponent_ou_position_board, bitboard, state.rotate_board, from, kind
 				)
 			},
 			_ => None,
