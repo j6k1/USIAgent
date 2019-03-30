@@ -831,10 +831,11 @@ impl Rule {
 		};
 
 		let to_mask = 1 << to;
+		let from_mask = 1 << from;
 
 		let nari = kind.is_nari();
 
-		if !nari && nari_mask & to_mask != 0 {
+		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
 			mvs.push(move_builder(from, to, true));
 		}
 
@@ -861,12 +862,13 @@ impl Rule {
 		};
 
 		let to_mask = 1 << to;
+		let from_mask = 1 << from;
 
 		let nari = kind.is_nari();
 
 		let o = Some(ObtainKind::Ou);
 
-		if !nari && nari_mask & to_mask != 0 {
+		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
 			mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
 		}
 
