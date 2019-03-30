@@ -8829,10 +8829,6 @@ fn test_oute_only_moves_win_only_result_some_moves_with_hisha_nari_gote() {
 	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8-4),(8-4,8),(0,8-4),(8-4,0),(8-3,8-5),(8-5,8-5),(8-3,8-3),(8-5,8-3)],GHishaN,false)
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-0,8-3),(8-3,8-0),(8-8,8-5),(8-5,8-8)],GHisha)
-}
-#[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_hisha_gote() {
 	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-0,8-2),(8-4,8-0),(8-8,8-2),(8-4,8-8)],GHisha,true)
 }
@@ -9145,6 +9141,10 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_gote() {
 #[test]
 fn test_oute_only_moves_none_moves_with_hisha_sente() {
 	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(0,3),(3,0),(8,5),(5,8)],SHisha)
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_gote() {
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-0,8-3),(8-3,8-0),(8-8,8-5),(8-5,8-8)],GHisha)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_hisha_occupied_self_sente() {
