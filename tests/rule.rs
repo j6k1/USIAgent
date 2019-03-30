@@ -10210,7 +10210,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 								},
 								KomaKind::Blank => {
 									if  kind < SOu &&
-										kind != KomaKind::SKin && dy <= 2 {
+										kind != KomaKind::SKin && dy <= 2 || y <= 2 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10241,7 +10241,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 									};
 
 									if  kind < SOu &&
-										kind != KomaKind::SKin && dy <= 2 {
+										kind != KomaKind::SKin && dy <= 2 || y <= 2 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10275,7 +10275,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 								},
 								KomaKind::Blank => {
 									if  kind < KomaKind::SOu &&
-										kind != KomaKind::SKin && dy <= 2 {
+										kind != KomaKind::SKin && dy <= 2 || y <= 2 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10308,7 +10308,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 									};
 
 									if  kind < KomaKind::SOu &&
-										kind != KomaKind::SKin && dy <= 2 {
+										kind != KomaKind::SKin && dy <= 2 || y <= 2 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10349,7 +10349,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 								},
 								KomaKind::Blank => {
 									if  kind < KomaKind::GOu &&
-										kind != KomaKind::GKin && dy >= 6 {
+										kind != KomaKind::GKin && dy >= 6 || y >= 6 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10380,7 +10380,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 									};
 
 									if  kind < KomaKind::GOu &&
-										kind != KomaKind::GKin && dy >= 6 {
+										kind != KomaKind::GKin && dy >= 6 || y >= 6 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10416,7 +10416,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 								},
 								KomaKind::Blank => {
 									if  kind < KomaKind::GOu &&
-										kind != KomaKind::GKin && dy >= 6 {
+										kind != KomaKind::GKin && dy >= 6 || y >= 6 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10450,7 +10450,7 @@ fn legal_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:Koma
 									};
 
 									if  kind < KomaKind::GOu &&
-										kind != KomaKind::GKin && dy >= 6 {
+										kind != KomaKind::GKin && dy >= 6 || y >= 6 {
 
 										mvs.push(LegalMove::To(
 											KomaSrcPosition(9 - x as u32, (y + 1) as u32),
@@ -10843,7 +10843,7 @@ fn win_only_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:K
 						return mvs;
 					}
 
-					if ty < 3 {
+					if ty < 3 || y < 3 {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32 + 1),
@@ -10916,7 +10916,7 @@ fn win_only_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:K
 						return mvs;
 					}
 
-					if ty < 3 {
+					if ty < 3 || y < 3 {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32 + 1),
@@ -11204,7 +11204,7 @@ fn win_only_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:K
 						return mvs;
 					}
 
-					if ty >= 6 {
+					if ty >= 6 || y >= 6 {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32 + 1),
@@ -11277,7 +11277,7 @@ fn win_only_moves_with_point_and_kind(t:&Teban,banmen:&Banmen,x:u32,y:u32,kind:K
 						return mvs;
 					}
 
-					if ty >= 6 {
+					if ty >= 6 || y >= 6 {
 						mvs.push(
 							LegalMove::To(
 								KomaSrcPosition(9 - x as u32,y as u32 + 1),
