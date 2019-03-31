@@ -8987,6 +8987,76 @@ fn test_oute_only_moves_none_moves_with_kyou_gote() {
 	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-3,0),(8-5,0)],GKyou)
 }
 #[test]
+fn test_oute_only_moves_none_moves_with_kyou_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 2] = [
+		(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 2] = [
+		((0,6),(0,7)),((8,6),(8,7))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 2] = [
+		(0,0),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SKyou;
+		banmen.0[(o.0).1][(o.0).0] = SGin;
+		banmen.0[(o.1).1][(o.1).0] = SGin;
+
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_kyou_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 2] = [
+		(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 2] = [
+		((0,6),(0,7)),((8,6),(8,7))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 2] = [
+		(0,0),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GKyou;
+		banmen.0[8-(o.0).1][8-(o.0).0] = GGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = GGin;
+
+		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
 fn test_oute_only_moves_none_moves_with_kyou_nari_sente() {
 	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(2,2),(6,2),(4,7)],SKyouN)
 }
@@ -9135,6 +9205,134 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_gote() {
 	}
 }
 #[test]
+fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(7,1),(1,1),(7,7),(7,1)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SKaku;
+		banmen.0[o.1][o.0] = SFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(6,2),(2,2),(6,6),(6,2)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GKaku;
+		banmen.0[8-o.1][8-o.0] = GFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(6,2),(2,2),(6,6),(6,2)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SKaku;
+		banmen.0[o.1][o.0] = GFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(7,1),(1,1),(7,7),(7,1)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GKaku;
+		banmen.0[8-o.1][8-o.0] = SFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
 fn test_oute_only_moves_none_moves_with_hisha_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
@@ -9190,6 +9388,204 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_self_gote() {
 		banmen.0[8-p.1][8-p.0] = GHisha;
 		banmen.0[8-(o.0).1][8-(o.0).0] = GGin;
 		banmen.0[8-(o.1).1][8-(o.1).0] = GGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 5] = [
+		(1,8),(7,0),(1,0),(8,7),(0,7)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 5] = [
+		((1,3),(1,4)),((7,5),(7,4)),((1,5),(1,4)),((4,7),(3,7)),((4,7),(5,7))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 5] = [
+		(1,0),(7,8),(1,8),(0,7),(8,7)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SHisha;
+		banmen.0[(o.0).1][(o.0).0] = GGin;
+		banmen.0[(o.1).1][(o.1).0] = GGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 5] = [
+		(1,8),(7,0),(1,0),(8,7),(0,7)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 5] = [
+		((1,3),(1,4)),((7,5),(7,4)),((1,5),(1,4)),((4,7),(3,7)),((5,7),(4,7))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 5] = [
+		(1,0),(7,8),(1,8),(0,7),(8,7)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GHisha;
+		banmen.0[8-(o.0).1][8-(o.0).0] = SGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = SGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SHisha;
+		banmen.0[(o.0).1][(o.0).0] = SGin;
+		banmen.0[(o.1).1][(o.1).0] = SGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GHisha;
+		banmen.0[8-(o.0).1][8-(o.0).0] = GGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = GGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SHisha;
+		banmen.0[(o.0).1][(o.0).0] = GGin;
+		banmen.0[(o.1).1][(o.1).0] = GGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GHisha;
+		banmen.0[8-(o.0).1][8-(o.0).0] = SGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = SGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9331,6 +9727,134 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_gote() {
 	}
 }
 #[test]
+fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(7,1),(1,1),(7,7),(7,1)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SKakuN;
+		banmen.0[o.1][o.0] = SFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(6,2),(2,2),(6,6),(6,2)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GKakuN;
+		banmen.0[8-o.1][8-o.0] = GFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(6,2),(2,2),(6,6),(6,2)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SKakuN;
+		banmen.0[o.1][o.0] = GFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(0,8),(8,0),(8,8),(0,0),(0,8),(8,0),(8,8)
+	];
+
+	const OCC_POSITIONS:[(usize,usize); 8] = [
+		(1,1),(1,7),(7,1),(7,7),(7,1),(1,1),(7,7),(7,1)
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,0),(0,0),(8,8),(8,0),(8,0),(0,0),(8,8),(8,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GKakuN;
+		banmen.0[8-o.1][8-o.0] = SFu;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
 fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
@@ -9392,6 +9916,138 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_gote() {
 		assert_eq!(answer.into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SHishaN;
+		banmen.0[(o.0).1][(o.0).0] = SGin;
+		banmen.0[(o.1).1][(o.1).0] = SGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GHishaN;
+		banmen.0[8-(o.0).1][8-(o.0).0] = GGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = GGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[t.1][t.0] = GOu;
+		banmen.0[p.1][p.0] = SHishaN;
+		banmen.0[(o.0).1][(o.0).0] = GGin;
+		banmen.0[(o.1).1][(o.1).0] = GGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+#[test]
+fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(usize,usize); 8] = [
+		(0,0),(8,0),(0,8),(8,8),(0,0),(8,0),(0,8),(8,8)
+	];
+
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 8] = [
+		((0,1),(1,0)),((8,1),(7,0)),((0,1),(1,8)),((0,3),(3,0)),((5,8),(8,5)),((3,8),(0,5)),((5,0),(8,3)),((3,0),(0,3))
+	];
+
+	const OU_POSITIONS:[(usize,usize); 8] = [
+		(8,8),(0,8),(8,0),(0,0),(8,8),(0,8),(8,0),(0,0)
+	];
+
+	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-t.1][8-t.0] = SOu;
+		banmen.0[8-p.1][8-p.0] = GHishaN;
+		banmen.0[8-(o.0).1][8-(o.0).0] = SGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = SGin;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		assert_eq!(answer,
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
