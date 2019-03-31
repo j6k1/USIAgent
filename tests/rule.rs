@@ -8538,7 +8538,7 @@ fn test_win_only_moves_none_moves_with_hisha_nari_occupied_opponent_gote() {
 		);
 	}
 }
-fn test_oute_only_moves_win_only_result_some_moves_sente_impl(ox:u32,oy:u32,positions:Vec<(u32,u32)>,kind:KomaKind,nari:bool) {
+fn test_oute_only_moves_win_only_result_some_moves_sente_impl(ox:u32,oy:u32,positions:Vec<(u32,u32,bool)>,kind:KomaKind) {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	for p in &positions {
@@ -8548,7 +8548,7 @@ fn test_oute_only_moves_win_only_result_some_moves_sente_impl(ox:u32,oy:u32,posi
 
 		banmen.0[p.1 as usize][p.0 as usize] = kind;
 
-		let answer = if nari {
+		let answer = if p.2 {
 			vec![
 				((p.0,p.1),(ox,oy,true),Some(ObtainKind::Ou)),
 				((p.0,p.1),(ox,oy,false),Some(ObtainKind::Ou))
@@ -8566,7 +8566,7 @@ fn test_oute_only_moves_win_only_result_some_moves_sente_impl(ox:u32,oy:u32,posi
 		);
 	}
 }
-fn test_oute_only_moves_win_only_result_some_moves_gote_impl(ox:u32,oy:u32,positions:Vec<(u32,u32)>,kind:KomaKind,nari:bool) {
+fn test_oute_only_moves_win_only_result_some_moves_gote_impl(ox:u32,oy:u32,positions:Vec<(u32,u32,bool)>,kind:KomaKind) {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	for p in &positions {
@@ -8576,7 +8576,7 @@ fn test_oute_only_moves_win_only_result_some_moves_gote_impl(ox:u32,oy:u32,posit
 
 		banmen.0[p.1 as usize][p.0 as usize] = kind;
 
-		let answer = if nari {
+		let answer = if p.2 {
 			vec![
 				((p.0,p.1),(ox,oy,true),Some(ObtainKind::Ou)),
 				((p.0,p.1),(ox,oy,false),Some(ObtainKind::Ou))
@@ -8596,107 +8596,107 @@ fn test_oute_only_moves_win_only_result_some_moves_gote_impl(ox:u32,oy:u32,posit
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_fu_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5)],SFu,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5,false)],SFu)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_fu_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(4,3)],SFu,true)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(4,3,true)],SFu)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_fu_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5)],GFu,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5,false)],GFu)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_fu_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-4,8-3)],GFu,true)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-4,8-3,true)],GFu)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_gin_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5),(3,5),(5,5),(3,3),(5,3)],SGin,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5,false),(3,5,false),(5,5,false),(3,3,false),(5,3,false)],SGin)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_gin_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(4,3),(3,3),(5,3),(3,1),(5,1)],SGin,true)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(4,3,true),(3,3,true),(5,3,true),(3,1,true),(5,1,true)],SGin)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_gin_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5),(8-3,8-5),(8-5,8-5),(8-3,8-3),(8-5,8-3)],GGin,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5,false),(8-3,8-5,false),(8-5,8-5,false),(8-3,8-3,false),(8-5,8-3,false)],GGin)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_gin_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-4,8-3),(8-3,8-3),(8-5,8-3),(8-3,8-1),(8-5,8-1)],GGin,true)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-4,8-3,true),(8-3,8-3,true),(8-5,8-3,true),(8-3,8-1,true),(8-5,8-1,true)],GGin)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kin_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5),(3,5),(5,5),(3,4),(5,4),(4,3)],SKin,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5,false),(3,5,false),(5,5,false),(3,4,false),(5,4,false),(4,3,false)],SKin)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kin_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5),(8-3,8-5),(8-5,8-5),(8-3,8-4),(8-5,8-4),(8-4,8-3)],GKin,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5,false),(8-3,8-5,false),(8-5,8-5,false),(8-3,8-4,false),(8-5,8-4,false),(8-4,8-3,false)],GKin)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_ou_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5),(3,5),(5,5),(3,4),(5,4),(3,3),(4,3),(5,3)],SOu,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5,false),(3,5,false),(5,5,false),(3,4,false),(5,4,false),(3,3,false),(4,3,false),(5,3,false)],SOu)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_ou_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5),(8-3,8-5),(8-5,8-5),(8-3,8-4),(8-5,8-4),(8-3,8-3),(8-4,8-3),(8-5,8-3)],GOu,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5,false),(8-3,8-5,false),(8-5,8-5,false),(8-3,8-4,false),(8-5,8-4,false),(8-3,8-3,false),(8-4,8-3,false),(8-5,8-3,false)],GOu)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_fu_nari_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5),(3,5),(5,5),(3,4),(5,4),(4,3)],SFuN,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5,false),(3,5,false),(5,5,false),(3,4,false),(5,4,false),(4,3,false)],SFuN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_fu_nari_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5),(8-3,8-5),(8-5,8-5),(8-3,8-4),(8-5,8-4),(8-4,8-3)],GFuN,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5,false),(8-3,8-5,false),(8-5,8-5,false),(8-3,8-4,false),(8-5,8-4,false),(8-4,8-3,false)],GFuN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_gin_nari_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5),(3,5),(5,5),(3,4),(5,4),(4,3)],SGinN,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5,false),(3,5,false),(5,5,false),(3,4,false),(5,4,false),(4,3,false)],SGinN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_gin_nari_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5),(8-3,8-5),(8-5,8-5),(8-3,8-4),(8-5,8-4),(8-4,8-3)],GGinN,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5,false),(8-3,8-5,false),(8-5,8-5,false),(8-3,8-4,false),(8-5,8-4,false),(8-4,8-3,false)],GGinN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kyou_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,8)],SKyou,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,8,false)],SKyou)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_kyou_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(4,8)],SKyou,true)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(4,8,true)],SKyou)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kyou_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(4,0)],GKyou,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(4,0,false)],GKyou)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_kyou_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(4,0)],GKyou,true)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(4,0,true)],GKyou)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kyou_nari_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5),(3,5),(5,5),(3,4),(5,4),(4,3)],SKyouN,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(4,5,false),(3,5,false),(5,5,false),(3,4,false),(5,4,false),(4,3,false)],SKyouN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kyou_nari_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5),(8-3,8-5),(8-5,8-5),(8-3,8-4),(8-5,8-4),(8-4,8-3)],GKyouN,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-4,8-5,false),(8-3,8-5,false),(8-5,8-5,false),(8-3,8-4,false),(8-5,8-4,false),(8-4,8-3,false)],GKyouN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kei_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(3,6),(5,6)],SKei,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(3,6,false),(5,6,false)],SKei)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_kei_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(3,4),(5,4)],SKei,true)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(3,4,true),(5,4,true)],SKei)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kei_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-3,8-6)],GKei,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8-3,8-6,false)],GKei)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_kei_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-3,8-4),(8-5,8-4)],GKei,true)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-3,8-4,true),(8-5,8-4,true)],GKei)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kei_jump_over_wall_sente() {
@@ -8786,51 +8786,51 @@ fn test_oute_only_moves_win_only_result_some_moves_with_kei_jump_over_wall_gote(
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kaku_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,0),(0,8),(8,0),(8,8)],SKaku,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,0,true),(0,8,false),(8,0,true),(8,8,false)],SKaku)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_kaku_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(2,0),(2,4),(6,0),(6,4)],SKaku,true)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(2,0,true),(2,4,true),(6,0,true),(6,4,true)],SKaku)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kaku_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8),(8,0),(0,8),(0,0)],GKaku,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8,true),(8,0,false),(0,8,true),(0,0,false)],GKaku)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_kaku_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-2,8),(8-2,8-4),(8-6,8),(8-6,8-4)],GKaku,true)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-2,8,true),(8-2,8-4,true),(8-6,8,true),(8-6,8-4,true)],GKaku)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_hisha_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,4),(4,0),(8,4),(4,8)],SHisha,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,4,false),(4,0,true),(8,4,false),(4,8,false)],SHisha)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_hisha_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(0,2),(4,0),(8,2),(4,8)],SHisha,true)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,2,vec![(0,2,true),(4,0,true),(8,2,true),(4,8,true)],SHisha)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_hisha_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8-4),(8-4,8),(0,8-4),(8-4,0)],GHisha,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8-4,false),(8-4,8,true),(0,8-4,false),(8-4,0,false)],GHisha)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kaku_nari_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,0),(0,8),(8,0),(8,8),(4,5),(3,4),(5,4),(4,3)],SKakuN,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,0,false),(0,8,false),(8,0,false),(8,8,false),(4,5,false),(3,4,false),(5,4,false),(4,3,false)],SKakuN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_kaku_nari_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8),(8,0),(0,8),(0,0),(8-4,8-5),(8-3,8-4),(8-5,8-4),(8-4,8-3)],GKakuN,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8,false),(8,0,false),(0,8,false),(0,0,false),(8-4,8-5,false),(8-3,8-4,false),(8-5,8-4,false),(8-4,8-3,false)],GKakuN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_hisha_nari_sente() {
-	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,4),(4,0),(8,4),(4,8),(3,5),(5,5),(3,3),(5,3)],SHishaN,false)
+	test_oute_only_moves_win_only_result_some_moves_sente_impl(4,4,vec![(0,4,false),(4,0,false),(8,4,false),(4,8,false),(3,5,false),(5,5,false),(3,3,false),(5,3,false)],SHishaN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_some_moves_with_hisha_nari_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8-4),(8-4,8),(0,8-4),(8-4,0),(8-3,8-5),(8-5,8-5),(8-3,8-3),(8-5,8-3)],GHishaN,false)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,4,vec![(8,8-4,false),(8-4,8,false),(0,8-4,false),(8-4,0,false),(8-3,8-5,false),(8-5,8-5,false),(8-3,8-3,false),(8-5,8-3,false)],GHishaN)
 }
 #[test]
 fn test_oute_only_moves_win_only_result_nari_moves_with_hisha_gote() {
-	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-0,8-2),(8-4,8-0),(8-8,8-2),(8-4,8-8)],GHisha,true)
+	test_oute_only_moves_win_only_result_some_moves_gote_impl(4,8-2,vec![(8-0,8-2,true),(8-4,8-0,true),(8-8,8-2,true),(8-4,8-8,true)],GHisha)
 }
 fn test_oute_only_moves_none_moves_sente_impl(ox:u32,oy:u32,positions:Vec<(u32,u32)>,kind:KomaKind) {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
@@ -8936,47 +8936,47 @@ fn test_oute_only_moves_none_moves_with_kyou_occupied_self_gote() {
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_fu_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(3,5),(4,6),(5,5)],SFu)
+	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(3,5),(4,7),(5,5)],SFu)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_gin_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(4,3),(3,4),(5,4),(4,6)],SGin)
+	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(4,3),(1,4),(7,4),(4,7)],SGin)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_fu_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-3,8-5),(8-4,8-6),(8-5,8-5)],GFu)
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-3,8-5),(8-4,8-7),(8-5,8-5)],GFu)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_gin_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-4,8-3),(8-3,8-4),(8-5,8-4),(8-4,8-6)],GGin)
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-4,8-3),(8-1,8-4),(8-7,8-4),(8-4,8-7)],GGin)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_kin_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(3,3),(5,3),(4,6)],SKin)
+	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(2,2),(6,2),(4,7)],SKin)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_kin_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-3,8-3),(8-5,8-3),(8-4,8-6)],GKin)
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-2,8-2),(8-6,8-2),(8-4,8-7)],GKin)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_ou_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(4,6)],GOu)
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(4,7)],GOu)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_fu_nari_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(3,3),(5,3),(4,6)],SFuN)
+	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(2,2),(6,2),(4,7)],SFuN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_fu_nari_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-3,8-3),(8-5,8-3),(8-4,8-6)],GFuN)
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-2,8-2),(8-6,8-2),(8-4,8-7)],GFuN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_gin_nari_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(3,3),(5,3),(4,6)],SGinN)
+	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(2,2),(6,2),(4,7)],SGinN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_gin_nari_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-3,8-3),(8-5,8-3),(8-4,8-6)],GGinN)
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-2,8-2),(8-6,8-2),(8-4,8-7)],GGinN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_kyou_sente() {
@@ -8988,11 +8988,11 @@ fn test_oute_only_moves_none_moves_with_kyou_gote() {
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_kyou_nari_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(3,3),(5,3),(4,6)],SKyouN)
+	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(2,2),(6,2),(4,7)],SKyouN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_kyou_nari_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-3,8-3),(8-5,8-3),(8-4,8-6)],GKyouN)
+	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-2,8-2),(8-6,8-2),(8-4,8-7)],GKyouN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_kei_sente() {
@@ -9003,14 +9003,6 @@ fn test_oute_only_moves_none_moves_with_kei_gote() {
 	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(4,8-6)],GKei)
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(1,0),(0,7),(7,0),(7,8)],SKaku)
-}
-#[test]
-fn test_oute_only_moves_none_moves_with_kaku_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-1,8),(8,8-7),(8-7,8),(8-7,8)],GKaku)
-}
-#[test]
 fn test_oute_only_moves_none_moves_with_kaku_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
@@ -9018,12 +9010,12 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_self_sente() {
 		(0,0),(0,8),(8,0),(8,8)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(3,3),(3,5),(5,3),(5,5)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 4] = [
+		((1,1),(2,2)),((2,6),(3,5)),((7,1),(6,2)),((7,7),(6,6))
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
-		(4,4),(4,4),(4,4),(4,4)
+		(5,5),(2,6),(3,5),(3,3)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
@@ -9031,7 +9023,8 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_self_sente() {
 
 		banmen.0[t.1][t.0] = GOu;
 		banmen.0[p.1][p.0] = SKaku;
-		banmen.0[o.1][o.0] = SFu;
+		banmen.0[(o.0).1][(o.0).0] = SGin;
+		banmen.0[(o.1).1][(o.1).0] = SGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9050,12 +9043,12 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_self_gote() {
 		(0,0),(0,8),(8,0),(8,8)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(3,3),(3,5),(5,3),(5,5)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 4] = [
+		((1,1),(2,2)),((2,6),(3,5)),((7,1),(6,2)),((6,6),(5,5))
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
-		(4,4),(4,4),(4,4),(4,4)
+		(5,5),(7,1),(6,2),(2,2)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
@@ -9063,7 +9056,8 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_self_gote() {
 
 		banmen.0[8-t.1][8-t.0] = SOu;
 		banmen.0[8-p.1][8-p.0] = GKaku;
-		banmen.0[8-o.1][8-o.0] = GFu;
+		banmen.0[8-(o.0).1][8-(o.0).0] = GGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = GGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9082,12 +9076,12 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_sente() {
 		(0,0),(0,8),(8,0),(8,8)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(3,3),(3,5),(5,3),(5,5)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 4] = [
+		((2,2),(3,3)),((2,6),(3,5)),((5,3),(6,2)),((5,5),(6,6))
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
-		(4,4),(4,4),(4,4),(4,4)
+		(6,6),(6,2),(2,6),(2,2)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
@@ -9095,7 +9089,8 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_sente() {
 
 		banmen.0[t.1][t.0] = GOu;
 		banmen.0[p.1][p.0] = SKaku;
-		banmen.0[o.1][o.0] = GFu;
+		banmen.0[(o.0).1][(o.0).0] = GGin;
+		banmen.0[(o.1).1][(o.1).0] = GGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9114,8 +9109,8 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_gote() {
 		(0,0),(0,8),(8,0),(8,8)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(3,3),(5,3),(5,3),(5,5)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 4] = [
+		((3,3),(2,2)),((3,5),(2,6)),((5,3),(6,2)),((5,5),(6,6))
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
@@ -9127,7 +9122,8 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_gote() {
 
 		banmen.0[8-t.1][8-t.0] = SOu;
 		banmen.0[8-p.1][8-p.0] = GKaku;
-		banmen.0[8-o.1][8-o.0] = SFu;
+		banmen.0[8-(o.0).1][8-(o.0).0] = SGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = SGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9139,27 +9135,19 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_gote() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(0,3),(3,0),(8,5),(5,8)],SHisha)
-}
-#[test]
-fn test_oute_only_moves_none_moves_with_hisha_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-0,8-3),(8-3,8-0),(8-8,8-5),(8-5,8-8)],GHisha)
-}
-#[test]
 fn test_oute_only_moves_none_moves_with_hisha_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
-	const POSITIONS:[(usize,usize); 4] = [
-		(1,8),(7,0),(1,0),(8,7)
+	const POSITIONS:[(usize,usize); 5] = [
+		(1,8),(7,0),(1,0),(8,7),(0,7)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(1,2),(7,6),(1,6),(1,7)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 5] = [
+		((1,3),(1,4)),((7,5),(7,4)),((1,5),(1,4)),((4,7),(3,7)),((4,7),(5,7))
 	];
 
-	const OU_POSITIONS:[(usize,usize); 4] = [
-		(1,0),(7,8),(1,8),(0,7)
+	const OU_POSITIONS:[(usize,usize); 5] = [
+		(1,0),(7,8),(1,8),(0,7),(8,7)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
@@ -9167,7 +9155,8 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_self_sente() {
 
 		banmen.0[t.1][t.0] = GOu;
 		banmen.0[p.1][p.0] = SHisha;
-		banmen.0[o.1][o.0] = SFu;
+		banmen.0[(o.0).1][(o.0).0] = SGin;
+		banmen.0[(o.1).1][(o.1).0] = SGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9182,16 +9171,16 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_self_sente() {
 fn test_oute_only_moves_none_moves_with_hisha_occupied_self_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
-	const POSITIONS:[(usize,usize); 4] = [
-		(1,8),(7,0),(1,0),(8,7)
+	const POSITIONS:[(usize,usize); 5] = [
+		(1,8),(7,0),(1,0),(8,7),(0,7)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(1,2),(7,6),(1,6),(1,7)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 5] = [
+		((1,3),(1,4)),((7,5),(7,4)),((1,5),(1,4)),((4,7),(3,7)),((5,7),(4,7))
 	];
 
-	const OU_POSITIONS:[(usize,usize); 4] = [
-		(1,0),(7,8),(1,8),(0,7)
+	const OU_POSITIONS:[(usize,usize); 5] = [
+		(1,0),(7,8),(1,8),(0,7),(8,7)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
@@ -9199,7 +9188,8 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_self_gote() {
 
 		banmen.0[8-t.1][8-t.0] = SOu;
 		banmen.0[8-p.1][8-p.0] = GHisha;
-		banmen.0[8-o.1][8-o.0] = GFu;
+		banmen.0[8-(o.0).1][8-(o.0).0] = GGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = GGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9209,14 +9199,6 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_self_gote() {
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
-}
-#[test]
-fn test_oute_only_moves_none_moves_with_kaku_nari_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(1,0),(0,7),(7,0),(7,8),(4,6),(2,4),(6,4),(4,2)],SKakuN)
-}
-#[test]
-fn test_oute_only_moves_none_moves_with_kaku_nari_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-1,8),(8,8-7),(8-7,8),(8-7,8),(8-4,8-6),(8-2,8-4),(8-6,8-4),(8-4,8-2)],GKakuN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_self_sente() {
@@ -9290,8 +9272,8 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_sente() {
 		(0,0),(0,8),(8,0),(8,8)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(3,3),(3,5),(5,3),(5,5)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 4] = [
+		((3,3),(2,2)),((3,5),(2,6)),((5,3),(6,2)),((5,5),(6,6))
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
@@ -9303,7 +9285,8 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_sente() {
 
 		banmen.0[t.1][t.0] = GOu;
 		banmen.0[p.1][p.0] = SKakuN;
-		banmen.0[o.1][o.0] = GFu;
+		banmen.0[(o.0).1][(o.0).0] = GGin;
+		banmen.0[(o.1).1][(o.1).0] = GGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9322,8 +9305,8 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_gote() {
 		(0,0),(0,8),(8,0),(8,8)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(3,3),(5,3),(5,3),(5,5)
+	const OCC_POSITIONS:[((usize,usize),(usize,usize)); 4] = [
+		((3,3),(2,2)),((3,5),(2,6)),((5,3),(6,2)),((5,5),(6,6))
 	];
 
 	const OU_POSITIONS:[(usize,usize); 4] = [
@@ -9335,7 +9318,8 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_gote() {
 
 		banmen.0[8-t.1][8-t.0] = SOu;
 		banmen.0[8-p.1][8-p.0] = GKakuN;
-		banmen.0[8-o.1][8-o.0] = SFu;
+		banmen.0[8-(o.0).1][8-(o.0).0] = SGin;
+		banmen.0[8-(o.1).1][8-(o.1).0] = SGin;
 
 		let answer:Vec<LegalMove> = vec![];
 
@@ -9345,14 +9329,6 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_gote() {
 			}).collect::<Vec<LegalMove>>()
 		);
 	}
-}
-#[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_sente() {
-	test_oute_only_moves_none_moves_sente_impl(4,4,vec![(0,3),(3,0),(8,5),(5,8),(2,6),(6,6),(2,2),(6,2)],SHishaN)
-}
-#[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_gote() {
-	test_oute_only_moves_none_moves_gote_impl(4,4,vec![(8-0,8-3),(8-3,8-0),(8-8,8-5),(8-5,8-8),(8-2,8-6),(8-6,8-6),(8-2,8-2),(8-6,8-2)],GHishaN)
 }
 #[test]
 fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_sente() {
@@ -9555,16 +9531,16 @@ fn test_oute_only_moves_with_hisha_occupied_opponent_sente() {
 fn test_oute_only_moves_with_hisha_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
-	const POSITIONS:[(usize,usize); 4] = [
-		(1,8),(7,0),(1,0),(8,7)
+	const POSITIONS:[(usize,usize); 5] = [
+		(1,8),(7,0),(1,0),(8,7),(0,7)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(1,1),(7,7),(1,7),(7,7)
+	const OCC_POSITIONS:[(usize,usize); 5] = [
+		(1,1),(7,7),(1,7),(7,7),(1,7)
 	];
 
-	const OU_POSITIONS:[(usize,usize); 4] = [
-		(1,0),(7,8),(1,8),(0,7)
+	const OU_POSITIONS:[(usize,usize); 5] = [
+		(1,0),(7,8),(1,8),(0,7),(8,7)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
@@ -9598,16 +9574,16 @@ fn test_oute_only_moves_with_hisha_occupied_opponent_gote() {
 fn test_oute_only_moves_with_hisha_nari_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
-	const POSITIONS:[(usize,usize); 4] = [
-		(1,8),(7,0),(1,0),(8,7)
+	const POSITIONS:[(usize,usize); 5] = [
+		(1,8),(7,0),(1,0),(8,7),(0,7)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(1,1),(7,7),(1,7),(7,7)
+	const OCC_POSITIONS:[(usize,usize); 5] = [
+		(1,1),(7,7),(1,7),(7,7),(1,7)
 	];
 
-	const OU_POSITIONS:[(usize,usize); 4] = [
-		(1,0),(7,8),(1,8),(0,7)
+	const OU_POSITIONS:[(usize,usize); 5] = [
+		(1,0),(7,8),(1,8),(0,7),(8,7)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
@@ -9634,16 +9610,16 @@ fn test_oute_only_moves_with_hisha_nari_occupied_opponent_sente() {
 fn test_oute_only_moves_with_hisha_nari_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
-	const POSITIONS:[(usize,usize); 4] = [
-		(1,8),(7,0),(1,0),(8,7)
+	const POSITIONS:[(usize,usize); 5] = [
+		(1,8),(7,0),(1,0),(8,7),(0,7)
 	];
 
-	const OCC_POSITIONS:[(usize,usize); 4] = [
-		(1,1),(7,7),(1,7),(7,7)
+	const OCC_POSITIONS:[(usize,usize); 5] = [
+		(1,1),(7,7),(1,7),(7,7),(1,7)
 	];
 
-	const OU_POSITIONS:[(usize,usize); 4] = [
-		(1,0),(7,8),(1,8),(0,7)
+	const OU_POSITIONS:[(usize,usize); 5] = [
+		(1,0),(7,8),(1,8),(0,7),(8,7)
 	];
 
 	for ((p,o),t) in POSITIONS.iter().zip(&OCC_POSITIONS).zip(&OU_POSITIONS) {
