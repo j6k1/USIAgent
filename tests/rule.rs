@@ -10054,6 +10054,260 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_oppon
 		);
 	}
 }
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_impl(
+	occ_positions:Vec<Vec<(usize,usize)>>,occ_kind:KomaKind,positions:Vec<(usize,usize)>,kind:KomaKind
+) {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,o) in positions.iter().zip(&occ_positions) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = GOu;
+
+		banmen.0[p.1][p.0] = kind;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		for op in o {
+			banmen.0[op.1][op.0] = occ_kind;
+		}
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_with_point(Teban::Sente,&State::new(banmen.clone()),
+				&MochigomaCollections::Empty, p.0 as u32,p.1 as u32).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_impl(
+	occ_positions:Vec<Vec<(usize,usize)>>,occ_kind:KomaKind,positions:Vec<(usize,usize)>,kind:KomaKind
+) {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,o) in positions.iter().zip(&occ_positions) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = GOu;
+
+		banmen.0[p.1][p.0] = kind;
+
+		let answer:Vec<LegalMove> = vec![];
+
+		for op in o {
+			banmen.0[op.1][op.0] = occ_kind;
+		}
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_with_point(Teban::Gote,&State::new(banmen.clone()),
+				&MochigomaCollections::Empty,p.0 as u32,p.1 as u32).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+	}
+}
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kin_impl(kind:KomaKind) {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_impl(
+		vec![
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(3,4),(3,3)],
+			vec![(4,3)],
+			vec![(5,5),(5,4),(5,3)]
+		],
+		SGin,
+		vec![
+			(3,6),(4,6),(5,6),(2,4),(4,2),(6,4),
+		],
+		kind
+	)
+}
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kin_impl(kind:KomaKind) {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_impl(
+		(vec![
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(3,4),(3,3)],
+			vec![(4,3)],
+			vec![(5,5),(5,4),(5,3)]
+		]).into_iter().map(|o| o.into_iter().map(|op| {
+			(8 - op.0, 8- op.1)
+		}).collect::<Vec<(usize,usize)>>()).collect::<Vec<Vec<(usize,usize)>>>(),
+		GGin,
+		(vec![
+			(3,6),(4,6),(5,6),(2,4),(4,2),(6,4),
+		]).into_iter().map(|p| (8 - p.0, 8 - p.1)).collect::<Vec<(usize,usize)>>(),
+		kind
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_gin() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_impl(
+		vec![
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,3)],
+			vec![(5,3)]
+		],
+		SKin,
+		vec![
+			(3,6),(4,6),(5,6),(2,2),(6,2),
+		],
+		SGin
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_gin() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_impl(
+		(vec![
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,5),(4,5),(5,5)],
+			vec![(3,3)],
+			vec![(5,3)]
+		]).into_iter().map(|o| o.into_iter().map(|op| {
+			(8 - op.0, 8- op.1)
+		}).collect::<Vec<(usize,usize)>>()).collect::<Vec<Vec<(usize,usize)>>>(),
+		GKin,
+		(vec![
+			(3,6),(4,6),(5,6),(2,2),(6,2),
+		]).into_iter().map(|p| (8 - p.0, 8 - p.1)).collect::<Vec<(usize,usize)>>(),
+		GGin
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kei() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_impl(
+		vec![
+			vec![(3,6)],
+			vec![(5,6)],
+		],
+		SKin,
+		vec![
+			(1,8),(7,8)
+		],
+		SKei
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kei() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_impl(
+		(vec![
+			vec![(3,6)],
+			vec![(5,6)],
+		]).into_iter().map(|o| o.into_iter().map(|op| {
+			(8 - op.0, 8- op.1)
+		}).collect::<Vec<(usize,usize)>>()).collect::<Vec<Vec<(usize,usize)>>>(),
+		GKin,
+		(vec![
+			(1,8),(7,8)
+		]).into_iter().map(|p| (8 - p.0, 8 - p.1)).collect::<Vec<(usize,usize)>>(),
+		GKei
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kaku_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_impl(
+		vec![
+			vec![(4,5),(3,5),(5,5)],
+			vec![(3,4),(3,3),(3,5)],
+			vec![(5,4),(5,3),(5,5)],
+			vec![(4,3),(3,3),(5,3)]
+		],
+		SKin,
+		vec![
+			(4,6),(2,4),(6,4),(4,2)
+		],
+		SKakuN
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kaku_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_impl(
+		(vec![
+			vec![(4,5),(3,5),(5,5)],
+			vec![(3,4),(3,3),(3,5)],
+			vec![(5,4),(5,3),(5,5)],
+			vec![(4,3),(3,3),(5,3)]
+		]).into_iter().map(|o| o.into_iter().map(|op| {
+			(8 - op.0, 8- op.1)
+		}).collect::<Vec<(usize,usize)>>()).collect::<Vec<Vec<(usize,usize)>>>(),
+		GKin,
+		(vec![
+			(4,6),(2,4),(6,4),(4,2)
+		]).into_iter().map(|p| (8 - p.0, 8 - p.1)).collect::<Vec<(usize,usize)>>(),
+		GKakuN
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_hisha_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_impl(
+		vec![
+			vec![(3,5),(2,4),(4,6)],
+			vec![(5,5),(6,6),(4,6)],
+			vec![(3,3),(2,4),(4,2)],
+			vec![(5,3),(6,4),(4,2)]
+		],
+		SKin,
+		vec![
+			(2,6),(6,6),(2,2),(6,2)
+		],
+		SHishaN
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_hisha_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_impl(
+		(vec![
+			vec![(3,5),(2,4),(4,6)],
+			vec![(5,5),(6,6),(4,6)],
+			vec![(3,3),(2,4),(4,2)],
+			vec![(5,3),(6,4),(6,4)]
+		]).into_iter().map(|o| o.into_iter().map(|op| {
+			(8 - op.0, 8- op.1)
+		}).collect::<Vec<(usize,usize)>>()).collect::<Vec<Vec<(usize,usize)>>>(),
+		GKin,
+		(vec![
+			(2,6),(6,6),(2,2),(6,2)
+		]).into_iter().map(|p| (8 - p.0, 8 - p.1)).collect::<Vec<(usize,usize)>>(),
+		GHishaN
+	)
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_fu_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kin_impl(SFuN);
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_fu_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kin_impl(GFuN);
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kyou_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kin_impl(SKyouN);
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kyou_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kin_impl(GKyouN);
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kei_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kin_impl(SKeiN);
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kei_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kin_impl(GKeiN);
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_gin_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_sente_kin_impl(SGinN);
+}
+#[test]
+fn test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_gin_nari() {
+	test_oute_only_moves_with_point_none_moves_with_occupied_self_gote_kin_impl(GGinN);
+}
 #[test]
 fn test_oute_only_moves_with_kyou_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
