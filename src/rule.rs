@@ -2533,6 +2533,12 @@ impl Rule {
 					AppliedMove::To(m) => {
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
+						let kind = if m.is_nari() {
+							kind.to_nari()
+						} else {
+							kind
+						};
+
 						if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
 							return true;
 						}
@@ -2566,6 +2572,12 @@ impl Rule {
 
 						let kind = match &state.banmen {
 							&Banmen(ref kinds) => kinds[y as usize][x as usize]
+						};
+
+						let kind = if m.is_nari() {
+							kind.to_nari()
+						} else {
+							kind
 						};
 
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
@@ -2628,6 +2640,13 @@ impl Rule {
 
 						let kind = match &state.banmen {
 							&Banmen(ref kinds) => kinds[y as usize][x as usize]
+						};
+
+
+						let kind = if m.is_nari() {
+							kind.to_nari()
+						} else {
+							kind
 						};
 
 						(kind,m.dst())
