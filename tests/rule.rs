@@ -11002,6 +11002,7 @@ fn test_oute_only_moves_from_mochigoma_none_moves_gote_kei() {
 	let mut banmen = Banmen([[Blank; 9]; 9]);
 
 	banmen.0[8-4][8-4] = SOu;
+
 	banmen.0[8-5][8-3] = GFu;
 	banmen.0[8-5][8-4] = GFu;
 	banmen.0[8-5][8-5] = GFu;

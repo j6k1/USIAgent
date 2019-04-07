@@ -4107,7 +4107,7 @@ impl Rule {
 			},
 			GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN if t == Teban::Gote => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					t,state.sente_self_board,state.gote_opponent_ou_position_board,from,kind
+					t,state.gote_self_board,state.gote_opponent_ou_position_board,from,kind
 				)
 			},
 			GKyou if t == Teban::Gote => {
