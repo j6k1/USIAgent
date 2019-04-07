@@ -8559,8 +8559,14 @@ fn test_oute_only_moves_win_only_result_some_moves_sente_impl(ox:u32,oy:u32,posi
 			]
 		};
 
-		assert_eq!(answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
+		assert_eq!(answer.clone().into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -8587,8 +8593,14 @@ fn test_oute_only_moves_win_only_result_some_moves_gote_impl(ox:u32,oy:u32,posit
 			]
 		};
 
-		assert_eq!(answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
+		assert_eq!(answer.clone().into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -8731,10 +8743,18 @@ fn test_oute_only_moves_win_only_result_some_moves_with_kei_jump_over_wall_sente
 				((p.0,p.1),(t.0,t.1,true),Some(ObtainKind::Ou))
 			];
 
-			assert_eq!(answer.into_iter().map(|m| {
+			assert_eq!(answer.clone().into_iter().map(|m| {
 					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>(),
 				Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			);
+
+			assert_eq!(answer.into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>(),
+				Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
@@ -8774,10 +8794,18 @@ fn test_oute_only_moves_win_only_result_some_moves_with_kei_jump_over_wall_gote(
 				((8 - p.0,8 - p.1),(8 - t.0,8 - t.1,true),Some(ObtainKind::Ou))
 			];
 
-			assert_eq!(answer.into_iter().map(|m| {
+			assert_eq!(answer.clone().into_iter().map(|m| {
 					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>(),
 				Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>()
+			);
+
+			assert_eq!(answer.into_iter().map(|m| {
+					LegalMove::from(m)
+				}).collect::<Vec<LegalMove>>(),
+				Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
@@ -8844,8 +8872,14 @@ fn test_oute_only_moves_none_moves_sente_impl(ox:u32,oy:u32,positions:Vec<(u32,u
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -8863,8 +8897,14 @@ fn test_oute_only_moves_none_moves_gote_impl(ox:u32,oy:u32,positions:Vec<(u32,u3
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -8895,8 +8935,14 @@ fn test_oute_only_moves_none_moves_with_kyou_occupied_self_sente() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -8927,8 +8973,14 @@ fn test_oute_only_moves_none_moves_with_kyou_occupied_self_gote() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9012,10 +9064,18 @@ fn test_oute_only_moves_none_moves_with_kyou_occupied_opponent_sente() {
 
 		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9047,10 +9107,18 @@ fn test_oute_only_moves_none_moves_with_kyou_occupied_opponent_gote() {
 
 		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9098,8 +9166,14 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_self_sente() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9131,8 +9205,14 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_self_gote() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9164,8 +9244,14 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_sente() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9197,8 +9283,14 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_gote() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9229,8 +9321,14 @@ fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_sente(
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9261,8 +9359,14 @@ fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_gote()
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9293,8 +9397,14 @@ fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_opponent_se
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9325,8 +9435,14 @@ fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_opponent_go
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9358,8 +9474,14 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_self_sente() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9391,8 +9513,14 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_self_gote() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9424,8 +9552,14 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_opponent_sente() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9457,8 +9591,14 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_opponent_gote() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9490,8 +9630,14 @@ fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_sente
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9523,8 +9669,14 @@ fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_gote(
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9556,8 +9708,14 @@ fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_opponent_s
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9589,8 +9747,14 @@ fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_opponent_g
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9621,8 +9785,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_self_sente() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9653,8 +9823,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_self_gote() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9686,8 +9862,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_sente() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9719,8 +9901,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_gote() {
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9751,8 +9939,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_s
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9783,8 +9977,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_g
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9815,8 +10015,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_oppone
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9847,8 +10053,14 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_oppone
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9879,10 +10091,18 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_sente() {
 
 		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9913,10 +10133,18 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_gote() {
 
 		let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9948,8 +10176,14 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -9981,8 +10215,14 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10014,8 +10254,14 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_oppon
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10047,8 +10293,14 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_oppon
 
 		let answer:Vec<LegalMove> = vec![];
 
-		assert_eq!(answer,
+		assert_eq!(answer.clone(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer,
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10342,10 +10594,18 @@ fn test_oute_only_moves_with_kyou_occupied_opponent_sente() {
 			]
 		};
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10385,10 +10645,18 @@ fn test_oute_only_moves_with_kyou_occupied_opponent_gote() {
 			]
 		};
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10428,10 +10696,18 @@ fn test_oute_only_moves_with_hisha_occupied_opponent_sente() {
 			]
 		};
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10471,10 +10747,18 @@ fn test_oute_only_moves_with_hisha_occupied_opponent_gote() {
 			]
 		};
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10507,10 +10791,18 @@ fn test_oute_only_moves_with_hisha_nari_occupied_opponent_sente() {
 			((p.0 as u32,p.1 as u32),(o.0 as u32,o.1 as u32,false),Some(ObtainKind::Fu))
 		];
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Sente,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
@@ -10543,10 +10835,18 @@ fn test_oute_only_moves_with_hisha_nari_occupied_opponent_gote() {
 			((8-p.0 as u32,8-p.1 as u32),(8-o.0 as u32,8-o.1 as u32,false),Some(ObtainKind::Fu)),
 		];
 
-		assert_eq!(answer.into_iter().map(|m| {
+		assert_eq!(answer.clone().into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>(),
 			Rule::oute_only_moves_from_banmen(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>()
+		);
+
+		assert_eq!(answer.into_iter().map(|m| {
+				LegalMove::from(m)
+			}).collect::<Vec<LegalMove>>(),
+			Rule::oute_only_moves_all(Teban::Gote,&State::new(banmen.clone()),&MochigomaCollections::Empty).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
 		);
