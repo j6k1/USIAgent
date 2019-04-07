@@ -10852,6 +10852,186 @@ fn test_oute_only_moves_with_hisha_nari_occupied_opponent_gote() {
 		);
 	}
 }
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_impl(kind:MochigomaKind) {
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[4][4] = GOu;
+	banmen.0[5][3] = SFu;
+	banmen.0[5][4] = SFu;
+	banmen.0[5][5] = SFu;
+	banmen.0[4][3] = SKin;
+	banmen.0[4][5] = SKin;
+	banmen.0[3][3] = SGin;
+	banmen.0[3][4] = SGin;
+	banmen.0[3][5] = SKei;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(kind,1);
+
+	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
+
+	let answer = answer.into_iter().map(|m| {
+		LegalMove::from(m)
+	}).collect::<Vec<LegalMove>>();
+
+	assert_eq!(answer,
+		Rule::oute_only_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen)).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_impl(kind:MochigomaKind) {
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[8-4][8-4] = SOu;
+	banmen.0[8-5][8-3] = GFu;
+	banmen.0[8-5][8-4] = GFu;
+	banmen.0[8-5][8-5] = GFu;
+	banmen.0[8-4][8-3] = GKin;
+	banmen.0[8-4][8-5] = GKin;
+	banmen.0[8-3][8-3] = GGin;
+	banmen.0[8-3][8-4] = GGin;
+	banmen.0[8-3][8-5] = GKei;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(kind,1);
+
+	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> =	vec![];
+
+	let answer = answer.into_iter().map(|m| {
+		LegalMove::from(m)
+	}).collect::<Vec<LegalMove>>();
+
+	assert_eq!(answer,
+		Rule::oute_only_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen)).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_fu() {
+	test_oute_only_moves_from_mochigoma_none_moves_sente_impl(MochigomaKind::Fu);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_kyou() {
+	test_oute_only_moves_from_mochigoma_none_moves_sente_impl(MochigomaKind::Kyou);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_gin() {
+	test_oute_only_moves_from_mochigoma_none_moves_sente_impl(MochigomaKind::Gin);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_kin() {
+	test_oute_only_moves_from_mochigoma_none_moves_sente_impl(MochigomaKind::Kin);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_kaku() {
+	test_oute_only_moves_from_mochigoma_none_moves_sente_impl(MochigomaKind::Kaku);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_hisha() {
+	test_oute_only_moves_from_mochigoma_none_moves_sente_impl(MochigomaKind::Hisha);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_fu() {
+	test_oute_only_moves_from_mochigoma_none_moves_gote_impl(MochigomaKind::Fu);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_kyou() {
+	test_oute_only_moves_from_mochigoma_none_moves_gote_impl(MochigomaKind::Kyou);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_gin() {
+	test_oute_only_moves_from_mochigoma_none_moves_gote_impl(MochigomaKind::Gin);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_kin() {
+	test_oute_only_moves_from_mochigoma_none_moves_gote_impl(MochigomaKind::Kin);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_kaku() {
+	test_oute_only_moves_from_mochigoma_none_moves_gote_impl(MochigomaKind::Kaku);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_hisha() {
+	test_oute_only_moves_from_mochigoma_none_moves_gote_impl(MochigomaKind::Hisha);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_sente_kei() {
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[4][4] = GOu;
+	banmen.0[5][3] = SFu;
+	banmen.0[5][4] = SFu;
+	banmen.0[5][5] = SFu;
+	banmen.0[6][3] = SKyou;
+	banmen.0[6][4] = SKyou;
+	banmen.0[6][5] = SKyou;
+	banmen.0[4][3] = SKin;
+	banmen.0[4][5] = SKin;
+	banmen.0[3][3] = SGin;
+	banmen.0[3][4] = SGin;
+	banmen.0[3][5] = SKei;
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Kei,1);
+
+	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> =	vec![];
+
+	let answer = answer.into_iter().map(|m| {
+		LegalMove::from(m)
+	}).collect::<Vec<LegalMove>>();
+
+	assert_eq!(answer,
+		Rule::oute_only_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen)).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
+fn test_oute_only_moves_from_mochigoma_none_moves_gote_kei() {
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[8-4][8-4] = SOu;
+	banmen.0[8-5][8-3] = GFu;
+	banmen.0[8-5][8-4] = GFu;
+	banmen.0[8-5][8-5] = GFu;
+	banmen.0[8-6][8-3] = GKyou;
+	banmen.0[8-6][8-4] = GKyou;
+	banmen.0[8-6][8-5] = GKyou;
+	banmen.0[8-4][8-3] = GKin;
+	banmen.0[8-4][8-5] = GKin;
+	banmen.0[8-3][8-3] = GGin;
+	banmen.0[8-3][8-4] = GGin;
+	banmen.0[8-3][8-5] = GKei;
+
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	mg.insert(MochigomaKind::Kei,1);
+
+	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> =	vec![];
+
+	let answer = answer.into_iter().map(|m| {
+		LegalMove::from(m)
+	}).collect::<Vec<LegalMove>>();
+
+	assert_eq!(answer,
+		Rule::oute_only_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen)).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
 #[test]
 fn test_apply_move_none_check_sente() {
 	let mvs:Vec<Vec<Move>> = vec![
