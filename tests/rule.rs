@@ -9297,7 +9297,7 @@ fn test_oute_only_moves_none_moves_with_kaku_occupied_opponent_gote() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_sente() {
+fn test_oute_only_moves_none_moves_with_kaku_turn_move_and_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9335,7 +9335,7 @@ fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_sente(
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_gote() {
+fn test_oute_only_moves_none_moves_with_kaku_turn_move_and_occupied_self_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9373,7 +9373,7 @@ fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_self_gote()
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_opponent_sente() {
+fn test_oute_only_moves_none_moves_with_kaku_turn_move_and_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9411,7 +9411,7 @@ fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_opponent_se
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_twice_move_and_occupied_opponent_gote() {
+fn test_oute_only_moves_none_moves_with_kaku_turn_move_and_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9605,7 +9605,7 @@ fn test_oute_only_moves_none_moves_with_hisha_occupied_opponent_gote() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_sente() {
+fn test_oute_only_moves_none_moves_with_hisha_turn_move_and_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9644,7 +9644,7 @@ fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_sente
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_gote() {
+fn test_oute_only_moves_none_moves_with_hisha_turn_move_and_occupied_self_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9683,7 +9683,7 @@ fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_self_gote(
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_opponent_sente() {
+fn test_oute_only_moves_none_moves_with_hisha_turn_move_and_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9722,7 +9722,7 @@ fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_opponent_s
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_twice_move_and_occupied_opponent_gote() {
+fn test_oute_only_moves_none_moves_with_hisha_turn_move_and_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9915,7 +9915,7 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_occupied_opponent_gote() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_sente() {
+fn test_oute_only_moves_none_moves_with_kaku_nari_turn_move_and_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9953,7 +9953,7 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_s
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_gote() {
+fn test_oute_only_moves_none_moves_with_kaku_nari_turn_move_and_occupied_self_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -9991,7 +9991,7 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_self_g
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_opponent_sente() {
+fn test_oute_only_moves_none_moves_with_kaku_nari_turn_move_and_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -10029,7 +10029,7 @@ fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_oppone
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_kaku_nari_twice_move_and_occupied_opponent_gote() {
+fn test_oute_only_moves_none_moves_with_kaku_nari_turn_move_and_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -10151,7 +10151,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_occupied_self_gote() {
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_sente() {
+fn test_oute_only_moves_none_moves_with_hisha_nari_turn_move_and_occupied_self_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -10190,7 +10190,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_gote() {
+fn test_oute_only_moves_none_moves_with_hisha_nari_turn_move_and_occupied_self_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -10229,7 +10229,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_self_
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_opponent_sente() {
+fn test_oute_only_moves_none_moves_with_hisha_nari_turn_move_and_occupied_opponent_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -10268,7 +10268,7 @@ fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_oppon
 	}
 }
 #[test]
-fn test_oute_only_moves_none_moves_with_hisha_nari_twice_move_and_occupied_opponent_gote() {
+fn test_oute_only_moves_none_moves_with_hisha_nari_turn_move_and_occupied_opponent_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 8] = [
@@ -10765,7 +10765,7 @@ fn test_oute_only_moves_with_kaku_occupied_opponent_gote() {
 	}
 }
 #[test]
-fn test_oute_only_moves_with_kaku_twice_move_sente() {
+fn test_oute_only_moves_with_kaku_turn_move_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 4] = [
@@ -10807,7 +10807,7 @@ fn test_oute_only_moves_with_kaku_twice_move_sente() {
 	}
 }
 #[test]
-fn test_oute_only_moves_with_kaku_twice_move_gote() {
+fn test_oute_only_moves_with_kaku_turn_move_gote() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
 	const POSITIONS:[(usize,usize); 4] = [
