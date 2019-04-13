@@ -492,13 +492,13 @@ impl State {
 						match kind {
 							SFu => sente_fu_board ^= 1 << (x * 9 + y + 1),
 							SKyou => sente_kyou_board ^= 1 << (x * 9 + y + 1),
-							SKaku => sente_kaku_board ^= 1 << (x * 9 + y + 1),
-							SHisha => sente_hisha_board ^= 1 << (x * 9 + y + 1),
+							SKaku | SKakuN => sente_kaku_board ^= 1 << (x * 9 + y + 1),
+							SHisha | SHishaN => sente_hisha_board ^= 1 << (x * 9 + y + 1),
 							SOu => gote_opponent_ou_position_board ^= 1 << ((8 - x) * 9 + (8 - y) + 1),
 							GFu => gote_fu_board ^= 1 << (x * 9 + y + 1),
 							GKyou => gote_kyou_board ^= 1 << (x * 9 + y + 1),
-							GKaku => gote_kaku_board ^= 1 << (x * 9 + y + 1),
-							GHisha => gote_hisha_board ^= 1 << (x * 9 + y + 1),
+							GKaku | GKakuN => gote_kaku_board ^= 1 << (x * 9 + y + 1),
+							GHisha | GHishaN => gote_hisha_board ^= 1 << (x * 9 + y + 1),
 							GOu => sente_opponent_ou_position_board ^= 1 << (x * 9 + y + 1),
 							_ => (),
 						}
