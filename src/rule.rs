@@ -2699,6 +2699,7 @@ impl Rule {
 						let from = m.src();
 						let (sx,sy) = from.square_to_point();
 						let to = m.dst();
+						let nari = m.is_nari();
 
 						let from_mask = 1 << (from + 1);
 
@@ -2741,6 +2742,13 @@ impl Rule {
 						};
 
 						match kind {
+							SFu if nari => {
+								ps.sente_fu_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_fu_board.merged_bitboard ^ from_mask
+									}
+								};
+							},
 							SFu => {
 								ps.sente_fu_board = unsafe {
 									BitBoard {
@@ -2777,6 +2785,13 @@ impl Rule {
 								};
 							},
 							SKei | SGin | SKin | SFuN | SKyouN | SKeiN | SGinN => (),
+							GFu if nari => {
+								ps.gote_fu_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_fu_board.merged_bitboard ^ from_mask
+									}
+								};
+							},
 							GFu => {
 								ps.gote_fu_board = unsafe {
 									BitBoard {
