@@ -481,8 +481,8 @@ impl State {
 		let mut gote_kyou_board:u128 = 0;
 		let mut sente_fu_board:u128 = 0;
 		let mut gote_fu_board:u128 = 0;
-		let mut gote_opponent_ou_position_board:u128 = 0;
 		let mut sente_opponent_ou_position_board:u128 = 0;
+		let mut gote_opponent_ou_position_board:u128 = 0;
 
 		match banmen {
 			Banmen(ref kinds) => {
@@ -563,8 +563,8 @@ impl State {
 				gote_kyou_board:BitBoard{ merged_bitboard: gote_kyou_board },
 				sente_fu_board:BitBoard{ merged_bitboard: sente_fu_board },
 				gote_fu_board:BitBoard{ merged_bitboard: gote_fu_board },
-				gote_opponent_ou_position_board:BitBoard{ merged_bitboard: gote_opponent_ou_position_board },
-				sente_opponent_ou_position_board:BitBoard{ merged_bitboard: sente_opponent_ou_position_board }
+				sente_opponent_ou_position_board:BitBoard{ merged_bitboard: sente_opponent_ou_position_board },
+				gote_opponent_ou_position_board:BitBoard{ merged_bitboard: gote_opponent_ou_position_board }
 			}
 		}
 	}
@@ -601,8 +601,8 @@ pub struct PartialState {
 	pub gote_kyou_board:BitBoard,
 	pub sente_fu_board:BitBoard,
 	pub gote_fu_board:BitBoard,
-	pub gote_opponent_ou_position_board:BitBoard,
-	pub sente_opponent_ou_position_board:BitBoard
+	pub sente_opponent_ou_position_board:BitBoard,
+	pub gote_opponent_ou_position_board:BitBoard
 }
 impl PartialState {
 	pub fn to_full_state(&self,banmen:Banmen) -> State {
@@ -2855,9 +2855,9 @@ impl Rule {
 										merged_bitboard: ps.gote_kaku_board.merged_bitboard & obtained_mask
 									}
 								};
-								ps.sente_opponent_ou_position_board = unsafe {
+								ps.gote_opponent_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.sente_opponent_ou_position_board.merged_bitboard & obtained_mask
+										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & !inverse_to_mask
 									}
 								};
 							} else if kind < Blank {
@@ -2881,9 +2881,9 @@ impl Rule {
 										merged_bitboard: ps.sente_kaku_board.merged_bitboard & obtained_mask
 									}
 								};
-								ps.gote_opponent_ou_position_board = unsafe {
+								ps.sente_opponent_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & !inverse_to_mask
+										merged_bitboard: ps.sente_opponent_ou_position_board.merged_bitboard & obtained_mask
 									}
 								};
 							}
@@ -3810,10 +3810,10 @@ impl Rule {
 
 		let mut ou_position_board = match t {
 			Teban::Sente => {
-				state.part.gote_opponent_ou_position_board
+				state.part.sente_opponent_ou_position_board
 			},
 			Teban::Gote => {
-				state.part.sente_opponent_ou_position_board
+				state.part.gote_opponent_ou_position_board
 			},
 		};
 
@@ -4062,7 +4062,7 @@ impl Rule {
 				match teban {
 					Teban::Sente => {
 						let to = m.dst();
-						let bitboard = unsafe { state.part.gote_opponent_ou_position_board.merged_bitboard };
+						let bitboard = unsafe { state.part.sente_opponent_ou_position_board.merged_bitboard };
 
 						let to_mask = 1 << (to + 1);
 
@@ -4070,7 +4070,7 @@ impl Rule {
 					},
 					Teban::Gote => {
 						let to = m.dst();
-						let bitboard = unsafe { state.part.sente_opponent_ou_position_board.merged_bitboard };
+						let bitboard = unsafe { state.part.gote_opponent_ou_position_board.merged_bitboard };
 
 						let to_mask = 1 << (80 - to + 1);
 

@@ -47,7 +47,6 @@ use usiagent::shogi::KomaKind::{
 	GHishaN,
 	Blank
 };
-
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 enum LegalMove {
 	To(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>),
@@ -15042,6 +15041,101 @@ fn test_oute_only_moves_from_mochigoma_hisha_gote() {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
+}
+#[test]
+fn test_respond_oute_only_moves_all_sente() {
+	let mvs:Vec<Vec<Move>> = vec![
+		vec![ Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,1+1)) ],
+		vec![]
+	];
+
+	let answer:Vec<Vec<Move>> =  vec![
+		vec![
+			Move::To(KomaSrcPosition(9-7,7+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-3,8+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-3,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-5,7+1,false)),
+			Move::To(KomaSrcPosition(9-5,8+1),KomaDstToPosition(9-4,7+1,false)),
+		],
+		vec![
+			Move::To(KomaSrcPosition(9-3,8+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-3,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-5,7+1,false)),
+			Move::To(KomaSrcPosition(9-5,8+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-7,7+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,3+1)),
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,4+1)),
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,5+1)),
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,6+1)),
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,7+1)),
+		]
+	];
+
+	let mut base_banmen = BANMEN_START_POS.clone();
+
+	base_banmen.0[2][4] = GKyou;
+	base_banmen.0[6][4] = Blank;
+	base_banmen.0[0][0] = Blank;
+
+	for (mvs,answer) in mvs.iter().zip(answer.into_iter()) {
+		let mut banmen = base_banmen.clone();
+
+		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		ms.insert(MochigomaKind::Fu,1);
+
+		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		mg.insert(MochigomaKind::Fu,1);
+
+		let mut mc = MochigomaCollections::Pair(ms,mg);
+
+		let mut state = State::new(banmen.clone());
+
+		let mvs = mvs.into_iter().map(|m| {
+			match m {
+				Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
+					let sx = 9 - sx;
+					let sy = sy - 1;
+					let dx = 9 - dx;
+					let dy = dy - 1;
+
+					let sx = 8 - sx;
+					let sy = 8 - sy;
+					let dx = 8 - dx;
+					let dy = 8 - dy;
+
+					Move::To(KomaSrcPosition(9-sx,sy+1),KomaDstToPosition(9-dx,dy+1,*n))
+				},
+				Move::Put(kind,KomaDstPutPosition(dx,dy)) => {
+					let dx = 9 - dx;
+					let dy = dy - 1;
+
+					let dx = 8 - dx;
+					let dy = 8 - dy;
+
+					Move::Put(*kind,KomaDstPutPosition(9-dx,dy+1))
+				}
+			}
+		}).collect::<Vec<Move>>();
+
+		for m in mvs {
+			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m.to_applied_move()) {
+				(next,nmc,_) => {
+					state = next;
+					mc = nmc;
+				}
+			}
+		}
+
+
+		assert_eq!(answer,
+			Rule::respond_oute_only_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
+				m.to_applied_move().to_move()
+			}).collect::<Vec<Move>>()
+		);
+	}
 }
 #[test]
 fn test_apply_move_none_check_sente() {
