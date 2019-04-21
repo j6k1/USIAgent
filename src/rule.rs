@@ -2679,9 +2679,8 @@ impl Rule {
 					mv => {
 						let mv = mv.to_applied_move();
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
-
-						!Rule::is_mate_with_partial_state_and_old_banmen_and_move(
-							t.opposite(),&state.banmen,&ps,mv
+						!Rule::is_mate_with_partial_state_and_old_banmen(
+							t.opposite(),&state.banmen,&ps
 						)
 					}
 				}
@@ -2943,7 +2942,6 @@ impl Rule {
 					},
 					AppliedMove::Put(m) => {
 						let to = m.dst();
-
 						let to_mask = 1 << (to + 1);
 						let inverse_to_mask = 1 << (80 - to + 1);
 
@@ -4258,6 +4256,33 @@ impl Rule {
 		false
 	}
 
+	pub fn is_mate_with_partial_state_and_old_banmen(
+		t:Teban,banmen:&Banmen,ps:&PartialState
+	) -> bool {
+
+		match banmen {
+			&Banmen(ref kinds) => {
+				for y in 0..kinds.len() {
+					for x in 0..kinds[y].len() {
+						let (x,y) = match t {
+							Teban::Sente => (x,y),
+							Teban::Gote => (8 - x, 8 - y),
+						};
+
+						let kind = kinds[y as usize][x as usize];
+
+						if Rule::is_mate_with_partial_state_and_point_and_kind(
+							t, &ps, x as u32, y as u32, kind
+						) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		false
+	}
+
 	pub fn is_mate_with_partial_state_and_old_banmen_and_move(
 		t:Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
 	) -> bool {
@@ -4308,7 +4333,6 @@ impl Rule {
 						} else {
 							kinds[y as usize][x as usize]
 						};
-
 						if Rule::is_mate_with_partial_state_and_point_and_kind(
 							t, &ps, x as u32, y as u32, kind
 						) {
