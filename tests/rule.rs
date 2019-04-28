@@ -15242,7 +15242,7 @@ fn test_apply_move_none_check_sente() {
 			Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,false))
 		],
 		vec![
-			Move::To(KomaSrcPosition(9-2,1+0),KomaDstToPosition(9-2,1+1,false)),
+			Move::To(KomaSrcPosition(9-2,0+1),KomaDstToPosition(9-2,1+1,false)),
 			Move::To(KomaSrcPosition(9-2,1+1),KomaDstToPosition(9-2,2+1,false))
 		]
 	];
@@ -15298,7 +15298,7 @@ fn test_apply_move_none_check_gote() {
 			Move::To(KomaSrcPosition(9-2,3+1),KomaDstToPosition(9-2,2+1,false))
 		],
 		vec![
-			Move::To(KomaSrcPosition(9-2,1+0),KomaDstToPosition(9-2,1+1,false)),
+			Move::To(KomaSrcPosition(9-2,0+1),KomaDstToPosition(9-2,1+1,false)),
 			Move::To(KomaSrcPosition(9-2,1+1),KomaDstToPosition(9-2,2+1,false))
 		]
 	];

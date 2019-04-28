@@ -2834,6 +2834,16 @@ impl Rule {
 							let obtained_mask = !to_mask;
 
 							if kind < GFu {
+								ps.gote_self_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_self_board.merged_bitboard & !inverse_to_mask
+									}
+								};
+								ps.sente_opponent_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_opponent_board.merged_bitboard & obtained_mask
+									}
+								};
 								ps.gote_fu_board = unsafe {
 									BitBoard {
 										merged_bitboard: ps.gote_fu_board.merged_bitboard & obtained_mask
@@ -2860,6 +2870,16 @@ impl Rule {
 									}
 								};
 							} else if kind < Blank {
+								ps.sente_self_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_self_board.merged_bitboard & obtained_mask
+									}
+								};
+								ps.gote_opponent_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_opponent_board.merged_bitboard & !inverse_to_mask
+									}
+								};
 								ps.sente_fu_board = unsafe {
 									BitBoard {
 										merged_bitboard: ps.sente_fu_board.merged_bitboard & obtained_mask
