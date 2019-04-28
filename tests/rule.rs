@@ -16009,7 +16009,10 @@ fn test_is_valid_move_valid_to_sente() {
 
 				banmen.0[p.1 as usize][p.0 as usize] = *k;
 
-				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+				let dx = m.0;
+				let dy = m.1;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-dx,dy+1,m.2)));
 
 				let state = State::new(banmen);
 
@@ -16018,6 +16021,365 @@ fn test_is_valid_move_valid_to_sente() {
 					&MochigomaCollections::Empty,
 					m
 				), format!("is_valid_move: kind = {:?}, move = {:?} is false.", k,m.to_move()));
+
+				let mut banmen = blank_banmen.clone();
+
+				banmen.0[p.1 as usize][p.0 as usize] = *k;
+				banmen.0[dy as usize][dx as usize] = GFu;
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Sente,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is false.", k,m.to_move()));
+			}
+		}
+	}
+}
+#[test]
+fn test_is_valid_move_valid_to_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	const POSITIONS:[(u32,u32); 5] = [
+		(4,4),(2,3),(6,3),(4,2),(4,1)
+	];
+
+	let mvs:Vec<Vec<Vec<(u32,u32,bool)>>> = vec![
+		// 歩
+		vec![
+			vec![
+				(4,3,true),(4,3,false)
+			],
+			vec![
+				(2,2,true),(2,2,false)
+			],
+			vec![
+				(6,2,true),(6,2,false)
+			],
+			vec![
+				(4,1,true),(4,1,false)
+			],
+			vec![
+				(4,1,true)
+			]
+		],
+		// 香車
+		vec![
+			vec![
+				(4,3,true),(4,3,false),
+				(4,2,true),(4,2,false),
+				(4,1,true),(4,1,false),
+				(4,0,true),
+			],
+			vec![
+				(2,2,true),(2,2,false),
+				(2,1,true),(2,1,false),
+				(2,0,true),
+			],
+			vec![
+				(6,2,true),(6,2,false),
+				(6,1,true),(6,1,false),
+				(6,0,true),
+			],
+			vec![
+				(4,1,true),(4,1,false),
+				(4,0,true)
+			],
+			vec![
+				(4,0,true)
+			]
+		],
+		// 桂馬
+		vec![
+			vec![
+				(4,2,true),(4,2,false),
+				(4,6,true),(4,6,false)
+			],
+			vec![
+				(0,1,true),
+				(4,1,true)
+			],
+			vec![
+				(4,1,true),
+				(8,1,true)
+			],
+			vec![
+				(2,0,true),
+				(6,0,true)
+			],
+			vec![]
+		],
+		// 銀
+		vec![
+			vec![
+				(3,3,false),
+				(4,3,false),
+				(5,3,false),
+				(3,5,false),
+				(5,5,false)
+			],
+			vec![
+				(1,2,true),(1,2,false),
+				(2,2,true),(2,2,false),
+				(3,2,true),(3,2,false),
+				(1,4,false),
+				(3,4,false)
+			],
+			vec![
+				(5,2,true),(5,2,false),
+				(6,2,true),(6,2,false),
+				(7,2,true),(7,2,false),
+				(5,4,false),
+				(7,4,false)
+			],
+			vec![
+				(3,1,true),(3,1,false),
+				(4,1,true),(4,1,false),
+				(5,1,true),(5,1,false),
+				(3,3,true),(3,3,false),
+				(5,3,true),(5,3,false)
+			],
+			vec![
+				(3,0,true),(3,0,false),
+				(4,0,true),(4,0,false),
+				(5,0,true),(5,0,false),
+				(3,2,true),(3,2,false),
+				(5,2,true),(5,2,false)
+			]
+		],
+		// 金,成歩,成香,成桂,成銀
+		vec![
+			vec![
+				(3,3,false),
+				(4,3,false),
+				(5,3,false),
+				(3,4,false),
+				(5,4,false),
+				(4,5,false)
+			],
+			vec![
+				(1,2,false),
+				(2,2,false),
+				(3,2,false),
+				(1,3,false),
+				(3,3,false),
+				(2,4,false)
+			],
+			vec![
+				(5,2,false),
+				(6,2,false),
+				(7,2,false),
+				(5,3,false),
+				(7,3,false),
+				(6,4,false)
+			],
+			vec![
+				(3,1,false),
+				(4,1,false),
+				(5,1,false),
+				(3,2,false),
+				(5,2,false),
+				(4,3,false)
+			],
+			vec![
+				(3,0,false),
+				(4,0,false),
+				(5,0,false),
+				(3,1,false),
+				(5,1,false),
+				(4,2,false)
+			]
+		],
+		// 角
+		vec![
+			vec![
+				(3,3,false),(2,2,true),(2,2,false),(1,1,true),(1,1,false),(0,0,true),(0,0,false),
+				(5,3,false),(6,2,true),(6,2,false),(7,1,true),(7,1,false),(8,0,true),(8,0,false),
+				(3,5,false),(2,6,false),(1,7,false),(0,8,false),
+				(5,5,false),(6,6,false),(7,7,false),(8,8,false)
+			],
+			vec![
+				(1,2,true),(1,2,false),(0,1,true),(0,1,false),
+				(3,2,true),(3,2,false),(4,1,true),(4,1,false),(5,0,true),(5,0,false),
+				(1,4,false),(0,5,false),
+				(3,4,false),(4,5,false),(5,6,false),(6,7,false),(7,8,false)
+			],
+			vec![
+				(5,2,true),(5,2,false),(4,1,true),(4,1,false),(3,0,true),(3,0,false),
+				(7,2,true),(7,2,false),(8,1,true),(8,1,false),
+				(5,4,false),(4,5,false),(3,6,false),(2,7,false),(1,8,false),
+				(7,4,false),(8,4,false)
+			],
+			vec![
+				(3,1,true),(3,1,false),(2,0,true),(2,0,false),
+				(5,1,true),(5,1,false),(6,0,true),(6,0,false),
+				(3,3,true),(3,3,false),(2,4,true),(2,4,false),(1,5,true),(1,5,false),(0,6,true),(0,6,false),
+				(5,3,true),(5,3,false),(6,4,true),(6,4,false),(7,5,true),(7,5,false),(8,4,true),(8,4,false)
+			],
+			vec![
+				(3,0,true),(3,0,false),
+				(5,0,true),(5,0,false),
+				(3,2,true),(3,2,false),(2,3,true),(2,3,false),(1,4,true),(1,4,false),(0,5,true),(0,5,false),
+				(5,2,true),(5,2,false),(6,3,true),(6,3,false),(7,4,true),(7,4,false),(8,5,true),(8,5,false)
+			]
+		],
+		// 飛車
+		vec![
+			vec![
+				(4,3,false),(4,2,true),(4,2,false),(4,1,true),(4,1,false),(4,0,true),(4,0,false),
+				(4,5,false),(4,6,false),(4,7,false),(4,8,false),
+				(3,4,false),(2,4,false),(1,4,false),(0,4,false),
+				(5,4,false),(6,4,false),(7,4,false),(8,4,false)
+			],
+			vec![
+				(2,2,true),(2,2,false),(2,1,true),(2,1,false),(2,0,true),(2,0,false),
+				(2,4,false),(2,5,false),(2,6,false),(2,7,false),(2,8,false),
+				(1,4,false),(0,4,false),
+				(3,3,false),(4,3,false),(5,3,false),(6,3,false),(7,3,false),(8,3,false)
+			],
+			vec![
+				(6,2,true),(6,2,false),(6,1,true),(6,1,false),(6,0,true),(6,0,false),
+				(6,4,false),(6,5,false),(6,6,false),(6,7,false),(6,8,false),
+				(5,4,false),(4,4,false),(3,4,false),(2,4,false),(1,4,false),(0,4,false),
+				(7,3,false),(8,3,false)
+			],
+			vec![
+				(4,1,true),(4,1,false),(4,0,true),(4,0,false),
+				(4,3,true),(4,3,false),(4,4,true),(4,4,false),(4,5,true),(4,5,false),(4,6,true),(4,6,false),(4,7,true),(4,7,false),(4,8,true),(4,8,false),
+				(3,2,true),(3,2,false),(2,2,true),(2,2,false),(1,2,true),(1,2,false),(0,2,true),(0,2,false),
+				(5,2,true),(5,2,false),(6,2,true),(6,2,false),(7,2,true),(7,2,false),(8,2,true),(8,2,false),
+			],
+			vec![
+				(4,0,true),(4,0,false),
+				(4,2,true),(4,2,false),(4,3,true),(4,3,false),(4,4,true),(4,4,false),(4,5,true),(4,5,false),(4,6,true),(4,6,false),(4,7,true),(4,7,false),(4,8,true),(4,8,false),
+				(3,1,true),(3,1,false),(2,1,true),(2,1,false),(1,1,true),(1,1,false),(0,1,true),(0,1,false),
+				(5,1,true),(5,1,false),(6,1,true),(6,1,false),(7,1,true),(7,1,false),(8,1,true),(8,1,false),
+			]
+		],
+		// 成角
+		vec![
+			vec![
+				(3,3,false),(2,2,false),(1,1,false),(0,0,false),
+				(5,3,false),(6,2,false),(7,1,false),(8,0,false),
+				(3,5,false),(2,6,false),(1,7,false),(0,8,false),
+				(5,5,false),(6,6,false),(7,7,false),(8,8,false),
+				(4,3,false),(4,5,false),(3,4,false),(5,4,false)
+			],
+			vec![
+				(1,2,false),(0,1,false),
+				(3,2,false),(4,1,false),(5,0,false),
+				(1,4,false),(0,5,false),
+				(3,4,false),(4,5,false),(5,6,false),(6,7,false),(7,8,false),
+				(2,2,false),(2,4,false),(1,3,false),(3,3,false),
+			],
+			vec![
+				(5,2,false),(4,1,false),(3,0,false),
+				(7,2,false),(8,1,false),
+				(5,4,false),(4,5,false),(3,6,false),(2,7,false),(1,8,false),
+				(7,4,false),(8,4,false),
+				(6,2,false),(6,4,false),(5,3,false),(7,3,false),
+			],
+			vec![
+				(3,1,false),(2,0,false),
+				(5,1,false),(6,0,false),
+				(3,3,false),(2,4,false),(1,5,false),(0,6,false),
+				(5,3,false),(6,4,false),(7,5,false),(8,4,false),
+				(4,1,false),(4,3,false),(3,2,false),(5,2,false)
+			],
+			vec![
+				(3,0,false),
+				(5,0,false),
+				(3,2,false),(2,3,false),(1,4,false),(0,5,false),
+				(5,2,false),(6,3,false),(7,4,false),(8,5,false),
+				(4,0,false),(4,2,false),(3,1,false),(5,1,false)
+			]
+		],
+		// 成飛
+		vec![
+			vec![
+				(4,3,false),(4,2,false),(4,1,false),(4,0,false),
+				(4,5,false),(4,6,false),(4,7,false),(4,8,false),
+				(3,4,false),(2,4,false),(1,4,false),(0,4,false),
+				(5,4,false),(6,4,false),(7,4,false),(8,4,false),
+				(3,3,false),(5,3,false),(3,5,false),(5,5,false),
+			],
+			vec![
+				(2,2,false),(2,1,false),(2,0,false),
+				(2,4,false),(2,5,false),(2,6,false),(2,7,false),(2,8,false),
+				(1,4,false),(0,4,false),
+				(3,3,false),(4,3,false),(5,3,false),(6,3,false),(7,3,false),(8,3,false),
+				(1,2,false),(3,2,false),(1,4,false),(3,4,false)
+			],
+			vec![
+				(6,2,false),(6,1,false),(6,0,false),
+				(6,4,false),(6,5,false),(6,6,false),(6,7,false),(6,8,false),
+				(5,4,false),(4,4,false),(3,4,false),(2,4,false),(1,4,false),(0,4,false),
+				(7,3,false),(8,3,false),
+				(5,2,false),(7,2,false),(5,4,false),(7,4,false)
+			],
+			vec![
+				(4,1,false),(4,0,false),
+				(4,3,false),(4,4,false),(4,5,false),(4,6,false),(4,7,false),(4,8,false),
+				(3,2,false),(2,2,false),(1,2,false),(0,2,false),
+				(5,2,false),(6,2,false),(7,2,false),(8,2,false),
+				(3,1,false),(5,1,false),(3,3,false),(5,3,false)
+			],
+			vec![
+				(4,0,false),
+				(4,2,false),(4,3,false),(4,4,false),(4,5,false),(4,6,false),(4,7,false),(4,8,false),
+				(3,1,false),(2,1,false),(1,1,false),(0,1,false),
+				(5,1,false),(6,1,false),(7,1,false),(8,1,false),
+				(3,0,false),(5,0,false),(3,1,false),(5,1,false)
+			]
+		]
+	];
+
+	let kinds:Vec<Vec<KomaKind>> = vec![
+		vec![ GFu ],
+		vec![ GKyou ],
+		vec![ GKei ],
+		vec![ GGin ],
+		vec![ GKin,GFuN,GKyouN,GKeiN,GGinN ],
+		vec![ GKaku ],
+		vec![ GHisha ],
+		vec![ GKakuN ],
+		vec![ GHishaN ]
+	];
+
+	for (kinds,mvs) in kinds.iter().zip(&mvs) {
+		for ((k,p),mvs) in kinds.iter().zip(&POSITIONS).zip(mvs) {
+			for m in mvs {
+				let mut banmen = blank_banmen.clone();
+
+				banmen.0[8 - p.1 as usize][8 - p.0 as usize] = *k;
+
+				let dx = m.0;
+				let dy = m.1;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-p.0),(8-p.1)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,m.2)));
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Gote,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move: kind = {:?}, move = {:?} is false.", k,m.to_move()));
+
+				let mut banmen = blank_banmen.clone();
+
+				banmen.0[8 - p.1 as usize][8 - p.0 as usize] = *k;
+				banmen.0[8 - dy as usize][8 - dx as usize] = SFu;
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Gote,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is false.", k,m.to_move()));
 			}
 		}
 	}
