@@ -4044,7 +4044,7 @@ impl Rule {
 
 		let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, m);
 
-		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_move(o, &state.banmen, &ps, m))
+		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(o, &state.banmen, &ps, m))
 	}
 
 	pub fn is_put_fu_and_mate(state:&State,teban:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
@@ -4072,7 +4072,7 @@ impl Rule {
 						m @ _ => {
 							let m = m.to_applied_move();
 							let ps = Rule::apply_move_to_partial_state_none_check(state, teban, mc, m);
-							Rule::is_mate_with_partial_state_and_old_banmen_and_move(teban.opposite(),&state.banmen,&ps,m)
+							Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(teban.opposite(),&state.banmen,&ps,m)
 						},
 					}
 				}).count() == 0
