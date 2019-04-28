@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
+use std::fmt;
+use std::fmt::Formatter;
 use std::ops::BitOr;
 use std::ops::Not;
 
@@ -460,7 +462,12 @@ impl PartialEq for BitBoard {
 		unsafe { self.merged_bitboard == other.merged_bitboard }
 	}
 }
-#[derive(Clone, Eq, PartialEq)]
+impl fmt::Debug for BitBoard {
+	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+		write!(f, "{}", unsafe { self.merged_bitboard })
+	}
+}
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct State {
 	banmen:Banmen,
 	part:PartialState
@@ -585,7 +592,7 @@ impl State {
 		&self.part
 	}
 }
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct PartialState {
 	pub sente_self_board:BitBoard,
 	pub sente_opponent_board:BitBoard,
