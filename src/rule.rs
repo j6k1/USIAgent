@@ -3325,7 +3325,7 @@ impl Rule {
 
 					let deny_move_mask = match kind {
 						SFu | SKyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
-						SKei =>DENY_MOVE_SENTE_KEI_MASK,
+						SKei => DENY_MOVE_SENTE_KEI_MASK,
 						GFu | GKyou => DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
 						GKei => DENY_MOVE_GOTE_KEI_MASK,
 						_ => 0,
@@ -3373,45 +3373,47 @@ impl Rule {
 							Rule::calc_back_move_repeat_count(bitboard,x,y)
 						};
 
-						let offset = if kind == SKyou {
-							-1 as i32
-						} else {
-							1 as i32
-						};
+						if count > 0 {
+							let offset = if kind == SKyou {
+								-1 as i32
+							} else {
+								1 as i32
+							};
 
-						let mut p = from as i32;
+							let mut p = from as i32;
 
-						if kind == SKyou {
-							for _ in 0..(count - 1) {
-								p += offset;
+							if kind == SKyou {
+								for _ in 0..(count - 1) {
+									p += offset;
 
-								if p == to {
-									return true;
-								} else if p < to {
-									return false;
+									if p == to {
+										return true;
+									} else if p < to {
+										return false;
+									}
+								}
+							} else {
+								for _ in 0..(count - 1) {
+									p += offset;
+
+									if p == to {
+										return true;
+									} else if p > to {
+										return false;
+									}
 								}
 							}
-						} else {
-							for _ in 0..(count - 1) {
-								p += offset;
 
-								if p == to {
-									return true;
-								} else if p > to {
-									return false;
-								}
-							}
-						}
-
-						if kind == SKyou && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind == GKyou && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else {
 							p += offset;
 
-							if p == to {
-								return true;
+							if kind == SKyou && self_occupied & (1 << (p + 1)) != 0 {
+								return false;
+							} else if kind == GKyou && self_occupied & (1 << (80 - p + 1)) != 0 {
+								return false;
+							} else {
+								if p == to {
+									return true;
+								}
 							}
 						}
 					},
@@ -3423,119 +3425,129 @@ impl Rule {
 							*state.part.diag_board.bitboard.get_unchecked(0)
 						};
 
-						let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
+						if to < from {
+							let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
 
-						let mut p = from;
+							if count > 0 {
+								let mut p = from;
 
-						for _ in 0..(count - 1) {
-							p -= 10;
+								for _ in 0..(count - 1) {
+									p -= 10;
 
-							if p == to {
-								return true;
-							} else if p < to {
-								return false;
+									if p == to {
+										return true;
+									} else if p < to {
+										break;
+									}
+								}
+
+								p -= 10;
+
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
 							}
-						}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
+							let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+
+							if count > 0 {
+
+								let mut p = from;
+
+								for _ in 0..(count - 1) {
+									p -= 8;
+
+									if p == to {
+										return true;
+									} else if p < to {
+										break;
+									}
+								}
+
+								p -= 8;
+
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
+							}
 						} else {
-							p -= 10;
+							let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
 
-							if p == to {
-								return true;
+							if count > 0 {
+								let mut p = from;
+
+								for _ in 0..(count - 1) {
+									p += 10;
+
+									if p == to {
+										return true;
+									} else if p > to {
+										break;
+									}
+								}
+
+								p += 10;
+
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
 							}
-						}
+							let board = unsafe {
+								*state.part.diag_board.bitboard.get_unchecked(1)
+							};
 
-						let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
+							let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
 
-						let mut p = from;
+							if count > 0 {
+								let mut p = from;
 
-						for _ in 0..(count - 1) {
-							p += 10;
+								for _ in 0..(count - 1) {
+									p += 8;
 
-							if p == to {
-								return true;
-							} else if p > to {
-								return false;
-							}
-						}
+									if p == to {
+										return true;
+									} else if p > to {
+										break;
+									}
+								}
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
-						} else {
-							p += 10;
+								p += 8;
 
-							if p == to {
-								return true;
-							}
-						}
-
-						let board = unsafe {
-							*state.part.diag_board.bitboard.get_unchecked(1)
-						};
-
-						let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
-
-						let mut p = from;
-
-						for _ in 0..(count - 1) {
-							p += 8;
-
-							if p == to {
-								return true;
-							} else if p > to {
-								return false;
-							}
-						}
-
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
-						} else {
-							p += 8;
-
-							if p == to {
-								return true;
-							}
-						}
-
-						let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
-
-						let mut p = from;
-
-						for _ in 0..(count - 1) {
-							p -= 8;
-
-							if p == to {
-								return true;
-							} else if p < to {
-								return false;
-							}
-						}
-
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
-						} else {
-							p -= 8;
-
-							if p == to {
-								return true;
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
 							}
 						}
 					},
@@ -3547,116 +3559,124 @@ impl Rule {
 
 						let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
-						let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
+						if to < from {
+							let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
 
-						let mut p = from;
+							if count > 0 {
+								let mut p = from;
 
-						for _ in 0..(count - 1) {
-							p -= 1;
+								for _ in 0..(count - 1) {
+									p -= 1;
 
-							if p == to {
-								return true;
-							} else if p < to {
-								return false;
+									if p == to {
+										return true;
+									} else if p < to {
+										break;
+									}
+								}
+
+								p -= 1;
+
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+
+									if p == to {
+										return true;
+									}
+								}
 							}
-						}
+							let count = Rule::calc_to_left_move_count_of_hisha(state.part.rotate_board,x,y);
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
+							if count > 0 {
+								let mut p = from;
+
+								for _ in 0..(count - 1) {
+									p -= 9;
+
+									if p == to {
+										return true;
+									} else if p < to {
+										break;
+									}
+								}
+
+								p -= 9;
+
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
+							}
 						} else {
-							p -= 1;
+							let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
 
-							if p == to {
-								return true;
+							if count > 0 {
+								let mut p = from;
+
+								for _ in 0..(count - 1) {
+									p += 1;
+
+									if p == to {
+										return true;
+									} else if p > to {
+										break;
+									}
+								}
+
+								p += 1;
+
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
 							}
-						}
+							let count = Rule::calc_to_right_move_count_of_hisha(state.part.rotate_board,x,y);
 
-						let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
+							if count > 0 {
+								let mut p = from;
 
-						let mut p = from;
+								for _ in 0..(count - 1) {
+									p += 9;
 
-						for _ in 0..(count - 1) {
-							p += 1;
+									if p == to {
+										return true;
+									} else if p > to {
+										break;
+									}
+								}
 
-							if p == to {
-								return true;
-							} else if p > to {
-								return false;
-							}
-						}
+								p += 9;
 
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
-						} else {
-							p += 1;
-
-							if p == to {
-								return true;
-							}
-						}
-
-						let count = Rule::calc_to_left_move_count_of_hisha(state.part.rotate_board,x,y);
-
-						let mut p = from;
-
-						for _ in 0..(count - 1) {
-							p -= 9;
-
-							if p == to {
-								return true;
-							} else if p < to {
-								return false;
-							}
-						}
-
-
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
-						} else {
-							p -= 9;
-
-							if p == to {
-								return true;
-							}
-						}
-
-						let count = Rule::calc_to_right_move_count_of_hisha(state.part.rotate_board,x,y);
-
-						let mut p = from;
-
-						for _ in 0..(count - 1) {
-							p += 9;
-
-							if p == to {
-								return true;
-							} else if p > to {
-								return false;
-							}
-						}
-
-						if kind < GFu && self_occupied & (1 << (p + 1)) != 1 {
-							return false;
-						} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 1 {
-							return false;
-						} else if kind == Blank {
-							return false;
-						} else {
-							p += 9;
-
-							if p == to {
-								return true;
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
 							}
 						}
 					},
