@@ -3751,12 +3751,12 @@ impl Rule {
 					Teban::Sente => {
 						match kind {
 							MochigomaKind::Fu | MochigomaKind::Kyou  => {
-								if DENY_MOVE_SENTE_FU_AND_KYOU_MASK & to_mask != 0 {
+								if (DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & to_mask != 0 {
 									return false;
 								}
 							},
 							MochigomaKind::Kei => {
-								if DENY_MOVE_SENTE_KEI_MASK & to_mask != 0 {
+								if (DENY_MOVE_SENTE_KEI_MASK << 1) & to_mask != 0 {
 									return false;
 								}
 							},
@@ -3766,12 +3766,12 @@ impl Rule {
 					Teban::Gote => {
 						match kind {
 							MochigomaKind::Fu | MochigomaKind::Kyou  => {
-								if DENY_MOVE_GOTE_FU_AND_KYOU_MASK & to_mask != 0 {
+								if (DENY_MOVE_GOTE_FU_AND_KYOU_MASK << 1) & to_mask != 0 {
 									return false;
 								}
 							},
 							MochigomaKind::Kei => {
-								if DENY_MOVE_GOTE_KEI_MASK & to_mask != 0 {
+								if (DENY_MOVE_GOTE_KEI_MASK << 1) & to_mask != 0 {
 									return false;
 								}
 							},
