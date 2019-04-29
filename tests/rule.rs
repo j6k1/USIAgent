@@ -15987,6 +15987,59 @@ fn test_is_valid_move_valid_to_sente() {
 				(5,1,false),(6,1,false),(7,1,false),(8,1,false),
 				(3,0,false),(5,0,false),(3,1,false),(5,1,false)
 			]
+		],
+		// 王
+		vec![
+			vec![
+				(3,3,false),
+				(4,3,false),
+				(5,3,false),
+				(3,4,false),
+				(5,4,false),
+				(3,5,false),
+				(4,5,false),
+				(5,5,false),
+			],
+			vec![
+				(1,2,false),
+				(2,2,false),
+				(3,2,false),
+				(1,3,false),
+				(3,3,false),
+				(1,4,false),
+				(2,4,false),
+				(3,4,false)
+			],
+			vec![
+				(5,2,false),
+				(6,2,false),
+				(7,2,false),
+				(5,3,false),
+				(7,3,false),
+				(5,4,false),
+				(6,4,false),
+				(7,4,false)
+			],
+			vec![
+				(3,1,false),
+				(4,1,false),
+				(5,1,false),
+				(3,2,false),
+				(5,2,false),
+				(3,3,false),
+				(4,3,false),
+				(5,3,false)
+			],
+			vec![
+				(3,0,false),
+				(4,0,false),
+				(5,0,false),
+				(3,1,false),
+				(5,1,false),
+				(3,2,false),
+				(4,2,false),
+				(5,2,false)
+			]
 		]
 	];
 
@@ -15999,7 +16052,8 @@ fn test_is_valid_move_valid_to_sente() {
 		vec![ SKaku ],
 		vec![ SHisha ],
 		vec![ SKakuN ],
-		vec![ SHishaN ]
+		vec![ SHishaN ],
+		vec![ SOu ]
 	];
 
 	for (kinds,mvs) in kinds.iter().zip(&mvs) {
@@ -16333,6 +16387,59 @@ fn test_is_valid_move_valid_to_gote() {
 				(5,1,false),(6,1,false),(7,1,false),(8,1,false),
 				(3,0,false),(5,0,false),(3,1,false),(5,1,false)
 			]
+		],
+		// 王
+		vec![
+			vec![
+				(3,3,false),
+				(4,3,false),
+				(5,3,false),
+				(3,4,false),
+				(5,4,false),
+				(3,5,false),
+				(4,5,false),
+				(5,5,false),
+			],
+			vec![
+				(1,2,false),
+				(2,2,false),
+				(3,2,false),
+				(1,3,false),
+				(3,3,false),
+				(1,4,false),
+				(2,4,false),
+				(3,4,false)
+			],
+			vec![
+				(5,2,false),
+				(6,2,false),
+				(7,2,false),
+				(5,3,false),
+				(7,3,false),
+				(5,4,false),
+				(6,4,false),
+				(7,4,false)
+			],
+			vec![
+				(3,1,false),
+				(4,1,false),
+				(5,1,false),
+				(3,2,false),
+				(5,2,false),
+				(3,3,false),
+				(4,3,false),
+				(5,3,false)
+			],
+			vec![
+				(3,0,false),
+				(4,0,false),
+				(5,0,false),
+				(3,1,false),
+				(5,1,false),
+				(3,2,false),
+				(4,2,false),
+				(5,2,false)
+			]
 		]
 	];
 
@@ -16345,7 +16452,8 @@ fn test_is_valid_move_valid_to_gote() {
 		vec![ GKaku ],
 		vec![ GHisha ],
 		vec![ GKakuN ],
-		vec![ GHishaN ]
+		vec![ GHishaN ],
+		vec![ GOu ]
 	];
 
 	for (kinds,mvs) in kinds.iter().zip(&mvs) {
@@ -16381,6 +16489,442 @@ fn test_is_valid_move_valid_to_gote() {
 					m
 				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is false.", k,m.to_move()));
 			}
+		}
+	}
+}
+#[test]
+fn test_is_valid_move_valid_with_kyou_opponent_occupied_sente() {
+	let mvs:Vec<(u32,u32,bool)> = vec![
+		(4,4,false),(4,3,false),(4,2,true),(4,2,false)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for m in &mvs {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[5][4] = SKyou;
+		banmen.0[2][4] = GFu;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,5+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+		let state = State::new(banmen);
+
+		assert!(Rule::is_valid_move(&state,
+			Teban::Sente,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_valid_with_kyou_opponent_occupied_gote() {
+	let mvs:Vec<(u32,u32,bool)> = vec![
+		(4,4,false),(4,3,false),(4,2,true),(4,2,false)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for m in &mvs {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-5][8-4] = GKyou;
+		banmen.0[8-2][8-4] = SFu;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-4),(8-5)+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+		let state = State::new(banmen);
+
+		assert!(Rule::is_valid_move(&state,
+			Teban::Gote,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_valid_with_kyou_self_occupied_sente() {
+	let mvs:Vec<(u32,u32,bool)> = vec![
+		(4,4,false),(4,3,false)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for m in &mvs {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[5][4] = SKyou;
+		banmen.0[2][4] = SFu;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,5+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+		let state = State::new(banmen);
+
+		assert!(Rule::is_valid_move(&state,
+			Teban::Sente,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_valid_with_kyou_self_occupied_gote() {
+	let mvs:Vec<(u32,u32,bool)> = vec![
+		(4,4,false),(4,3,false)
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for m in &mvs {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8-5][8-4] = GKyou;
+		banmen.0[8-2][8-4] = GFu;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-4),(8-5)+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+		let state = State::new(banmen);
+
+		assert!(Rule::is_valid_move(&state,
+			Teban::Gote,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_kaku_opponent_occupied_sente() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(1,1),(1,7),(7,1),(7,7)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(2,2,true),(2,2,false),(3,3,true),(3,3,false),(4,4,true),(4,4,false)
+		],
+		vec![
+			(2,6,false),(3,5,false),(4,4,false)
+		],
+		vec![
+			(6,2,true),(6,2,false),(5,3,true),(5,3,false),(4,4,true),(4,4,false)
+		],
+		vec![
+			(6,6,false),(5,5,false),(4,4,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[p.1 as usize][p.0 as usize] = SKaku;
+			banmen.0[4][4] = GFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Sente,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_kaku_opponent_occupied_gote() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(1,1),(1,7),(7,1),(7,7)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(2,2,true),(2,2,false),(3,3,true),(3,3,false),(4,4,true),(4,4,false)
+		],
+		vec![
+			(2,6,false),(3,5,false),(4,4,false)
+		],
+		vec![
+			(6,2,true),(6,2,false),(5,3,true),(5,3,false),(4,4,true),(4,4,false)
+		],
+		vec![
+			(6,6,false),(5,5,false),(4,4,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8 - p.1 as usize][8 - p.0 as usize] = GKaku;
+			banmen.0[4][4] = SFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-p.0),(8-p.1)+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Gote,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_kaku_self_occupied_sente() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(1,1),(1,7),(7,1),(7,7)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(2,2,true),(2,2,false),(3,3,true),(3,3,false)
+		],
+		vec![
+			(2,6,false),(3,5,false)
+		],
+		vec![
+			(6,2,true),(6,2,false),(5,3,true),(5,3,false)
+		],
+		vec![
+			(6,6,false),(5,5,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[p.1 as usize][p.0 as usize] = SKaku;
+			banmen.0[4][4] = SFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Sente,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_kaku_self_occupied_gote() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(1,1),(1,7),(7,1),(7,7)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(2,2,true),(2,2,false),(3,3,true),(3,3,false)
+		],
+		vec![
+			(2,6,false),(3,5,false)
+		],
+		vec![
+			(6,2,true),(6,2,false),(5,3,true),(5,3,false)
+		],
+		vec![
+			(6,6,false),(5,5,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8 - p.1 as usize][8 - p.0 as usize] = GKaku;
+			banmen.0[4][4] = GFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-p.0),(8-p.1)+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Gote,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_hisha_opponent_occupied_sente() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(4,7),(1,4),(4,1),(7,4)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(4,6,false),(4,5,false),(4,4,false)
+		],
+		vec![
+			(2,4,false),(3,4,false),(4,4,false)
+		],
+		vec![
+			(4,2,true),(4,2,false),(4,3,true),(4,3,false),(4,4,true),(4,4,false)
+		],
+		vec![
+			(6,4,false),(5,4,false),(4,4,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[p.1 as usize][p.0 as usize] = SHisha;
+			banmen.0[4][4] = GFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Sente,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_hisha_opponent_occupied_gote() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(4,7),(1,4),(4,1),(7,4)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(4,6,false),(4,5,false),(4,4,false)
+		],
+		vec![
+			(2,4,false),(3,4,false),(4,4,false)
+		],
+		vec![
+			(4,2,true),(4,2,false),(4,3,true),(4,3,false),(4,4,true),(4,4,false)
+		],
+		vec![
+			(6,4,false),(5,4,false),(4,4,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8 - p.1 as usize][8 - p.0 as usize] = GHisha;
+			banmen.0[8-4][8-4] = SFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-p.0),(8-p.1)+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Gote,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_hisha_self_occupied_sente() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(4,7),(1,4),(4,1),(7,4)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(4,6,false),(4,5,false)
+		],
+		vec![
+			(2,4,false),(3,4,false)
+		],
+		vec![
+			(4,2,true),(4,2,false),(4,3,true),(4,3,false)
+		],
+		vec![
+			(6,4,false),(5,4,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[p.1 as usize][p.0 as usize] = SHisha;
+			banmen.0[4][4] = SFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Sente,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_valid_move_with_hisha_self_occupied_gote() {
+	const POSITIONS:[(u32,u32); 4] = [
+		(4,7),(1,4),(4,1),(7,4)
+	];
+
+	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
+		vec![
+			(4,6,false),(4,5,false)
+		],
+		vec![
+			(2,4,false),(3,4,false)
+		],
+		vec![
+			(4,2,true),(4,2,false),(4,3,true),(4,3,false)
+		],
+		vec![
+			(6,4,false),(5,4,false)
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
+		for m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8 - p.1 as usize][8 - p.0 as usize] = GHisha;
+			banmen.0[8-4][8-4] = GFu;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-p.0),(8-p.1)+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Gote,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
 		}
 	}
 }
