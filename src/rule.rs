@@ -3424,11 +3424,11 @@ impl Rule {
 					SKaku | SKakuN | GKaku | GKakuN => {
 						let to = m.dst();
 
-						let board = unsafe {
-							*state.part.diag_board.bitboard.get_unchecked(0)
-						};
-
 						if to < from {
+							let board = unsafe {
+								*state.part.diag_board.bitboard.get_unchecked(0)
+							};
+
 							let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
 
 							if count > 0 {
@@ -3458,6 +3458,10 @@ impl Rule {
 									}
 								}
 							}
+
+							let board = unsafe {
+								*state.part.diag_board.bitboard.get_unchecked(1)
+							};
 
 							let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
 
@@ -3490,6 +3494,10 @@ impl Rule {
 								}
 							}
 						} else {
+							let board = unsafe {
+								*state.part.diag_board.bitboard.get_unchecked(0)
+							};
+
 							let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
 
 							if count > 0 {
