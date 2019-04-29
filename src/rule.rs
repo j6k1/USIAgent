@@ -3303,6 +3303,11 @@ impl Rule {
 		match m {
 			AppliedMove::To(m) => {
 				let from = m.src();
+				let to = m.dst();
+
+				if from > 80 || to > 80 {
+					return false;
+				}
 
 				let (x,y) = from.square_to_point();
 
@@ -3321,7 +3326,7 @@ impl Rule {
 						_ => ()
 					}
 				} else {
-					let to_mask = 1 << m.dst();
+					let to_mask = 1 << to;
 
 					let deny_move_mask = match kind {
 						SFu | SKyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
@@ -3337,9 +3342,9 @@ impl Rule {
 				}
 
 				let (to,self_occupied) = if kind < GFu {
-					(m.dst(),state.part.sente_self_board)
+					(to,state.part.sente_self_board)
 				} else if kind < Blank {
-					(80 - m.dst(),state.part.gote_self_board)
+					(80 - to,state.part.gote_self_board)
 				} else {
 					return false;
 				};
@@ -3349,7 +3354,7 @@ impl Rule {
 					GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN => {
 						let board = Rule::gen_candidate_bits(t, self_occupied, from, kind);
 
-						if (unsafe { board.merged_bitboard } & (1 << (to + 1))) != 1 {
+						if (unsafe { board.merged_bitboard } & (1 << (to + 1))) != 0 {
 							return true;
 						}
 					},
@@ -3360,7 +3365,6 @@ impl Rule {
 
 				match kind {
 					SKyou | GKyou => {
-						let from = m.src();
 						let to = m.dst() as i32;
 
 						let (x,y) = from.square_to_point();
@@ -3418,7 +3422,6 @@ impl Rule {
 						}
 					},
 					SKaku | SKakuN | GKaku | GKakuN => {
-						let from = m.src();
 						let to = m.dst();
 
 						let board = unsafe {
@@ -3516,6 +3519,7 @@ impl Rule {
 									}
 								}
 							}
+
 							let board = unsafe {
 								*state.part.diag_board.bitboard.get_unchecked(1)
 							};
@@ -3552,7 +3556,6 @@ impl Rule {
 						}
 					},
 					SHisha | SHishaN | GHisha | GHishaN => {
-						let from = m.src();
 						let to = m.dst();
 
 						let (x,y) = from.square_to_point();
@@ -3590,6 +3593,7 @@ impl Rule {
 									}
 								}
 							}
+
 							let count = Rule::calc_to_left_move_count_of_hisha(state.part.rotate_board,x,y);
 
 							if count > 0 {
@@ -3649,6 +3653,7 @@ impl Rule {
 									}
 								}
 							}
+
 							let count = Rule::calc_to_right_move_count_of_hisha(state.part.rotate_board,x,y);
 
 							if count > 0 {
@@ -3687,6 +3692,10 @@ impl Rule {
 			},
 			AppliedMove::Put(m) => {
 				let to = m.dst();
+
+				if to > 80 {
+					return false;
+				}
 
 				let to_mask = 1 << (to + 1);
 

@@ -15748,12 +15748,12 @@ fn test_is_valid_move_valid_to_sente() {
 		// 桂馬
 		vec![
 			vec![
-				(4,2,true),(4,2,false),
-				(4,6,true),(4,6,false)
+				(3,2,true),(3,2,false),
+				(5,2,true),(5,2,false)
 			],
 			vec![
-				(0,1,true),
-				(4,1,true)
+				(1,1,true),
+				(3,1,true)
 			],
 			vec![
 				(4,1,true),
@@ -16148,12 +16148,12 @@ fn test_is_valid_move_valid_to_gote() {
 		// 桂馬
 		vec![
 			vec![
-				(4,2,true),(4,2,false),
-				(4,6,true),(4,6,false)
+				(3,2,true),(3,2,false),
+				(5,2,true),(5,2,false)
 			],
 			vec![
-				(0,1,true),
-				(4,1,true)
+				(1,1,true),
+				(3,1,true)
 			],
 			vec![
 				(4,1,true),
@@ -17361,6 +17361,95 @@ fn test_is_valid_move_invalid_with_hisha_self_occupied_gote() {
 				&MochigomaCollections::Empty,
 				m
 			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_move_invalid_to_outside_sente() {
+	let kinds:Vec<Vec<KomaKind>> = vec![
+		vec![ SFu ],
+		vec![ SKyou ],
+		vec![ SKei ],
+		vec![ SGin ],
+		vec![ SKin,SFuN,SKyouN,SKeiN,SGinN ],
+		vec![ SKaku ],
+		vec![ SHisha ],
+		vec![ SKakuN ],
+		vec![ SHishaN ]
+	];
+
+	let mvs:Vec<Vec<((u32,u32),(u32,u32))>> = vec![
+		vec![
+			((8,0),(7,8))
+		],
+		vec![
+			((8,1),(7,8))
+		],
+		vec![
+			((7,1),(7,8))
+		],
+		vec![
+			((0,0),(1,8)),((0,0),(2,8)),
+			((0,8),(2,0)),
+			((8,0),(6,8)),((8,0),(7,8)),((8,0),(8,8)),((8,0),(9,1)),
+			((8,8),(9,7)),((8,8),(9,9)),((8,8),(6,0))
+		],
+		vec![
+			((0,0),(1,8)),((0,0),(2,8)),
+			((0,8),(1,0)),
+			((8,0),(6,8)),((8,0),(7,8)),((8,0),(8,8)),((8,0),(9,0)),
+			((8,8),(7,0)),((8,8),(9,7)),((8,8),(9,8))
+		],
+		vec![
+		],
+		vec![
+			((0,8),(1,0)),
+			((8,0),(7,8)),((8,0),(9,8)),
+			((8,8),(7,0)),((8,8),(8,9)),((8,8),(9,8))
+		],
+		vec![
+			((0,8),(6,0)),((0,8),(1,0)),
+			((8,0),(7,8)),((8,0),(9,8)),((8,0),(6,8)),((8,0),(9,1)),
+			((8,8),(7,0)),((8,8),(8,9)),((8,8),(9,8)),((8,8),(6,0)),((8,8),(9,9)),((8,8),(9,7))
+		],
+		vec![
+			((0,8),(6,0)),((0,8),(1,0)),
+			((8,0),(7,8)),((8,0),(9,8)),((8,0),(6,8)),((8,0),(9,1)),
+			((8,8),(7,0)),((8,8),(8,9)),((8,8),(9,8)),((8,8),(6,0)),((8,8),(9,9)),((8,8),(9,7))
+		]
+	];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (kinds,mvs) in kinds.iter().zip(&mvs) {
+		for k in kinds {
+			for m in mvs {
+				let mut banmen = blank_banmen.clone();
+
+				banmen.0[(m.0).1 as usize][(m.0).0 as usize] = *k;
+
+				let mv = rule::LegalMove::To(rule::LegalMoveTo::new(
+												((m.0).0 * 9 + (m.0).1) as u32,
+												((m.1).0 * 9 + (m.1).1) as u32,true,None)).to_applied_move();
+
+				let state = State::new(banmen);
+
+				assert!(!Rule::is_valid_move(&state,
+					Teban::Sente,
+					&MochigomaCollections::Empty,
+					mv
+				), format!("is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move()));
+
+				let mv = rule::LegalMove::To(rule::LegalMoveTo::new(
+												((m.0).0 * 9 + (m.0).1) as u32,
+												((m.1).0 * 9 + (m.1).1) as u32,false,None)).to_applied_move();
+
+				assert!(!Rule::is_valid_move(&state,
+					Teban::Sente,
+					&MochigomaCollections::Empty,
+					mv
+				), format!("is_valid_move: move = {:?} is true.", mv.to_move()));
+			}
 		}
 	}
 }
