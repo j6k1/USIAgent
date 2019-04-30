@@ -3797,14 +3797,12 @@ impl Rule {
 		}
 	}
 
-	pub fn apply_moves(state:&State,mut teban:Teban,
+	pub fn apply_moves(mut state:State,mut teban:Teban,
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut mhash:u64,mut shash:u64,
 						mut kyokumen_hash_map:TwoKeyHashMap<u64,u32>,
 						hasher:&KyokumenHash<u64>)
 		-> (Teban,State,MochigomaCollections,u64,u64,TwoKeyHashMap<u64,u32>) {
-
-		let mut state = state.clone();
 
 		for m in m {
 			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
@@ -3833,7 +3831,7 @@ impl Rule {
 
 
 	pub fn apply_moves_with_callback<T,F>(
-						state:&State,
+						mut state:State,
 						mut teban:Teban,
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut r:T,mut f:F)
@@ -3841,8 +3839,6 @@ impl Rule {
 		where F: FnMut(&Banmen,Teban,
 						&MochigomaCollections,&Option<AppliedMove>,
 						&Option<MochigomaKind>,T) -> T {
-		let mut state = state.clone();
-
 		for m in m {
 			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
 				(next,nmc,o) => {

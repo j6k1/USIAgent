@@ -22330,6 +22330,61 @@ fn test_apply_valid_move_put_invalid_gote() {
 		}
 	}
 }
+#[test]
+fn test_apply_moves() {
+	let mut after_banmen = BANMEN_START_POS.clone();
+
+	after_banmen.0[6][8] = Blank;
+	after_banmen.0[4][8] = SFu;
+	after_banmen.0[8][1] = Blank;
+	after_banmen.0[6][2] = SKei;
+	after_banmen.0[5][2] = SFu;
+
+	after_banmen.0[8-6][8-8] = Blank;
+	after_banmen.0[8-4][8-8] = GFu;
+	after_banmen.0[8-8][8-1] = Blank;
+	after_banmen.0[8-6][8-2] = GKei;
+	after_banmen.0[8-5][8-2] = GFu;
+
+	let mvs:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
+		((8,6),(8,5,false),None),
+		((8-8,8-6),(8-8,8-5,false),None),
+		((8,5),(8,4,false),None),
+		((8-8,8-5),(8-8,8-4,false),None),
+		((2,6),(2,5,false),None),
+		((8-2,8-6),(8-2,8-5,false),None),
+		((1,8),(2,6,false),None),
+		((8-1,8-8),(8-2,8-6,false),None),
+	];
+
+	let kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
+	let hasher = KyokumenHash::new();
+
+	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
+
+	let mvs = mvs.into_iter().map(|m| {
+		rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,(m.1).2)))
+	}).collect::<Vec<rule::AppliedMove>>();
+
+	let state = State::new(BANMEN_START_POS.clone());
+	let teban = Teban::Sente;
+	let mc = MochigomaCollections::Empty;
+
+	let (_,
+		 _,
+		 _,
+		 mhash,
+		 shash,
+		 _) = Rule::apply_moves(state,teban,mc,&mvs,imhash,ishash,kyokumen_hash_map,&hasher);
+
+	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&HashMap::new(),&HashMap::new());
+
+	assert_eq!(amhash,mhash);
+	assert_eq!(ashash,shash);
+
+	assert!(mhash != imhash);
+	assert!(mhash != ishash);
+}
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
 		match m {

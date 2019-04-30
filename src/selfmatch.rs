@@ -644,7 +644,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					 mut mc,
 					 mut mhash,
 					 mut shash,
-					 mut kyokumen_hash_map) = Rule::apply_moves(&State::new(banmen),teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
+					 mut kyokumen_hash_map) = Rule::apply_moves(State::new(banmen),teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
 
 				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u64,u32>>; 2] = [None,None];
 
