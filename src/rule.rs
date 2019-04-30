@@ -4037,7 +4037,7 @@ impl Rule {
 													0
 												}
 											}
-										}).count()
+										}).fold(0, |sum,s| sum + s)
 									} else {
 										0
 									}
@@ -4053,7 +4053,7 @@ impl Rule {
 									} else {
 										0
 									}
-								}).count() >= 10
+								}).fold(0, |sum,s| sum + s) >= 10
 							}
 						}
 					}
