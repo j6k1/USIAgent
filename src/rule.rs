@@ -725,6 +725,7 @@ const DENY_MOVE_SENTE_KEI_MASK: u128 = 0b000000011_000000011_000000011_000000011
 const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
 const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
 const BANMEN_MASK: u128 = 0b111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111_0;
+const NYUGYOK_MASK:u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
 /// 左上を(0,0)とした位置
 pub const BANMEN_START_POS:Banmen = Banmen([
 	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
@@ -3866,21 +3867,18 @@ impl Rule {
 			}
 		}
 
-		let mut ou_position_board = match t {
+		match t {
 			Teban::Sente => {
-				state.part.sente_opponent_ou_position_board
+				if unsafe { state.part.gote_opponent_ou_position_board.merged_bitboard } & NYUGYOK_MASK << 1 == 0 {
+					return false;
+				}
 			},
 			Teban::Gote => {
-				state.part.gote_opponent_ou_position_board
+				if unsafe { state.part.sente_opponent_ou_position_board.merged_bitboard } & NYUGYOK_MASK << 1 == 0 {
+					return false;
+				}
 			},
-		};
-
-		let p = Rule::pop_lsb(&mut ou_position_board);
-		if p == -1 {
-			return false;
 		}
-
-		let (_,oy) = p.square_to_point();
 
 		match &state.banmen {
 			&Banmen(ref kinds) => {
@@ -3888,7 +3886,7 @@ impl Rule {
 					Teban::Sente => {
 						match mc {
 							&MochigomaCollections::Pair(ref mc, _) => {
-								oy <= 2 && kinds.iter().enumerate().map(|(y,row)| {
+								kinds.iter().enumerate().map(|(y,row)| {
 									if y <  3 {
 										row.iter().map(|k| {
 											match *k {
@@ -3934,7 +3932,7 @@ impl Rule {
 								}).fold(0, |sum,s| sum + s) >= 10
 							},
 							&MochigomaCollections::Empty => {
-								oy <= 2 && kinds.iter().enumerate().map(|(y,row)| {
+								kinds.iter().enumerate().map(|(y,row)| {
 									if y < 3 {
 										row.iter().map(|k| {
 											match *k {
@@ -3975,7 +3973,7 @@ impl Rule {
 					Teban::Gote => {
 						match mc {
 							&MochigomaCollections::Pair(_, ref mc) => {
-								oy >= 6 && kinds.iter().enumerate().map(|(y,row)| {
+								kinds.iter().enumerate().map(|(y,row)| {
 									if y >= 6 {
 										row.iter().map(|k| {
 											match *k {
@@ -4021,7 +4019,7 @@ impl Rule {
 								}).fold(0, |sum,s| sum + s) >= 10
 							},
 							&MochigomaCollections::Empty => {
-								oy >= 6 && kinds.iter().enumerate().map(|(y,row)| {
+								kinds.iter().enumerate().map(|(y,row)| {
 									if y >= 6 {
 										row.iter().map(|k| {
 											match *k {

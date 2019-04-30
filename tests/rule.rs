@@ -1,7 +1,7 @@
 extern crate usiagent;
 
 use std::collections::HashMap;
-use std::time::{Instant};
+use std::time::{Instant,Duration};
 
 use usiagent::TryFrom;
 use usiagent::Find;
@@ -22450,6 +22450,271 @@ fn test_apply_moves_with_callback() {
 
 	assert!(mhash != imhash);
 	assert!(mhash != ishash);
+}
+#[test]
+fn test_is_nyugyoku_win_win_sente() {
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,Blank,SKin,Blank,SKin,Blank],
+		[Blank,SKyouN,Blank,Blank,Blank,Blank,SGin,Blank,SFuN],
+		[Blank,SGin,SHishaN,SFuN,SFuN,Blank,Blank,Blank,SOu],
+		[GFu,Blank,Blank,Blank,Blank,SKakuN,Blank,Blank,Blank],
+		[Blank,SHishaN,SFu,SKakuN,Blank,Blank,Blank,Blank,Blank],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,Blank,Blank,Blank,Blank,Blank,Blank,GOu,Blank]
+	]);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Fu,7);
+	ms.insert(MochigomaKind::Kyou,2);
+	ms.insert(MochigomaKind::Gin,1);
+	ms.insert(MochigomaKind::Kei,1);
+	mg.insert(MochigomaKind::Kin,1);
+
+	let mc = MochigomaCollections::Pair(ms,mg);
+	let state = State::new(banmen);
+
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&None));
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&Some(Instant::now())));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,SFuN,SKin,SFuN,SKin,SFuN],
+		[Blank,SKyouN,SHishaN,Blank,Blank,Blank,SGin,Blank,SHishaN],
+		[Blank,SGin,Blank,SFuN,Blank,Blank,SKakuN,Blank,SOu],
+		[GFu,Blank,Blank,Blank,SFuN,SKakuN,Blank,Blank,Blank],
+		[Blank,Blank,SFu,Blank,Blank,SKei,SKyou,SKyou,SKin],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,SGin,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,SFu,SFu,SFu,SFu,SFu,Blank,GOu,Blank]
+	]);
+
+	let state = State::new(banmen);
+
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Empty,&None));
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Empty,&Some(Instant::now())));
+
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Pair(HashMap::new(),HashMap::new()),&None));
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Pair(HashMap::new(),HashMap::new()),&Some(Instant::now())));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,SFuN,SKin,SFuN,SKin,SFuN],
+		[Blank,SKyouN,Blank,Blank,Blank,Blank,SGin,Blank,SHishaN],
+		[Blank,SGin,Blank,SFuN,Blank,Blank,SKakuN,Blank,SOu],
+		[GFu,Blank,Blank,Blank,SFuN,SKakuN,Blank,Blank,Blank],
+		[Blank,Blank,SFu,Blank,Blank,SKei,SKyou,SKyou,SKin],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,SGin,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,SFu,SFu,SFu,SFu,SFu,Blank,GOu,Blank]
+	]);
+
+	let state = State::new(banmen);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Hisha,1);
+
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Pair(ms,HashMap::new()),&None));
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Hisha,1);
+	assert!(Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Pair(ms,HashMap::new()),&Some(Instant::now())));
+}
+#[test]
+fn test_is_nyugyoku_win_lose_sente() {
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,Blank,SKin,Blank,SKin,Blank],
+		[Blank,SKyouN,Blank,Blank,Blank,Blank,SGin,Blank,SFuN],
+		[Blank,SGin,SHishaN,SFuN,SFuN,Blank,Blank,Blank,SOu],
+		[GFu,Blank,Blank,Blank,Blank,SKakuN,Blank,Blank,Blank],
+		[Blank,SHishaN,SFu,SKakuN,Blank,Blank,Blank,Blank,Blank],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,Blank,Blank,Blank,Blank,Blank,Blank,GOu,Blank]
+	]);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Fu,7);
+	ms.insert(MochigomaKind::Kyou,2);
+	ms.insert(MochigomaKind::Gin,1);
+	ms.insert(MochigomaKind::Kei,1);
+	mg.insert(MochigomaKind::Kin,1);
+
+	let mc = MochigomaCollections::Pair(ms,mg);
+	let state = State::new(banmen);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&Some(Instant::now() + Duration::from_secs(60))));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,SFuN,SKin,SFuN,SKin,SFuN],
+		[Blank,SKyouN,SHishaN,Blank,Blank,Blank,SGin,Blank,SHishaN],
+		[Blank,SGin,Blank,SFuN,Blank,Blank,SKakuN,Blank,SOu],
+		[GFu,Blank,Blank,Blank,SFuN,SKakuN,Blank,Blank,Blank],
+		[Blank,Blank,SFu,Blank,Blank,SKei,SKyou,SKyou,SKin],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,SGin,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,SFu,SFu,SFu,SFu,SFu,Blank,GOu,Blank]
+	]);
+
+	let state = State::new(banmen);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,
+			&MochigomaCollections::Empty,&Some(Instant::now() + Duration::from_secs(60))));
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,
+			&MochigomaCollections::Pair(HashMap::new(),HashMap::new()),&Some(Instant::now() + Duration::from_secs(60))));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,SFuN,SKin,SFuN,SKin,SFuN],
+		[Blank,SKyouN,Blank,Blank,Blank,Blank,SGin,Blank,SHishaN],
+		[Blank,SGin,Blank,SFuN,Blank,Blank,SKakuN,Blank,SOu],
+		[GFu,Blank,Blank,Blank,SFuN,SKakuN,Blank,Blank,Blank],
+		[Blank,Blank,SFu,Blank,Blank,SKei,SKyou,SKyou,SKin],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,SGin,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,SFu,SFu,SFu,SFu,SFu,Blank,GOu,Blank]
+	]);
+
+	let state = State::new(banmen);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Hisha,1);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Hisha,1);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,
+			&MochigomaCollections::Pair(ms,HashMap::new()),&Some(Instant::now() + Duration::from_secs(60))));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,Blank,SKin,Blank,SKin,Blank],
+		[Blank,SKyouN,Blank,Blank,Blank,Blank,SGin,Blank,SFuN],
+		[Blank,Blank,SHishaN,SFuN,SFuN,Blank,Blank,Blank,SOu],
+		[GFu,SGin,Blank,Blank,Blank,SKakuN,Blank,Blank,Blank],
+		[Blank,SHishaN,SFu,SKakuN,Blank,Blank,Blank,Blank,Blank],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,Blank,Blank,Blank,Blank,Blank,Blank,GOu,Blank]
+	]);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Fu,7);
+	ms.insert(MochigomaKind::Kyou,2);
+	ms.insert(MochigomaKind::Gin,1);
+	ms.insert(MochigomaKind::Kei,1);
+	mg.insert(MochigomaKind::Kin,1);
+
+	let mc = MochigomaCollections::Pair(ms,mg);
+	let state = State::new(banmen);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&Some(Instant::now())));
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&None));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,Blank,SKin,Blank,SKin,Blank],
+		[Blank,SKyouN,Blank,Blank,Blank,Blank,SGin,Blank,SFuN],
+		[Blank,SGin,SFu,SFuN,SFuN,Blank,Blank,Blank,SOu],
+		[GFu,Blank,Blank,Blank,Blank,SKakuN,Blank,Blank,Blank],
+		[Blank,SHishaN,SHishaN,SKakuN,Blank,Blank,Blank,Blank,Blank],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,Blank,Blank,Blank,Blank,Blank,Blank,GOu,Blank]
+	]);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Fu,7);
+	ms.insert(MochigomaKind::Kyou,2);
+	ms.insert(MochigomaKind::Gin,1);
+	ms.insert(MochigomaKind::Kei,1);
+	mg.insert(MochigomaKind::Kin,1);
+
+	let mc = MochigomaCollections::Pair(ms,mg);
+	let state = State::new(banmen);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&Some(Instant::now())));
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&None));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,SFuN,SKin,SFuN,SKin,SFuN],
+		[Blank,SKyouN,SHishaN,Blank,Blank,Blank,SGin,Blank,SHishaN],
+		[Blank,Blank,Blank,SFuN,Blank,Blank,SKakuN,Blank,SOu],
+		[GFu,SGin,Blank,Blank,SFuN,SKakuN,Blank,Blank,Blank],
+		[Blank,Blank,SFu,Blank,Blank,SKei,SKyou,SKyou,SKin],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,SGin,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,SFu,SFu,SFu,SFu,SFu,Blank,GOu,Blank]
+	]);
+
+	let state = State::new(banmen);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Empty,&None));
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Empty,&Some(Instant::now())));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,SFuN,SKin,SFuN,SKin,SFuN],
+		[Blank,SKyouN,SHishaN,Blank,Blank,Blank,SGin,Blank,SFuN],
+		[Blank,SGin,Blank,SFuN,Blank,Blank,SKakuN,Blank,SOu],
+		[GFu,Blank,Blank,Blank,SHishaN,SKakuN,Blank,Blank,Blank],
+		[Blank,Blank,SFu,Blank,Blank,SKei,SKyou,SKyou,SKin],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,SGin,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,SFu,SFu,SFu,SFu,SFu,Blank,GOu,Blank]
+	]);
+
+	let state = State::new(banmen);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Empty,&None));
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&MochigomaCollections::Empty,&Some(Instant::now())));
+
+	let banmen = Banmen([
+		[SFuN,SFuN,SFuN,SFuN,Blank,SKin,Blank,SKin,Blank],
+		[Blank,SKyouN,Blank,Blank,Blank,Blank,SGin,Blank,SFuN],
+		[Blank,SGin,SHishaN,SFuN,SFuN,Blank,Blank,Blank,Blank],
+		[GFu,Blank,Blank,Blank,Blank,SKakuN,Blank,Blank,SOu],
+		[Blank,SHishaN,SFu,SKakuN,Blank,Blank,Blank,Blank,Blank],
+		[SFu,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank,Blank],
+		[Blank,Blank,Blank,SGin,GKeiN,Blank,Blank,GKin,GFuN],
+		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GKeiN,Blank],
+		[SKyou,Blank,Blank,Blank,Blank,Blank,Blank,GOu,Blank]
+	]);
+
+	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+	ms.insert(MochigomaKind::Fu,7);
+	ms.insert(MochigomaKind::Kyou,2);
+	ms.insert(MochigomaKind::Gin,1);
+	ms.insert(MochigomaKind::Kei,1);
+	mg.insert(MochigomaKind::Kin,1);
+
+	let mc = MochigomaCollections::Pair(ms,mg);
+	let state = State::new(banmen);
+
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&None));
+	assert!(!Rule::is_nyugyoku_win(&state,Teban::Sente,&mc,&Some(Instant::now())));
+}
+#[test]
+fn test_is_nyugyoku_win_win_gote() {
 }
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
