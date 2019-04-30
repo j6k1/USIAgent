@@ -141,7 +141,7 @@ impl<T> KyokumenHash<T>
 		}
 	}
 
-	fn calc_hash<AF,PF>(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,
+	fn calc_hash<AF,PF>(&self,h:T,t:Teban,b:&Banmen,mc:&MochigomaCollections,
 												m:AppliedMove,obtained:&Option<MochigomaKind>,add:AF,pull:PF)
 		-> T where AF: Fn(T,T) -> T, PF: Fn(T,T) -> T {
 		match b {
@@ -192,7 +192,7 @@ impl<T> KyokumenHash<T>
 								&None => hash,
 								&Some(ref obtained) => {
 									let c =  match t {
-										&Teban::Sente => {
+										Teban::Sente => {
 											match mc {
 												&MochigomaCollections::Pair(ref mc,_) => {
 													match mc.get(obtained) {
@@ -203,7 +203,7 @@ impl<T> KyokumenHash<T>
 												&MochigomaCollections::Empty => 0,
 											}
 										},
-										&Teban::Gote => {
+										Teban::Gote => {
 											match mc {
 												&MochigomaCollections::Pair(_,ref mc) => {
 													match mc.get(obtained) {
@@ -219,10 +219,10 @@ impl<T> KyokumenHash<T>
 									let k = *obtained as usize;
 
 									match t {
-										&Teban::Sente => {
+										Teban::Sente => {
 											hash = add(hash,self.mochigoma_hash_seeds[0][c][k]);
 										},
-										&Teban::Gote => {
+										Teban::Gote => {
 											hash = add(hash,self.mochigoma_hash_seeds[1][c][k]);
 										}
 									}
@@ -241,7 +241,7 @@ impl<T> KyokumenHash<T>
 						let mut hash = h;
 
 						let c = match t {
-							&Teban::Sente => {
+							Teban::Sente => {
 								match mc {
 									&MochigomaCollections::Pair(ref mc,_) => {
 										match mc.get(&mk) {
@@ -256,7 +256,7 @@ impl<T> KyokumenHash<T>
 									}
 								}
 							},
-							&Teban::Gote => {
+							Teban::Gote => {
 								match mc {
 									&MochigomaCollections::Pair(_,ref mc) => {
 										match mc.get(&mk) {
@@ -276,10 +276,10 @@ impl<T> KyokumenHash<T>
 						let k = mk as usize;
 
 						match t {
-							&Teban::Sente => {
+							Teban::Sente => {
 								hash = pull(hash,self.mochigoma_hash_seeds[0][c-1][k]);
 							},
-							&Teban::Gote => {
+							Teban::Gote => {
 								hash = pull(hash,self.mochigoma_hash_seeds[1][c-1][k]);
 							}
 						}
@@ -288,7 +288,7 @@ impl<T> KyokumenHash<T>
 
 						hash = pull(hash,self.kyokumen_hash_seeds[dk as usize][dy * 8 + dx]);
 
-						let k = KomaKind::from((*t,mk)) as usize;
+						let k = KomaKind::from((t,mk)) as usize;
 
 						hash = add(hash,self.kyokumen_hash_seeds[k as usize][dy * 8 + dx]);
 						hash
@@ -298,11 +298,11 @@ impl<T> KyokumenHash<T>
 		}
 	}
 
-	pub fn calc_main_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
+	pub fn calc_main_hash(&self,h:T,t:Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| h ^ v, |h,v| h ^ v)
 	}
 
-	pub fn calc_sub_hash(&self,h:T,t:&Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
+	pub fn calc_sub_hash(&self,h:T,t:Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| {
 			let h = Wrapping(h);
 			let v = Wrapping(v);

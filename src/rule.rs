@@ -3807,8 +3807,8 @@ impl Rule {
 		for m in m {
 			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
 				(next,nmc,o) => {
-					mhash = hasher.calc_main_hash(mhash,&teban,&state.banmen,&mc,*m,&o);
-					shash = hasher.calc_sub_hash(shash,&teban,&state.banmen,&mc,*m,&o);
+					mhash = hasher.calc_main_hash(mhash,teban,&state.banmen,&mc,*m,&o);
+					shash = hasher.calc_sub_hash(shash,teban,&state.banmen,&mc,*m,&o);
 
 					mc = nmc;
 					teban = teban.opposite();
