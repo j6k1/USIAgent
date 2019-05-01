@@ -4097,13 +4097,13 @@ impl Rule {
 
 				let is_oute = Rule::is_mate_with_partial_state_and_point_and_kind(teban,&state.part,dx,dy,kind);
 
-				is_oute && Rule::legal_moves_all(teban, state, &mc).into_iter().filter(|m| {
+				is_oute && Rule::legal_moves_all(teban.opposite(), state, &mc).into_iter().filter(|m| {
 					match *m {
 						LegalMove::To(m) if m.obtained() == Some(ObtainKind::Ou) => true,
 						m @ _ => {
 							let m = m.to_applied_move();
-							let ps = Rule::apply_move_to_partial_state_none_check(state, teban, mc, m);
-							Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(teban.opposite(),&state.banmen,&ps,m)
+							let ps = Rule::apply_move_to_partial_state_none_check(state, teban.opposite(), mc, m);
+							!Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(teban,&state.banmen,&ps,m)
 						},
 					}
 				}).count() == 0

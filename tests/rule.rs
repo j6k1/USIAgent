@@ -23259,6 +23259,59 @@ fn test_responded_oute_error_gote() {
 		}
 	}
 }
+#[test]
+fn test_is_put_fu_and_mate_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	let m = Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,1+1));
+
+	let position_and_kinds:Vec<Vec<(usize,usize,KomaKind)>> = vec![
+		vec![
+			(3,0,GFu),(3,1,GKyou),(4,0,GOu),(5,0,GFu),(5,1,GKyou),(4,8,SKyou)
+		],
+		vec![
+			(3,0,GKin),(3,1,GKyou),(4,0,GOu),(5,0,GKin),(5,1,GKyou),(4,8,SKyou)
+		],
+		vec![
+			(3,0,GFu),(3,1,GKyou),(4,0,GOu),(5,1,GKyou),(4,8,SKyou)
+		],
+		vec![
+			(3,0,GFu),(3,1,GKyou),(4,0,GOu),(5,0,GKyou),(5,1,GGin)
+		]
+	];
+
+	let answer:[bool; 4] = [
+		true,false,false,false
+	];
+
+	for (pk,answer) in position_and_kinds.iter().zip(&answer) {
+		let mut banmen = blank_banmen.clone();
+
+		for pk in pk {
+			banmen.0[pk.1][pk.0] = pk.2;
+		}
+
+		let mut state = State::new(banmen);
+
+		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		ms.insert(MochigomaKind::Fu,1);
+
+		let mut mc = MochigomaCollections::Pair(ms,mg);
+
+		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m.to_applied_move()) {
+			(next,nmc,_) => {
+				state = next;
+				mc = nmc;
+			}
+		}
+
+		assert_eq!(*answer,Rule::is_put_fu_and_mate(
+								&state,Teban::Sente,&mc,m.to_applied_move()),
+								"assertion failed: `(left == right), move = {:?}, {:?}",m,state.get_banmen())
+	}
+}
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
 		match m {

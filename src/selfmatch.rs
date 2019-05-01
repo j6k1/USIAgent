@@ -762,7 +762,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 									state = next;
 
-									if Rule::is_put_fu_and_mate(&state,teban.opposite(),&mc,m) {
+									if Rule::is_put_fu_and_mate(&state,teban,&mc,m) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																		.map(|m| m.to_move())
 																		.collect::<Vec<Move>>());
