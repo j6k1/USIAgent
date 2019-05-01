@@ -820,7 +820,7 @@ impl Rule {
 		BitBoard { merged_bitboard: board }
 	}
 
-	fn append_legal_moves_from_banmen<F>(
+	pub fn append_legal_moves_from_banmen<F>(
 		m:Square,
 		from:u32,
 		kind:KomaKind,
@@ -852,7 +852,7 @@ impl Rule {
 		}
 	}
 
-	fn append_win_only_move(
+	pub fn append_win_only_move(
 		m:Square,
 		from:u32,
 		kind:KomaKind,
@@ -885,7 +885,7 @@ impl Rule {
 		}
 	}
 
-	fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F>(
 		teban:Teban,
 		self_occupied:BitBoard,
 		from:u32,kind:KomaKind,
@@ -1846,6 +1846,7 @@ impl Rule {
 			}
 		}
 	}
+
 	pub fn legal_moves_with_src(t:Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
@@ -2182,7 +2183,6 @@ impl Rule {
 		}
 	}
 
-
 	pub fn win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
@@ -2306,7 +2306,6 @@ impl Rule {
 			None
 		}
 	}
-
 
 	pub fn win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
 		_:BitBoard,opponent_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
