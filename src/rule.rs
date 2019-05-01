@@ -2872,9 +2872,9 @@ impl Rule {
 										merged_bitboard: ps.gote_kaku_board.merged_bitboard & obtained_mask
 									}
 								};
-								ps.gote_opponent_ou_position_board = unsafe {
+								ps.sente_opponent_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & !inverse_to_mask
+										merged_bitboard: ps.sente_opponent_ou_position_board.merged_bitboard & obtained_mask
 									}
 								};
 							} else if kind < Blank {
@@ -2908,9 +2908,9 @@ impl Rule {
 										merged_bitboard: ps.sente_kaku_board.merged_bitboard & obtained_mask
 									}
 								};
-								ps.sente_opponent_ou_position_board = unsafe {
+								ps.gote_opponent_ou_position_board = unsafe {
 									BitBoard {
-										merged_bitboard: ps.sente_opponent_ou_position_board.merged_bitboard & obtained_mask
+										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & !inverse_to_mask
 									}
 								};
 							}
