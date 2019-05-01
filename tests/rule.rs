@@ -25691,6 +25691,112 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_hisha_occupied
 		}
 	}
 }
+#[test]
+fn test_is_mate_with_partial_state_and_old_banmen_and_opponent_move_sente() {
+	let mate_mvs:Vec<Move> = vec![
+		Move::Put(MochigomaKind::Kyou,KomaDstPutPosition(9-4,8+1)),
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,1+1)),
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,2+1)),
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,1+1)),
+	];
+
+	let mvs:Vec<Move>  = vec![
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,1+1)),
+		Move::To(KomaSrcPosition(9-5,0+1),KomaDstToPosition(9-4,1+1,false)),
+		Move::To(KomaSrcPosition(9-3,0+1),KomaDstToPosition(9-3,1+1,false)),
+		Move::To(KomaSrcPosition(9-3,0+1),KomaDstToPosition(9-3,1+1,false))
+	];
+
+	let answer:Vec<bool> = vec![
+		false,
+		false,
+		false,
+		true
+	];
+
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[0][3] = GKin;
+	banmen.0[0][4] = GOu;
+	banmen.0[0][5] = GKin;
+
+	for ((m,answer),mm) in mvs.iter().zip(&answer).zip(&mate_mvs) {
+		let mut state = State::new(banmen.clone());
+
+		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		ms.insert(MochigomaKind::Fu, 1);
+
+		let mut mc = MochigomaCollections::Pair(ms,mg);
+
+		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mm.to_applied_move()) {
+			(next,nmc,_) => {
+				state = next;
+				mc = nmc;
+			}
+		}
+
+		let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,m.to_applied_move());
+
+		assert_eq!(*answer,
+					Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(
+						Teban::Sente,state.get_banmen(),&ps,m.to_applied_move()));
+	}
+}
+#[test]
+fn test_is_mate_with_partial_state_and_old_banmen_and_opponent_move_gote() {
+	let mate_mvs:Vec<Move> = vec![
+		Move::Put(MochigomaKind::Kyou,KomaDstPutPosition(9-(8-4),(8-8)+1)),
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-(8-4),(8-1)+1)),
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-(8-4),(8-2)+1)),
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-(8-4),(8-1)+1)),
+	];
+
+	let mvs:Vec<Move>  = vec![
+		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-(8-4),(8-1)+1)),
+		Move::To(KomaSrcPosition(9-(8-5),(8-0)+1),KomaDstToPosition(9-(8-4),(8-1)+1,false)),
+		Move::To(KomaSrcPosition(9-(8-3),(8-0)+1),KomaDstToPosition(9-(8-3),(8-1)+1,false)),
+		Move::To(KomaSrcPosition(9-(8-3),(8-0)+1),KomaDstToPosition(9-(8-3),(8-1)+1,false))
+	];
+
+	let answer:Vec<bool> = vec![
+		false,
+		false,
+		false,
+		true
+	];
+
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[8-0][8-3] = SKin;
+	banmen.0[8-0][8-4] = SOu;
+	banmen.0[8-0][8-5] = SKin;
+
+	for ((m,answer),mm) in mvs.iter().zip(&answer).zip(&mate_mvs) {
+		let mut state = State::new(banmen.clone());
+
+		let ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		mg.insert(MochigomaKind::Fu, 1);
+
+		let mut mc = MochigomaCollections::Pair(ms,mg);
+
+		match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mm.to_applied_move()) {
+			(next,nmc,_) => {
+				state = next;
+				mc = nmc;
+			}
+		}
+
+		let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,m.to_applied_move());
+
+		assert_eq!(*answer,
+					Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(
+						Teban::Gote,state.get_banmen(),&ps,m.to_applied_move()));
+	}
+}
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
 		match m {
