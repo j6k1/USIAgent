@@ -776,10 +776,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
-									if !Rule::check_sennichite_by_oute(
+									if Rule::is_sennichite_by_oute(
 										&state,
 										teban.opposite(),mhash,shash,
-										&mut oute_kyokumen_hash_maps[cs_index]
+										&oute_kyokumen_hash_maps[cs_index]
 									) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																.map(|m| m.to_move())
@@ -794,8 +794,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
-									if !Rule::check_sennichite(
-										&state,mhash,shash,&mut kyokumen_hash_map
+									Rule::update_sennichite_by_oute_map(
+										&state,
+										teban.opposite(),mhash,shash,
+										&mut oute_kyokumen_hash_maps[cs_index]
+									);
+
+									if Rule::is_sennichite(
+										&state,mhash,shash,&kyokumen_hash_map
 									) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																.map(|m| m.to_move())
@@ -810,6 +816,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										break;
 									}
 
+									Rule::update_sennichite_map(
+										&state,mhash,shash,&mut kyokumen_hash_map
+									);
 									ponders[cs_index] = pm.map(|pm| pm.to_applied_move());
 
 									match pm {
