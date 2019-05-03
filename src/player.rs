@@ -90,26 +90,28 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		}
 	}
 
-	fn extract_kyokumen(&self,teban:&Option<Teban>,
-						banmen:&Option<Banmen>,
-						mc:&Option<MochigomaCollections>)
-		-> Result<(Teban,Banmen,MochigomaCollections),UsiProtocolError>
+	fn extract_kyokumen(&self,kyokumen:&Option<Kyokumen>)
+		-> Result<Kyokumen,UsiProtocolError>
 		where E: Error + fmt::Debug + From<UsiProtocolError> {
 
-		let r = match teban {
-			&Some(ref teban) => match banmen {
-				&Some(ref banmen) => match mc {
-					&Some(ref mc) => Some((teban.clone(),banmen.clone(),mc.clone())),
-					&None => None,
-				},
-				&None => None,
+		match kyokumen {
+			&Some(ref kyokumen) => {
+				Ok(kyokumen.clone())
 			},
-			&None => None,
-		};
+			&None => Err(UsiProtocolError::InvalidState(
+						String::from("Position information is not initialized."))),
+		}
+	}
 
-		match r {
-			Some(r) => Ok(r),
-			None => Err(UsiProtocolError::InvalidState(
+	fn extract_teban(&self,kyokumen:&Option<Kyokumen>)
+		-> Result<Teban,UsiProtocolError>
+		where E: Error + fmt::Debug + From<UsiProtocolError> {
+
+		match kyokumen {
+			&Some(ref kyokumen) => {
+				Ok(kyokumen.teban.clone())
+			},
+			&None => Err(UsiProtocolError::InvalidState(
 						String::from("Position information is not initialized."))),
 		}
 	}

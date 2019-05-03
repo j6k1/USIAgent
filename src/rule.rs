@@ -623,6 +623,12 @@ impl PartialState {
 		}
 	}
 }
+#[derive(Clone)]
+pub struct Kyokumen {
+	pub teban:Teban,
+	pub mc:MochigomaCollections,
+	pub state:State
+}
 const CANDIDATE_BITS:[u128; 14] = [
 	// 歩
 	0b000000000_000000010_000000000,
