@@ -4385,68 +4385,6 @@ impl Rule {
 		false
 	}
 
-	pub fn is_mate_with_partial_state_and_old_banmen_and_move(
-		t:Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
-	) -> bool {
-		let from = match m {
-			AppliedMove::To(m) => m.src() as i32,
-			_ => -1,
-		};
-
-		let (sx,sy) = if from != -1 {
-			let (sx,sy) = from.square_to_point();
-			(sx as i32,sy as i32)
-		} else {
-			(-1,-1)
-		};
-
-		let to = match m {
-			AppliedMove::To(m) => m.dst(),
-			AppliedMove::Put(m) => m.dst(),
-		};
-
-		let (dx,dy) = to.square_to_point();
-		let dx = dx as usize;
-		let dy = dy as usize;
-
-		match banmen {
-			&Banmen(ref kinds) => {
-				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len() {
-						let (x,y) = match t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8 - x, 8 - y),
-						};
-
-						let kind = if x as i32 == sx && y as i32 == sy {
-							Blank
-						} else if x == dx && y == dy {
-							match m {
-								AppliedMove::To(m) if m.is_nari() => {
-									kinds[sy as usize][sx as usize].to_nari()
-								},
-								AppliedMove::To(_) => {
-									kinds[sy as usize][sx as usize]
-								}
-								AppliedMove::Put(m) => {
-									KomaKind::from((t,m.kind()))
-								}
-							}
-						} else {
-							kinds[y as usize][x as usize]
-						};
-						if Rule::is_mate_with_partial_state_and_point_and_kind(
-							t, &ps, x as u32, y as u32, kind
-						) {
-							return true;
-						}
-					}
-				}
-			}
-		}
-		false
-	}
-
 	pub fn update_sennichite_map(_:&State,mhash:u64,shash:u64,
 									kyokumen_hash_map:&mut TwoKeyHashMap<u64,u32>) {
 		match kyokumen_hash_map.get(&mhash,&shash) {
