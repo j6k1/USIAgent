@@ -266,6 +266,10 @@ impl LegalMove {
 	pub fn to_applied_move(self) -> AppliedMove {
 		AppliedMove::from(self)
 	}
+
+	pub fn to_move(self) -> Move {
+		Move::from(self)
+	}
 }
 impl From<LegalMove> for Move {
 	fn from(m:LegalMove) -> Move {
