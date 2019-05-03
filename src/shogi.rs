@@ -322,8 +322,3 @@ impl From<(Teban,MochigomaKind)> for KomaKind {
 		}
 	}
 }
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-pub enum Kyokumen {
-	Ban(Teban,KomaKind,u32,u32),
-	MochigomaKind(Teban,MochigomaKind),
-}
