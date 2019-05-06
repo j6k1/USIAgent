@@ -239,7 +239,9 @@ impl<T,E> UsiAgent<T,E>
 									on_error_handler.lock().map(|h| h.call(e)).is_err()
 								},
 								Ok(ref writer) => {
-									writer.write(s).is_err()
+									let s = writer.write(s).is_err();
+									thread::sleep(time::Duration::from_millis(5));
+									s
 								}
 							};
 							Ok(())
