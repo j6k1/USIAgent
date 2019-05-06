@@ -240,7 +240,7 @@ impl<T,E> UsiAgent<T,E>
 								},
 								Ok(ref writer) => {
 									let s = writer.write(s).is_err();
-									thread::sleep(time::Duration::from_millis(5));
+									thread::sleep(time::Duration::from_millis(10));
 									s
 								}
 							};
