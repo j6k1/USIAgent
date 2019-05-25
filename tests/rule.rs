@@ -15109,6 +15109,31 @@ fn test_respond_oute_only_moves_all_sente() {
 	}
 }
 #[test]
+fn test_respond_oute_only_moves_all_win_move_sente() {
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
+		((4,1),(4,0,false),Some(ObtainKind::Ou))
+	];
+
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[8][4] = SOu;
+	banmen.0[6][3] = GKyou;
+	banmen.0[6][4] = GKyou;
+	banmen.0[6][5] = GKyou;
+	banmen.0[0][4] = GOu;
+	banmen.0[1][4] = SKin;
+
+	let mc = MochigomaCollections::Pair(HashMap::new(),HashMap::new());
+
+	let state = State::new(banmen);
+
+	assert_eq!(answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
+		Rule::respond_oute_only_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
+}
+#[test]
 fn test_respond_oute_only_moves_all_gote() {
 	let mvs:Vec<Vec<Move>> = vec![
 		vec![ Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,7+1)) ],
@@ -15227,6 +15252,31 @@ fn test_respond_oute_only_moves_all_gote() {
 			}).collect::<Vec<Move>>()
 		);
 	}
+}
+#[test]
+fn test_respond_oute_only_moves_all_win_move_gote() {
+	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![
+		((8-4,8-1),(8-4,8-0,false),Some(ObtainKind::Ou))
+	];
+
+	let mut banmen = Banmen([[Blank; 9]; 9]);
+
+	banmen.0[8-8][8-4] = GOu;
+	banmen.0[8-6][8-3] = SKyou;
+	banmen.0[8-6][8-4] = SKyou;
+	banmen.0[8-6][8-5] = SKyou;
+	banmen.0[8-0][8-4] = SOu;
+	banmen.0[8-1][8-4] = GKin;
+
+	let mc = MochigomaCollections::Pair(HashMap::new(),HashMap::new());
+
+	let state = State::new(banmen);
+
+	assert_eq!(answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
+		Rule::respond_oute_only_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
+			LegalMove::from(m)
+		}).collect::<Vec<LegalMove>>()
+	);
 }
 #[test]
 fn test_apply_move_none_check_sente() {
