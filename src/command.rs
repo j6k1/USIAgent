@@ -21,7 +21,7 @@ pub enum BestMove {
 	Win,
 	Abort,
 }
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum UsiInfoSubCommand {
 	Depth(u32),
 	SelDepth(u32),
@@ -47,7 +47,7 @@ pub enum UsiInfoSubCommandKind {
 	Nps,
 	Str,
 }
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum UsiScore {
 	Cp(i32),
 	CpUpper(i32),
@@ -56,7 +56,7 @@ pub enum UsiScore {
 	MateUpper(i32),
 	MateLower(i32),
 }
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum UsiScoreMate {
 	Num(i32),
 	Plus,

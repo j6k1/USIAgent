@@ -129,7 +129,7 @@ pub struct SelfMatchEngine<T,E,S>
 	player_error_type:PhantomData<E>,
 	player1:Arc<Mutex<T>>,
 	player2:Arc<Mutex<T>>,
-	info_sender:Arc<Mutex<S>>,
+	info_sender:S,
 	game_time_limit:UsiGoTimeLimit,
 	end_time:Option<Duration>,
 	number_of_games:Option<u32>,
@@ -138,10 +138,9 @@ pub struct SelfMatchEngine<T,E,S>
 impl<T,E,S> SelfMatchEngine<T,E,S>
 	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
 			E: PlayerError,
-			S: InfoSender,
-			Arc<Mutex<S>>: Send + 'static {
+			S: InfoSender {
 	pub fn new(player1:T,player2:T,
-				info_sender:Arc<Mutex<S>>,
+				info_sender:S,
 				game_time_limit:UsiGoTimeLimit,
 				end_time:Option<Duration>,number_of_games:Option<u32>)
 	-> SelfMatchEngine<T,E,S>

@@ -22,6 +22,9 @@ use std::fmt;
 use std::{thread,time};
 use std::sync::Mutex;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+use std::sync::mpsc;
 use std::marker::Send;
 use std::marker::PhantomData;
 use std::collections::HashMap;
@@ -239,9 +242,7 @@ impl<T,E> UsiAgent<T,E>
 									on_error_handler.lock().map(|h| h.call(e)).is_err()
 								},
 								Ok(ref writer) => {
-									let s = writer.write(s).is_err();
-									thread::sleep(time::Duration::from_millis(10));
-									s
+									writer.write(s).is_err()
 								}
 							};
 							Ok(())
@@ -467,12 +468,14 @@ impl<T,E> UsiAgent<T,E>
 				let on_delay_move_handler = on_delay_move_handler_arc.clone();
 
 				let user_event_queue = user_event_queue_arc.clone();
-				let system_event_queue = system_event_queue_arc.clone();
 
-				let info_sender_arc = Arc::new(Mutex::new(USIInfoSender::new(system_event_queue)));
 				let busy = busy_arc.clone();
 
 				let thread_queue = thread_queue_arc.clone();
+
+				let thinking_arc = Arc::new(AtomicBool::new(false));
+
+				let writer = writer_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Go, move |ctx,e| {
 					match busy.lock() {
@@ -492,9 +495,9 @@ impl<T,E> UsiAgent<T,E>
 							let player = ctx.player.clone();
 							let system_event_queue = ctx.system_event_queue.clone();
 							let on_error_handler_inner = on_error_handler.clone();
+							let thinking = thinking_arc.clone();
 							let allow_immediate_move_inner = allow_immediate_move.clone();
 							let on_delay_move_handler_inner = on_delay_move_handler.clone();
-							let info_sender = info_sender_arc.clone();
 							let user_event_queue_inner = user_event_queue.clone();
 							let opt = Arc::new(*opt);
 							let opt = opt.clone();
@@ -511,18 +514,30 @@ impl<T,E> UsiAgent<T,E>
 
 							match thread_queue.lock() {
 								Ok(mut thread_queue) => {
+									let (sender,receiver) = mpsc::channel();
+
+									let info_sender = USIInfoSender::new(sender);
+
+									info_sender.start_worker_thread(
+										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
+									);
+
+									let thinking_inner = thinking.clone();
+
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
 												let bm = match player.think(&*opt,
 																user_event_queue_inner.clone(),
-																info_sender.clone(),on_error_handler_inner.clone()) {
+																info_sender,on_error_handler_inner.clone()) {
 																	Ok(bm) => bm,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 																		return;
 																	}
 																};
+
+												thinking_inner.store(false,Ordering::Release);
 
 												match busy_inner.lock() {
 													Ok(mut busy) => {
@@ -595,8 +610,8 @@ impl<T,E> UsiAgent<T,E>
 						SystemEvent::Go(UsiGo::Go(ref opt)) => {
 							let system_event_queue = ctx.system_event_queue.clone();
 							let on_error_handler_inner = on_error_handler.clone();
+							let thinking = thinking_arc.clone();
 							let player = ctx.player.clone();
-							let info_sender = info_sender_arc.clone();
 							let user_event_queue_inner = user_event_queue.clone();
 							let opt = Arc::new(*opt);
 							let opt = opt.clone();
@@ -604,18 +619,31 @@ impl<T,E> UsiAgent<T,E>
 
 							match thread_queue.lock() {
 								Ok(mut thread_queue) => {
+									let (sender,receiver) = mpsc::channel();
+
+									let info_sender = USIInfoSender::new(sender);
+
+									info_sender.start_worker_thread(
+										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
+									);
+
+									let thinking_inner = thinking.clone();
+
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
 												let m = match player.think(&*opt,
 																user_event_queue_inner.clone(),
-																info_sender.clone(),on_error_handler_inner.clone()) {
+																info_sender,on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 																		return;
 																	}
 																};
+
+												thinking_inner.store(false,Ordering::Release);
+
 												match busy_inner.lock() {
 													Ok(mut busy) => {
 														*busy = false;
@@ -666,8 +694,8 @@ impl<T,E> UsiAgent<T,E>
 						SystemEvent::Go(UsiGo::Mate(opt)) => {
 							let system_event_queue = ctx.system_event_queue.clone();
 							let on_error_handler_inner = on_error_handler.clone();
+							let thinking = thinking_arc.clone();
 							let player = ctx.player.clone();
-							let info_sender = info_sender_arc.clone();
 							let user_event_queue_inner = user_event_queue.clone();
 							let opt = Arc::new(opt);
 							let opt = opt.clone();
@@ -675,18 +703,30 @@ impl<T,E> UsiAgent<T,E>
 
 							match thread_queue.lock() {
 								Ok(mut thread_queue) => {
+									let (sender,receiver) = mpsc::channel();
+
+									let info_sender = USIInfoSender::new(sender);
+
+									info_sender.start_worker_thread(
+										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
+									);
+
+									let thinking_inner = thinking.clone();
+
 									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
 												let m = match player.think_mate(&*opt,
 																user_event_queue_inner.clone(),
-																info_sender.clone(),on_error_handler_inner.clone()) {
+																info_sender,on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 																		return;
 																	}
 																};
+												thinking_inner.store(false,Ordering::Release);
+
 												match busy_inner.lock() {
 													Ok(mut busy) => {
 														*busy = false;

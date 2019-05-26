@@ -1,5 +1,10 @@
+use std::{thread,time};
 use std::sync::Mutex;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::Sender;
 use std::collections::HashMap;
 use std::fmt;
 use std::error::Error;
@@ -9,8 +14,9 @@ use command::*;
 use error::*;
 use event::*;
 use shogi::*;
+use protocol::*;
 use rule::*;
-use UsiOutput;
+use output::*;
 use Logger;
 use OnErrorHandler;
 use TryFrom;
@@ -26,20 +32,21 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
 	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:Arc<Mutex<S>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,E> where L: Logger, S: InfoSender;
+			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:Arc<Mutex<S>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<CheckMate,E> where L: Logger, S: InfoSender;
+			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<CheckMate,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn gameover<L>(&mut self,s:&GameEndState,
 			event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E> where L: Logger;
+			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E> where L: Logger, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	fn on_quit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn quit(&mut self) -> Result<(),E>;
 	fn handle_events<'a,L>(&mut self,event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,E>
 						where L: Logger, E: Error + fmt::Debug,
+								Arc<Mutex<OnErrorHandler<L>>>: Send + 'static,
 								EventHandlerError<UserEventKind,E>: From<E> {
 		Ok(match self.dispatch_events(event_queue,&on_error_handler) {
 			Ok(_)=> true,
@@ -54,6 +61,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 						on_error_handler:&Mutex<OnErrorHandler<L>>) ->
 						Result<(), EventDispatchError<'a,EventQueue<UserEvent,UserEventKind>,UserEvent,E>>
 							where L: Logger, E: Error + fmt::Debug,
+									Arc<Mutex<OnErrorHandler<L>>>: Send + 'static,
 									EventHandlerError<UserEventKind,E>: From<E> {
 		let events = {
 			event_queue.lock()?.drain_events()
@@ -149,31 +157,113 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		}
 	}
 }
-pub trait InfoSender {
+#[derive(Clone, Debug)]
+pub enum UsiInfoMessage {
+	Commands(Vec<UsiInfoSubCommand>),
+}
+pub trait InfoSender: Clone + Send + 'static {
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError>;
 }
 pub struct USIInfoSender {
-	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
+	sender:Sender<UsiInfoMessage>
 }
 impl USIInfoSender {
-	pub fn new(system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>) -> USIInfoSender {
+	pub fn new(sender:Sender<UsiInfoMessage>) -> USIInfoSender {
 		USIInfoSender {
-			system_event_queue:system_event_queue
+			sender:sender
 		}
+	}
+
+	pub fn start_worker_thread<W,L>(&self,thinking:Arc<AtomicBool>,
+		receiver:Receiver<UsiInfoMessage>,
+		writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+		where W: USIOutputWriter, L: Logger, Arc<Mutex<W>>: Send + 'static, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
+
+		thinking.store(true,Ordering::Release);
+
+		thread::spawn(move || {
+			loop {
+				if !thinking.load(Ordering::Acquire) {
+					break;
+				}
+
+				match receiver.recv() {
+					Ok(UsiInfoMessage::Commands(commands)) => {
+						match UsiOutput::try_from(&UsiCommand::UsiInfo(commands)) {
+							Ok(UsiOutput::Command(ref s)) => {
+								match writer.lock() {
+									Err(ref e) => {
+										on_error_handler.lock().map(|h| h.call(e)).is_err();
+										break;
+									},
+									Ok(ref writer) => {
+										let s = writer.write(s).is_err();
+										thread::sleep(time::Duration::from_millis(10));
+										s
+									}
+								};
+							},
+							Err(ref e) => {
+								on_error_handler.lock().map(|h| h.call(e)).is_err();
+								break;
+							}
+						}
+					},
+					Err(ref e) => {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						break;
+					}
+				}
+			}
+		});
 	}
 }
 impl InfoSender for USIInfoSender {
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
-		match self.system_event_queue.lock() {
-			Ok(mut system_event_queue) => {
-				system_event_queue.push(
-				SystemEvent::SendUsiCommand(UsiOutput::try_from(&UsiCommand::UsiInfo(commands))?));
-				Ok(())
-			},
-			Err(_) => {
-				Err(InfoSendError::Fail(String::from(
-					"I attempted to lock the event queue for info command transmission, but it failed.")))
+		if let Err(_) = self.sender.send(UsiInfoMessage::Commands(commands)) {
+			Err(InfoSendError::Fail(String::from(
+				"info command send failed.")))
+		} else {
+			Ok(())
+		}
+	}
+}
+impl Clone for USIInfoSender {
+	fn clone(&self) -> USIInfoSender {
+		USIInfoSender::new(self.sender.clone())
+	}
+}
+pub struct CosoleInfoSender {
+	writer:USIStdOutputWriter,
+	silent:bool,
+}
+impl CosoleInfoSender {
+	pub fn new(silent:bool) -> CosoleInfoSender {
+		CosoleInfoSender {
+			writer:USIStdOutputWriter::new(),
+			silent:silent
+		}
+	}
+}
+impl InfoSender for CosoleInfoSender {
+	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
+		if !self.silent {
+			let mut lines = Vec::with_capacity(commands.len());
+
+			for c in commands {
+				lines.push(c.to_usi_command()?);
+			}
+
+			if let Err(_) =  self.writer.write(&lines) {
+				return Err(InfoSendError::Fail(String::from(
+					"info command send failed.")))
 			}
 		}
+		Ok(())
+	}
+}
+impl Clone for CosoleInfoSender {
+	fn clone(&self) -> CosoleInfoSender {
+		CosoleInfoSender::new(self.silent)
 	}
 }
