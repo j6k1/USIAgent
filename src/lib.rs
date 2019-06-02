@@ -516,7 +516,7 @@ impl<T,E> UsiAgent<T,E>
 								Ok(mut thread_queue) => {
 									let (sender,receiver) = mpsc::channel();
 
-									let info_sender = USIInfoSender::new(sender);
+									let info_sender = USIInfoSender::new(sender.clone());
 
 									info_sender.start_worker_thread(
 										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
@@ -538,6 +538,11 @@ impl<T,E> UsiAgent<T,E>
 																};
 
 												thinking_inner.store(false,Ordering::Release);
+
+												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
+													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													return;
+												}
 
 												match busy_inner.lock() {
 													Ok(mut busy) => {
@@ -621,7 +626,7 @@ impl<T,E> UsiAgent<T,E>
 								Ok(mut thread_queue) => {
 									let (sender,receiver) = mpsc::channel();
 
-									let info_sender = USIInfoSender::new(sender);
+									let info_sender = USIInfoSender::new(sender.clone());
 
 									info_sender.start_worker_thread(
 										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
@@ -643,6 +648,11 @@ impl<T,E> UsiAgent<T,E>
 																};
 
 												thinking_inner.store(false,Ordering::Release);
+
+												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
+													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													return;
+												}
 
 												match busy_inner.lock() {
 													Ok(mut busy) => {
@@ -705,7 +715,7 @@ impl<T,E> UsiAgent<T,E>
 								Ok(mut thread_queue) => {
 									let (sender,receiver) = mpsc::channel();
 
-									let info_sender = USIInfoSender::new(sender);
+									let info_sender = USIInfoSender::new(sender.clone());
 
 									info_sender.start_worker_thread(
 										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
@@ -726,6 +736,11 @@ impl<T,E> UsiAgent<T,E>
 																	}
 																};
 												thinking_inner.store(false,Ordering::Release);
+
+												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
+													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													return;
+												}
 
 												match busy_inner.lock() {
 													Ok(mut busy) => {

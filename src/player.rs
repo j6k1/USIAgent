@@ -160,6 +160,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 #[derive(Clone, Debug)]
 pub enum UsiInfoMessage {
 	Commands(Vec<UsiInfoSubCommand>),
+	Quit,
 }
 pub trait InfoSender: Clone + Send + 'static {
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError>;
@@ -208,6 +209,9 @@ impl USIInfoSender {
 								break;
 							}
 						}
+					},
+					Ok(UsiInfoMessage::Quit) => {
+						break;
 					},
 					Err(ref e) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
