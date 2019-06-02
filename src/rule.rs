@@ -3889,184 +3889,157 @@ impl Rule {
 			},
 		}
 
-		match &state.banmen {
-			&Banmen(ref kinds) => {
-				match t {
-					Teban::Sente => {
-						match mc {
-							&MochigomaCollections::Pair(ref mc, _) => {
-								kinds.iter().enumerate().map(|(y,row)| {
-									if y <  3 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::SHisha | KomaKind::SHishaN |
-												KomaKind::SKaku | KomaKind::SKakuN => {
-													5
-												},
-												KomaKind::SOu => {
-													0
-												},
-												k if k < KomaKind::GFu => {
-													1
-												},
-												_ => {
-													0
-												}
-											}
-										}).fold(0, |sum,s| sum + s)
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s) + (&MOCHIGOMA_KINDS).iter().map(|k| {
-									match k {
-										&MochigomaKind::Hisha | &MochigomaKind::Kaku => {
-											mc.get(k).map_or(0, |n| *n * 5)
-										},
-										_ => {
-											mc.get(k).map_or(0, |n| *n)
-										}
-									}
-								}).fold(0, |sum,s| sum + s) >= 28 && kinds.iter().enumerate().map(|(y,row)| {
-									if y < 3 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::SOu => false,
-												k if k < KomaKind::GFu => true,
-												_ => false,
-											}
-										}).count()
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s) >= 10
-							},
-							&MochigomaCollections::Empty => {
-								kinds.iter().enumerate().map(|(y,row)| {
-									if y < 3 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::SHisha | KomaKind::SHishaN |
-												KomaKind::SKaku | KomaKind::SKakuN => {
-													5
-												},
-												KomaKind::SOu => {
-													0
-												},
-												k if k < KomaKind::GFu => {
-													1
-												},
-												_ => {
-													0
-												}
-											}
-										}).fold(0, |sum,s| sum + s)
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s)  >= 28 && kinds.iter().enumerate().map(|(y,row)| {
-									if y < 3 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::SOu => false,
-												k if k < KomaKind::GFu => true,
-												_ => false,
-											}
-										}).count()
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s) >= 10
-							}
-						}
-					},
-					Teban::Gote => {
-						match mc {
-							&MochigomaCollections::Pair(_, ref mc) => {
-								kinds.iter().enumerate().map(|(y,row)| {
-									if y >= 6 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::GHisha | KomaKind::GHishaN |
-												KomaKind::GKaku | KomaKind::GKakuN => {
-													5
-												},
-												KomaKind::GOu | KomaKind::Blank=> {
-													0
-												},
-												k if k >= KomaKind::GFu => {
-													1
-												},
-												_ => {
-													0
-												}
-											}
-										}).fold(0, |sum,s| sum + s)
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s) + (&MOCHIGOMA_KINDS).iter().map(|k| {
-									match k {
-										&MochigomaKind::Hisha | &MochigomaKind::Kaku => {
-											mc.get(k).map_or(0, |n| *n * 5)
-										},
-										_ => {
-											mc.get(k).map_or(0, |n| *n)
-										}
-									}
-								}).fold(0, |sum,s| sum + s) >= 27 && kinds.iter().enumerate().map(|(y,row)| {
-									if y >= 6 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::GOu | KomaKind::Blank => false,
-												k if k >= KomaKind::GFu => true,
-												_ => false,
-											}
-										}).count()
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s) >= 10
-							},
-							&MochigomaCollections::Empty => {
-								kinds.iter().enumerate().map(|(y,row)| {
-									if y >= 6 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::GHisha | KomaKind::GHishaN |
-												KomaKind::GKaku | KomaKind::GKakuN => {
-													5
-												},
-												KomaKind::GOu | KomaKind::Blank=> {
-													0
-												},
-												k if k >= KomaKind::GFu => {
-													1
-												},
-												_ => {
-													0
-												}
-											}
-										}).fold(0, |sum,s| sum + s)
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s) >= 27 && kinds.iter().enumerate().map(|(y,row)| {
-									if y >= 6 {
-										row.iter().map(|k| {
-											match *k {
-												KomaKind::GOu | KomaKind::Blank => false,
-												k if k >= KomaKind::GFu => true,
-												_ => false,
-											}
-										}).count()
-									} else {
-										0
-									}
-								}).fold(0, |sum,s| sum + s) >= 10
-							}
-						}
+		match t {
+			Teban::Sente => {
+				let mut ou_bitboard = state.part.gote_opponent_ou_position_board;
+
+				let ou_position = Rule::pop_lsb(&mut ou_bitboard);
+
+				if ou_position == -1 {
+					return false;
+				}
+
+				let ou_position = 80 - ou_position;
+				let ou_bitboard:u128 = 1 << (ou_position + 1);
+
+				let mut count = 0;
+				let mut point = 0;
+
+				let sente_occupied_board = state.part.sente_self_board;
+				let sente_hisha_board = unsafe { state.part.sente_hisha_board.merged_bitboard };
+				let sente_kaku_board = unsafe { state.part.sente_kaku_board.merged_bitboard };
+
+				let mut sente_occupied_board = BitBoard {
+					merged_bitboard: unsafe {
+						sente_occupied_board.merged_bitboard &
+						!(sente_hisha_board | sente_kaku_board | ou_bitboard) & (SENTE_NARI_MASK << 1)
+					}
+				};
+
+				let mut sente_oogoma_board = BitBoard {
+					merged_bitboard: (sente_hisha_board | sente_kaku_board) & (SENTE_NARI_MASK << 1)
+				};
+
+				loop {
+					let p = Rule::pop_lsb(&mut sente_occupied_board);
+
+					if p == -1 {
+						break;
+					} else {
+						count += 1;
+						point += 1;
 					}
 				}
+
+				loop {
+					let p = Rule::pop_lsb(&mut sente_oogoma_board);
+
+					if p == -1 {
+						break;
+					} else {
+						count += 1;
+						point += 5;
+					}
+				}
+
+				if count < 10 {
+					return false;
+				} else if point >= 28 {
+					return true;
+				}
+
+				point += match mc {
+					&MochigomaCollections::Pair(ref mc, _) => {
+						(&MOCHIGOMA_KINDS).iter().map(|k| {
+							match k {
+								&MochigomaKind::Hisha | &MochigomaKind::Kaku => {
+									mc.get(k).map_or(0, |n| *n * 5)
+								},
+								_ => {
+									mc.get(k).map_or(0, |n| *n)
+								}
+							}
+						}).fold(0, |sum,s| sum + s)
+					},
+					&MochigomaCollections::Empty => {
+						0
+					}
+				};
+
+				point >= 28
+			},
+			Teban::Gote => {
+				let ou_bitboard = unsafe { state.part.sente_opponent_ou_position_board.merged_bitboard };
+
+				if ou_bitboard == 0 {
+					return false;
+				}
+
+				let mut count = 0;
+				let mut point = 0;
+
+				let gote_occupied_board = state.part.sente_opponent_board;
+				let gote_hisha_board = unsafe { state.part.gote_hisha_board.merged_bitboard };
+				let gote_kaku_board = unsafe { state.part.gote_kaku_board.merged_bitboard };
+
+				let mut gote_occupied_board = BitBoard {
+					merged_bitboard: unsafe {
+						gote_occupied_board.merged_bitboard &
+						!(gote_hisha_board | gote_kaku_board | ou_bitboard) & (GOTE_NARI_MASK << 1)
+					}
+				};
+
+				let mut gote_oogoma_board = BitBoard {
+					merged_bitboard: (gote_hisha_board | gote_kaku_board) & (GOTE_NARI_MASK << 1)
+				};
+
+				loop {
+					let p = Rule::pop_lsb(&mut gote_occupied_board);
+
+					if p == -1 {
+						break;
+					} else {
+						count += 1;
+						point += 1;
+					}
+				}
+
+				loop {
+					let p = Rule::pop_lsb(&mut gote_oogoma_board);
+
+					if p == -1 {
+						break;
+					} else {
+						count += 1;
+						point += 5;
+					}
+				}
+
+				if count < 10 {
+					return false;
+				} else if point >= 27 {
+					return true;
+				}
+
+				point += match mc {
+					&MochigomaCollections::Pair(_, ref mc) => {
+						(&MOCHIGOMA_KINDS).iter().map(|k| {
+							match k {
+								&MochigomaKind::Hisha | &MochigomaKind::Kaku => {
+									mc.get(k).map_or(0, |n| *n * 5)
+								},
+								_ => {
+									mc.get(k).map_or(0, |n| *n)
+								}
+							}
+						}).fold(0, |sum,s| sum + s)
+					},
+					&MochigomaCollections::Empty => {
+						0
+					}
+				};
+
+				point >= 27
 			}
 		}
 	}
