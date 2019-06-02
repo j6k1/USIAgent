@@ -237,26 +237,33 @@ impl Clone for USIInfoSender {
 		USIInfoSender::new(self.sender.clone())
 	}
 }
-pub struct CosoleInfoSender {
+pub struct ConsoleInfoSender {
 	writer:USIStdOutputWriter,
 	silent:bool,
 }
-impl CosoleInfoSender {
-	pub fn new(silent:bool) -> CosoleInfoSender {
-		CosoleInfoSender {
+impl ConsoleInfoSender {
+	pub fn new(silent:bool) -> ConsoleInfoSender {
+		ConsoleInfoSender {
 			writer:USIStdOutputWriter::new(),
 			silent:silent
 		}
 	}
+
+	fn create_command_strs(&self,commands:Vec<UsiInfoSubCommand>)
+		-> Result<Vec<String>, InfoSendError> {
+		let mut lines = Vec::with_capacity(commands.len());
+
+		for c in commands {
+			lines.push(c.to_usi_command()?);
+		}
+
+		Ok(lines)
+	}
 }
-impl InfoSender for CosoleInfoSender {
+impl InfoSender for ConsoleInfoSender {
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
 		if !self.silent {
-			let mut lines = Vec::with_capacity(commands.len());
-
-			for c in commands {
-				lines.push(c.to_usi_command()?);
-			}
+			let lines = self.create_command_strs(commands)?;
 
 			if let Err(_) =  self.writer.write(&lines) {
 				return Err(InfoSendError::Fail(String::from(
@@ -266,8 +273,8 @@ impl InfoSender for CosoleInfoSender {
 		Ok(())
 	}
 }
-impl Clone for CosoleInfoSender {
-	fn clone(&self) -> CosoleInfoSender {
-		CosoleInfoSender::new(self.silent)
+impl Clone for ConsoleInfoSender {
+	fn clone(&self) -> ConsoleInfoSender {
+		ConsoleInfoSender::new(self.silent)
 	}
 }
