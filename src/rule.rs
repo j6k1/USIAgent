@@ -44,8 +44,11 @@ use shogi::KomaKind::{
 use TryFrom;
 use Find;
 
-impl From<u32> for ObtainKind {
-	fn from(k:u32) -> ObtainKind {
+trait KomaKindFrom<T> {
+	fn kind_from(k:T) -> Self;
+}
+impl KomaKindFrom<u32> for ObtainKind {
+	fn kind_from(k:u32) -> ObtainKind {
 		match k {
 			0 => ObtainKind::Fu,
 			1 => ObtainKind::Kyou,
@@ -65,8 +68,8 @@ impl From<u32> for ObtainKind {
 		}
 	}
 }
-impl From<u32> for MochigomaKind {
-	fn from(k:u32) -> MochigomaKind {
+impl KomaKindFrom<u32> for MochigomaKind {
+	fn kind_from(k:u32) -> MochigomaKind {
 		match k {
 			0 => MochigomaKind::Fu,
 			1 => MochigomaKind::Kyou,
@@ -146,7 +149,7 @@ impl LegalMoveTo {
 		if o == 0 {
 			None
 		} else {
-			Some(ObtainKind::from(o-1))
+			Some(ObtainKind::kind_from(o-1))
 		}
 	}
 }
@@ -167,7 +170,7 @@ impl LegalMovePut {
 
 	#[inline]
 	pub fn kind(&self) -> MochigomaKind {
-		MochigomaKind::from(self.0 & 0b111)
+		MochigomaKind::kind_from(self.0 & 0b111)
 	}
 }
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
@@ -208,7 +211,7 @@ impl AppliedMovePut {
 
 	#[inline]
 	pub fn kind(&self) -> MochigomaKind {
-		MochigomaKind::from(self.0 & 0b111)
+		MochigomaKind::kind_from(self.0 & 0b111)
 	}
 }
 impl From<LegalMovePut> for AppliedMovePut {
