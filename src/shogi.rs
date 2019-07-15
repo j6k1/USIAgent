@@ -254,6 +254,44 @@ impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
 		})
 	}
 }
+impl TryFrom<KomaKind,TypeConvertError<String>> for MochigomaKind {
+	fn try_from(kind:KomaKind) -> Result<MochigomaKind,TypeConvertError<String>> {
+		Ok(match kind {
+			KomaKind::SFu => MochigomaKind::Fu,
+			KomaKind::SKyou => MochigomaKind::Kyou,
+			KomaKind::SKei => MochigomaKind::Kei,
+			KomaKind::SGin => MochigomaKind::Gin,
+			KomaKind::SKin => MochigomaKind::Kin,
+			KomaKind::SKaku => MochigomaKind::Kaku,
+			KomaKind::SHisha => MochigomaKind::Hisha,
+			KomaKind::SFuN => MochigomaKind::Fu,
+			KomaKind::SKyouN => MochigomaKind::Kyou,
+			KomaKind::SKeiN => MochigomaKind::Kei,
+			KomaKind::SGinN => MochigomaKind::Gin,
+			KomaKind::SKakuN => MochigomaKind::Kaku,
+			KomaKind::SHishaN => MochigomaKind::Hisha,
+			KomaKind::GFu => MochigomaKind::Fu,
+			KomaKind::GKyou => MochigomaKind::Kyou,
+			KomaKind::GKei => MochigomaKind::Kei,
+			KomaKind::GGin => MochigomaKind::Gin,
+			KomaKind::GKin => MochigomaKind::Kin,
+			KomaKind::GKaku => MochigomaKind::Kaku,
+			KomaKind::GHisha => MochigomaKind::Hisha,
+			KomaKind::GFuN => MochigomaKind::Fu,
+			KomaKind::GKyouN => MochigomaKind::Kyou,
+			KomaKind::GKeiN => MochigomaKind::Kei,
+			KomaKind::GGinN => MochigomaKind::Gin,
+			KomaKind::GKakuN => MochigomaKind::Kaku,
+			KomaKind::GHishaN => MochigomaKind::Hisha,
+			KomaKind::SOu | KomaKind::GOu => {
+				return Err(TypeConvertError::LogicError(String::from("Can not  to convert SOu or GOu to MochigomaKind.")));
+			},
+			KomaKind::Blank => {
+				return Err(TypeConvertError::LogicError(String::from("Can not  to convert Blank to MochigomaKind.")));
+			}
+		})
+	}
+}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum MochigomaKind {
 	Fu = 0,
