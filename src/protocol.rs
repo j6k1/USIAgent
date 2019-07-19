@@ -1011,6 +1011,8 @@ impl ToUsiCommand<String,UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
 			}
 		});
 
+		let mut prev_kind = None;
+
 		for cmd in other {
 			match cmd {
 				&UsiInfoSubCommand::Pv(_) if hs.contains(&UsiInfoSubCommandKind::Str) => {
@@ -1023,7 +1025,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
 						"specified pv and str with together"
 					)));
 				},
-				&UsiInfoSubCommand::SelDepth(_) if !hs.contains(&UsiInfoSubCommandKind::Depth) => {
+				&UsiInfoSubCommand::SelDepth(_) if !prev_kind.map(|k| k == UsiInfoSubCommandKind::Depth).unwrap_or(false) => {
 					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
 						"seldepth must be specified immediately after depth"
 					)));
@@ -1046,7 +1048,9 @@ impl ToUsiCommand<String,UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
 				)))
 			}
 			else {
-				hs.insert(cmd.get_kind());
+				let kind = cmd.get_kind();
+				hs.insert(kind);
+				prev_kind = Some(kind);
 			}
 
 			strs.push(cmd.to_usi_command()?);

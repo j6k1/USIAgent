@@ -35,7 +35,7 @@ pub enum UsiInfoSubCommand {
 	Nps(u32),
 	Str(String),
 }
-#[derive(Hash, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Hash, Eq, PartialEq, Debug)]
 pub enum UsiInfoSubCommandKind {
 	Depth,
 	SelDepth,
@@ -107,6 +107,7 @@ impl Validate for UsiCommand {
 			UsiCommand::UsiBestMove(BestMove::Move(_,Some(ref m))) if !m.validate() => false,
 			UsiCommand::UsiInfo(ref commands) => {
 				let mut hs = HashSet::new();
+				let mut prev_kind = None;
 
 				for cmd in commands {
 					match *cmd {
@@ -116,7 +117,7 @@ impl Validate for UsiCommand {
 						UsiInfoSubCommand::Str(_) if hs.contains(&UsiInfoSubCommandKind::Pv) => {
 							return false;
 						},
-						UsiInfoSubCommand::SelDepth(_) if !hs.contains(&UsiInfoSubCommandKind::Depth) => {
+						UsiInfoSubCommand::SelDepth(_) if !prev_kind.map(|k| k == UsiInfoSubCommandKind::Depth).unwrap_or(false) => {
 							return false;
 						},
 						ref c @ UsiInfoSubCommand::Pv(_) => {
@@ -131,7 +132,9 @@ impl Validate for UsiCommand {
 						return false;
 					}
 					else {
-						hs.insert(cmd.get_kind());
+						let kind = cmd.get_kind();
+						hs.insert(kind);
+						prev_kind = Some(kind);
 					}
 				}
 
