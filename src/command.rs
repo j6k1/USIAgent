@@ -28,6 +28,7 @@ pub enum UsiInfoSubCommand {
 	Time(u32),
 	Nodes(u32),
 	Pv(Vec<Move>),
+	MultiPv(u32),
 	Score(UsiScore),
 	CurMove(Move),
 	Hashfull(u32),
@@ -41,6 +42,7 @@ pub enum UsiInfoSubCommandKind {
 	Time,
 	Nodes,
 	Pv,
+	MultiPv,
 	Score,
 	CurMove,
 	Hashfull,
@@ -132,7 +134,12 @@ impl Validate for UsiCommand {
 						hs.insert(cmd.get_kind());
 					}
 				}
-				true
+
+				if hs.contains(&UsiInfoSubCommandKind::MultiPv) && !hs.contains(&UsiInfoSubCommandKind::Pv) {
+					false
+				} else {
+					true
+				}
 			},
 			UsiCommand::UsiOption(_,ref opt) => opt.validate(),
 			UsiCommand::UsiCheckMate(ref c) => c.validate(),
@@ -148,6 +155,7 @@ impl UsiInfoSubCommand {
 			UsiInfoSubCommand::Time(_) => UsiInfoSubCommandKind::Time,
 			UsiInfoSubCommand::Nodes(_) => UsiInfoSubCommandKind::Nodes,
 			UsiInfoSubCommand::Pv(_) => UsiInfoSubCommandKind::Pv,
+			UsiInfoSubCommand::MultiPv(_) => UsiInfoSubCommandKind::MultiPv,
 			UsiInfoSubCommand::Score(_) => UsiInfoSubCommandKind::Score,
 			UsiInfoSubCommand::CurMove(_) => UsiInfoSubCommandKind::CurMove,
 			UsiInfoSubCommand::Hashfull(_) => UsiInfoSubCommandKind::Hashfull,

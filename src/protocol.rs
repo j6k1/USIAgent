@@ -1,6 +1,7 @@
 use std::fmt;
 use std::error::Error;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 use event::*;
 use shogi::*;
@@ -993,10 +994,94 @@ impl ToSfen<ToMoveStringConvertError> for BestMove {
 }
 impl ToUsiCommand<String,UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
 	fn to_usi_command(&self) -> Result<String, UsiOutputCreateError> {
+		let mut hs = HashSet::new();
 		let mut strs:Vec<String> = Vec::with_capacity(self.len());
 
-		for cmd in self {
+		let (pv,other): (Vec<&UsiInfoSubCommand>,Vec<&UsiInfoSubCommand>) = self.iter().partition(|c| {
+			match c {
+				&UsiInfoSubCommand::Pv(_) => true,
+				_ => false,
+			}
+		});
+
+		let (multipv,other): (Vec<&UsiInfoSubCommand>,Vec<&UsiInfoSubCommand>) = other.iter().partition(|c| {
+			match c {
+				&UsiInfoSubCommand::MultiPv(_) => true,
+				_ => false,
+			}
+		});
+
+		for cmd in other {
+			match cmd {
+				&UsiInfoSubCommand::Pv(_) if hs.contains(&UsiInfoSubCommandKind::Str) => {
+					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+						"specified pv and str with together"
+					)));
+				},
+				&UsiInfoSubCommand::Str(_) if hs.contains(&UsiInfoSubCommandKind::Pv) => {
+					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+						"specified pv and str with together"
+					)));
+				},
+				&UsiInfoSubCommand::SelDepth(_) if !hs.contains(&UsiInfoSubCommandKind::Depth) => {
+					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+						"seldepth must be specified immediately after depth"
+					)));
+				},
+				c @ UsiInfoSubCommand::Pv(_) if !c.validate() => {
+					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+						"parameter of pv is invalid"
+					)));
+				},
+				c @ UsiInfoSubCommand::CurMove(_) if !c.validate() => {
+					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+						"parameter of curmove is invalid"
+					)));
+				}
+				_ => (),
+			}
+			if hs.contains(&cmd.get_kind()) {
+				return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+					"The same subcommand is specified more than once"
+				)))
+			}
+			else {
+				hs.insert(cmd.get_kind());
+			}
+
 			strs.push(cmd.to_usi_command()?);
+		}
+
+		for cmd in &multipv {
+			if hs.contains(&cmd.get_kind()) {
+				return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+					"The same subcommand is specified more than once"
+				)))
+			}
+			else {
+				hs.insert(cmd.get_kind());
+			}
+
+			strs.push(cmd.to_usi_command()?);
+		}
+
+		for cmd in &pv {
+			if hs.contains(&cmd.get_kind()) {
+				return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+					"The same subcommand is specified more than once"
+				)))
+			}
+			else {
+				hs.insert(cmd.get_kind());
+			}
+
+			strs.push(cmd.to_usi_command()?);
+		}
+
+		if hs.contains(&UsiInfoSubCommandKind::MultiPv) && !hs.contains(&UsiInfoSubCommandKind::Pv) {
+			return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+				"multipv must be specified along with pv"
+			)));
 		}
 
 		Ok(strs.join(" "))
@@ -1012,6 +1097,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 			UsiInfoSubCommand::Pv(ref v) if v.len() < 1 => {
 				return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
 			},
+			UsiInfoSubCommand::MultiPv(n) => format!("multipv {}", n),
 			UsiInfoSubCommand::Pv(ref v) => {
 				let mut mv:Vec<String> = Vec::with_capacity(v.len());
 				for m in v {

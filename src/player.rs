@@ -248,22 +248,11 @@ impl ConsoleInfoSender {
 			silent:silent
 		}
 	}
-
-	fn create_command_strs(&self,commands:Vec<UsiInfoSubCommand>)
-		-> Result<Vec<String>, InfoSendError> {
-		let mut lines = Vec::with_capacity(commands.len());
-
-		for c in commands {
-			lines.push(c.to_usi_command()?);
-		}
-
-		Ok(lines)
-	}
 }
 impl InfoSender for ConsoleInfoSender {
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
 		if !self.silent {
-			let lines = self.create_command_strs(commands)?;
+			let lines = vec![commands.to_usi_command()?];
 
 			if let Err(_) =  self.writer.write(&lines) {
 				return Err(InfoSendError::Fail(String::from(

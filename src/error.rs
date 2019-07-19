@@ -157,6 +157,7 @@ impl From<DanConvertError> for ToMoveStringConvertError {
 pub enum UsiOutputCreateError {
 	ValidationError(UsiCommand),
 	InvalidStateError(String),
+	InvalidInfoCommand(String),
 	ConvertError(ToMoveStringConvertError),
 	AbortedError,
 }
@@ -165,6 +166,7 @@ impl fmt::Display for UsiOutputCreateError {
 	 	match *self {
 	 		UsiOutputCreateError::ConvertError(_) => write!(f, "Failed to generate command string output to USI protocol."),
 	 		UsiOutputCreateError::InvalidStateError(ref s) => write!(f, "The state of {} is invalid.", s),
+	 		UsiOutputCreateError::InvalidInfoCommand(ref s) => write!(f, "The content of the info command is invalid. ({})", s),
 	 		UsiOutputCreateError::ValidationError(ref cmd) => {
 	 			match *cmd {
 	 				UsiCommand::UsiBestMove(_) => write!(f, "The state of the object that generated the bestmove command is invalid."),
@@ -182,6 +184,7 @@ impl error::Error for UsiOutputCreateError {
 	 	match *self {
 	 		UsiOutputCreateError::ConvertError(_) => "Failed to generate command string output to USI protocol.",
 	 		UsiOutputCreateError::InvalidStateError(_) => "The state of the command generation object is invalid",
+	 		UsiOutputCreateError::InvalidInfoCommand(_) => "The content of the info command is invalid.",
 	 		UsiOutputCreateError::ValidationError(ref cmd) => {
 	 			match *cmd {
 	 				UsiCommand::UsiBestMove(_) => "The state of the object that generated the bestmove command is invalid",
@@ -198,6 +201,7 @@ impl error::Error for UsiOutputCreateError {
 	 	match *self {
 	 		UsiOutputCreateError::ConvertError(ref e) => Some(e),
 	 		UsiOutputCreateError::InvalidStateError(_) => None,
+	 		UsiOutputCreateError::InvalidInfoCommand(_)=> None,
 	 		UsiOutputCreateError::ValidationError(_) => None,
 	 		UsiOutputCreateError::AbortedError => None,
 	 	}
