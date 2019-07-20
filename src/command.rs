@@ -25,14 +25,14 @@ pub enum BestMove {
 pub enum UsiInfoSubCommand {
 	Depth(u32),
 	SelDepth(u32),
-	Time(u32),
-	Nodes(u32),
+	Time(u64),
+	Nodes(u64),
 	Pv(Vec<Move>),
 	MultiPv(u32),
 	Score(UsiScore),
 	CurMove(Move),
-	Hashfull(u32),
-	Nps(u32),
+	Hashfull(u64),
+	Nps(u64),
 	Str(String),
 }
 #[derive(Clone, Copy, Hash, Eq, PartialEq, Debug)]
