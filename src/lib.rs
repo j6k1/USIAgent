@@ -533,6 +533,7 @@ impl<T,E> UsiAgent<T,E>
 																	Ok(bm) => bm,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		handle.join().is_err();
 																		return;
 																	}
 																};
@@ -541,6 +542,7 @@ impl<T,E> UsiAgent<T,E>
 
 												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
 													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													handle.join().is_err();
 													return;
 												}
 
@@ -586,6 +588,7 @@ impl<T,E> UsiAgent<T,E>
 															},
 															Err(ref e) => {
 																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																handle.join().is_err();
 																return;
 															}
 														}
@@ -645,6 +648,7 @@ impl<T,E> UsiAgent<T,E>
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		handle.join().is_err();
 																		return;
 																	}
 																};
@@ -653,6 +657,7 @@ impl<T,E> UsiAgent<T,E>
 
 												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
 													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													handle.join().is_err();
 													return;
 												}
 
@@ -736,6 +741,7 @@ impl<T,E> UsiAgent<T,E>
 																	Ok(m) => m,
 																	Err(ref e) => {
 																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		handle.join().is_err();
 																		return;
 																	}
 																};
@@ -757,6 +763,7 @@ impl<T,E> UsiAgent<T,E>
 
 												match m {
 													CheckMate::Abort => {
+														handle.join().is_err();
 														return;
 													},
 													_ => (),
