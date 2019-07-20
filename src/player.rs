@@ -1,4 +1,5 @@
 use std::{thread,time};
+use std::thread::JoinHandle;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -175,14 +176,14 @@ impl USIInfoSender {
 		}
 	}
 
-	pub fn start_worker_thread<W,L>(&self,thinking:Arc<AtomicBool>,
+	pub(crate) fn start_worker_thread<W,L>(&self,thinking:Arc<AtomicBool>,
 		receiver:Receiver<UsiInfoMessage>,
-		writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+		writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> JoinHandle<()>
 		where W: USIOutputWriter, L: Logger, Arc<Mutex<W>>: Send + 'static, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 
 		thinking.store(true,Ordering::Release);
 
-		thread::spawn(move || {
+		let handle = thread::spawn(move || {
 			loop {
 				if !thinking.load(Ordering::Acquire) {
 					break;
@@ -220,6 +221,8 @@ impl USIInfoSender {
 				}
 			}
 		});
+
+		handle
 	}
 }
 impl InfoSender for USIInfoSender {

@@ -518,7 +518,7 @@ impl<T,E> UsiAgent<T,E>
 
 									let info_sender = USIInfoSender::new(sender.clone());
 
-									info_sender.start_worker_thread(
+									let mut handle = info_sender.start_worker_thread(
 										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
 									);
 
@@ -543,6 +543,8 @@ impl<T,E> UsiAgent<T,E>
 													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													return;
 												}
+
+												handle.join().is_err();
 
 												match busy_inner.lock() {
 													Ok(mut busy) => {
@@ -628,7 +630,7 @@ impl<T,E> UsiAgent<T,E>
 
 									let info_sender = USIInfoSender::new(sender.clone());
 
-									info_sender.start_worker_thread(
+									let mut handle = info_sender.start_worker_thread(
 										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
 									);
 
@@ -653,6 +655,8 @@ impl<T,E> UsiAgent<T,E>
 													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													return;
 												}
+
+												handle.join().is_err();
 
 												match busy_inner.lock() {
 													Ok(mut busy) => {
@@ -717,7 +721,7 @@ impl<T,E> UsiAgent<T,E>
 
 									let info_sender = USIInfoSender::new(sender.clone());
 
-									info_sender.start_worker_thread(
+									let mut handle = info_sender.start_worker_thread(
 										thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
 									);
 
@@ -741,6 +745,8 @@ impl<T,E> UsiAgent<T,E>
 													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													return;
 												}
+
+												handle.join().is_err();
 
 												match busy_inner.lock() {
 													Ok(mut busy) => {
