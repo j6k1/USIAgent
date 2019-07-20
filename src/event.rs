@@ -79,7 +79,7 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 #[derive(Debug)]
 pub enum SysEventOption {
 	Str(String),
-	Num(u32),
+	Num(i64),
 	Bool(bool),
 }
 impl Clone for SysEventOption {

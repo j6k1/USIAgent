@@ -69,7 +69,7 @@ impl USIInterpreter {
 															event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Str(v.to_string())));
 														},
 														("name", id, "value", v, &SysEventOptionKind::Num) => {
-															v.parse::<u32>().map(|n|{
+															v.parse::<i64>().map(|n|{
 																event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Num(n)));
 															}).map_err(|ref e| {
 																on_error_handler.lock().map(|h| h.call(e))

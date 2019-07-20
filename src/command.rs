@@ -75,7 +75,7 @@ pub enum CheckMate {
 #[derive(Debug)]
 pub enum UsiOptType {
 	Check(Option<bool>),
-	Spin(u32, u32,Option<u32>),
+	Spin(i64, i64,Option<i64>),
 	Combo(Option<String>, Vec<String>),
 	Button,
 	String(Option<String>),
