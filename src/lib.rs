@@ -544,8 +544,6 @@ impl<T,E> UsiAgent<T,E>
 													return;
 												}
 
-												handle.join().is_err();
-
 												match busy_inner.lock() {
 													Ok(mut busy) => {
 														*busy = false;
@@ -596,6 +594,8 @@ impl<T,E> UsiAgent<T,E>
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													}
 												}
+
+												handle.join().is_err();
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -656,8 +656,6 @@ impl<T,E> UsiAgent<T,E>
 													return;
 												}
 
-												handle.join().is_err();
-
 												match busy_inner.lock() {
 													Ok(mut busy) => {
 														*busy = false;
@@ -687,6 +685,8 @@ impl<T,E> UsiAgent<T,E>
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													}
 												}
+
+												handle.join().is_err();
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
@@ -746,8 +746,6 @@ impl<T,E> UsiAgent<T,E>
 													return;
 												}
 
-												handle.join().is_err();
-
 												match busy_inner.lock() {
 													Ok(mut busy) => {
 														*busy = false;
@@ -777,6 +775,8 @@ impl<T,E> UsiAgent<T,E>
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													}
 												}
+
+												handle.join().is_err();
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
