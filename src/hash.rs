@@ -76,10 +76,46 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		self.map.clear();
 	}
 }
-impl<K,T> Clone for TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
-	fn clone(&self) -> TwoKeyHashMap<K,T> {
-		TwoKeyHashMap {
-			map:self.map.clone()
+pub struct KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+	sente_map:TwoKeyHashMap<K,T>,
+	gote_map:TwoKeyHashMap<K,T>
+}
+impl<K,T> Clone for KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone, TwoKeyHashMap<K,T>: Clone {
+	fn clone(&self) -> KyokumenMap<K,T> {
+		KyokumenMap {
+			sente_map:self.sente_map.clone(),
+			gote_map:self.gote_map.clone(),
+		}
+	}
+}
+impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+	pub fn new()
+		-> KyokumenMap<K,T> {
+
+		KyokumenMap {
+			sente_map:TwoKeyHashMap::new(),
+			gote_map:TwoKeyHashMap::new(),
+		}
+	}
+
+	pub fn get(&self,teban:Teban,k:&K,sk:&K) -> Option<T> {
+		match teban {
+			Teban::Sente => self.sente_map.get(k,sk),
+			Teban::Gote => self.gote_map.get(k,sk),
+		}
+	}
+
+	pub fn insert(&mut self,teban:Teban,k:K,sk:K,nv:T) -> Option<T> {
+		match teban {
+			Teban::Sente => self.sente_map.insert(k,sk,nv),
+			Teban::Gote => self.gote_map.insert(k,sk,nv),
+		}
+	}
+
+	pub fn clear(&mut self,teban:Teban) {
+		match teban {
+			Teban::Sente => self.sente_map.clear(),
+			Teban::Gote => self.gote_map.clear(),
 		}
 	}
 }

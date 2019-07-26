@@ -3813,9 +3813,9 @@ impl Rule {
 	pub fn apply_moves(mut state:State,mut teban:Teban,
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut mhash:u64,mut shash:u64,
-						mut kyokumen_hash_map:TwoKeyHashMap<u64,u32>,
+						mut kyokumen_map:KyokumenMap<u64,u32>,
 						hasher:&KyokumenHash<u64>)
-		-> (Teban,State,MochigomaCollections,u64,u64,TwoKeyHashMap<u64,u32>) {
+		-> (Teban,State,MochigomaCollections,u64,u64,KyokumenMap<u64,u32>) {
 
 		for m in m {
 			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
@@ -3823,23 +3823,23 @@ impl Rule {
 					mhash = hasher.calc_main_hash(mhash,teban,&state.banmen,&mc,*m,&o);
 					shash = hasher.calc_sub_hash(shash,teban,&state.banmen,&mc,*m,&o);
 
+					match kyokumen_map.get(teban,&mhash,&shash) {
+						Some(c) => {
+							kyokumen_map.insert(teban,mhash,shash,c+1);
+						},
+						None => {
+							kyokumen_map.insert(teban,mhash,shash,1);
+						}
+					}
+
 					mc = nmc;
 					teban = teban.opposite();
 					state = next;
-
-					match kyokumen_hash_map.get(&mhash,&shash) {
-						Some(c) => {
-							kyokumen_hash_map.insert(mhash,shash,c+1);
-						},
-						None => {
-							kyokumen_hash_map.insert(mhash,shash,1);
-						}
-					}
 				}
 			}
 		}
 
-		(teban,state,mc,mhash,shash,kyokumen_hash_map)
+		(teban,state,mc,mhash,shash,kyokumen_map)
 	}
 
 
@@ -4361,21 +4361,21 @@ impl Rule {
 		false
 	}
 
-	pub fn update_sennichite_map(_:&State,mhash:u64,shash:u64,
-									kyokumen_hash_map:&mut TwoKeyHashMap<u64,u32>) {
-		match kyokumen_hash_map.get(&mhash,&shash) {
+	pub fn update_sennichite_map(_:&State,teban:Teban,mhash:u64,shash:u64,
+									kyokumen_map:&mut KyokumenMap<u64,u32>) {
+		match kyokumen_map.get(teban,&mhash,&shash) {
 			Some(c) => {
-				kyokumen_hash_map.insert(mhash,shash,c+1);
+				kyokumen_map.insert(teban,mhash,shash,c+1);
 			},
 			None => {
-				kyokumen_hash_map.insert(mhash,shash,1);
+				kyokumen_map.insert(teban,mhash,shash,1);
 			}
 		}
 	}
 
-	pub fn is_sennichite(_:&State,mhash:u64,shash:u64,
-									kyokumen_hash_map:&TwoKeyHashMap<u64,u32>) -> bool {
-		match kyokumen_hash_map.get(&mhash,&shash) {
+	pub fn is_sennichite(_:&State,teban:Teban,mhash:u64,shash:u64,
+									kyokumen_map:&KyokumenMap<u64,u32>) -> bool {
+		match kyokumen_map.get(teban,&mhash,&shash) {
 			Some(c) if c >= 3 => {
 				true
 			},
@@ -4384,45 +4384,28 @@ impl Rule {
 	}
 
 	pub fn update_sennichite_by_oute_map(state:&State,teban:Teban,mhash:u64,shash:u64,
-									oute_kyokumen_hash_map:&mut Option<TwoKeyHashMap<u64,u32>>)
-		-> bool {
+									oute_kyokumen_map:&mut KyokumenMap<u64,u32>) {
 
-		match *oute_kyokumen_hash_map {
-			None if Rule::is_mate(teban,state) => {
-				let mut m = TwoKeyHashMap::new();
-				m.insert(mhash,shash,1);
-				*oute_kyokumen_hash_map = Some(m);
-			},
-			Some(ref mut m) => {
-				if Rule::is_mate(teban,state) {
-					if let Some(c) = m.get(&mhash,&shash) {
-						m.insert(mhash,shash,c+1);
-					} else {
-						m.insert(mhash,shash,1);
-					}
-				}
-			},
-			ref mut m => {
-				*m = None;
-			}
+		if Rule::is_mate(teban,state) {
+			let count = oute_kyokumen_map.get(teban, &mhash, &shash).unwrap_or(0);
+
+			oute_kyokumen_map.insert(teban, mhash, shash, count + 1);
+		} else {
+			oute_kyokumen_map.clear(teban);
 		}
-
-		true
 	}
 
 	pub fn is_sennichite_by_oute(state:&State,teban:Teban,mhash:u64,shash:u64,
-									oute_kyokumen_hash_map:&Option<TwoKeyHashMap<u64,u32>>)
+									oute_kyokumen_map:&KyokumenMap<u64,u32>)
 		-> bool {
 
-		if let Some(ref m) = *oute_kyokumen_hash_map {
-			if Rule::is_mate(teban,state) {
-				if let Some(_) = m.get(&mhash,&shash) {
-					return true;
-				}
-			}
-		}
+		if Rule::is_mate(teban,state) {
+			let count = oute_kyokumen_map.get(teban, &mhash, &shash).unwrap_or(0);
 
-		false
+			count > 0
+		} else {
+			false
+		}
 	}
 
 	pub fn update_time_limit(limit:&UsiGoTimeLimit,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {

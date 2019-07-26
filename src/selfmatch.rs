@@ -619,7 +619,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				let mut current_game_time_limit = [game_time_limit,game_time_limit];
 				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
 
-				let kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
+				let kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 				let hasher = KyokumenHash::new();
 
 				let (ms,mg) = match mc {
@@ -643,9 +643,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					 mut mc,
 					 mut mhash,
 					 mut shash,
-					 mut kyokumen_hash_map) = Rule::apply_moves(State::new(banmen),teban,mc,&mvs,mhash,shash,kyokumen_hash_map,&hasher);
+					 mut kyokumen_map) = Rule::apply_moves(State::new(banmen),teban,mc,&mvs,mhash,shash,kyokumen_map,&hasher);
 
-				let mut oute_kyokumen_hash_maps:[Option<TwoKeyHashMap<u64,u32>>; 2] = [None,None];
+				let mut oute_kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 
 				while end_time.map_or(true, |t| Instant::now() - start_time < t)  && !(match notify_quit.lock() {
 					Ok(notify_quit) => {
@@ -778,7 +778,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									if Rule::is_sennichite_by_oute(
 										&state,
 										teban.opposite(),mhash,shash,
-										&oute_kyokumen_hash_maps[cs_index]
+										&oute_kyokumen_map
 									) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																.map(|m| m.to_move())
@@ -796,11 +796,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									Rule::update_sennichite_by_oute_map(
 										&state,
 										teban.opposite(),mhash,shash,
-										&mut oute_kyokumen_hash_maps[cs_index]
+										&mut oute_kyokumen_map
 									);
 
 									if Rule::is_sennichite(
-										&state,mhash,shash,&kyokumen_hash_map
+										&state,teban.opposite(),mhash,shash,&kyokumen_map
 									) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																.map(|m| m.to_move())
@@ -816,7 +816,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 
 									Rule::update_sennichite_map(
-										&state,mhash,shash,&mut kyokumen_hash_map
+										&state,teban.opposite(),mhash,shash,&mut kyokumen_map
 									);
 									ponders[cs_index] = pm.map(|pm| pm.to_applied_move());
 

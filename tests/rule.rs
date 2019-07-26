@@ -22405,7 +22405,7 @@ fn test_apply_moves() {
 		((8-1,8-8),(8-2,8-6,false),None),
 	];
 
-	let kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
+	let kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 	let hasher = KyokumenHash::new();
 
 	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
@@ -22423,7 +22423,7 @@ fn test_apply_moves() {
 		 _,
 		 mhash,
 		 shash,
-		 _) = Rule::apply_moves(state,teban,mc,&mvs,imhash,ishash,kyokumen_hash_map,&hasher);
+		 _) = Rule::apply_moves(state,teban,mc,&mvs,imhash,ishash,kyokumen_map,&hasher);
 
 	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&HashMap::new(),&HashMap::new());
 
@@ -25853,16 +25853,16 @@ fn test_is_sennichite_sente() {
 		((7,7),(4,7)),((4,7),(7,7)),((7,7),(4,7)),((4,7),(7,7)),((7,7),(4,7))
 	];
 
-	let mut kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
+	let mut kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 	let hasher = KyokumenHash::new();
 
 	let (mut mhash, mut shash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
 
 	let mut state = State::new(BANMEN_START_POS.clone());
 
-	assert!(!Rule::is_sennichite(&state,mhash,shash,&kyokumen_hash_map));
+	assert!(!Rule::is_sennichite(&state,Teban::Sente,mhash,shash,&kyokumen_map));
 
-	Rule::update_sennichite_map(&state,mhash,shash,&mut kyokumen_hash_map);
+	Rule::update_sennichite_map(&state,Teban::Sente,mhash,shash,&mut kyokumen_map);
 
 	let mvs = mvs.into_iter().map(|m| {
 		rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,false)))
@@ -25880,9 +25880,9 @@ fn test_is_sennichite_sente() {
 				mc = nmc;
 				state = next;
 
-				assert!(!Rule::is_sennichite(&state,mhash,shash,&kyokumen_hash_map));
+				assert!(!Rule::is_sennichite(&state,teban,mhash,shash,&kyokumen_map));
 
-				Rule::update_sennichite_map(&state,mhash,shash,&mut kyokumen_hash_map);
+				Rule::update_sennichite_map(&state,teban,mhash,shash,&mut kyokumen_map);
 			}
 		}
 	}
@@ -25896,7 +25896,7 @@ fn test_is_sennichite_sente() {
 		}
 	}
 
-	assert!(Rule::is_sennichite(&state,mhash,shash,&kyokumen_hash_map));
+	assert!(Rule::is_sennichite(&state,Teban::Sente,mhash,shash,&kyokumen_map));
 }
 #[test]
 fn test_is_sennichite_gote() {
@@ -25904,15 +25904,15 @@ fn test_is_sennichite_gote() {
 		((7,7),(4,7)),((4,7),(7,7)),((7,7),(4,7)),((4,7),(7,7)),((7,7),(4,7))
 	];
 
-	let mut kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
+	let mut kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 	let hasher = KyokumenHash::new();
 
 	let (mut mhash, mut shash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
 
 	let mut state = State::new(BANMEN_START_POS.clone());
 
-	assert!(!Rule::is_sennichite(&state,mhash,shash,&kyokumen_hash_map));
-	Rule::update_sennichite_map(&state,mhash,shash,&mut kyokumen_hash_map);
+	assert!(!Rule::is_sennichite(&state,Teban::Gote,mhash,shash,&kyokumen_map));
+	Rule::update_sennichite_map(&state,Teban::Gote,mhash,shash,&mut kyokumen_map);
 
 	let mvs = mvs.into_iter().map(|m| {
 		rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-(m.0).0),(8-(m.0).1)+1),KomaDstToPosition(9-(8-(m.1).0),(8-(m.1).1)+1,false)))
@@ -25930,9 +25930,9 @@ fn test_is_sennichite_gote() {
 				mc = nmc;
 				state = next;
 
-				assert!(!Rule::is_sennichite(&state,mhash,shash,&kyokumen_hash_map));
+				assert!(!Rule::is_sennichite(&state,teban,mhash,shash,&kyokumen_map));
 
-				Rule::update_sennichite_map(&state,mhash,shash,&mut kyokumen_hash_map)
+				Rule::update_sennichite_map(&state,teban,mhash,shash,&mut kyokumen_map)
 			}
 		}
 	}
@@ -25946,7 +25946,7 @@ fn test_is_sennichite_gote() {
 		}
 	}
 
-	assert!(Rule::is_sennichite(&state,mhash,shash,&kyokumen_hash_map));
+	assert!(Rule::is_sennichite(&state,Teban::Gote,mhash,shash,&kyokumen_map));
 }
 #[test]
 fn test_is_sennichite_by_oute_sente() {
@@ -25954,36 +25954,35 @@ fn test_is_sennichite_by_oute_sente() {
 		((4,8),(5,8)),((4,0),(5,0)),((5,8),(4,8))
 	];
 
-	let mut kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
 	let hasher = KyokumenHash::new();
 
 	let mut banmen = Banmen([[Blank; 9]; 9]);
 
-	banmen.0[8][4] = SOu;
-	banmen.0[0][8] = GHisha;
+	banmen.0[8][4] = GOu;
+	banmen.0[0][8] = SHisha;
 
 	let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
 
 	let mut state = State::new(banmen);
-	let mut teban = Teban::Gote;
+	let mut teban = Teban::Sente;
 	let mut mc = MochigomaCollections::Empty;
 
-	kyokumen_hash_map.insert(mhash,shash,1);
-	let mut kyokumen_hash_map = Some(kyokumen_hash_map);
+	let mut kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 
 	let m = Move::To(KomaSrcPosition(9-8,0+1),KomaDstToPosition(9-4,0+1,false)).to_applied_move();
 
 	match Rule::apply_move_none_check(&state,teban,&mc,m) {
 		(next,nmc,_) => {
-			state = next;
 			mhash = hasher.calc_main_hash(mhash,teban,state.get_banmen(),&mc,m,&None);
 			shash = hasher.calc_sub_hash(shash,teban,state.get_banmen(),&mc,m,&None);
 
-			assert!(!Rule::is_sennichite_by_oute(&state,teban,mhash,shash,&kyokumen_hash_map));
-
-			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_hash_map);
-
+			state = next;
 			mc = nmc;
+
+			assert!(!Rule::is_sennichite_by_oute(&state,teban,mhash,shash,&kyokumen_map));
+
+			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_map);
+
 			teban = teban.opposite();
 		}
 	}
@@ -25998,10 +25997,11 @@ fn test_is_sennichite_by_oute_sente() {
 				mhash = hasher.calc_main_hash(mhash,teban,state.get_banmen(),&mc,m,&o);
 				shash = hasher.calc_sub_hash(shash,teban,state.get_banmen(),&mc,m,&o);
 
-				Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_hash_map);
-
 				mc = nmc;
 				state = next;
+
+				Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_map);
+
 				teban = teban.opposite();
 			}
 		}
@@ -26014,15 +26014,13 @@ fn test_is_sennichite_by_oute_sente() {
 			mhash = hasher.calc_main_hash(mhash,teban,state.get_banmen(),&mc,m,&o);
 			shash = hasher.calc_sub_hash(shash,teban,state.get_banmen(),&mc,m,&o);
 
-			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_hash_map);
-
 			state = next;
-			teban = teban.opposite();
+
+			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_map);
 		}
 	}
 
-	assert!(Rule::is_sennichite_by_oute(&state,teban.opposite(),mhash,shash,&kyokumen_hash_map));
-	assert!(!Rule::is_sennichite_by_oute(&state,teban.opposite(),mhash,shash,&None));
+	assert!(Rule::is_sennichite_by_oute(&state,Teban::Sente,mhash,shash,&kyokumen_map));
 }
 #[test]
 fn test_is_sennichite_by_oute_gote() {
@@ -26030,36 +26028,34 @@ fn test_is_sennichite_by_oute_gote() {
 		((4,8),(5,8)),((4,0),(5,0)),((5,8),(4,8))
 	];
 
-	let mut kyokumen_hash_map:TwoKeyHashMap<u64,u32> = TwoKeyHashMap::new();
 	let hasher = KyokumenHash::new();
 
 	let mut banmen = Banmen([[Blank; 9]; 9]);
 
-	banmen.0[8-8][8-4] = GOu;
-	banmen.0[8-0][8-8] = SHisha;
+	banmen.0[8-8][8-4] = SOu;
+	banmen.0[8-0][8-8] = GHisha;
 
 	let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
 
 	let mut state = State::new(banmen);
-	let mut teban = Teban::Sente;
+	let mut teban = Teban::Gote;
 	let mut mc = MochigomaCollections::Empty;
 
-	kyokumen_hash_map.insert(mhash,shash,1);
-	let mut kyokumen_hash_map = Some(kyokumen_hash_map);
+	let mut kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 
 	let m = Move::To(KomaSrcPosition(9-(8-8),(8-0)+1),KomaDstToPosition(9-(8-4),(8-0)+1,false)).to_applied_move();
 
 	match Rule::apply_move_none_check(&state,teban,&mc,m) {
 		(next,nmc,_) => {
-			state = next;
 			mhash = hasher.calc_main_hash(mhash,teban,state.get_banmen(),&mc,m,&None);
 			shash = hasher.calc_sub_hash(shash,teban,state.get_banmen(),&mc,m,&None);
 
-			assert!(!Rule::is_sennichite_by_oute(&state,teban,mhash,shash,&kyokumen_hash_map));
-
-			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_hash_map);
-
+			state = next;
 			mc = nmc;
+
+			assert!(!Rule::is_sennichite_by_oute(&state,teban,mhash,shash,&kyokumen_map));
+
+			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_map);
 			teban = teban.opposite();
 		}
 	}
@@ -26074,10 +26070,11 @@ fn test_is_sennichite_by_oute_gote() {
 				mhash = hasher.calc_main_hash(mhash,teban,state.get_banmen(),&mc,m,&o);
 				shash = hasher.calc_sub_hash(shash,teban,state.get_banmen(),&mc,m,&o);
 
-				Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_hash_map);
-
 				mc = nmc;
 				state = next;
+
+				Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_map);
+
 				teban = teban.opposite();
 			}
 		}
@@ -26090,15 +26087,13 @@ fn test_is_sennichite_by_oute_gote() {
 			mhash = hasher.calc_main_hash(mhash,teban,state.get_banmen(),&mc,m,&o);
 			shash = hasher.calc_sub_hash(shash,teban,state.get_banmen(),&mc,m,&o);
 
-			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_hash_map);
-
 			state = next;
-			teban = teban.opposite();
+
+			Rule::update_sennichite_by_oute_map(&state,teban,mhash,shash,&mut kyokumen_map);
 		}
 	}
 
-	assert!(Rule::is_sennichite_by_oute(&state,teban.opposite(),mhash,shash,&kyokumen_hash_map));
-	assert!(!Rule::is_sennichite_by_oute(&state,teban.opposite(),mhash,shash,&None));
+	assert!(Rule::is_sennichite_by_oute(&state,Teban::Gote,mhash,shash,&kyokumen_map));
 }
 impl From<rule::LegalMove> for LegalMove {
 	fn from(m:rule::LegalMove) -> LegalMove {
