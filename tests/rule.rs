@@ -27907,7 +27907,7 @@ fn apply_moves(banmen:&Banmen,mut teban:Teban,
 				banmen = next;
 
 				match kyokumen_hash_map.get(&mhash,&shash) {
-					Some(c) => {
+					Some(&c) => {
 						kyokumen_hash_map.insert(mhash,shash,c+1);
 					},
 					None => {
@@ -28413,10 +28413,10 @@ fn is_win(banmen:&Banmen,teban:&Teban,m:&Move) -> bool {
 fn check_sennichite(_:&Banmen,mhash:u64,shash:u64,
 								kyokumen_hash_map:&mut TwoKeyHashMap<u64,u32>) -> bool {
 	match kyokumen_hash_map.get(&mhash,&shash) {
-		Some(c) if c >= 3 => {
+		Some(&c) if c >= 3 => {
 			return false;
 		},
-		Some(c) => {
+		Some(&c) => {
 			kyokumen_hash_map.insert(mhash,shash,c+1);
 		},
 		None => {

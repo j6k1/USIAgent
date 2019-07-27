@@ -3824,7 +3824,7 @@ impl Rule {
 					shash = hasher.calc_sub_hash(shash,teban,&state.banmen,&mc,*m,&o);
 
 					match kyokumen_map.get(teban,&mhash,&shash) {
-						Some(c) => {
+						Some(&c) => {
 							kyokumen_map.insert(teban,mhash,shash,c+1);
 						},
 						None => {
@@ -4364,7 +4364,7 @@ impl Rule {
 	pub fn update_sennichite_map(_:&State,teban:Teban,mhash:u64,shash:u64,
 									kyokumen_map:&mut KyokumenMap<u64,u32>) {
 		match kyokumen_map.get(teban,&mhash,&shash) {
-			Some(c) => {
+			Some(&c) => {
 				kyokumen_map.insert(teban,mhash,shash,c+1);
 			},
 			None => {
@@ -4376,7 +4376,7 @@ impl Rule {
 	pub fn is_sennichite(_:&State,teban:Teban,mhash:u64,shash:u64,
 									kyokumen_map:&KyokumenMap<u64,u32>) -> bool {
 		match kyokumen_map.get(teban,&mhash,&shash) {
-			Some(c) if c >= 3 => {
+			Some(&c) if c >= 3 => {
 				true
 			},
 			_ => false
@@ -4387,7 +4387,7 @@ impl Rule {
 									oute_kyokumen_map:&mut KyokumenMap<u64,u32>) {
 
 		if Rule::is_mate(teban,state) {
-			let count = oute_kyokumen_map.get(teban, &mhash, &shash).unwrap_or(0);
+			let count = oute_kyokumen_map.get(teban, &mhash, &shash).map(|&c| c).unwrap_or(0);
 
 			oute_kyokumen_map.insert(teban, mhash, shash, count + 1);
 		} else {
@@ -4400,7 +4400,7 @@ impl Rule {
 		-> bool {
 
 		if Rule::is_mate(teban,state) {
-			let count = oute_kyokumen_map.get(teban, &mhash, &shash).unwrap_or(0);
+			let count = oute_kyokumen_map.get(teban, &mhash, &shash).map(|&c| c).unwrap_or(0);
 
 			count > 0
 		} else {

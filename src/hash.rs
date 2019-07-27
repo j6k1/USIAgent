@@ -11,10 +11,10 @@ use std::num::Wrapping;
 use shogi::*;
 use rule::AppliedMove;
 
-pub struct TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+pub struct TwoKeyHashMap<K,T> where K: Eq + Hash {
 	map:HashMap<K,Vec<(K,T)>>
 }
-impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 	pub fn new() -> TwoKeyHashMap<K,T> {
 		let map:HashMap<K,Vec<(K,T)>> = HashMap::new();
 
@@ -23,18 +23,38 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		}
 	}
 
-	pub fn get(&self,k:&K,sk:&K) -> Option<T> {
+	pub fn get(&self,k:&K,sk:&K) -> Option<&T> {
 		match self.map.get(k) {
 			Some(v) if v.len() == 1 => {
-				Some(v[0].1.clone())
+				Some(&v[0].1)
 			},
 			Some(v) if v.len() > 1 => {
 				for e in v {
 					if e.0 == *sk {
-						return Some(e.1.clone());
+						return Some(&e.1);
 					}
 				}
 				None
+			},
+			_ => None,
+		}
+	}
+
+	pub fn get_mut(&mut self,k:&K,sk:&K) -> Option<&mut T> {
+		match self.map.get_mut(k) {
+			Some(v) => {
+				if v.len() == 1 {
+					Some(&mut v[0].1)
+				} else if v.len() > 1 {
+					for e in v {
+						if e.0 == *sk {
+							return Some(&mut e.1);
+						}
+					}
+					None
+				} else {
+					None
+				}
 			},
 			_ => None,
 		}
@@ -44,8 +64,8 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		match self.map.get_mut(&k) {
 			Some(ref mut v) if v.len() == 1 => {
 				if v[0].0 == sk {
-					let old = v[0].1.clone();
-					v[0] = (sk,nv);
+					let old = v.remove(0).1;
+					v.push((sk,nv));
 					return Some(old);
 				} else {
 					v.push((sk,nv));
@@ -55,8 +75,8 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 			Some(ref mut v) if v.len() > 1 => {
 				for i in 0..v.len() {
 					if v[i].0 == sk {
-						let old = v[i].1.clone();
-						v[i] = (sk,nv);
+						let old = v.remove(i).1;
+						v.insert(i,(sk,nv));
 						return Some(old);
 					}
 				}
@@ -96,10 +116,17 @@ impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		}
 	}
 
-	pub fn get(&self,teban:Teban,k:&K,sk:&K) -> Option<T> {
+	pub fn get(&self,teban:Teban,k:&K,sk:&K) -> Option<&T> {
 		match teban {
 			Teban::Sente => self.sente_map.get(k,sk),
 			Teban::Gote => self.gote_map.get(k,sk),
+		}
+	}
+
+	pub fn get_mut(&mut self,teban:Teban,k:&K,sk:&K) -> Option<&mut T> {
+		match teban {
+			Teban::Sente => self.sente_map.get_mut(k,sk),
+			Teban::Gote => self.gote_map.get_mut(k,sk),
 		}
 	}
 
