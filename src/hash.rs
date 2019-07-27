@@ -14,7 +14,6 @@ use rule::AppliedMove;
 pub struct TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 	map:HashMap<K,Vec<(K,T)>>
 }
-
 impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 	pub fn new() -> TwoKeyHashMap<K,T> {
 		let map:HashMap<K,Vec<(K,T)>> = HashMap::new();
@@ -76,17 +75,16 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		self.map.clear();
 	}
 }
+impl<T,K> Clone for TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+	fn clone(&self) -> TwoKeyHashMap<K,T> {
+		TwoKeyHashMap {
+			map:self.map.clone()
+		}
+	}
+}
 pub struct KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 	sente_map:TwoKeyHashMap<K,T>,
 	gote_map:TwoKeyHashMap<K,T>
-}
-impl<K,T> Clone for KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone, TwoKeyHashMap<K,T>: Clone {
-	fn clone(&self) -> KyokumenMap<K,T> {
-		KyokumenMap {
-			sente_map:self.sente_map.clone(),
-			gote_map:self.gote_map.clone(),
-		}
-	}
 }
 impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 	pub fn new()
@@ -116,6 +114,14 @@ impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		match teban {
 			Teban::Sente => self.sente_map.clear(),
 			Teban::Gote => self.gote_map.clear(),
+		}
+	}
+}
+impl<K,T> Clone for KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone, TwoKeyHashMap<K,T>: Clone {
+	fn clone(&self) -> KyokumenMap<K,T> {
+		KyokumenMap {
+			sente_map:self.sente_map.clone(),
+			gote_map:self.gote_map.clone(),
 		}
 	}
 }
