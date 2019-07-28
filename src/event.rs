@@ -506,7 +506,7 @@ impl<'b,K,E,T,L,UE> USIEventDispatcher<'b,K,E,T,L,UE>
 			UE: PlayerError,
 			EventHandlerError<K,UE>: From<UE>,
 			usize: From<K> {
-	pub fn new(logger:&Arc<Mutex<L>>) -> USIEventDispatcher<'b,K,E,T,L,UE>
+	pub fn new(on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>) -> USIEventDispatcher<'b,K,E,T,L,UE>
 											where K: MaxIndex + fmt::Debug, usize: From<K>,
 											E: MapEventKind<K> + fmt::Debug,
 											L: Logger,
@@ -514,7 +514,7 @@ impl<'b,K,E,T,L,UE> USIEventDispatcher<'b,K,E,T,L,UE>
 											EventHandlerError<K,UE>: From<UE>, {
 
 		let mut o = USIEventDispatcher {
-			on_error_handler:Arc::new(Mutex::new(OnErrorHandler::new(logger.clone()))),
+			on_error_handler:on_error_handler.clone(),
 			context_type:PhantomData::<T>,
 			event_kind:PhantomData::<K>,
 			handlers:Vec::with_capacity(K::max_index()+1),

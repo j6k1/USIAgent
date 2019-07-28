@@ -210,7 +210,7 @@ impl<T,E> UsiAgent<T,E>
 		let system_event_queue_arc = self.system_event_queue.clone();
 
 		let system_event_dispatcher:USIEventDispatcher<SystemEventKind,
-														SystemEvent,UsiAgent<T,E>,L,E> = USIEventDispatcher::new(&logger_arc);
+														SystemEvent,UsiAgent<T,E>,L,E> = USIEventDispatcher::new(&on_error_handler_arc);
 
 		let system_event_dispatcher_arc = Arc::new(Mutex::new(system_event_dispatcher));
 

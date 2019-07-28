@@ -293,12 +293,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let mut self_match_event_dispatcher = USIEventDispatcher::<
 														SelfMatchEventKind,
 														SelfMatchEvent,
-														SelfMatchEngine<T, E, S>,L,E>::new(&logger_arc);
+														SelfMatchEngine<T, E, S>,L,E>::new(&on_error_handler_arc);
 
 		on_init_event_dispatcher(&mut self_match_event_dispatcher);
 
 		let mut system_event_dispatcher:USIEventDispatcher<SystemEventKind,
-														SystemEvent,SelfMatchEngine<T, E, S>,L,E> = USIEventDispatcher::new(&logger_arc);
+														SystemEvent,SelfMatchEngine<T, E, S>,L,E> = USIEventDispatcher::new(&on_error_handler_arc);
 
 		let user_event_queue_arc:[Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>; 2] = [Arc::new(Mutex::new(EventQueue::new())),Arc::new(Mutex::new(EventQueue::new()))];
 
