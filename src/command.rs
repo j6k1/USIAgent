@@ -51,16 +51,16 @@ pub enum UsiInfoSubCommandKind {
 }
 #[derive(Clone, Debug)]
 pub enum UsiScore {
-	Cp(i32),
-	CpUpper(i32),
-	CpLower(i32),
+	Cp(i64),
+	CpUpper(i64),
+	CpLower(i64),
 	Mate(UsiScoreMate),
-	MateUpper(i32),
-	MateLower(i32),
+	MateUpper(i64),
+	MateLower(i64),
 }
 #[derive(Clone, Debug)]
 pub enum UsiScoreMate {
-	Num(i32),
+	Num(i64),
 	Plus,
 	Minus,
 }
