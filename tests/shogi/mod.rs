@@ -1,5 +1,3 @@
-extern crate usiagent;
-
 use usiagent::TryFrom;
 use usiagent::Find;
 use usiagent::shogi::*;

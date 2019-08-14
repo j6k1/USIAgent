@@ -1,5 +1,3 @@
-extern crate usiagent;
-
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
 

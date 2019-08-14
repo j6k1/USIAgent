@@ -76,7 +76,7 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 		}
 	}
 }
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub enum SysEventOption {
 	Str(String),
 	Num(i64),
