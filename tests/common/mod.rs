@@ -97,7 +97,7 @@ impl MockInputReader {
 }
 impl USIInputReader for MockInputReader {
 	fn read(&mut self) -> io::Result<String> {
-		let l = self.rcv.recv().expect_err("Failed to receive input.");
+		let l = self.rcv.recv().expect("Failed to receive input.");
 
 		Ok(l.to_string())
 	}
@@ -144,6 +144,7 @@ impl Logger for MockLogger {
 	}
 }
 #[allow(dead_code)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum ActionKind {
 	TakeReady,
 	SetOption,
@@ -196,7 +197,7 @@ pub struct MockPlayer {
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>)
 				-> Result<(),CommonError> + Send + 'static)>>,
 	pub options_it:ConsumedIterator<(String,SysEventOption)>,
-	sender:Sender<Result<ActionKind,String>>,
+	pub sender:Sender<Result<ActionKind,String>>,
 	info_send_notifier:Sender<()>,
 }
 impl MockPlayer {
