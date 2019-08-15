@@ -28,11 +28,11 @@ fn test_sequence() {
 
 	let h = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
-										UniqueIterator::new(vec![]),
-										UniqueIterator::new(vec![]),
-										UniqueIterator::new(vec![]),
-										UniqueIterator::new(vec![]),
-										UniqueIterator::new(vec![])
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![])
 		);
 		let agent = UsiAgent::new(player);
 

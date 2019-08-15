@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use std::sync::mpsc::Sender;
 use std::sync::mpsc::Receiver;
 use std::collections::HashMap;
+use std::iter::Iterator;
 use std::ops::Add;
 use usiagent::event::SystemEventKind;
 use usiagent::event::UserEventKind;
@@ -155,17 +156,20 @@ pub enum ActionKind {
 	OnQuit,
 	Quit,
 }
-pub struct UniqueIterator<T> where T: Send + 'static {
+pub struct ConsumedIterator<T> where T: Send + 'static {
 	v:Vec<T>,
 }
-impl<T> UniqueIterator<T> where T: Send + 'static {
-	pub fn new(v:Vec<T>) -> UniqueIterator<T> {
-		UniqueIterator {
+impl<T> ConsumedIterator<T> where T: Send + 'static {
+	pub fn new(v:Vec<T>) -> ConsumedIterator<T> {
+		ConsumedIterator {
 			v:v,
 		}
 	}
+}
+impl<T> Iterator for ConsumedIterator<T> where T: Send + 'static {
+	type Item = T;
 
-	pub fn next(&mut self) -> Option<T> where T: Send + 'static {
+	fn next(&mut self) -> Option<Self::Item> {
 		if self.v.len() == 0 {
 			None
 		} else {
@@ -174,22 +178,22 @@ impl<T> UniqueIterator<T> where T: Send + 'static {
 	}
 }
 pub struct MockPlayer {
-	pub on_isready: UniqueIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_position: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,Teban,Banmen,
+	pub on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
+	pub on_position: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,Teban,Banmen,
 												HashMap<MochigomaKind,u32>,
 												HashMap<MochigomaKind,u32>,u32,Vec<Move>)) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_think: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoTimeLimit,
+	pub on_think: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoTimeLimit,
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
 			)) -> Result<BestMove,CommonError> + Send + 'static)>>,
-	pub on_think_mate: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoMateTimeLimit,
+	pub on_think_mate: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoMateTimeLimit,
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
 			)) -> Result<CheckMate,CommonError> + Send + 'static)>>,
-	pub on_gameover: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,&GameEndState,
+	pub on_gameover: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&GameEndState,
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>))
 				-> Result<(),CommonError> + Send + 'static)>>,
-	pub options_it:UniqueIterator<(String,SysEventOption)>,
+	pub options_it:ConsumedIterator<(String,SysEventOption)>,
 	sender:Sender<Result<ActionKind,String>>,
 	info_send_notifier:Sender<()>,
 }
@@ -197,19 +201,19 @@ impl MockPlayer {
 
 	pub fn new(sender:Sender<Result<ActionKind,String>>,
 				info_send_notifier:Sender<()>,
-				on_isready: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer)) -> Result<(),CommonError> + Send + 'static)>>,
-				on_position: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,Teban,Banmen,
+				on_isready: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer)) -> Result<(),CommonError> + Send + 'static)>>,
+				on_position: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,Teban,Banmen,
 															HashMap<MochigomaKind,u32>,
 															HashMap<MochigomaKind,u32>,u32,Vec<Move>)) -> Result<(),CommonError> + Send + 'static)>>,
-				on_think: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoTimeLimit,
+				on_think: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoTimeLimit,
 															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
 						)) -> Result<BestMove,CommonError> + Send + 'static)>>,
-				on_think_mate: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoMateTimeLimit,
+				on_think_mate: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoMateTimeLimit,
 															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
 						)) -> Result<CheckMate,CommonError> + Send + 'static)>>,
-				on_gameover: UniqueIterator<Box<(dyn FnMut((&mut MockPlayer,&GameEndState,
+				on_gameover: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&GameEndState,
 															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>))
 							-> Result<(),CommonError> + Send + 'static)>>
 	) -> MockPlayer {
@@ -219,7 +223,7 @@ impl MockPlayer {
 			on_think:on_think,
 			on_think_mate:on_think_mate,
 			on_gameover:on_gameover,
-			options_it:UniqueIterator::new(vec![
+			options_it:ConsumedIterator::new(vec![
 				(String::from("USI_Hash"),SysEventOption::Num(1000)),
 				(String::from("USI_Ponder"),SysEventOption::Bool(false)),
 			]),
