@@ -136,10 +136,10 @@ impl MockLogger {
 	}
 }
 impl Logger for MockLogger {
-	fn logging(&mut self, msg:&String) -> bool {
+	fn logging(&mut self, _:&String) -> bool {
 		true
 	}
-	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
+	fn logging_error<E: Error>(&mut self, _:&E) -> bool {
 		true
 	}
 }
@@ -179,19 +179,21 @@ impl<T> Iterator for ConsumedIterator<T> where T: Send + 'static {
 }
 pub struct MockPlayer {
 	pub on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_position: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,Teban,Banmen,
+	pub on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
 												HashMap<MochigomaKind,u32>,
-												HashMap<MochigomaKind,u32>,u32,Vec<Move>)) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_think: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoTimeLimit,
+												HashMap<MochigomaKind,u32>,u32,Vec<Move>) -> Result<(),CommonError> + Send + 'static)>>,
+	pub on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
-			)) -> Result<BestMove,CommonError> + Send + 'static)>>,
-	pub on_think_mate: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoMateTimeLimit,
+	) -> Result<BestMove,CommonError> + Send + 'static)>>,
+
+	pub on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
-			)) -> Result<CheckMate,CommonError> + Send + 'static)>>,
-	pub on_gameover: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&GameEndState,
-												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>))
+	) -> Result<CheckMate,CommonError> + Send + 'static)>>,
+
+	pub on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
+												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>)
 				-> Result<(),CommonError> + Send + 'static)>>,
 	pub options_it:ConsumedIterator<(String,SysEventOption)>,
 	sender:Sender<Result<ActionKind,String>>,
@@ -201,21 +203,25 @@ impl MockPlayer {
 
 	pub fn new(sender:Sender<Result<ActionKind,String>>,
 				info_send_notifier:Sender<()>,
-				on_isready: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer)) -> Result<(),CommonError> + Send + 'static)>>,
-				on_position: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,Teban,Banmen,
+				on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
+				on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
 															HashMap<MochigomaKind,u32>,
-															HashMap<MochigomaKind,u32>,u32,Vec<Move>)) -> Result<(),CommonError> + Send + 'static)>>,
-				on_think: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoTimeLimit,
+															HashMap<MochigomaKind,u32>,u32,Vec<Move>
+				) -> Result<(),CommonError> + Send + 'static)>>,
+
+				on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
 															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
-						)) -> Result<BestMove,CommonError> + Send + 'static)>>,
-				on_think_mate: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&UsiGoMateTimeLimit,
+				) -> Result<BestMove,CommonError> + Send + 'static)>>,
+
+				on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
-						)) -> Result<CheckMate,CommonError> + Send + 'static)>>,
-				on_gameover: ConsumedIterator<Box<(dyn FnMut((&mut MockPlayer,&GameEndState,
-															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>))
-							-> Result<(),CommonError> + Send + 'static)>>
+				) -> Result<CheckMate,CommonError> + Send + 'static)>>,
+
+				on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
+															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>)
+				-> Result<(),CommonError> + Send + 'static)>>
 	) -> MockPlayer {
 		MockPlayer {
 			on_isready:on_isready,
@@ -275,7 +281,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),CommonError> {
 		(self.on_position.next().expect("Iterator of on set_position callback is empty."))(
-			(self,teban,ban,ms,mg,n,m)
+			self,teban,ban,ms,mg,n,m
 		)
 	}
 
@@ -286,14 +292,14 @@ impl USIPlayer<CommonError> for MockPlayer {
 		let info_send_notifier = self.info_send_notifier.clone();
 
 		(self.on_think.next().expect("Iterator of on think callback is empty."))(
-			(self,limit,event_queue,Box::new(move |commands| {
+			self,limit,event_queue,Box::new(move |commands| {
 				let r = info_sender.send(commands);
 
 				if let Ok(_) = r {
 					let _ = info_send_notifier.send(());
 				}
 				r
-			}))
+			})
 		)
 	}
 
@@ -303,14 +309,14 @@ impl USIPlayer<CommonError> for MockPlayer {
 		let mut info_sender = info_sender.clone();
 		let info_send_notifier = self.info_send_notifier.clone();
 		(self.on_think_mate.next().expect("Iterator of on think_mate callback is empty."))(
-			(self,limit,event_queue,Box::new(move |commands| {
+			self,limit,event_queue,Box::new(move |commands| {
 				let r = info_sender.send(commands);
 
 				if let Ok(_) = r {
 					let _ = info_send_notifier.send(());
 				}
 				r
-			}))
+			})
 		)
 	}
 
@@ -325,7 +331,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 	-> Result<(),CommonError> where L: Logger, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		(self.on_gameover.next()
 			.expect("Iterator of gameover callback is empty."))(
-			(self,s,event_queue)
+			self,s,event_queue
 		)
 	}
 
