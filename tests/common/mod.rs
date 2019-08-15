@@ -172,6 +172,7 @@ pub struct MockPlayer<IR,IP,IG,IM,IE,IOP>
 	pub on_gameover: Option<IE>,
 	pub options_it:Option<IOP>,
 	sender:Sender<Result<ActionKind,String>>,
+	info_send_notifier:Sender<()>,
 }
 impl<IR,IP,IG,IM,IE,IOP> MockPlayer<IR,IP,IG,IM,IE,IOP> where IR: Iterator<Item=Box<dyn FnMut(&mut MockPlayer<IR,IP,IG,IM,IE,IOP>) -> Result<(),CommonError>>>,
 			IP: Iterator<Item=Box<dyn FnMut((&mut MockPlayer<IR,IP,IG,IM,IE,IOP>,Teban,Banmen,
@@ -187,7 +188,7 @@ impl<IR,IP,IG,IM,IE,IOP> MockPlayer<IR,IP,IG,IM,IE,IOP> where IR: Iterator<Item=
 														Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,)) -> Result<(),CommonError>>>,
 			IOP: Iterator<Item=(String,SysEventOption)> {
 
-	pub fn new(sender:Sender<Result<ActionKind,String>>) -> MockPlayer<IR,IP,IG,IM,IE,IOP> {
+	pub fn new(sender:Sender<Result<ActionKind,String>>,info_send_notifier:Sender<()>) -> MockPlayer<IR,IP,IG,IM,IE,IOP> {
 		MockPlayer {
 			on_isready:None,
 			on_position:None,
@@ -196,6 +197,7 @@ impl<IR,IP,IG,IM,IE,IOP> MockPlayer<IR,IP,IG,IM,IE,IOP> where IR: Iterator<Item=
 			on_gameover:None,
 			options_it:None,
 			sender:sender,
+			info_send_notifier:info_send_notifier,
 		}
 	}
 }
@@ -276,8 +278,16 @@ impl<IR,IP,IG,IM,IE,IOP> USIPlayer<CommonError> for MockPlayer<IR,IP,IG,IM,IE,IO
 			info_sender:S,_:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		let mut info_sender = info_sender;
+		let info_send_notifier = self.info_send_notifier.clone();
 		(self.on_think.as_mut().expect("on think callback is empty.").next().expect("Iterator of on think callback is empty."))(
-			(self,limit,event_queue,Box::new(move |commands| info_sender.send(commands)))
+			(self,limit,event_queue,Box::new(move |commands| {
+				let r = info_sender.send(commands);
+
+				if let Ok(_) = r {
+					let _ = info_send_notifier.send(());
+				}
+				r
+			}))
 		)
 	}
 
@@ -285,8 +295,16 @@ impl<IR,IP,IG,IM,IE,IOP> USIPlayer<CommonError> for MockPlayer<IR,IP,IG,IM,IE,IO
 			info_sender:S,_:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		let mut info_sender = info_sender;
+		let info_send_notifier = self.info_send_notifier.clone();
 		(self.on_think_mate.as_mut().expect("on think_mate callback is empty.").next().expect("Iterator of on think_mate callback is empty."))(
-			(self,limit,event_queue,Box::new(move |commands| info_sender.send(commands)))
+			(self,limit,event_queue,Box::new(move |commands| {
+				let r = info_sender.send(commands);
+
+				if let Ok(_) = r {
+					let _ = info_send_notifier.send(());
+				}
+				r
+			}))
 		)
 	}
 

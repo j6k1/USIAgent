@@ -119,7 +119,7 @@ impl OnAcceptMove {
 }
 #[derive(Debug)]
 pub struct UsiAgent<T,E>
-	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
+	where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 			E: PlayerError,
 			EventHandlerError<SystemEventKind, E>: From<E> {
 	player_error_type:PhantomData<E>,
@@ -127,7 +127,7 @@ pub struct UsiAgent<T,E>
 	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
 impl<T,E> UsiAgent<T,E>
-	where T: USIPlayer<E> + fmt::Debug, Arc<Mutex<T>>: Send + 'static,
+	where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 			E: PlayerError,
 			EventHandlerError<SystemEventKind, E>: From<E> {
 	pub fn new(player:T) -> UsiAgent<T,E>
@@ -168,7 +168,7 @@ impl<T,E> UsiAgent<T,E>
 		let input_reader = USIStdInputReader::new();
 		let output_writer = USIStdOutputWriter::new();
 
-		self.start::<USIStdInputReader,USIStdOutputWriter,FileLogger,F>(input_reader,output_writer,logger,on_error)
+		self.start(input_reader,output_writer,logger,on_error)
 	}
 
 	pub fn start<R,W,L,F>(&self,reader:R,writer:W,logger:L,mut on_error:F) ->
@@ -177,10 +177,10 @@ impl<T,E> UsiAgent<T,E>
 			F: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
 					&USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>),
 			EventHandlerError<SystemEventKind, E>: From<E>,
-			Arc<Mutex<R>>: Send + 'static,
-			Arc<Mutex<L>>: Send + 'static,
-			Arc<Mutex<W>>: Send + 'static,
-			Arc<Mutex<OnAcceptMove>>: Send + 'static {
+			R: Send + 'static,
+			L: Send + 'static,
+			W: Send + 'static,
+			OnAcceptMove: Send + 'static {
 
 		let logger_arc = Arc::new(Mutex::new(logger));
 		let on_error_handler_arc = Arc::new(Mutex::new(OnErrorHandler::new(logger_arc.clone())));
@@ -200,10 +200,10 @@ impl<T,E> UsiAgent<T,E>
 		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
 			EventHandlerError<SystemEventKind, E>: From<E>,
-			Arc<Mutex<R>>: Send + 'static,
-			Arc<Mutex<L>>: Send + 'static,
-			Arc<Mutex<W>>: Send + 'static,
-			Arc<Mutex<OnAcceptMove>>: Send + 'static {
+			R: Send + 'static,
+			L: Send + 'static,
+			W: Send + 'static,
+			OnAcceptMove: Send + 'static {
 		let reader_arc = Arc::new(Mutex::new(reader));
 		let writer_arc = Arc::new(Mutex::new(writer));
 
