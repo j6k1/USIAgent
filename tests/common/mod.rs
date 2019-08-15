@@ -3,6 +3,7 @@ use std::iter::IntoIterator;
 use std::fmt;
 use std::error;
 use std::io;
+use std::error::Error;
 use std::convert::From;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -120,6 +121,24 @@ impl USIOutputWriter for MockOutputWriter {
 		}
 
 		Ok(s)
+	}
+}
+pub struct MockLogger {
+
+}
+impl MockLogger {
+	pub fn new() -> MockLogger {
+		MockLogger {
+
+		}
+	}
+}
+impl Logger for MockLogger {
+	fn logging(&mut self, msg:&String) -> bool {
+		true
+	}
+	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
+		true
 	}
 }
 pub struct Actions<'a,T,R> {
