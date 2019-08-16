@@ -3,6 +3,7 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::marker::Send;
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use event::*;
 use protocol::*;
@@ -22,7 +23,7 @@ impl USIInterpreter {
 
 	pub fn start<L,R>(&self,
 		event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
-		reader:Arc<Mutex<R>>,optmap:HashMap<String,SysEventOptionKind>, logger:&Arc<Mutex<L>>)
+		reader:Arc<Mutex<R>>,optmap:BTreeMap<String,SysEventOptionKind>, logger:&Arc<Mutex<L>>)
 		where R: USIInputReader, L: Logger,
 				Arc<Mutex<R>>: Send + 'static, Arc<Mutex<L>>: Send + 'static {
 		let event_queue = event_queue.clone();

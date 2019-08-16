@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use std::sync::mpsc::Sender;
 use std::sync::mpsc::Receiver;
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::iter::Iterator;
 use std::ops::Add;
 use usiagent::event::SystemEventKind;
@@ -248,16 +249,16 @@ impl fmt::Debug for MockPlayer {
 impl USIPlayer<CommonError> for MockPlayer {
 	const ID: &'static str = "mockplayer";
 	const AUTHOR: &'static str = "j6k1";
-	fn get_option_kinds(&mut self) -> Result<HashMap<String,SysEventOptionKind>,CommonError> {
-		let mut kinds:HashMap<String,SysEventOptionKind> = HashMap::new();
+	fn get_option_kinds(&mut self) -> Result<BTreeMap<String,SysEventOptionKind>,CommonError> {
+		let mut kinds:BTreeMap<String,SysEventOptionKind> = BTreeMap::new();
 		kinds.insert(String::from("USI_Hash"),SysEventOptionKind::Num);
 		kinds.insert(String::from("USI_Ponder"),SysEventOptionKind::Bool);
 
 		Ok(kinds)
 	}
 
-	fn get_options(&mut self) -> Result<HashMap<String,UsiOptType>,CommonError> {
-		let mut options:HashMap<String,UsiOptType> = HashMap::new();
+	fn get_options(&mut self) -> Result<BTreeMap<String,UsiOptType>,CommonError> {
+		let mut options:BTreeMap<String,UsiOptType> = BTreeMap::new();
 		options.insert(String::from("USI_Hash"),UsiOptType::Spin(1,100,None));
 		options.insert(String::from("USI_Ponder"),UsiOptType::Check(Some(false)));
 		Ok(options)

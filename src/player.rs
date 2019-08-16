@@ -6,6 +6,7 @@ use std::sync::atomic::Ordering;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt;
 use std::error::Error;
 use std::time::Instant;
@@ -24,8 +25,8 @@ use TryFrom;
 pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	const ID: &'static str;
 	const AUTHOR: &'static str;
-	fn get_option_kinds(&mut self) -> Result<HashMap<String,SysEventOptionKind>,E>;
-	fn get_options(&mut self) -> Result<HashMap<String,UsiOptType>,E>;
+	fn get_option_kinds(&mut self) -> Result<BTreeMap<String,SysEventOptionKind>,E>;
+	fn get_options(&mut self) -> Result<BTreeMap<String,UsiOptType>,E>;
 	fn take_ready(&mut self) -> Result<(),E>;
 	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),E>;
 	fn newgame(&mut self) -> Result<(),E>;
