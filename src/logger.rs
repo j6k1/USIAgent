@@ -9,7 +9,22 @@ use string::AddIndent;
 
 pub trait Logger {
 	fn logging(&mut self, msg:&String) -> bool;
-	fn logging_error<E: Error>(&mut self, e:&E) -> bool;
+	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
+		let mut messages:Vec<String> = vec![];
+		let mut indent:u32 = 0;
+
+		messages.push(format!("{}", e).add_indent(indent*2));
+
+		let mut e:&Error = e;
+
+		while let Some(cause) = e.cause() {
+			indent += 1;
+			messages.push(format!("{}", cause).add_indent(indent*2));
+			e = cause;
+		}
+
+		self.logging(&messages.join("\n"))
+	}
 }
 #[derive(Debug)]
 pub struct FileLogger {
@@ -35,21 +50,5 @@ impl Logger for FileLogger {
 				false
 			}
 		}
-	}
-	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
-		let mut messages:Vec<String> = vec![];
-		let mut indent:u32 = 0;
-
-		messages.push(format!("{}", e).add_indent(indent*2));
-
-		let mut e:&Error = e;
-
-		while let Some(cause) = e.cause() {
-			indent += 1;
-			messages.push(format!("{}", cause).add_indent(indent*2));
-			e = cause;
-		}
-
-		self.logging(&messages.join("\n"))
 	}
 }

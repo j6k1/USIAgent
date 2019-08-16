@@ -1,7 +1,6 @@
 use std::fmt;
 use std::error;
 use std::io;
-use std::error::Error;
 use std::convert::From;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -23,7 +22,6 @@ use usiagent::shogi::*;
 use usiagent::event::*;
 use usiagent::command::*;
 use usiagent::logger::Logger;
-use usiagent::string::AddIndent;
 use usiagent::player::USIPlayer;
 use usiagent::player::InfoSender;
 use usiagent::OnErrorHandler;
@@ -141,23 +139,6 @@ impl Logger for MockLogger {
 	fn logging(&mut self, message:&String) -> bool {
 		println!("{}",message);
 		true
-	}
-
-	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
-		let mut messages:Vec<String> = vec![];
-		let mut indent:u32 = 0;
-
-		messages.push(format!("{}", e).add_indent(indent*2));
-
-		let mut e:&Error = e;
-
-		while let Some(cause) = e.cause() {
-			indent += 1;
-			messages.push(format!("{}", cause).add_indent(indent*2));
-			e = cause;
-		}
-
-		self.logging(&messages.join("\n"))
 	}
 }
 #[allow(dead_code)]
