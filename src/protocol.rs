@@ -406,103 +406,109 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 				let mut sente:HashMap<MochigomaKind,u32> = HashMap::new();
 				let mut gote:HashMap<MochigomaKind,u32> = HashMap::new();
 
-				while let Some(c) = chars.next() {
-					let t = match c {
-						'R' | 'B' | 'G' | 'S' | 'N' | 'L' | 'P' => Teban::Sente,
-						'r' | 'b' | 'g' | 's' | 'n' | 'l' | 'p' => Teban::Gote,
-						_ => {
-							return Err(TypeConvertError::SyntaxError(
-								String::from("Invalid SFEN character string (illegal representation character string of the piece)"
-							)));
-						}
-					};
+				let mut cur = chars.next();
 
-					let k = match c {
-						'R' | 'r' => MochigomaKind::Hisha,
-						'B' | 'b' => MochigomaKind::Kaku,
-						'G' | 'g' => MochigomaKind::Kin,
-						'S' | 's'=> MochigomaKind::Gin,
-						'N' | 'n' => MochigomaKind::Kei,
-						'L' | 'l' => MochigomaKind::Kyou,
-						'P' | 'p' => MochigomaKind::Fu,
-						_ => {
-							return Err(TypeConvertError::LogicError(String::from(
-								"SFEN This is a logic error of the pieces analysis phase of the character string analysis process.")
-							));
-						}
-					};
+				while let Some(_) = cur {
+					let mut ns = String::new();
+					let mut n = 1;
 
-					let mut nchars = chars.clone();
+					while let Some(c) = cur {
+						match c {
+							'0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
+								ns.push(c);
+							},
+							_ if !ns.is_empty() => {
+								n = ns.parse::<u32>()?;
 
-					match nchars.next() {
-						Some(n) if n >= '1' && n <= '9' => {
-							let mut ns = String::new();
-							ns.push(n);
-
-							chars.clone_from(&nchars);
-
-							let mut nchars = chars.clone();
-
-							while let Some(next) = nchars.next() {
-								match next {
-									'0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
-										ns.push(next);
-										chars.clone_from(&nchars);
-									},
-									_ => {
-										break;
-									}
+								if n == 1 {
+									return Err(TypeConvertError::LogicError(String::from(
+										"Invalid SFEN character string (the number of pieces is illegal.).")
+									));
 								}
+
+								break;
+							},
+							_ => {
+								break;
 							}
+						}
+						cur = chars.next();
+					}
 
-							let n = ns.parse::<u32>()?;
+					let (t,k) = if let Some(c) = cur {
+						let t = match c {
+							'R' | 'B' | 'G' | 'S' | 'N' | 'L' | 'P' => Teban::Sente,
+							'r' | 'b' | 'g' | 's' | 'n' | 'l' | 'p' => Teban::Gote,
+							_ => {
+								return Err(TypeConvertError::SyntaxError(
+									String::from("Invalid SFEN character string (illegal representation character string of the piece)"
+								)));
+							}
+						};
 
-							if n == 1 {
+						let k = match c {
+							'R' | 'r' => MochigomaKind::Hisha,
+							'B' | 'b' => MochigomaKind::Kaku,
+							'G' | 'g' => MochigomaKind::Kin,
+							'S' | 's'=> MochigomaKind::Gin,
+							'N' | 'n' => MochigomaKind::Kei,
+							'L' | 'l' => MochigomaKind::Kyou,
+							'P' | 'p' => MochigomaKind::Fu,
+							_ => {
 								return Err(TypeConvertError::LogicError(String::from(
-									"Invalid SFEN character string (the number of pieces is illegal.).")
+									"SFEN This is a logic error of the pieces analysis phase of the character string analysis process.")
 								));
 							}
+						};
 
-							match t {
-								Teban::Sente => {
-									let n = match sente.get(&k) {
-										Some(count) => count+n,
-										None => n,
-									};
+						(t,k)
+					} else {
+						return Err(TypeConvertError::SyntaxError(String::from(
+							"Invalid SFEN character string (The type of piece is empty)"
+						)));
+					};
 
-									sente.insert(k,n);
-								},
-								Teban::Gote => {
-									let n = match gote.get(&k) {
-										Some(count) => count+n,
-										None => n,
-									};
+					if n > 1 {
+						match t {
+							Teban::Sente => {
+								let n = match sente.get(&k) {
+									Some(count) => count+n,
+									None => n,
+								};
 
-									gote.insert(k,n);
-								},
-							}
-						},
-						_ => {
-							match t {
-								Teban::Sente => {
-									let n = match sente.get(&k) {
-										Some(count) => count+1,
-										None => 1,
-									};
+								sente.insert(k,n);
+							},
+							Teban::Gote => {
+								let n = match gote.get(&k) {
+									Some(count) => count+n,
+									None => n,
+								};
 
-									sente.insert(k,n);
-								},
-								Teban::Gote => {
-									let n = match gote.get(&k) {
-										Some(count) => count+1,
-										None => 1,
-									};
+								gote.insert(k,n);
+							},
+						}
+					} else {
+						match t {
+							Teban::Sente => {
+								let n = match sente.get(&k) {
+									Some(count) => count+1,
+									None => 1,
+								};
 
-									gote.insert(k,n);
-								},
-							}
+								sente.insert(k,n);
+							},
+							Teban::Gote => {
+								let n = match gote.get(&k) {
+									Some(count) => count+1,
+									None => 1,
+								};
+
+								gote.insert(k,n);
+							},
 						}
 					}
+
+					cur = chars.next();
 				}
 
 				MochigomaCollections::Pair(sente,gote)
@@ -885,8 +891,8 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_SENTE {
 					if let Some(n) = ms.get(&k) {
 						if *n > 0 {
-							sfen.push(c);
 							sfen.push_str(&n.to_string());
+							sfen.push(c);
 						}
 					}
 				}
@@ -904,8 +910,8 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_GOTE {
 					if let Some(n) = mg.get(&k) {
 						if *n > 1 {
-							sfen.push(c);
 							sfen.push_str(&n.to_string());
+							sfen.push(c);
 						} else if *n == 1 {
 							sfen.push(c);
 						}

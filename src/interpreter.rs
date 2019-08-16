@@ -2,7 +2,6 @@ use std::thread;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::marker::Send;
-use std::collections::HashMap;
 use std::collections::BTreeMap;
 
 use event::*;
