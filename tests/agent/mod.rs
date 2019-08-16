@@ -185,13 +185,13 @@ fn test_gameover() {
 		(output_writer,r)
 	};
 
-	let mut lastmoves = vec![
+	let lastmoves = vec![
 		String::from("bestmove 1f1e"),
 		String::from("bestmove resign"),
 		String::from("bestmove 1f1e"),
 	].into_iter();
 
-	let mut gamestates = vec![
+	let gamestates = vec![
 		String::from("gameover win"),
 		String::from("gameover lose"),
 		String::from("gameover draw"),

@@ -1,6 +1,8 @@
+use std;
 use std::fmt;
 use std::error;
 use std::io;
+use std::io::Write;
 use std::convert::From;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -137,7 +139,7 @@ impl MockLogger {
 }
 impl Logger for MockLogger {
 	fn logging(&mut self, message:&String) -> bool {
-		println!("{}",message);
+		writeln!(&mut std::io::stderr(),"{}",message);
 		true
 	}
 }
@@ -340,11 +342,13 @@ impl USIPlayer<CommonError> for MockPlayer {
 
 	fn on_quit(&mut self,_:&UserEvent) -> Result<(), CommonError> {
 		let _ = self.sender.send(Ok(ActionKind::OnQuit));
+		self.stop = true;
 		Ok(())
 	}
 
 	fn quit(&mut self) -> Result<(),CommonError> {
 		let _ = self.sender.send(Ok(ActionKind::Quit));
+		self.quited = true;
 		Ok(())
 	}
 }
