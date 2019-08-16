@@ -23,6 +23,7 @@ use usiagent::shogi::*;
 use usiagent::event::*;
 use usiagent::command::*;
 use usiagent::logger::Logger;
+use usiagent::string::AddIndent;
 use usiagent::player::USIPlayer;
 use usiagent::player::InfoSender;
 use usiagent::OnErrorHandler;
@@ -137,11 +138,26 @@ impl MockLogger {
 	}
 }
 impl Logger for MockLogger {
-	fn logging(&mut self, _:&String) -> bool {
+	fn logging(&mut self, message:&String) -> bool {
+		println!("{}",message);
 		true
 	}
-	fn logging_error<E: Error>(&mut self, _:&E) -> bool {
-		true
+
+	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
+		let mut messages:Vec<String> = vec![];
+		let mut indent:u32 = 0;
+
+		messages.push(format!("{}", e).add_indent(indent*2));
+
+		let mut e:&Error = e;
+
+		while let Some(cause) = e.cause() {
+			indent += 1;
+			messages.push(format!("{}", cause).add_indent(indent*2));
+			e = cause;
+		}
+
+		self.logging(&messages.join("\n"))
 	}
 }
 #[allow(dead_code)]
@@ -200,6 +216,8 @@ pub struct MockPlayer {
 	pub options_it:ConsumedIterator<(String,SysEventOption)>,
 	pub sender:Sender<Result<ActionKind,String>>,
 	info_send_notifier:Sender<()>,
+	stop:bool,
+	quited:bool,
 }
 impl MockPlayer {
 
@@ -236,7 +254,9 @@ impl MockPlayer {
 				(String::from("USI_Ponder"),SysEventOption::Bool(false)),
 			]),
 			sender:sender,
-			info_send_notifier:info_send_notifier
+			info_send_notifier:info_send_notifier,
+			stop:false,
+			quited:false,
 		}
 	}
 }
