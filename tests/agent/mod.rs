@@ -421,7 +421,7 @@ fn test_gameover() {
 
 		assert_eq!(res,Ok(ActionKind::Think));
 
-		let res = r.recv_timeout(Duration::from_millis(150)).expect(format!("attempt to receive {} timed out.",lastmove).as_str());
+		let res = r.recv_timeout(Duration::from_millis(150)).expect(format!("attempt to receive '{}' timed out.",lastmove).as_str());
 
 		assert_eq!(&*res,&*lastmove);
 
