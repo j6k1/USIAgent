@@ -893,27 +893,30 @@ impl<T,E> UsiAgent<T,E>
 							let user_event_queue_inner = user_event_queue.clone();
 							let busy_inner = busy.clone();
 
-							match thread_queue.lock() {
-								Ok(mut thread_queue) => {
-									thread_queue.submit(move || {
-										match busy_inner.lock() {
-											Ok(busy) => {
-												if *busy {
-													match user_event_queue_inner.lock() {
-														Ok(mut user_event_queue) => {
-															user_event_queue.push(UserEvent::Quit);
-														},
-														Err(ref e) => {
-															on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-														}
-													}
-												}
+							match busy_inner.lock() {
+								Ok(busy) => {
+									if *busy {
+										match user_event_queue_inner.lock() {
+											Ok(mut user_event_queue) => {
+												user_event_queue.push(UserEvent::Quit);
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-												return;
 											}
 										}
+									}
+								},
+								Err(ref e) => {
+									on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+									return Err(EventHandlerError::Fail(String::from(
+										"Could not get exclusive lock on busy object."
+									)));
+								}
+							}
+
+							match thread_queue.lock() {
+								Ok(mut thread_queue) => {
+									thread_queue.submit(move || {
 										match player.lock() {
 											Ok(mut player) => {
 												match player.quit() {
@@ -922,14 +925,14 @@ impl<T,E> UsiAgent<T,E>
 														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 													}
 												}
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => {
-														system_event_queue.push(SystemEvent::QuitReady);
-													},
-													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-													}
-												};
+											},
+											Err(ref e) => {
+												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+											}
+										};
+										match system_event_queue.lock() {
+											Ok(mut system_event_queue) => {
+												system_event_queue.push(SystemEvent::QuitReady);
 											},
 											Err(ref e) => {
 												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();

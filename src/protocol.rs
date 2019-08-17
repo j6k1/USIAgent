@@ -1170,8 +1170,8 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiOptType {
 			UsiOptType::String(Some(ref s)) if s.is_empty() => format!("string default <empty>"),
 			UsiOptType::String(Some(ref s)) => format!("string default {}", s),
 			UsiOptType::String(None) => format!("string"),
-			UsiOptType::FileName(Some(ref s)) if s.is_empty() => format!("filename <empty>"),
-			UsiOptType::FileName(Some(ref s)) => format!("filename {}", s),
+			UsiOptType::FileName(Some(ref s)) if s.is_empty() => format!("filename default <empty>"),
+			UsiOptType::FileName(Some(ref s)) => format!("filename default {}", s),
 			UsiOptType::FileName(None) => format!("filename"),
 		})
 	}

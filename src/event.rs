@@ -81,6 +81,7 @@ pub enum SysEventOption {
 	Str(String),
 	Num(i64),
 	Bool(bool),
+	Exist,
 }
 impl Clone for SysEventOption {
 	fn clone(&self) -> SysEventOption {
@@ -88,6 +89,7 @@ impl Clone for SysEventOption {
 			SysEventOption::Str(ref s) => SysEventOption::Str(s.clone()),
 			SysEventOption::Num(n) => SysEventOption::Num(n),
 			SysEventOption::Bool(b) => SysEventOption::Bool(b),
+			SysEventOption::Exist => SysEventOption::Exist,
 		}
 	}
 }
@@ -96,6 +98,7 @@ pub enum SysEventOptionKind {
 	Str,
 	Num,
 	Bool,
+	Exist,
 }
 #[derive(Debug)]
 pub enum UsiInitialPosition {

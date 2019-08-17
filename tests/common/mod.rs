@@ -237,6 +237,15 @@ impl MockPlayer {
 			on_think_mate:on_think_mate,
 			on_gameover:on_gameover,
 			options_it:ConsumedIterator::new(vec![
+				(String::from("OptionButton"),SysEventOption::Exist),
+				(String::from("OptionCheck"),SysEventOption::Bool(true)),
+				(String::from("OptionCombo"),SysEventOption::Str(String::from("cccc"))),
+				(String::from("OptionCombo2"),SysEventOption::Str(String::from("eeee"))),
+				(String::from("OptionFileName"),SysEventOption::Str(String::from("book.bin"))),
+				(String::from("OptionFileName2"),SysEventOption::Str(String::from("book2.bin"))),
+				(String::from("OptionSpin"),SysEventOption::Num(25)),
+				(String::from("OptionString"),SysEventOption::Str(String::from("string.."))),
+				(String::from("OptionString2"),SysEventOption::Str(String::from("string..."))),
 				(String::from("USI_Hash"),SysEventOption::Num(1000)),
 				(String::from("USI_Ponder"),SysEventOption::Bool(false)),
 			]),
@@ -260,6 +269,15 @@ impl USIPlayer<CommonError> for MockPlayer {
 		let mut kinds:BTreeMap<String,SysEventOptionKind> = BTreeMap::new();
 		kinds.insert(String::from("USI_Hash"),SysEventOptionKind::Num);
 		kinds.insert(String::from("USI_Ponder"),SysEventOptionKind::Bool);
+		kinds.insert(String::from("OptionButton"),SysEventOptionKind::Exist);
+		kinds.insert(String::from("OptionCheck"),SysEventOptionKind::Bool);
+		kinds.insert(String::from("OptionCombo"),SysEventOptionKind::Str);
+		kinds.insert(String::from("OptionCombo2"),SysEventOptionKind::Str);
+		kinds.insert(String::from("OptionFileName"),SysEventOptionKind::Str);
+		kinds.insert(String::from("OptionFileName2"),SysEventOptionKind::Str);
+		kinds.insert(String::from("OptionSpin"),SysEventOptionKind::Num);
+		kinds.insert(String::from("OptionString"),SysEventOptionKind::Str);
+		kinds.insert(String::from("OptionString2"),SysEventOptionKind::Str);
 
 		Ok(kinds)
 	}
@@ -268,6 +286,22 @@ impl USIPlayer<CommonError> for MockPlayer {
 		let mut options:BTreeMap<String,UsiOptType> = BTreeMap::new();
 		options.insert(String::from("USI_Hash"),UsiOptType::Spin(1,100,None));
 		options.insert(String::from("USI_Ponder"),UsiOptType::Check(Some(false)));
+		options.insert(String::from("OptionButton"),UsiOptType::Button);
+		options.insert(String::from("OptionCheck"),UsiOptType::Check(None));
+		options.insert(String::from("OptionCombo"),UsiOptType::Combo(Some(String::from("bbbb")),
+																	["bbbb","cccc"]
+																		.into_iter()
+																		.map(|&s| String::from(s))
+																		.collect::<Vec<String>>()));
+		options.insert(String::from("OptionCombo2"),UsiOptType::Combo(None,["dddd","eeee"]
+																		.into_iter()
+																		.map(|&s| String::from(s))
+																		.collect::<Vec<String>>()));
+		options.insert(String::from("OptionFileName"),UsiOptType::FileName(Some(String::from("filename."))));
+		options.insert(String::from("OptionFileName2"),UsiOptType::FileName(None));
+		options.insert(String::from("OptionSpin"),UsiOptType::Spin(5,50,Some(10)));
+		options.insert(String::from("OptionString"),UsiOptType::String(Some(String::from("string."))));
+		options.insert(String::from("OptionString2"),UsiOptType::String(None));
 		Ok(options)
 	}
 
@@ -276,8 +310,12 @@ impl USIPlayer<CommonError> for MockPlayer {
 	}
 
 	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),CommonError> {
-		if (name,value) == self.options_it.next().expect("on set_option iterator is empty.") {
+		let (n,v) = self.options_it.next().expect("on set_option iterator is empty.");
+
+		if (&name,&value) == (&n,&v) {
 			let _ = self.sender.send(Ok(ActionKind::SetOption));
+		} else {
+			let _ = self.sender.send(Err(format!("The option {} value is different. {:?} Is correct.",name,v)));
 		}
 		Ok(())
 	}
@@ -358,11 +396,13 @@ impl USIPlayer<CommonError> for MockPlayer {
 	fn on_quit(&mut self,_:&UserEvent) -> Result<(), CommonError> {
 		let _ = self.sender.send(Ok(ActionKind::OnQuit));
 		self.stop = true;
+		self.quited = true;
 		Ok(())
 	}
 
 	fn quit(&mut self) -> Result<(),CommonError> {
 		let _ = self.sender.send(Ok(ActionKind::Quit));
+		self.stop = true;
 		self.quited = true;
 		Ok(())
 	}

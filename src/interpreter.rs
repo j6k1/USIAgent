@@ -55,6 +55,29 @@ impl USIInterpreter {
 									match f[0] {
 										"usi" => event_queue.push(SystemEvent::Usi),
 										"isready" => event_queue.push(SystemEvent::IsReady),
+										"setoption" if f.len() == 3 => {
+											match optmap.get(&f[2].to_string()) {
+												None => {
+													logger.lock().map(|mut logger| logger.logging(&String::from("Could not get option type."))).map_err(|_| {
+														USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+														false
+													}).is_err();
+												},
+												Some(kind) => {
+													match (f[1],f[2],kind) {
+														("name", id, &SysEventOptionKind::Exist) => {
+															event_queue.push(SystemEvent::SetOption(id.to_string(),SysEventOption::Exist));
+														},
+														_ => {
+															logger.lock().map(|mut logger| logger.logging(&String::from("The format of the option command is illegal."))).map_err(|_| {
+																USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+																false
+															}).is_err();
+														}
+													}
+												}
+											}
+										},
 										"setoption" if f.len() >= 5 => {
 											match optmap.get(&f[2].to_string()) {
 												None => {
