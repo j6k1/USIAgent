@@ -185,12 +185,14 @@ pub struct MockPlayer {
 												HashMap<MochigomaKind,u32>,u32,Vec<Move>) -> Result<(),CommonError> + Send + 'static)>>,
 	pub on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
+												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 	) -> Result<BestMove,CommonError> + Send + 'static)>>,
 
 	pub on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
+												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 	) -> Result<CheckMate,CommonError> + Send + 'static)>>,
 
 	pub on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
@@ -199,8 +201,8 @@ pub struct MockPlayer {
 	pub options_it:ConsumedIterator<(String,SysEventOption)>,
 	pub sender:Sender<Result<ActionKind,String>>,
 	info_send_notifier:Sender<()>,
-	stop:bool,
-	quited:bool,
+	pub stop:bool,
+	pub quited:bool,
 }
 impl MockPlayer {
 
@@ -214,12 +216,14 @@ impl MockPlayer {
 
 				on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
 															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
+															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 				) -> Result<BestMove,CommonError> + Send + 'static)>>,
 
 				on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>
+															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 				) -> Result<CheckMate,CommonError> + Send + 'static)>>,
 
 				on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
@@ -279,6 +283,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 	}
 
 	fn newgame(&mut self) -> Result<(),CommonError> {
+		self.stop = false;
 		let _ = self.sender.send(Ok(ActionKind::NewGame));
 		Ok(())
 	}
@@ -291,42 +296,52 @@ impl USIPlayer<CommonError> for MockPlayer {
 	}
 
 	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:S,_:Arc<Mutex<OnErrorHandler<L>>>)
+			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		let mut info_sender = info_sender.clone();
 		let info_send_notifier = self.info_send_notifier.clone();
+		let event_queue = event_queue.clone();
+		let on_error_handler = on_error_handler.clone();
 
 		(self.on_think.next().expect("Iterator of on think callback is empty."))(
-			self,limit,event_queue,Box::new(move |commands| {
+			self,limit,event_queue.clone(),Box::new(move |commands| {
 				let r = info_sender.send(commands);
 
 				if let Ok(_) = r {
 					let _ = info_send_notifier.send(());
 				}
 				r
+			}),Box::new(move |player| {
+				player.handle_events(&*event_queue,&*on_error_handler)
 			})
 		)
 	}
 
 	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
-			info_sender:S,_:Arc<Mutex<OnErrorHandler<L>>>)
+			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		let mut info_sender = info_sender.clone();
 		let info_send_notifier = self.info_send_notifier.clone();
+		let event_queue = event_queue.clone();
+		let on_error_handler = on_error_handler.clone();
+
 		(self.on_think_mate.next().expect("Iterator of on think_mate callback is empty."))(
-			self,limit,event_queue,Box::new(move |commands| {
+			self,limit,event_queue.clone(),Box::new(move |commands| {
 				let r = info_sender.send(commands);
 
 				if let Ok(_) = r {
 					let _ = info_send_notifier.send(());
 				}
 				r
+			}),Box::new(move |player| {
+				player.handle_events(&*event_queue,&*on_error_handler)
 			})
 		)
 	}
 
 	fn on_stop(&mut self,_:&UserEvent) -> Result<(), CommonError> {
 		let _ = self.sender.send(Ok(ActionKind::OnStop));
+		self.stop = true;
 		Ok(())
 	}
 
