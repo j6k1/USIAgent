@@ -174,13 +174,14 @@ impl UsiGoTimeLimit {
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoMateTimeLimit {
+	None,
 	Limit(u32),
 	Infinite,
 }
 impl UsiGoMateTimeLimit {
 	pub fn to_instant(&self) -> Option<Instant> {
 		match *self {
-			UsiGoMateTimeLimit::Infinite => None,
+			UsiGoMateTimeLimit::Infinite | UsiGoMateTimeLimit::None => None,
 			UsiGoMateTimeLimit::Limit(limit) => {
 				let now = Instant::now();
 				Some(now + Duration::from_millis(limit as u64))

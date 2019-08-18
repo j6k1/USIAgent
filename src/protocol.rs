@@ -632,6 +632,8 @@ impl GoParser {
 									UsiGo::Mate(UsiGoMateTimeLimit::Limit(n.parse::<u32>()?)))),
 				}
 			},
+			"mate" => return Ok(SystemEvent::Go(
+									UsiGo::Mate(UsiGoMateTimeLimit::None))),
 			_ => (),
 		}
 

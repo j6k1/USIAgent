@@ -2369,7 +2369,7 @@ fn test_go_with_limit() {
 										ConsumedIterator::new(vec![Box::new(|player,limit,_,_,_| {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(Some((100,200)),None);
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2383,7 +2383,7 @@ fn test_go_with_limit() {
 										Box::new(|player,limit,_,_,_| {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(Some((100,200)),None);
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2522,7 +2522,7 @@ fn test_go_with_limit_and_byoyomi() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(Some((100,200)),
 																									Some(UsiGoByoyomiOrInc::Byoyomi(10000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2537,7 +2537,7 @@ fn test_go_with_limit_and_byoyomi() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(Some((100,200)),
 																									Some(UsiGoByoyomiOrInc::Byoyomi(10000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2676,7 +2676,7 @@ fn test_go_with_limit_and_inc() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(Some((100,200)),
 																									Some(UsiGoByoyomiOrInc::Inc(1000,2000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2691,7 +2691,7 @@ fn test_go_with_limit_and_inc() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(Some((100,200)),
 																									Some(UsiGoByoyomiOrInc::Inc(1000,2000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2830,7 +2830,7 @@ fn test_go_with_byoyomi() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(None,
 																									Some(UsiGoByoyomiOrInc::Byoyomi(10000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2845,7 +2845,7 @@ fn test_go_with_byoyomi() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(None,
 																									Some(UsiGoByoyomiOrInc::Byoyomi(20000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2984,7 +2984,7 @@ fn test_go_with_inc() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(None,
 																									Some(UsiGoByoyomiOrInc::Inc(1000,2000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -2999,7 +2999,7 @@ fn test_go_with_inc() {
 											const EXPECTED:UsiGoTimeLimit = UsiGoTimeLimit::Limit(None,
 																									Some(UsiGoByoyomiOrInc::Inc(1000,2000)));
 
-											if EXPECTED == *limit {
+											if *limit == EXPECTED {
 												let _ = player.sender.send(Ok(ActionKind::Think));
 											} else {
 												let _ = player.sender.send(Err(
@@ -3090,6 +3090,389 @@ fn test_go_with_inc() {
 	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
 
 	assert_eq!(res,Ok(ActionKind::GameOver));
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}
+#[test]
+fn test_go_mate() {
+	let (pms,pmr) = mpsc::channel();
+	let (pns,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
+
+	let logger = MockLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = mpsc::channel();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let lastmoves = vec![
+		String::from("checkmate 1g1f 1f1e 1e1d 1d1c"),
+		String::from("checkmate notimplemented"),
+		String::from("checkmate timeout"),
+		String::from("checkmate nomate"),
+	].into_iter();
+
+	let _ =thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										}),
+										Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										}),
+										Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										}),
+										Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										}),
+										Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										}),
+										Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										}),
+										Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,limit,_,_,_| {
+											const EXPECTED:UsiGoMateTimeLimit = UsiGoMateTimeLimit::None;
+
+											if *limit == EXPECTED {
+												let _ = player.sender.send(Ok(ActionKind::ThinkMate));
+											} else {
+												let _ = player.sender.send(Err(
+														format!("The time limit value is incorrect. expected = {:?} actual = {:?}",
+																														EXPECTED,limit
+												)));
+											}
+
+											Ok(CheckMate::Moves(vec![
+												Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+												Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),
+												Move::To(KomaSrcPosition(1,5),KomaDstToPosition(1,4,false)),
+												Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,false)),
+											]))
+										}),
+										Box::new(|player,limit,_,_,_| {
+											const EXPECTED:UsiGoMateTimeLimit = UsiGoMateTimeLimit::None;
+
+											if *limit == EXPECTED {
+												let _ = player.sender.send(Ok(ActionKind::ThinkMate));
+											} else {
+												let _ = player.sender.send(Err(
+														format!("The time limit value is incorrect. expected = {:?} actual = {:?}",
+																														EXPECTED,limit
+												)));
+											}
+
+											Ok(CheckMate::NotiImplemented)
+										}),
+										Box::new(|player,limit,_,_,_| {
+											const EXPECTED:UsiGoMateTimeLimit = UsiGoMateTimeLimit::None;
+
+											if *limit == EXPECTED {
+												let _ = player.sender.send(Ok(ActionKind::ThinkMate));
+											} else {
+												let _ = player.sender.send(Err(
+														format!("The time limit value is incorrect. expected = {:?} actual = {:?}",
+																														EXPECTED,limit
+												)));
+											}
+
+											Ok(CheckMate::Timeout)
+										}),
+										Box::new(|player,limit,_,_,_| {
+											const EXPECTED:UsiGoMateTimeLimit = UsiGoMateTimeLimit::None;
+
+											if *limit == EXPECTED {
+												let _ = player.sender.send(Ok(ActionKind::ThinkMate));
+											} else {
+												let _ = player.sender.send(Err(
+														format!("The time limit value is incorrect. expected = {:?} actual = {:?}",
+																														EXPECTED,limit
+												)));
+											}
+
+											Ok(CheckMate::Nomate)
+										})]),
+										ConsumedIterator::new(vec![]),
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	for lastmove in lastmoves {
+		let _ = s.send(String::from("isready"));
+
+		let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+		assert_eq!(res,Ok(ActionKind::TakeReady));
+
+		let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+		assert_eq!(&*res,"readyok");
+
+		let _ = s.send(String::from("usinewgame"));
+
+		let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+		assert_eq!(res,Ok(ActionKind::NewGame));
+
+		let _ = s.send(String::from("position startpos"));
+
+		let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+		assert_eq!(res,Ok(ActionKind::SetPosition));
+
+		let _ = s.send(String::from("go mate"));
+
+		let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+		assert_eq!(res,Ok(ActionKind::ThinkMate));
+
+		let res = r.recv_timeout(Duration::from_millis(150)).expect(format!("attempt to receive '{}' timed out.",lastmove).as_str());
+
+		assert_eq!(&*res,&*lastmove);
+	}
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}
+#[test]
+fn test_mate_with_limit() {
+	let (pms,pmr) = mpsc::channel();
+	let (pns,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
+
+	let logger = MockLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = mpsc::channel();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let _ =thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,limit,_,_,_| {
+											const EXPECTED:UsiGoMateTimeLimit = UsiGoMateTimeLimit::Limit(100000);
+
+											if *limit == EXPECTED {
+												let _ = player.sender.send(Ok(ActionKind::ThinkMate));
+											} else {
+												let _ = player.sender.send(Err(
+															format!("The time limit value is incorrect. expected = {:?} actual = {:?}",
+																															EXPECTED,limit
+												)));
+											}
+
+											Ok(CheckMate::Timeout)
+										})]),
+										ConsumedIterator::new(vec![])
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	let _ = s.send(String::from("isready"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+	assert_eq!(res,Ok(ActionKind::TakeReady));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+	assert_eq!(&*res,"readyok");
+
+	let _ = s.send(String::from("usinewgame"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+	assert_eq!(res,Ok(ActionKind::NewGame));
+
+	let _ = s.send(String::from("position startpos"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go mate 100000"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::ThinkMate));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+
+	assert_eq!(&*res,"checkmate timeout");
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}
+#[test]
+fn test_mate_with_limit_of_infinite() {
+	let (pms,pmr) = mpsc::channel();
+	let (pns,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
+
+	let logger = MockLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = mpsc::channel();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let _ =thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,limit,_,_,_| {
+											const EXPECTED:UsiGoMateTimeLimit = UsiGoMateTimeLimit::Infinite;
+
+											if *limit == EXPECTED {
+												let _ = player.sender.send(Ok(ActionKind::ThinkMate));
+											} else {
+												let _ = player.sender.send(Err(
+															format!("The time limit value is incorrect. expected = {:?} actual = {:?}",
+																															EXPECTED,limit
+												)));
+											}
+
+											Ok(CheckMate::Timeout)
+										})]),
+										ConsumedIterator::new(vec![])
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	let _ = s.send(String::from("isready"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+	assert_eq!(res,Ok(ActionKind::TakeReady));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+	assert_eq!(&*res,"readyok");
+
+	let _ = s.send(String::from("usinewgame"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+	assert_eq!(res,Ok(ActionKind::NewGame));
+
+	let _ = s.send(String::from("position startpos"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go mate infinite"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::ThinkMate));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+
+	assert_eq!(&*res,"checkmate timeout");
 
 	let _ = s.send(String::from("quit"));
 
