@@ -3482,3 +3482,622 @@ fn test_mate_with_limit_of_infinite() {
 
 	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
 }
+#[test]
+fn test_info_send_commands_without_str() {
+	let (pms,pmr) = mpsc::channel();
+	let (pns,pnr) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
+
+	let logger = MockLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = mpsc::channel();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let _ =thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										}),
+										Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
+										}),
+										Box::new(|player,_,_,mut send_info_commands,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+
+											if let Err(_) = send_info_commands(vec![
+												UsiInfoSubCommand::Depth(1),
+												UsiInfoSubCommand::SelDepth(3),
+												UsiInfoSubCommand::Time(10000),
+												UsiInfoSubCommand::Nodes(1000000),
+												UsiInfoSubCommand::Pv(vec![
+													Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+													Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+													Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+												]),
+												UsiInfoSubCommand::MultiPv(1),
+												UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+												UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+												UsiInfoSubCommand::Hashfull(10000),
+												UsiInfoSubCommand::Nps(100)
+											]) {
+												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
+											} else {
+												Ok(BestMove::Resign)
+											}
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,s,_| {
+											match s {
+												&GameEndState::Lose => {
+													let _ = player.sender.send(Ok(ActionKind::GameOver));
+												},
+												_ => {
+													let _ = player.sender.send(Err(String::from("gameend state is invalid.")));
+												}
+											}
+
+											Ok(())
+										})])
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	let _ = s.send(String::from("isready"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+	assert_eq!(res,Ok(ActionKind::TakeReady));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+	assert_eq!(&*res,"readyok");
+
+	let _ = s.send(String::from("usinewgame"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+	assert_eq!(res,Ok(ActionKind::NewGame));
+
+	let _ = s.send(String::from("position startpos"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1g1f' timed out.");
+
+	assert_eq!(&*res,"bestmove 1g1f");
+
+	let _ = s.send(String::from("position startpos moves 1g1f"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e' timed out.");
+
+	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e");
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+
+	assert_eq!(&*res,"bestmove resign");
+
+	let _ = s.send(String::from("gameover lose"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+
+	assert_eq!(res,Ok(ActionKind::GameOver));
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}
+#[test]
+fn test_info_send_commands_without_str_and_multipv() {
+	let (pms,pmr) = mpsc::channel();
+	let (pns,pnr) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
+
+	let logger = MockLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = mpsc::channel();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let _ =thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										}),
+										Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
+										}),
+										Box::new(|player,_,_,mut send_info_commands,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+
+											if let Err(_) = send_info_commands(vec![
+												UsiInfoSubCommand::Depth(1),
+												UsiInfoSubCommand::SelDepth(3),
+												UsiInfoSubCommand::Time(10000),
+												UsiInfoSubCommand::Nodes(1000000),
+												UsiInfoSubCommand::Pv(vec![
+													Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+													Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+													Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+												]),
+												UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+												UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+												UsiInfoSubCommand::Hashfull(10000),
+												UsiInfoSubCommand::Nps(100)
+											]) {
+												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
+											} else {
+												Ok(BestMove::Resign)
+											}
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,s,_| {
+											match s {
+												&GameEndState::Lose => {
+													let _ = player.sender.send(Ok(ActionKind::GameOver));
+												},
+												_ => {
+													let _ = player.sender.send(Err(String::from("gameend state is invalid.")));
+												}
+											}
+
+											Ok(())
+										})])
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	let _ = s.send(String::from("isready"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+	assert_eq!(res,Ok(ActionKind::TakeReady));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+	assert_eq!(&*res,"readyok");
+
+	let _ = s.send(String::from("usinewgame"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+	assert_eq!(res,Ok(ActionKind::NewGame));
+
+	let _ = s.send(String::from("position startpos"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1g1f' timed out.");
+
+	assert_eq!(&*res,"bestmove 1g1f");
+
+	let _ = s.send(String::from("position startpos moves 1g1f"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e' timed out.");
+
+	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e");
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+
+	assert_eq!(&*res,"bestmove resign");
+
+	let _ = s.send(String::from("gameover lose"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+
+	assert_eq!(res,Ok(ActionKind::GameOver));
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}
+#[test]
+fn test_info_send_commands_without_pv_and_multipv() {
+	let (pms,pmr) = mpsc::channel();
+	let (pns,pnr) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
+
+	let logger = MockLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = mpsc::channel();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let _ =thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										}),
+										Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
+										}),
+										Box::new(|player,_,_,mut send_info_commands,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+
+											if let Err(_) = send_info_commands(vec![
+												UsiInfoSubCommand::Depth(1),
+												UsiInfoSubCommand::SelDepth(3),
+												UsiInfoSubCommand::Time(10000),
+												UsiInfoSubCommand::Nodes(1000000),
+												UsiInfoSubCommand::Str(String::from("hellow!")),
+												UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+												UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+												UsiInfoSubCommand::Hashfull(10000),
+												UsiInfoSubCommand::Nps(100)
+											]) {
+												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
+											} else {
+												Ok(BestMove::Resign)
+											}
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,s,_| {
+											match s {
+												&GameEndState::Lose => {
+													let _ = player.sender.send(Ok(ActionKind::GameOver));
+												},
+												_ => {
+													let _ = player.sender.send(Err(String::from("gameend state is invalid.")));
+												}
+											}
+
+											Ok(())
+										})])
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	let _ = s.send(String::from("isready"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+	assert_eq!(res,Ok(ActionKind::TakeReady));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+	assert_eq!(&*res,"readyok");
+
+	let _ = s.send(String::from("usinewgame"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+	assert_eq!(res,Ok(ActionKind::NewGame));
+
+	let _ = s.send(String::from("position startpos"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1g1f' timed out.");
+
+	assert_eq!(&*res,"bestmove 1g1f");
+
+	let _ = s.send(String::from("position startpos moves 1g1f"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 curmove 1g1f hashfull 10000 nps 100' timed out.");
+
+	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 curmove 1g1f hashfull 10000 nps 100");
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+
+	assert_eq!(&*res,"bestmove resign");
+
+	let _ = s.send(String::from("gameover lose"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+
+	assert_eq!(res,Ok(ActionKind::GameOver));
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}
+#[test]
+fn test_info_send_commands_with_str_5times() {
+	let (pms,pmr) = mpsc::channel();
+	let (pns,pnr) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
+
+	let logger = MockLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = mpsc::channel();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let _ =thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										}),
+										Box::new(|player,_,_,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::SetPosition));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
+										}),
+										Box::new(|player,_,_,mut send_info_commands,_| {
+											let _ = player.sender.send(Ok(ActionKind::Think));
+
+											for i in 0..5 {
+												if let Err(_) = send_info_commands(vec![
+													UsiInfoSubCommand::Str(format!("hellow! {}",i+1))
+												]) {
+													return Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
+												}
+											}
+
+											thread::sleep(Duration::from_millis(250));
+
+											Ok(BestMove::Resign)
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,s,_| {
+											match s {
+												&GameEndState::Lose => {
+													let _ = player.sender.send(Ok(ActionKind::GameOver));
+												},
+												_ => {
+													let _ = player.sender.send(Err(String::from("gameend state is invalid.")));
+												}
+											}
+
+											Ok(())
+										})])
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	let _ = s.send(String::from("isready"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+	assert_eq!(res,Ok(ActionKind::TakeReady));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+	assert_eq!(&*res,"readyok");
+
+	let _ = s.send(String::from("usinewgame"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+	assert_eq!(res,Ok(ActionKind::NewGame));
+
+	let _ = s.send(String::from("position startpos"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1g1f' timed out.");
+
+	assert_eq!(&*res,"bestmove 1g1f");
+
+	let _ = s.send(String::from("position startpos moves 1g1f"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	for i in 0..5 {
+		let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
+
+		let res = r.recv_timeout(Duration::from_millis(200)).expect(format!("attempt to receive 'info string hellow! {}' timed out.",i+1).as_str());;
+
+		assert_eq!(&*res,format!("info string hellow! {}",i+1).as_str());
+	}
+
+	let res = r.recv_timeout(Duration::from_millis(300)).expect("attempt to receive 'bestmove resign' timed out.");
+
+	assert_eq!(&*res,"bestmove resign");
+
+	let _ = s.send(String::from("gameover lose"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+
+	assert_eq!(res,Ok(ActionKind::GameOver));
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}

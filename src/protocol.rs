@@ -1143,7 +1143,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 						}
 					}
 				}
-				mv.join(" ")
+				format!("pv {}",mv.join(" "))
 			},
 			UsiInfoSubCommand::Score(UsiScore::Cp(cp)) => format!("score cp {}", cp),
 			UsiInfoSubCommand::Score(UsiScore::CpUpper(cp)) => {
@@ -1162,7 +1162,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 				format!("score mate {} lowerbound",n)
 			},
 			UsiInfoSubCommand::CurMove(ref m) => {
-				MoveStringCreator::str_from(m)?
+				format!("curmove {}",MoveStringCreator::str_from(m)?)
 			},
 			UsiInfoSubCommand::Hashfull(v) => format!("hashfull {}", v),
 			UsiInfoSubCommand::Nps(v) => format!("nps {}",v),
