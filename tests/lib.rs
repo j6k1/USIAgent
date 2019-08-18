@@ -4,3 +4,4 @@ mod common;
 mod rule;
 mod shogi;
 mod agent;
+mod selfmatch;

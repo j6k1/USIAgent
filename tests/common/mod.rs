@@ -20,6 +20,7 @@ use usiagent::error::PlayerError;
 use usiagent::error::UsiProtocolError;
 use usiagent::error::TypeConvertError;
 use usiagent::error::InfoSendError;
+use usiagent::output::USIOutputWriter;
 use usiagent::shogi::*;
 use usiagent::event::*;
 use usiagent::command::*;
@@ -29,7 +30,8 @@ use usiagent::player::InfoSender;
 use usiagent::player::UsiInfoMessage;
 use usiagent::OnErrorHandler;
 use usiagent::input::USIInputReader;
-use usiagent::output::USIOutputWriter;
+use usiagent::error::SelfMatchRunningError;
+use usiagent::selfmatch::SelfMatchKifuWriter;
 
 #[derive(Debug)]
 pub enum CommonError {
@@ -158,6 +160,13 @@ pub enum ActionKind {
 	OnQuit,
 	Quit,
 }
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
+pub enum EventState {
+	GameStart = 0,
+	Moved,
+	GameEnd,
+	Abort,
+}
 pub struct MockInfoSender {
 	sender:Sender<UsiInfoMessage>
 }
@@ -176,6 +185,31 @@ impl InfoSender for MockInfoSender {
 		} else {
 			Ok(())
 		}
+	}
+}
+#[derive(Debug)]
+pub struct MockSfenKifuWriter {
+	sender:Sender<String>,
+}
+impl MockSfenKifuWriter {
+	pub fn new(sender:Sender<String>) -> MockSfenKifuWriter {
+		MockSfenKifuWriter {
+			sender:sender,
+		}
+	}
+}
+impl SelfMatchKifuWriter<SelfMatchRunningError> for MockSfenKifuWriter {
+	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),SelfMatchRunningError> {
+		let sfen = match self.to_sfen(initial_sfen,m) {
+			Err(ref e) => {
+				return Err(SelfMatchRunningError::InvalidState(e.to_string()));
+			},
+			Ok(sfen) => sfen,
+		};
+
+		let _ = self.sender.send(sfen);
+
+		Ok(())
 	}
 }
 impl Clone for MockInfoSender {

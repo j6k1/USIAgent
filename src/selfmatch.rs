@@ -594,9 +594,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					Ok(mut self_match_event_queue) => {
 						self_match_event_queue.push(
 							SelfMatchEvent::GameStart(if cs_index == 1 {
-								1
-							} else {
 								2
+							} else {
+								1
 							}, teban, sfen.clone()));
 					},
 					Err(ref e) => {
@@ -1177,6 +1177,20 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							}
 						},
 						SelfMatchMessage::Quit | SelfMatchMessage::Error(_) => {
+							match player.lock() {
+								Ok(mut player) => {
+									match player.quit(){
+										Ok(()) => (),
+										Err(ref e) => {
+											on_error_handler.lock().map(|h| h.call(e)).is_err();
+										}
+									}
+								},
+								Err(ref e) => {
+									on_error_handler.lock().map(|h| h.call(e)).is_err();
+								}
+							}
+
 							return Ok(());
 						},
 						_ => {
