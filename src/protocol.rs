@@ -663,11 +663,11 @@ impl GoParser {
 
 		while let Some(&p) = it.next() {
 			match p {
-				"btime" => {
+				"btime" | "wtime"  => {
 					limit.map_or(Ok(()), |_| Err(TypeConvertError::SyntaxError(String::from(
 						"The input form of the go command is invalid. (Duplicate parameters)"
 					))))?;
-					let bt = it.next().ok_or(TypeConvertError::SyntaxError(String::from(
+					let t1 = it.next().ok_or(TypeConvertError::SyntaxError(String::from(
 						"The input form of the go command is invalid. (There is no value for item)"
 					))).and_then(|n| match n.parse::<u32>() {
 						Ok(n) => Ok(n),
@@ -675,8 +675,15 @@ impl GoParser {
 							Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer.")))
 						}
 					})?;
-					let wt = match it.next() {
-						Some(&"wtime") => {
+
+					let next = if p == "btime" {
+						String::from("wtime")
+					} else {
+						String::from("btime")
+					};
+
+					let t2 = match it.next() {
+						Some(&t) if t == &*next => {
 							it.next().ok_or(
 								TypeConvertError::SyntaxError(String::from(
 									"The input form of the go command is invalid. (There is no value for item)"
@@ -691,23 +698,34 @@ impl GoParser {
 							)));
 						}
 					};
-					limit = Some((bt,wt));
+
+					limit = if &*next == "wtime"{
+						Some((t1,t2))
+					} else {
+						Some((t2,t1))
+					};
 				},
-				"binc" => {
+				"binc" | "winc" => {
 					byori.map_or(
 						Ok(()),
 						|_| Err(TypeConvertError::SyntaxError(String::from(
 							"The input form of the go command is invalid. (Duplicate parameters)"
 					))))?;
-					let bi = it.next()
+					let i1 = it.next()
 								.ok_or(TypeConvertError::SyntaxError(String::from(
 									"The input form of the go command is invalid. (There is no value for item)"
 								))).and_then(|n| match n.parse::<u32>() {
 									Ok(n) => Ok(n),
 									Err(_) => Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer."))),
 								})?;
-					let wi = match it.next() {
-						Some(&"winc") => {
+					let next = if p == "binc" {
+						String::from("winc")
+					} else {
+						String::from("binc")
+					};
+
+					let i2 = match it.next() {
+						Some(&inc) if inc == &*next => {
 							it.next().ok_or(
 								TypeConvertError::SyntaxError(String::from(
 									"The input form of the go command is invalid. (There is no value for item)"
@@ -722,7 +740,12 @@ impl GoParser {
 							)));
 						}
 					};
-					byori = Some(UsiGoByoyomiOrInc::Inc(bi,wi));
+
+					byori = if &*next == "winc" {
+						Some(UsiGoByoyomiOrInc::Inc(i1,i2))
+					} else {
+						Some(UsiGoByoyomiOrInc::Inc(i2,i1))
+					};
 				},
 				"byoyomi" => {
 					byori.map_or(
@@ -750,9 +773,7 @@ impl GoParser {
 			limit.map_or(
 				byori.map_or(
 					Ok(f.create(UsiGoTimeLimit::None)),
-					|_| Err(TypeConvertError::SyntaxError(String::from(
-							"The input form of the go command is invalid. (Insufficient parameters)"
-						)))
+					|ref byori| Ok(f.create(UsiGoTimeLimit::Limit(None, Some(*byori))))
 				),
 				|ref limit| Ok(f.create(UsiGoTimeLimit::Limit(Some(*limit), byori)))
 			),
