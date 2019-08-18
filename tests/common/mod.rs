@@ -26,6 +26,7 @@ use usiagent::command::*;
 use usiagent::logger::Logger;
 use usiagent::player::USIPlayer;
 use usiagent::player::InfoSender;
+use usiagent::player::UsiInfoMessage;
 use usiagent::OnErrorHandler;
 use usiagent::input::USIInputReader;
 use usiagent::output::USIOutputWriter;
@@ -156,6 +157,31 @@ pub enum ActionKind {
 	GameOver,
 	OnQuit,
 	Quit,
+}
+pub struct MockInfoSender {
+	sender:Sender<UsiInfoMessage>
+}
+impl MockInfoSender {
+	pub fn new(sender:Sender<UsiInfoMessage>) -> MockInfoSender {
+		MockInfoSender {
+			sender:sender
+		}
+	}
+}
+impl InfoSender for MockInfoSender {
+	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
+		if let Err(_) = self.sender.send(UsiInfoMessage::Commands(commands)) {
+			Err(InfoSendError::Fail(String::from(
+				"info command send failed.")))
+		} else {
+			Ok(())
+		}
+	}
+}
+impl Clone for MockInfoSender {
+	fn clone(&self) -> MockInfoSender {
+		MockInfoSender::new(self.sender.clone())
+	}
 }
 pub struct ConsumedIterator<T> where T: Send + 'static {
 	v:Vec<T>,
