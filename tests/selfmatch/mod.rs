@@ -62,58 +62,58 @@ fn create_options() -> Vec<(String,SysEventOption)> {
 }
 fn startup(pmr:&[Receiver<Result<ActionKind,String>>; 2]) {
 	for i in 0..2 {
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetOption timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetOption timed out.");
 
 		assert_eq!(res,Ok(ActionKind::SetOption));
 	}
 }
 fn gamestart_process(pmr:&[Receiver<Result<ActionKind,String>>; 2]) {
 	for i in 0..2 {
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::TakeReady timed out.");
 
 		assert_eq!(res,Ok(ActionKind::TakeReady));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::NewGame timed out.");
 
 		assert_eq!(res,Ok(ActionKind::NewGame));
 	}
@@ -313,63 +313,63 @@ fn test_resign_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(150)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Think timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Think));
 
-	let res = er.recv_timeout(Duration::from_millis(150)).expect("attempt to receive EventState::Moved timed out.");
+	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::Moved timed out.");
 
 	assert_eq!(res,Ok(EventState::Moved));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Think timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Think));
 
-	let res = er.recv_timeout(Duration::from_millis(150)).expect("attempt to receive EventState::Moved timed out.");
+	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::Moved timed out.");
 
 	assert_eq!(res,Ok(EventState::Moved));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Think timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Think));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::GameOver timed out.");
 
 	assert_eq!(res,Ok(ActionKind::GameOver));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::GameOver timed out.");
 
 	assert_eq!(res,Ok(ActionKind::GameOver));
 
-	let res = er.recv_timeout(Duration::from_millis(150)).expect("attempt to receive EventState::GameEnd timed out.");
+	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameEnd timed out.");
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
 	let _ = s.send(String::from("quit"));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
 }
