@@ -177,7 +177,7 @@ fn test_sequence() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -309,7 +309,7 @@ fn test_gameover() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -519,7 +519,7 @@ fn test_check_kyokumen_with_startpos() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -675,7 +675,7 @@ fn test_check_kyokumen_with_sfen_sente() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -879,7 +879,7 @@ fn test_check_kyokumen_with_sfen_gote() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -1083,7 +1083,7 @@ fn test_ponderhit_move_already_been_decided() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -1230,7 +1230,7 @@ fn test_ponderhit_thinking() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -1378,7 +1378,7 @@ fn test_ponderng_move_already_been_decided() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -1550,7 +1550,7 @@ fn test_ponderng_thinking() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -1728,7 +1728,7 @@ fn test_stop_thinking() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -1905,7 +1905,7 @@ fn test_quit_thinking() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -2051,7 +2051,7 @@ fn test_go_infinite() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -2197,7 +2197,7 @@ fn test_go_none_limit() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -2337,7 +2337,7 @@ fn test_go_with_limit() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -2489,7 +2489,7 @@ fn test_go_with_limit_and_byoyomi() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -2643,7 +2643,7 @@ fn test_go_with_limit_and_inc() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -2797,7 +2797,7 @@ fn test_go_with_byoyomi() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -2951,7 +2951,7 @@ fn test_go_with_inc() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -3105,7 +3105,7 @@ fn test_go_mate() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -3286,7 +3286,7 @@ fn test_mate_with_limit() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -3387,7 +3387,7 @@ fn test_mate_with_limit_of_infinite() {
 	let (pns,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -3488,7 +3488,7 @@ fn test_info_send_commands_without_str() {
 	let (pns,pnr) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -3646,7 +3646,7 @@ fn test_info_send_commands_without_str_and_multipv() {
 	let (pns,pnr) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -3803,7 +3803,7 @@ fn test_info_send_commands_without_pv_and_multipv() {
 	let (pns,pnr) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 
@@ -3956,7 +3956,7 @@ fn test_info_send_commands_with_str_5times() {
 	let (pns,pnr) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 

@@ -129,7 +129,7 @@ fn test_resign_1times() {
 
 	let pmr = [pmr1,pmr2];
 
-	let logger = MockLogger::new();
+	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
 		let (s,r) = mpsc::channel();
 

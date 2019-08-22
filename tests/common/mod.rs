@@ -130,20 +130,36 @@ impl USIOutputWriter for MockOutputWriter {
 	}
 }
 #[derive(Debug)]
-pub struct MockLogger {
+pub struct StdErrorLogger {
 
 }
-impl MockLogger {
-	pub fn new() -> MockLogger {
-		MockLogger {
+impl StdErrorLogger {
+	pub fn new() -> StdErrorLogger {
+		StdErrorLogger {
 
+		}
+	}
+}
+impl Logger for StdErrorLogger {
+	fn logging(&mut self, message:&String) -> bool {
+		writeln!(&mut std::io::stderr(),"{}",message);
+		true
+	}
+}
+#[derive(Debug)]
+pub struct MockLogger {
+	sender:Sender<String>,
+}
+impl MockLogger {
+	pub fn new(sender:Sender<String>) -> MockLogger {
+		MockLogger {
+			sender:sender
 		}
 	}
 }
 impl Logger for MockLogger {
 	fn logging(&mut self, message:&String) -> bool {
-		writeln!(&mut std::io::stderr(),"{}",message);
-		true
+		self.sender.send(message.clone()).is_ok()
 	}
 }
 #[allow(dead_code)]
