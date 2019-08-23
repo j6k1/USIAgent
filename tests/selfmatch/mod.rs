@@ -139,8 +139,6 @@ fn test_resign_1times() {
 
 	let (es,er) = mpsc::channel();
 
-	let (ks,_) = mpsc::channel();
-
 	let _ =thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
@@ -298,7 +296,7 @@ fn test_resign_1times() {
 			},
 			|| false,
 			None,
-			Some(MockSfenKifuWriter::new(ks)), input_reader, input_read_handler,
+			None, input_reader, input_read_handler,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));

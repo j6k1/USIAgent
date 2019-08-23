@@ -17,7 +17,6 @@ use protocol::*;
 
 use chrono::prelude::*;
 
-use std::error::Error;
 use std::fmt;
 use std::{thread};
 use std::sync::Mutex;
@@ -36,8 +35,8 @@ use std::io::BufWriter;
 use std::fs;
 use std::fs::OpenOptions;
 
-pub trait SelfMatchKifuWriter<OE> where OE: Error + fmt::Debug {
-	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),OE>;
+pub trait SelfMatchKifuWriter {
+	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError>;
 	fn to_sfen(&self,initial_sfen:&String,m:&Vec<Move>)
 		-> Result<String, SfenStringConvertError> {
 
@@ -77,27 +76,18 @@ pub struct FileSfenKifuWriter {
 	writer:BufWriter<fs::File>,
 }
 impl FileSfenKifuWriter {
-	pub fn new(file:String) -> Result<FileSfenKifuWriter,SelfMatchRunningError> {
+	pub fn new(file:String) -> Result<FileSfenKifuWriter,KifuWriteError> {
 		Ok(FileSfenKifuWriter {
 			writer:BufWriter::new(OpenOptions::new().append(true).create(true).open(file)?),
 		})
 	}
 }
-impl SelfMatchKifuWriter<SelfMatchRunningError> for FileSfenKifuWriter {
-	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),SelfMatchRunningError> {
-		let sfen = match self.to_sfen(initial_sfen,m) {
-			Err(ref e) => {
-				return Err(SelfMatchRunningError::InvalidState(e.to_string()));
-			},
-			Ok(sfen) => sfen,
-		};
+impl SelfMatchKifuWriter for FileSfenKifuWriter {
+	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError> {
+		let sfen = self.to_sfen(initial_sfen,m)?;
 
-		match self.writer.write(format!("{}\n",sfen).as_bytes()) {
-			Err(ref e) => {
-				Err(SelfMatchRunningError::InvalidState(e.to_string()))
-			},
-			Ok(_) => Ok(()),
-		}
+		let _ = self.writer.write(format!("{}\n",sfen).as_bytes())?;
+		Ok(())
 	}
 }
 #[derive(Debug)]
@@ -161,18 +151,16 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		}
 	}
 
-	pub fn start_default<I,F,RH,OE,KW,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start_default<I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
 						on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<KW>,
+						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				OE: Error + fmt::Debug,
-				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -188,19 +176,17 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								player1_options, player2_options, on_error)
 	}
 
-	pub fn start_with_log_path<I,F,RH,OE,KW,EH>(&mut self,path:String,
+	pub fn start_with_log_path<I,F,RH,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
 						on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<KW>,
+						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				OE: Error + fmt::Debug,
-				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -226,10 +212,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					player1_options, player2_options, logger, on_error)
 	}
 
-	pub fn start<I,F,R,RH,OE,KW,L,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start<I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
 						on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<KW>,
+						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_reader:R,
 						input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
@@ -238,8 +224,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				OE: Error + fmt::Debug,
-				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -266,10 +250,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		r
 	}
 
-	fn run<I,F,R,RH,OE,KW,L>(&mut self, mut on_init_event_dispatcher:I,
+	fn run<I,F,R,RH,L>(&mut self, mut on_init_event_dispatcher:I,
 						mut on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<KW>,
+						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError> + Send + 'static>>,
 						mut input_reader:R,
 						mut input_handler:RH,
 						player1_options:Vec<(String,SysEventOption)>,
@@ -279,8 +263,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
-				OE: Error + fmt::Debug,
-				KW:SelfMatchKifuWriter<OE> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -311,12 +293,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let on_error_handler = on_error_handler_arc.clone();
 
-		let mut kifu_writer:Box<FnMut(&String,&Vec<Move>) +Send + 'static> =
-			kifu_writer.map_or(Box::new(|_,_| ()), |mut w| Box::new(move |sfen,m| {
-				w.write(sfen,m).map_err(|e| {
-					on_error_handler.lock().map(|h| h.call(&e)).is_err();
-				}).is_err();
-			}));
+		let mut kifu_writer = kifu_writer;
+		let mut kifu_writer = move |sfen:&String,m:&Vec<Move>| {
+			let _ = kifu_writer.as_mut().map(|w| {
+				let _= w(sfen,m).map_err(|e| on_error_handler.lock().map(|h| h.call(&e)).is_err());
+			});
+		};
 
 		let quit_ready_arc = Arc::new(Mutex::new(false));
 

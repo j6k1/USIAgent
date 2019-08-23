@@ -446,6 +446,7 @@ impl error::Error for UsiProtocolError {
 pub enum SelfMatchRunningError {
 	InvalidState(String),
 	IOError(io::Error),
+	KifuWriteError(KifuWriteError),
 	RecvError(RecvError),
 	SendError(SendError<SelfMatchMessage>),
 	ThreadJoinFailed(String),
@@ -456,6 +457,7 @@ impl fmt::Display for SelfMatchRunningError {
 	 	match *self {
 		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s),
 		 	SelfMatchRunningError::IOError(ref e) => write!(f,"{}",e),
+			SelfMatchRunningError::KifuWriteError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::RecvError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::SendError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::ThreadJoinFailed(ref s) => write!(f,"{}",s),
@@ -468,6 +470,7 @@ impl error::Error for SelfMatchRunningError {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => "invalid state.",
 		 	SelfMatchRunningError::IOError(_) => "IO Error.",
+		 	SelfMatchRunningError::KifuWriteError(_) => "There was an error writing kifu.",
 		 	SelfMatchRunningError::RecvError(_) => "An error occurred when receiving the message.",
 		 	SelfMatchRunningError::SendError(_) => "An error occurred while sending the message.",
 			SelfMatchRunningError::ThreadJoinFailed(_) => "An panic occurred in child thread.",
@@ -479,6 +482,7 @@ impl error::Error for SelfMatchRunningError {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => None,
 	 		SelfMatchRunningError::IOError(ref e) => Some(e),
+	 		SelfMatchRunningError::KifuWriteError(ref e) => Some(e),
 	 		SelfMatchRunningError::RecvError(ref e) => Some(e),
 	 		SelfMatchRunningError::SendError(ref e) => Some(e),
 	 		SelfMatchRunningError::ThreadJoinFailed(_) => None,
@@ -504,6 +508,11 @@ impl From<SendError<SelfMatchMessage>> for SelfMatchRunningError {
 impl From<io::Error> for SelfMatchRunningError {
 	fn from(err: io::Error) -> SelfMatchRunningError {
 		SelfMatchRunningError::IOError(err)
+	}
+}
+impl From<KifuWriteError> for SelfMatchRunningError {
+	fn from(err: KifuWriteError) -> SelfMatchRunningError {
+		SelfMatchRunningError::KifuWriteError(err)
 	}
 }
 #[derive(Debug)]
@@ -558,6 +567,52 @@ impl From<ToMoveStringConvertError> for SfenStringConvertError {
 impl From<TypeConvertError<String>> for SfenStringConvertError {
 	fn from(err: TypeConvertError<String>) -> SfenStringConvertError {
 		SfenStringConvertError::TypeConvertError(err)
+	}
+}
+#[derive(Debug)]
+pub enum KifuWriteError {
+	Fail(String),
+	InvalidState(String),
+	SfenStringConvertError(SfenStringConvertError),
+	IOError(io::Error),
+}
+impl fmt::Display for KifuWriteError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		KifuWriteError::Fail(ref s) => write!(f,"{}",s),
+	 		KifuWriteError::InvalidState(ref e) => write!(f,"{}", e),
+	 		KifuWriteError::SfenStringConvertError(ref e) => write!(f,"{}", e),
+		 	KifuWriteError::IOError(_) => write!(f,"IO Error."),
+	 	}
+	 }
+}
+impl error::Error for KifuWriteError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		KifuWriteError::Fail(_) => "There was an error writing kifu.",
+	 		KifuWriteError::InvalidState(_) => "There was an error writing kifu. (invalid state).",
+	 		KifuWriteError::SfenStringConvertError(_) => "An error occurred during conversion to sfen string.",
+		 	KifuWriteError::IOError(_) => "There was an error writing kifu. (IO Error).",
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		KifuWriteError::Fail(_) => None,
+	 		KifuWriteError::InvalidState(_) => None,
+	 		KifuWriteError::SfenStringConvertError(ref e) => Some(e),
+	 		KifuWriteError::IOError(ref e) => Some(e),
+	 	}
+	 }
+}
+impl From<SfenStringConvertError> for KifuWriteError {
+	fn from(err: SfenStringConvertError) -> KifuWriteError {
+		KifuWriteError::SfenStringConvertError(err)
+	}
+}
+impl From<io::Error> for KifuWriteError {
+	fn from(err:io::Error) -> KifuWriteError {
+		KifuWriteError::IOError(err)
 	}
 }
 pub trait PlayerError: Error + fmt::Debug {}

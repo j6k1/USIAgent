@@ -20,6 +20,7 @@ use usiagent::error::PlayerError;
 use usiagent::error::UsiProtocolError;
 use usiagent::error::TypeConvertError;
 use usiagent::error::InfoSendError;
+use usiagent::error::KifuWriteError;
 use usiagent::output::USIOutputWriter;
 use usiagent::shogi::*;
 use usiagent::event::*;
@@ -30,7 +31,6 @@ use usiagent::player::InfoSender;
 use usiagent::player::UsiInfoMessage;
 use usiagent::OnErrorHandler;
 use usiagent::input::USIInputReader;
-use usiagent::error::SelfMatchRunningError;
 use usiagent::selfmatch::SelfMatchKifuWriter;
 
 #[derive(Debug)]
@@ -214,14 +214,9 @@ impl MockSfenKifuWriter {
 		}
 	}
 }
-impl SelfMatchKifuWriter<SelfMatchRunningError> for MockSfenKifuWriter {
-	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),SelfMatchRunningError> {
-		let sfen = match self.to_sfen(initial_sfen,m) {
-			Err(ref e) => {
-				return Err(SelfMatchRunningError::InvalidState(e.to_string()));
-			},
-			Ok(sfen) => sfen,
-		};
+impl SelfMatchKifuWriter for MockSfenKifuWriter {
+	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError> {
+		let sfen = self.to_sfen(initial_sfen,m)?;
 
 		let _ = self.sender.send(sfen);
 
