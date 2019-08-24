@@ -3330,10 +3330,10 @@ impl Rule {
 
 				if m.is_nari() {
 					match kind {
-						SFuN | SKyouN | SGinN | SHishaN | SKakuN => {
+						SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN => {
 							return false;
 						},
-						GFuN | GKyouN | GGinN | GHishaN | GKakuN => {
+						GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN => {
 							return false;
 						},
 						_ => ()
@@ -3437,7 +3437,10 @@ impl Rule {
 					SKaku | SKakuN | GKaku | GKakuN => {
 						let to = m.dst();
 
-						if to < from {
+						let (sx,sy) = from.square_to_point();
+						let (dx,dy) = to.square_to_point();
+
+						if sx > dx && sy > dy {
 							let board = unsafe {
 								*state.part.diag_board.bitboard.get_unchecked(0)
 							};
@@ -3471,7 +3474,7 @@ impl Rule {
 									}
 								}
 							}
-
+						} else if sx > dx && sy < dy {
 							let board = unsafe {
 								*state.part.diag_board.bitboard.get_unchecked(1)
 							};
@@ -3506,7 +3509,7 @@ impl Rule {
 									}
 								}
 							}
-						} else {
+						} else if dy > sy {
 							let board = unsafe {
 								*state.part.diag_board.bitboard.get_unchecked(0)
 							};
@@ -3540,7 +3543,7 @@ impl Rule {
 									}
 								}
 							}
-
+						} else {
 							let board = unsafe {
 								*state.part.diag_board.bitboard.get_unchecked(1)
 							};
@@ -3579,12 +3582,13 @@ impl Rule {
 					SHisha | SHishaN | GHisha | GHishaN => {
 						let to = m.dst();
 
-						let (x,y) = from.square_to_point();
+						let (sx,sy) = from.square_to_point();
+						let (dx,dy) = to.square_to_point();
 
 						let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
 
-						if to < from {
-							let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
+						if sx == dx && sy > dy {
+							let count = Rule::calc_to_top_move_count_of_hisha(bitboard,sx,sy);
 
 							if count > 0 {
 								let mut p = from;
@@ -3614,8 +3618,38 @@ impl Rule {
 									}
 								}
 							}
+						} else if sx == dx {
+							let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,sx,sy);
 
-							let count = Rule::calc_to_left_move_count_of_hisha(state.part.rotate_board,x,y);
+							if count > 0 {
+								let mut p = from;
+
+								for _ in 0..(count - 1) {
+									p += 1;
+
+									if p == to {
+										return true;
+									} else if p > to {
+										break;
+									}
+								}
+
+								p += 1;
+
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
+									return false;
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+									return false;
+								} else if kind == Blank {
+									return false;
+								} else {
+									if p == to {
+										return true;
+									}
+								}
+							}
+						} else if sy == dy && sx > dx {
+							let count = Rule::calc_to_left_move_count_of_hisha(state.part.rotate_board,sx,sy);
 
 							if count > 0 {
 								let mut p = from;
@@ -3645,37 +3679,7 @@ impl Rule {
 								}
 							}
 						} else {
-							let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
-
-							if count > 0 {
-								let mut p = from;
-
-								for _ in 0..(count - 1) {
-									p += 1;
-
-									if p == to {
-										return true;
-									} else if p > to {
-										break;
-									}
-								}
-
-								p += 1;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
-
-							let count = Rule::calc_to_right_move_count_of_hisha(state.part.rotate_board,x,y);
+							let count = Rule::calc_to_right_move_count_of_hisha(state.part.rotate_board,sx,sy);
 
 							if count > 0 {
 								let mut p = from;

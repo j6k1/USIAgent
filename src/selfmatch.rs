@@ -698,6 +698,24 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							match Rule::apply_valid_move(&state,teban,&mc,m) {
 								Ok((next,nmc,o)) => {
 
+									let is_win = Rule::is_win(&state,teban,m);
+
+									if is_win {
+										mvs.push(m);
+
+										kifu_writer(&sfen,&mvs.into_iter()
+																.map(|m| m.to_move())
+																.collect::<Vec<Move>>());
+										on_gameend(
+											cs[cs_index].clone(),
+											cs[(cs_index+1) % 2].clone(),
+											[cs[0].clone(),cs[1].clone()],
+											&sr,
+											SelfMatchGameEndState::Win(teban)
+										)?;
+										break;
+									}
+
 									if let Some(_) = prev_move {
 										if Rule::win_only_moves(teban.opposite(),&state).len() > 0 {
 											if Rule::win_only_moves(teban.opposite(),&next).len() > 0 {
@@ -717,23 +735,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										}
 									}
 
-									let is_win = Rule::is_win(&state,teban,m);
-
 									mvs.push(m);
-
-									if is_win {
-										kifu_writer(&sfen,&mvs.into_iter()
-																.map(|m| m.to_move())
-																.collect::<Vec<Move>>());
-										on_gameend(
-											cs[cs_index].clone(),
-											cs[(cs_index+1) % 2].clone(),
-											[cs[0].clone(),cs[1].clone()],
-											&sr,
-											SelfMatchGameEndState::Win(teban)
-										)?;
-										break;
-									}
 
 									mhash = hasher.calc_main_hash(mhash,teban,&state.get_banmen(),&mc,m,&o);
 									shash = hasher.calc_sub_hash(shash,teban,&state.get_banmen(),&mc,m,&o);
