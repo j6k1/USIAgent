@@ -303,7 +303,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let quit_ready_arc = Arc::new(Mutex::new(false));
 
 		let on_error_handler = on_error_handler_arc.clone();
-		let notify_quit_arc = Arc::new(Mutex::new(false));
 
 		let self_match_event_queue:EventQueue<SelfMatchEvent,SelfMatchEventKind> = EventQueue::new();
 		let self_match_event_queue_arc = Arc::new(Mutex::new(self_match_event_queue));
@@ -317,8 +316,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		{
 			let ss = ss.clone();
-
-			let notify_quit = notify_quit_arc.clone();
 
 			let on_error_handler = on_error_handler_arc.clone();
 
@@ -395,7 +392,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let position_parser = PositionParser::new();
 
 		let self_match_event_queue = self_match_event_queue_arc.clone();
-		let notify_quit = notify_quit_arc.clone();
 		let quit_ready = quit_ready_arc.clone();
 
 		let on_error_handler = on_error_handler_arc.clone();
@@ -509,15 +505,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			let mut game_count = 0;
 
 			while number_of_games.map_or(true, |n| game_count < n) &&
-			  end_time.map_or(true, |t| Instant::now() - start_time < t) && !(match notify_quit.lock() {
-				Ok(notify_quit) => {
-					*notify_quit
-				},
-				Err(ref e) => {
-					on_error_handler.lock().map(|h| h.call(e)).is_err();
-					true
-				}
-			}) {
+			  end_time.map_or(true, |t| Instant::now() - start_time < t) {
 
 				cs[0].send(SelfMatchMessage::GameStart)?;
 				cs[1].send(SelfMatchMessage::GameStart)?;
@@ -630,15 +618,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 				let mut oute_kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 
-				while end_time.map_or(true, |t| Instant::now() - start_time < t)  && !(match notify_quit.lock() {
-					Ok(notify_quit) => {
-						*notify_quit
-					},
-					Err(ref e) => {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
-						true
-					}
-				}) {
+				while end_time.map_or(true, |t| Instant::now() - start_time < t) {
 					match ponders[cs_index] {
 						None => {
 							cs[cs_index].send(SelfMatchMessage::StartThink(
