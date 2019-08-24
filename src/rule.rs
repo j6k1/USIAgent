@@ -3330,10 +3330,10 @@ impl Rule {
 
 				if m.is_nari() {
 					match kind {
-						SFuN | SKyouN | SKei | SGinN | SHishaN | SKakuN => {
+						SFuN | SKyouN | SGinN | SHishaN | SKakuN => {
 							return false;
 						},
-						GFuN | GKyouN | GKei | GGinN | GHishaN | GKakuN => {
+						GFuN | GKyouN | GGinN | GHishaN | GKakuN => {
 							return false;
 						},
 						_ => ()
@@ -3362,12 +3362,6 @@ impl Rule {
 					return false;
 				};
 
-				let self_occupied_for_repeat_move = if kind < GFu {
-					unsafe { state.part.sente_opponent_board.merged_bitboard }
-				} else {
-					unsafe { state.part.sente_self_board.merged_bitboard }
-				};
-
 				match kind {
 					SFu | SKei | SGin | SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN |
 					GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN => {
@@ -3379,6 +3373,8 @@ impl Rule {
 					},
 					SKyou | SHisha | SKaku | GKyou | GHisha | GKaku | Blank => (),
 				}
+
+				let self_occupied = unsafe { self_occupied.merged_bitboard };
 
 				match kind {
 					SKyou | GKyou => {
@@ -3427,9 +3423,9 @@ impl Rule {
 
 							p += offset;
 
-							if kind == SKyou && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+							if kind == SKyou && self_occupied & (1 << (p + 1)) != 0 {
 								return false;
-							} else if kind == GKyou && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+							} else if kind == GKyou && self_occupied & (1 << (80 - p + 1)) != 0 {
 								return false;
 							} else {
 								if p == to {
@@ -3463,9 +3459,9 @@ impl Rule {
 
 								p -= 10;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3498,9 +3494,9 @@ impl Rule {
 
 								p -= 8;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3532,9 +3528,9 @@ impl Rule {
 
 								p += 10;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3566,9 +3562,9 @@ impl Rule {
 
 								p += 8;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3605,9 +3601,9 @@ impl Rule {
 
 								p -= 1;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3636,9 +3632,9 @@ impl Rule {
 
 								p -= 9;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3666,9 +3662,9 @@ impl Rule {
 
 								p += 1;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3696,9 +3692,9 @@ impl Rule {
 
 								p += 9;
 
-								if kind < GFu && self_occupied_for_repeat_move & (1 << (p + 1)) != 0 {
+								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied_for_repeat_move & (1 << (80 - p + 1)) != 0 {
+								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
