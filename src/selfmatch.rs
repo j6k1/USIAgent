@@ -160,7 +160,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						player2_options:Vec<(String,SysEventOption)>,
 						on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
-				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -186,7 +186,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						player2_options:Vec<(String,SysEventOption)>,
 						mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
-				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -223,7 +223,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						logger:L, mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
-				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -262,7 +262,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
-				RH: FnMut(String) -> Result<(),SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -302,39 +302,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let quit_ready_arc = Arc::new(Mutex::new(false));
 
+		let on_error_handler = on_error_handler_arc.clone();
 		let notify_quit_arc = Arc::new(Mutex::new(false));
-		let notify_quit = notify_quit_arc.clone();
-
-		let on_error_handler = on_error_handler_arc.clone();
-
-		system_event_dispatcher.add_handler(SystemEventKind::Quit, move |_,e| {
-			match e {
-				&SystemEvent::Quit => {
-					match notify_quit.lock() {
-						Ok(mut notify_quit) => {
-							*notify_quit = true;
-						},
-						Err(ref e) => {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
-						}
-					};
-					for i in 0..2 {
-						match user_event_queue[i].lock() {
-							Ok(mut user_event_queue) => {
-								user_event_queue.push(UserEvent::Quit);
-							},
-							Err(ref e) => {
-								on_error_handler.lock().map(|h| h.call(e)).is_err();
-							}
-						};
-					};
-					Ok(())
-				},
-				e => Err(EventHandlerError::InvalidState(e.event_kind())),
-			}
-		});
-
-		let on_error_handler = on_error_handler_arc.clone();
 
 		let self_match_event_queue:EventQueue<SelfMatchEvent,SelfMatchEventKind> = EventQueue::new();
 		let self_match_event_queue_arc = Arc::new(Mutex::new(self_match_event_queue));
@@ -345,6 +314,38 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let (cs1,cr1) = mpsc::channel();
 		let (cs2,cr2) = mpsc::channel();
 		let mut cr = vec![cr1,cr2];
+
+		{
+			let ss = ss.clone();
+
+			let notify_quit = notify_quit_arc.clone();
+
+			let on_error_handler = on_error_handler_arc.clone();
+
+			system_event_dispatcher.add_handler(SystemEventKind::Quit, move |_,e| {
+				match e {
+					&SystemEvent::Quit => {
+						for i in 0..2 {
+							match user_event_queue[i].lock() {
+								Ok(mut user_event_queue) => {
+									user_event_queue.push(UserEvent::Quit);
+								},
+								Err(ref e) => {
+									on_error_handler.lock().map(|h| h.call(e)).is_err();
+								}
+							};
+						};
+
+						if let Err(ref e) = ss.send(SelfMatchMessage::Quit) {
+							on_error_handler.lock().map(|h| h.call(e)).is_err();
+						}
+
+						Ok(())
+					},
+					e => Err(EventHandlerError::InvalidState(e.event_kind())),
+				}
+			});
+		}
 
 		let player1 = self.player1.clone();
 		let player2 = self.player2.clone();
@@ -1144,7 +1145,23 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 										ss.send(SelfMatchMessage::Ready)?;
 										break;
 									},
-									SelfMatchMessage::Quit | SelfMatchMessage::Error(_) => {
+									SelfMatchMessage::Quit => {
+										match player.lock() {
+											Ok(mut player) => {
+												match player.quit(){
+													Ok(()) => (),
+													Err(ref e) => {
+														on_error_handler.lock().map(|h| h.call(e)).is_err();
+													}
+												}
+											},
+											Err(ref e) => {
+												on_error_handler.lock().map(|h| h.call(e)).is_err();
+											}
+										}
+										return Ok(());
+									},
+									SelfMatchMessage::Error(_) => {
 										return Ok(());
 									},
 									_ => {
@@ -1160,7 +1177,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								}
 							}
 						},
-						SelfMatchMessage::Quit | SelfMatchMessage::Error(_) => {
+						SelfMatchMessage::Quit => {
 							match player.lock() {
 								Ok(mut player) => {
 									match player.quit(){
@@ -1175,6 +1192,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								}
 							}
 
+							return Ok(());
+						},
+						SelfMatchMessage::Error(_) => {
 							return Ok(());
 						},
 						_ => {
@@ -1211,9 +1231,15 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			loop {
 				match input_reader.read() {
 					Ok(line) => {
-						if let Err(ref e) = input_handler(line) {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
-							return;
+						match input_handler(line) {
+							Ok(false) => {
+								return;
+							},
+							Err(ref e) => {
+								on_error_handler.lock().map(|h| h.call(e)).is_err();
+								return;
+							},
+							_ => (),
 						}
 					},
 					Err(ref e) => {

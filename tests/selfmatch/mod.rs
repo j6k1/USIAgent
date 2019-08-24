@@ -1,4 +1,6 @@
 use std::thread;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::time::Duration;
@@ -118,6 +120,29 @@ fn gamestart_process(pmr:&[Receiver<Result<ActionKind,String>>; 2]) {
 		assert_eq!(res,Ok(ActionKind::NewGame));
 	}
 }
+fn create_input_read_handler(system_event_queue:&Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>)
+	-> impl FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static {
+	let system_event_queue = system_event_queue.clone();
+
+	let input_read_handler = move |input| {
+		if input == "quit" {
+			return match system_event_queue.lock()  {
+				Ok(mut system_event_queue) => {
+					system_event_queue.push(SystemEvent::Quit);
+					Ok(false)
+				},
+				Err(_) => {
+					Err(SelfMatchRunningError::InvalidState(String::from(
+						"Failed to secure exclusive lock of system_event_queue."
+					)))
+				}
+			};
+		}
+		Ok(true)
+	};
+
+	input_read_handler
+}
 #[test]
 fn test_resign_1times() {
 	let (pms1,pmr1) = mpsc::channel();
@@ -216,24 +241,7 @@ fn test_resign_1times() {
 			None,Some(1)
 		);
 
-		let system_event_queue = engine.system_event_queue.clone();
-
-		let input_read_handler = move |input| {
-			if input == "quit" {
-				return match system_event_queue.lock()  {
-					Ok(mut system_event_queue) => {
-						system_event_queue.push(SystemEvent::Quit);
-						Ok(())
-					},
-					Err(_) => {
-						Err(SelfMatchRunningError::InvalidState(String::from(
-							"Failed to secure exclusive lock of system_event_queue."
-						)))
-					}
-				};
-			}
-			Ok(())
-		};
+		let input_read_handler = create_input_read_handler(&engine.system_event_queue);
 
 		let _ = engine.start(|self_match_event_dispatcher| {
 			let hes = es.clone();
@@ -469,24 +477,7 @@ fn test_invalidmove_1times() {
 			None,Some(1)
 		);
 
-		let system_event_queue = engine.system_event_queue.clone();
-
-		let input_read_handler = move |input| {
-			if input == "quit" {
-				return match system_event_queue.lock()  {
-					Ok(mut system_event_queue) => {
-						system_event_queue.push(SystemEvent::Quit);
-						Ok(())
-					},
-					Err(_) => {
-						Err(SelfMatchRunningError::InvalidState(String::from(
-							"Failed to secure exclusive lock of system_event_queue."
-						)))
-					}
-				};
-			}
-			Ok(())
-		};
+		let input_read_handler = create_input_read_handler(&engine.system_event_queue);
 
 		let _ = engine.start(|self_match_event_dispatcher| {
 			let hes = es.clone();
@@ -726,24 +717,7 @@ fn test_invalidmove_by_from_blank_1times() {
 			None,Some(1)
 		);
 
-		let system_event_queue = engine.system_event_queue.clone();
-
-		let input_read_handler = move |input| {
-			if input == "quit" {
-				return match system_event_queue.lock()  {
-					Ok(mut system_event_queue) => {
-						system_event_queue.push(SystemEvent::Quit);
-						Ok(())
-					},
-					Err(_) => {
-						Err(SelfMatchRunningError::InvalidState(String::from(
-							"Failed to secure exclusive lock of system_event_queue."
-						)))
-					}
-				};
-			}
-			Ok(())
-		};
+		let input_read_handler = create_input_read_handler(&engine.system_event_queue);
 
 		let _ = engine.start(|self_match_event_dispatcher| {
 			let hes = es.clone();
@@ -912,7 +886,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,m| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										}),
@@ -979,24 +953,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 			None,Some(1)
 		);
 
-		let system_event_queue = engine.system_event_queue.clone();
-
-		let input_read_handler = move |input| {
-			if input == "quit" {
-				return match system_event_queue.lock()  {
-					Ok(mut system_event_queue) => {
-						system_event_queue.push(SystemEvent::Quit);
-						Ok(())
-					},
-					Err(_) => {
-						Err(SelfMatchRunningError::InvalidState(String::from(
-							"Failed to secure exclusive lock of system_event_queue."
-						)))
-					}
-				};
-			}
-			Ok(())
-		};
+		let input_read_handler = create_input_read_handler(&engine.system_event_queue);
 
 		let _ = engine.start(|self_match_event_dispatcher| {
 			let hes = es.clone();
