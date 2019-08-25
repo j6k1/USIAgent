@@ -3464,7 +3464,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3499,7 +3499,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3533,7 +3533,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3567,7 +3567,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3607,7 +3607,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3638,7 +3638,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3668,7 +3668,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
@@ -3698,7 +3698,7 @@ impl Rule {
 
 								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
 									return false;
-								} else if kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
+								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
 									return false;
 								} else if kind == Blank {
 									return false;
