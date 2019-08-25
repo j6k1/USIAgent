@@ -142,7 +142,7 @@ impl StdErrorLogger {
 }
 impl Logger for StdErrorLogger {
 	fn logging(&mut self, message:&String) -> bool {
-		writeln!(&mut std::io::stderr(),"{}",message);
+		writeln!(&mut std::io::stderr(),"errror: {}",message);
 		true
 	}
 }

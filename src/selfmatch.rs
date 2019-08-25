@@ -21,6 +21,8 @@ use std::fmt;
 use std::{thread};
 use std::sync::Mutex;
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::Ordering;
 use std::sync::mpsc::Sender;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::SendError;
@@ -34,6 +36,22 @@ use std::io::Write;
 use std::io::BufWriter;
 use std::fs;
 use std::fs::OpenOptions;
+
+struct OnDrop<F> where F: FnMut() {
+	f:F
+}
+impl<F> OnDrop<F> where F: FnMut() {
+	pub fn new(f:F) -> OnDrop<F> {
+		OnDrop {
+			f:f
+		}
+	}
+}
+impl<F> Drop for OnDrop<F> where F: FnMut() {
+	fn drop(&mut self) {
+		(self.f)();
+	}
+}
 
 pub trait SelfMatchKifuWriter {
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError>;
@@ -314,8 +332,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let (cs2,cr2) = mpsc::channel();
 		let mut cr = vec![cr1,cr2];
 
+		let quited = Arc::new(AtomicBool::new(false));
+
 		{
 			let ss = ss.clone();
+			let quited = quited.clone();
 
 			let on_error_handler = on_error_handler_arc.clone();
 
@@ -333,8 +354,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							};
 						};
 
-						if let Err(ref e) = ss.send(SelfMatchMessage::Quit) {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
+						if !quited.load(Ordering::Acquire) {
+							if let Err(ref e) = ss.send(SelfMatchMessage::Quit) {
+								on_error_handler.lock().map(|h| h.call(e)).is_err();
+							}
 						}
 
 						Ok(())
@@ -400,7 +423,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let number_of_games = self.number_of_games.map(|n| n);
 		let game_time_limit = self.game_time_limit;
 
+		let quited = quited.clone();
+
+		let on_drop = OnDrop::new(move || {
+			quited.store(true,Ordering::Release);
+		});
+
 		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
+			let _on_drop = on_drop;
 			let cs = [cs1.clone(),cs2.clone()];
 			let mut prev_move:Option<AppliedMove> = None;
 			let mut ponders:[Option<AppliedMove>; 2] = [None,None];
