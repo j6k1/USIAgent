@@ -513,7 +513,7 @@ fn test_apply_valid_move_valid_to_sente() {
 		// 歩
 		vec![
 			vec![
-				(4,3,true),(4,3,false)
+				(4,3,false)
 			],
 			vec![
 				(2,2,true),(2,2,false)
@@ -531,7 +531,7 @@ fn test_apply_valid_move_valid_to_sente() {
 		// 香車
 		vec![
 			vec![
-				(4,3,true),(4,3,false),
+				(4,3,false),
 				(4,2,true),(4,2,false),
 				(4,1,true),(4,1,false),
 				(4,0,true),
@@ -913,7 +913,7 @@ fn test_apply_valid_move_to_gote() {
 		// 歩
 		vec![
 			vec![
-				(4,3,true),(4,3,false)
+				(4,3,false)
 			],
 			vec![
 				(2,2,true),(2,2,false)
@@ -931,7 +931,7 @@ fn test_apply_valid_move_to_gote() {
 		// 香車
 		vec![
 			vec![
-				(4,3,true),(4,3,false),
+				(4,3,false),
 				(4,2,true),(4,2,false),
 				(4,1,true),(4,1,false),
 				(4,0,true),
