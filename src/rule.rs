@@ -3328,6 +3328,10 @@ impl Rule {
 					&Banmen(ref kinds) => kinds[y as usize][x as usize]
 				};
 
+				if kind == Blank || (t == Teban::Sente && kind >= GFu) || (t == Teban::Gote && kind < GFu) {
+					return false;
+				}
+
 				if m.is_nari() {
 					let nari_mask = match kind {
 						SFu | SKyou | SKei | SGin | SHisha | SKaku => SENTE_NARI_MASK,

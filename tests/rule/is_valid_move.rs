@@ -3345,27 +3345,25 @@ fn test_is_valid_move_valid_with_kaku_opponent_occupied_and_inverted_position_oc
 	for &kind in &KINDS {
 		for (o,mvs) in OCC.iter().zip(&mvs) {
 			for m in mvs {
-				for m in mvs {
-					if kind == SKakuN && m.2 {
-						continue;
-					}
-
-					let mut banmen = blank_banmen.clone();
-
-					banmen.0[(o.0).1 as usize][(o.0).0 as usize] = GFu;
-					banmen.0[(o.1).1 as usize][(o.1).0 as usize] = SFu;
-					banmen.0[4][4] = kind;
-
-					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
-
-					let state = State::new(banmen);
-
-					assert!(Rule::is_valid_move(&state,
-						Teban::Sente,
-						&MochigomaCollections::Empty,
-						m
-					), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				if kind == SKakuN && m.2 {
+					continue;
 				}
+
+				let mut banmen = blank_banmen.clone();
+
+				banmen.0[(o.0).1 as usize][(o.0).0 as usize] = GFu;
+				banmen.0[(o.1).1 as usize][(o.1).0 as usize] = SFu;
+				banmen.0[4][4] = kind;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Sente,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
 			}
 		}
 	}
@@ -3390,34 +3388,160 @@ fn test_is_valid_move_valid_with_hisha_opponent_occupied_and_inverted_position_o
 	for &kind in &KINDS {
 		for (o,mvs) in OCC.iter().zip(&mvs) {
 			for m in mvs {
-				for m in mvs {
-					if kind == SHishaN && m.2 {
-						continue;
-					}
-
-					let mut banmen = blank_banmen.clone();
-
-					banmen.0[(o.0).1 as usize][(o.0).0 as usize] = GFu;
-					banmen.0[(o.1).1 as usize][(o.1).0 as usize] = SFu;
-					banmen.0[4][4] = kind;
-
-					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
-
-					let state = State::new(banmen);
-
-					assert!(Rule::is_valid_move(&state,
-						Teban::Sente,
-						&MochigomaCollections::Empty,
-						m
-					), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				if kind == SHishaN && m.2 {
+					continue;
 				}
+
+				let mut banmen = blank_banmen.clone();
+
+				banmen.0[(o.0).1 as usize][(o.0).0 as usize] = GFu;
+				banmen.0[(o.1).1 as usize][(o.1).0 as usize] = SFu;
+				banmen.0[4][4] = kind;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Sente,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
 			}
 		}
 	}
 }
 #[test]
+fn test_is_valid_move_valid_nari_sente() {
+	const MVS:[[((u32,u32),(u32,u32)); 2]; 6] = [
+		[((4,3),(4,2)),((4,2),(4,1))],
+		[((4,8),(4,2)),((4,2),(4,1))],
+		[((4,4),(5,2)),((4,2),(5,0))],
+		[((4,3),(4,2)),((4,2),(3,3))],
+		[((4,4),(2,2)),((0,0),(8,8))],
+		[((4,8),(4,0)),((4,0),(4,8))]
+	];
+
+	let kinds:Vec<KomaKind> = vec![ SFu, SKyou, SKei, SGin, SKaku, SHisha ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (&kind,mvs) in kinds.iter().zip(&MVS) {
+		for &m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[(m.0).1 as usize][(m.0).0 as usize] = kind;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,true)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Sente,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_move_valid_nari_gote() {
+	const MVS:[[((u32,u32),(u32,u32)); 2]; 6] = [
+		[((4,3),(4,2)),((4,2),(4,1))],
+		[((4,8),(4,2)),((4,2),(4,1))],
+		[((4,4),(5,2)),((4,2),(5,0))],
+		[((4,3),(4,2)),((4,2),(3,3))],
+		[((4,4),(2,2)),((0,0),(8,8))],
+		[((4,8),(4,0)),((4,0),(4,8))]
+	];
+
+	let kinds:Vec<KomaKind> = vec![ GFu, GKyou, GKei, GGin, GKaku, GHisha ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (&kind,mvs) in kinds.iter().zip(&MVS) {
+		for &m in mvs {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8 - (m.0).1 as usize][8 - (m.0).0 as usize] = kind;
+
+			let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-(m.0).0),(8-(m.0).1)+1),KomaDstToPosition(9-(8-(m.1).0),(8-(m.1).1)+1,true)));
+
+			let state = State::new(banmen);
+
+			assert!(Rule::is_valid_move(&state,
+				Teban::Gote,
+				&MochigomaCollections::Empty,
+				m
+			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		}
+	}
+}
+#[test]
+fn test_is_valid_move_invalid_nari_sente() {
+	const MVS:[((u32,u32),(u32,u32)); 6] = [
+		((4,4),(4,3)),
+		((4,8),(4,3)),
+		((4,5),(5,3)),
+		((4,4),(4,3)),
+		((4,4),(3,3)),
+		((4,8),(4,3))
+	];
+
+	let kinds:Vec<KomaKind> = vec![ SFu, SKyou, SKei, SGin, SKaku, SHisha ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (&kind,m) in kinds.iter().zip(&MVS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[(m.0).1 as usize][(m.0).0 as usize] = kind;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,true)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Sente,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_invalid_nari_gote() {
+	const MVS:[((u32,u32),(u32,u32)); 6] = [
+		((4,4),(4,3)),
+		((4,8),(4,3)),
+		((4,5),(5,3)),
+		((4,4),(4,3)),
+		((4,4),(3,3)),
+		((4,8),(4,3))
+	];
+
+	let kinds:Vec<KomaKind> = vec![ GFu, GKyou, GKei, GGin, GKaku, GHisha ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (&kind,m) in kinds.iter().zip(&MVS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[8 - (m.0).1 as usize][8 - (m.0).0 as usize] = kind;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-(m.0).0),(8-(m.0).1)+1),KomaDstToPosition(9-(8-(m.1).0),(8-(m.1).1)+1,true)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Gote,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+	}
+}
+#[test]
 fn test_is_valid_move_invalid_nari_to_nari_sente() {
-	let kinds:Vec<KomaKind> = vec![ SFuN, SKyouN, SKeiN, SGinN, SKakuN, SHishaN, SKin, SOu ];
+	let kinds:Vec<KomaKind> = vec![ SFuN, SKyouN, SKeiN, SGinN, SKakuN, SHishaN ];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
@@ -3439,7 +3563,51 @@ fn test_is_valid_move_invalid_nari_to_nari_sente() {
 }
 #[test]
 fn test_is_valid_move_invalid_nari_to_nari_gote() {
-	let kinds:Vec<KomaKind> = vec![ GFuN, GKyouN, GKeiN, GGinN, GKakuN, GHishaN, GKin, GOu ];
+	let kinds:Vec<KomaKind> = vec![ GFuN, GKyouN, GKeiN, GGinN, GKakuN, GHishaN ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for kind in kinds {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[5][4] = kind;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,5+1),KomaDstToPosition(9-4,6+1,true)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Gote,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_invalid_nari_kin_or_ou_sente() {
+	let kinds:Vec<KomaKind> = vec![ SKin, SOu ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for kind in kinds {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[3][4] = kind;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,3+1),KomaDstToPosition(9-4,2+1,true)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Sente,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_invalid_nari_kin_or_ou_gote() {
+	let kinds:Vec<KomaKind> = vec![ GKin, GOu ];
 
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
@@ -3482,29 +3650,27 @@ fn test_is_valid_move_with_kaku_valid_ohter_direction_occupied_sente() {
 	for &kind in &KINDS {
 		for (o,mvs) in OCC.iter().zip(&mvs) {
 			for m in mvs {
-				for m in mvs {
-					if kind == SKakuN && m.2 {
-						continue;
-					}
-
-					let mut banmen = blank_banmen.clone();
-
-					for o in o {
-						banmen.0[o.1 as usize][o.0 as usize] = SFu;
-					}
-
-					banmen.0[4][4] = kind;
-
-					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
-
-					let state = State::new(banmen);
-
-					assert!(Rule::is_valid_move(&state,
-						Teban::Sente,
-						&MochigomaCollections::Empty,
-						m
-					), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				if kind == SKakuN && m.2 {
+					continue;
 				}
+
+				let mut banmen = blank_banmen.clone();
+
+				for o in o {
+					banmen.0[o.1 as usize][o.0 as usize] = SFu;
+				}
+
+				banmen.0[4][4] = kind;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Sente,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
 			}
 		}
 	}
@@ -3532,29 +3698,27 @@ fn test_is_valid_move_with_kaku_valid_ohter_direction_occupied_gote() {
 	for &kind in &KINDS {
 		for (o,mvs) in OCC.iter().zip(&mvs) {
 			for m in mvs {
-				for m in mvs {
-					if kind == GKakuN && m.2 {
-						continue;
-					}
-
-					let mut banmen = blank_banmen.clone();
-
-					for o in o {
-						banmen.0[8 - o.1 as usize][8 - o.0 as usize] = GFu;
-					}
-
-					banmen.0[4][4] = kind;
-
-					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
-
-					let state = State::new(banmen);
-
-					assert!(Rule::is_valid_move(&state,
-						Teban::Gote,
-						&MochigomaCollections::Empty,
-						m
-					), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				if kind == GKakuN && m.2 {
+					continue;
 				}
+
+				let mut banmen = blank_banmen.clone();
+
+				for o in o {
+					banmen.0[8 - o.1 as usize][8 - o.0 as usize] = GFu;
+				}
+
+				banmen.0[4][4] = kind;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Gote,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
 			}
 		}
 	}
@@ -3582,29 +3746,27 @@ fn test_is_valid_move_with_hisha_valid_ohter_direction_occupied_sente() {
 	for &kind in &KINDS {
 		for (o,mvs) in OCC.iter().zip(&mvs) {
 			for m in mvs {
-				for m in mvs {
-					if kind == SHishaN && m.2 {
-						continue;
-					}
-
-					let mut banmen = blank_banmen.clone();
-
-					for o in o {
-						banmen.0[o.1 as usize][o.0 as usize] = SFu;
-					}
-
-					banmen.0[4][4] = kind;
-
-					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
-
-					let state = State::new(banmen);
-
-					assert!(Rule::is_valid_move(&state,
-						Teban::Sente,
-						&MochigomaCollections::Empty,
-						m
-					), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				if kind == SHishaN && m.2 {
+					continue;
 				}
+
+				let mut banmen = blank_banmen.clone();
+
+				for o in o {
+					banmen.0[o.1 as usize][o.0 as usize] = SFu;
+				}
+
+				banmen.0[4][4] = kind;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Sente,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
 			}
 		}
 	}
@@ -3632,30 +3794,170 @@ fn test_is_valid_move_with_hisha_valid_ohter_direction_occupied_gote() {
 	for &kind in &KINDS {
 		for (o,mvs) in OCC.iter().zip(&mvs) {
 			for m in mvs {
-				for m in mvs {
-					if kind == GHishaN && m.2 {
-						continue;
-					}
-
-					let mut banmen = blank_banmen.clone();
-
-					for o in o {
-						banmen.0[8 - o.1 as usize][8 - o.0 as usize] = GFu;
-					}
-
-					banmen.0[4][4] = kind;
-
-					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
-
-					let state = State::new(banmen);
-
-					assert!(Rule::is_valid_move(&state,
-						Teban::Gote,
-						&MochigomaCollections::Empty,
-						m
-					), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				if kind == GHishaN && m.2 {
+					continue;
 				}
+
+				let mut banmen = blank_banmen.clone();
+
+				for o in o {
+					banmen.0[8 - o.1 as usize][8 - o.0 as usize] = GFu;
+				}
+
+				banmen.0[4][4] = kind;
+
+				let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
+
+				let state = State::new(banmen);
+
+				assert!(Rule::is_valid_move(&state,
+					Teban::Gote,
+					&MochigomaCollections::Empty,
+					m
+				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
 			}
 		}
+	}
+}
+#[test]
+fn test_is_valid_move_invalid_from_blank_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = SFu;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,3+1),KomaDstToPosition(9-4,2+1,false)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Sente,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+}
+#[test]
+fn test_is_valid_move_invalid_from_blank_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[4][4] = GFu;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,5+1),KomaDstToPosition(9-4,6+1,false)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Gote,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+}
+#[test]
+fn test_is_valid_move_invalid_from_opponent_sente() {
+	const MVS:[((u32,u32),(u32,u32)); 14] = [
+		((4,4),(4,3)),
+		((4,8),(4,3)),
+		((4,5),(5,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(2,2)),
+		((4,8),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(2,2)),
+		((4,8),(4,3)),
+	];
+
+	let kinds:Vec<KomaKind> = vec![
+									GFu,
+									GKyou,
+									GKei,
+									GGin,
+									GKin,
+									GKaku,
+									GHisha,
+									GOu,
+									GFuN,
+									GKyouN,
+									GKeiN,
+									GGinN,
+									GKakuN,
+									GHishaN ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (&kind,m) in kinds.iter().zip(&MVS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[(m.0).1 as usize][(m.0).0 as usize] = kind;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,false)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Sente,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = kind = {:?} {:?} is true.", kind,m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_invalid_from_opponent_gote() {
+	const MVS:[((u32,u32),(u32,u32)); 14] = [
+		((4,4),(4,3)),
+		((4,8),(4,3)),
+		((4,5),(5,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(2,2)),
+		((4,8),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(4,3)),
+		((4,4),(2,2)),
+		((4,8),(4,3)),
+	];
+
+	let kinds:Vec<KomaKind> = vec![
+									SFu,
+									SKyou,
+									SKei,
+									SGin,
+									SKin,
+									SKaku,
+									SHisha,
+									SOu,
+									SFuN,
+									SKyouN,
+									SKeiN,
+									SGinN,
+									SKakuN,
+									SHishaN ];
+
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for (&kind,m) in kinds.iter().zip(&MVS) {
+		let mut banmen = blank_banmen.clone();
+
+		banmen.0[(m.0).1 as usize][(m.0).0 as usize] = kind;
+
+		let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-(m.0).0),(8-(m.0).1)+1),KomaDstToPosition(9-(8-(m.1).0),(8-(m.1).1)+1,false)));
+
+		let state = State::new(banmen);
+
+		assert!(!Rule::is_valid_move(&state,
+			Teban::Gote,
+			&MochigomaCollections::Empty,
+			m
+		), format!("is_valid_move: move = kind = {:?} {:?} is true.", kind,m.to_move()));
 	}
 }
