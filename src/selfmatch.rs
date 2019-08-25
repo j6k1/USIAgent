@@ -302,7 +302,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			});
 		};
 
-		let quit_ready_arc = Arc::new(Mutex::new(false));
+		let quit_ready_arc = Arc::new(AtomicBool::new(false));
 
 		let on_error_handler = on_error_handler_arc.clone();
 
@@ -316,11 +316,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let (cs2,cr2) = mpsc::channel();
 		let mut cr = vec![cr1,cr2];
 
-		let quited = Arc::new(AtomicBool::new(false));
-
 		{
 			let ss = ss.clone();
-			let quited = quited.clone();
+			let quit_ready = quit_ready_arc.clone();
 
 			let on_error_handler = on_error_handler_arc.clone();
 
@@ -338,7 +336,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							};
 						};
 
-						if !quited.load(Ordering::Acquire) {
+						if !quit_ready.load(Ordering::Acquire) {
 							if let Err(ref e) = ss.send(SelfMatchMessage::Quit) {
 								on_error_handler.lock().map(|h| h.call(e)).is_err();
 							}
@@ -412,19 +410,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 			let mut prev_move:Option<AppliedMove> = None;
 			let mut ponders:[Option<AppliedMove>; 2] = [None,None];
 
-			let on_error_handler_inner = on_error_handler.clone();
 			let quit_ready_inner = quit_ready.clone();
 
 			let quit_notification =  move || {
-				match quit_ready_inner.lock() {
-					Ok(mut quit_ready) => {
-						*quit_ready = true;
-					},
-					Err(ref e) => {
-						on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-					}
-				};
-				quited.store(true,Ordering::Release);
+				quit_ready_inner.store(true,Ordering::Release);
 			};
 
 			let self_match_event_queue_inner = self_match_event_queue.clone();
@@ -439,15 +428,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									s:SelfMatchGameEndState| {
 				let mut message_state = GameEndState::Win;
 
-				let quit_notification =  || {
-					match quit_ready_inner.lock() {
-						Ok(mut quit_ready) => {
-							*quit_ready = true;
-						},
-						Err(ref e) => {
-							on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-						}
-					};
+				let quit_notification = || {
+					quit_ready_inner.store(true,Ordering::Release);
 				};
 
 				match self_match_event_queue_inner.lock() {
@@ -459,14 +441,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						win_cs.send(SelfMatchMessage::Error(0))?;
 						lose_cs.send(SelfMatchMessage::Error(1))?;
 
-						match quit_ready_inner.lock() {
-							Ok(mut quit_ready) => {
-								*quit_ready = true;
-							},
-							Err(ref e) => {
-								on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-							}
-						};
+						quit_notification();
 
 						return Err(SelfMatchRunningError::InvalidState(String::from(
 							"Exclusive lock on self_match_event_queue failed."
@@ -951,14 +926,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					}
 				}
 			}
-			match quit_ready.lock() {
-				Ok(mut quit_ready) => {
-					*quit_ready = true;
-				},
-				Err(ref e) => {
-					on_error_handler.lock().map(|h| h.call(e)).is_err();
-				}
-			};
+			quit_ready.store(true,Ordering::Release);
 			e
 		}));
 
@@ -1242,13 +1210,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let quit_ready = quit_ready_arc.clone();
 
-		while !(match quit_ready.lock() {
-			Ok(quit_ready) => *quit_ready,
-			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
-				true
-			}
-		}) || (match self.system_event_queue.lock() {
+		while !quit_ready.load(Ordering::Acquire) || (match self.system_event_queue.lock() {
 			Ok(system_event_queue) => system_event_queue.has_event(),
 			Err(ref e) => {
 				on_error_handler.lock().map(|h| h.call(e)).is_err();
