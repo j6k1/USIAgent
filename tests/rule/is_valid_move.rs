@@ -3518,7 +3518,7 @@ fn test_is_valid_move_with_kaku_valid_ohter_direction_occupied_gote() {
 		[(3,3),(3,5),(5,3)]
 	];
 
-	const KINDS:[KomaKind; 2] = [ SKaku, SKakuN ];
+	const KINDS:[KomaKind; 2] = [ GKaku, GKakuN ];
 
 	let mvs:Vec<Vec<(u32,u32,bool)>> = vec![
 		vec![(0,0,true)],
@@ -3533,24 +3533,24 @@ fn test_is_valid_move_with_kaku_valid_ohter_direction_occupied_gote() {
 		for (o,mvs) in OCC.iter().zip(&mvs) {
 			for m in mvs {
 				for m in mvs {
-					if kind == SKakuN && m.2 {
+					if kind == GKakuN && m.2 {
 						continue;
 					}
 
 					let mut banmen = blank_banmen.clone();
 
 					for o in o {
-						banmen.0[o.1 as usize][o.0 as usize] = SFu;
+						banmen.0[8 - o.1 as usize][8 - o.0 as usize] = GFu;
 					}
 
 					banmen.0[4][4] = kind;
 
-					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-m.0,m.1+1,m.2)));
+					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-4,4+1),KomaDstToPosition(9-(8-m.0),(8-m.1)+1,m.2)));
 
 					let state = State::new(banmen);
 
 					assert!(Rule::is_valid_move(&state,
-						Teban::Sente,
+						Teban::Gote,
 						&MochigomaCollections::Empty,
 						m
 					), format!("is_valid_move: move = {:?} is false.", m.to_move()));
