@@ -3329,16 +3329,6 @@ impl Rule {
 				};
 
 				if m.is_nari() {
-					match kind {
-						SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN | SKin | SOu => {
-							return false;
-						},
-						GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN | GKin | GOu => {
-							return false;
-						},
-						_ => ()
-					}
-
 					let nari_mask = match kind {
 						SFu | SKyou | SKei | SGin | SHisha | SKaku => SENTE_NARI_MASK,
 						GFu | GKyou | GKei | GGin | GHisha | GKaku => GOTE_NARI_MASK,
