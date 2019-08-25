@@ -37,22 +37,6 @@ use std::io::BufWriter;
 use std::fs;
 use std::fs::OpenOptions;
 
-struct OnDrop<F> where F: FnMut() {
-	f:F
-}
-impl<F> OnDrop<F> where F: FnMut() {
-	pub fn new(f:F) -> OnDrop<F> {
-		OnDrop {
-			f:f
-		}
-	}
-}
-impl<F> Drop for OnDrop<F> where F: FnMut() {
-	fn drop(&mut self) {
-		(self.f)();
-	}
-}
-
 pub trait SelfMatchKifuWriter {
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError>;
 	fn to_sfen(&self,initial_sfen:&String,m:&Vec<Move>)
@@ -423,14 +407,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let number_of_games = self.number_of_games.map(|n| n);
 		let game_time_limit = self.game_time_limit;
 
-		let quited = quited.clone();
-
-		let on_drop = OnDrop::new(move || {
-			quited.store(true,Ordering::Release);
-		});
-
 		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
-			let _on_drop = on_drop;
 			let cs = [cs1.clone(),cs2.clone()];
 			let mut prev_move:Option<AppliedMove> = None;
 			let mut ponders:[Option<AppliedMove>; 2] = [None,None];
@@ -447,6 +424,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
 					}
 				};
+				quited.store(true,Ordering::Release);
 			};
 
 			let self_match_event_queue_inner = self_match_event_queue.clone();
