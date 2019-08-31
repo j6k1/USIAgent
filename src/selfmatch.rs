@@ -1035,7 +1035,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											}
 										};
 
-										match player.lock() {
+										let m = match player.lock() {
 											Ok(mut player) => {
 												match player.set_position(t, b, ms, mg, n, m.into_iter().map(|m| {
 													m.to_move()
@@ -1047,32 +1047,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 														break;
 													}
 												}
-												let m = match player.think(&limit,
+												match player.think(&limit,
 															user_event_queue[player_i].clone(),
 															info_sender.clone(),on_error_handler.clone()) {
 													Ok(m) => m,
 													Err(ref e) => {
 														on_error_handler.lock().map(|h| h.call(e)).is_err();
-														ss.send(SelfMatchMessage::Error(player_i))?;
-														break;
-													}
-												};
-
-												match cr.recv()? {
-													SelfMatchMessage::PonderHit => {
-														ss.send(SelfMatchMessage::NotifyMove(m))?;
-													},
-													SelfMatchMessage::PonderNG => (),
-													SelfMatchMessage::Quit | SelfMatchMessage::Error(_) => {
-														break;
-													},
-													_ => {
-														logger.lock().map(|mut logger| {
-															logger.logging(&format!("Invalid message."))
-														}).map_err(|_| {
-															USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
-															false
-														}).is_err();
 														ss.send(SelfMatchMessage::Error(player_i))?;
 														break;
 													}
@@ -1084,6 +1064,42 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												break;
 											}
 										};
+
+										match cr.recv()? {
+											SelfMatchMessage::PonderHit => {
+												ss.send(SelfMatchMessage::NotifyMove(m))?;
+											},
+											SelfMatchMessage::PonderNG => (),
+											SelfMatchMessage::Quit => {
+												match player.lock() {
+													Ok(mut player) => {
+														match player.quit(){
+															Ok(()) => (),
+															Err(ref e) => {
+																on_error_handler.lock().map(|h| h.call(e)).is_err();
+															}
+														}
+													},
+													Err(ref e) => {
+														on_error_handler.lock().map(|h| h.call(e)).is_err();
+													}
+												}
+												return Ok(());
+											},
+											SelfMatchMessage::Error(_) => {
+												return Ok(());
+											}
+											_ => {
+												logger.lock().map(|mut logger| {
+													logger.logging(&format!("Invalid message."))
+												}).map_err(|_| {
+													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
+													false
+												}).is_err();
+												ss.send(SelfMatchMessage::Error(player_i))?;
+												break;
+											}
+										}
 									},
 									SelfMatchMessage::GameEnd(s) => {
 										match player.lock() {
