@@ -1187,9 +1187,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let on_error_handler = on_error_handler_arc.clone();
 		let self_match_event_queue = self_match_event_queue_arc.clone();
 		let logger = logger_arc.clone();
+		let quit_ready = quit_ready_arc.clone();
 
 		thread::spawn(move || {
-			loop {
+			while !quit_ready.load(Ordering::Acquire) {
 				match input_reader.read() {
 					Ok(line) => {
 						match input_handler(line) {
@@ -1200,13 +1201,16 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								on_error_handler.lock().map(|h| h.call(e)).is_err();
 								return;
 							},
-							_ => (),
+							_ => {
+								break;
+							},
 						}
 					},
-					Err(ref e) => {
+					Err(ref e) if !quit_ready.load(Ordering::Acquire) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
 						return;
-					}
+					},
+					_ => (),
 				}
 			}
 		});

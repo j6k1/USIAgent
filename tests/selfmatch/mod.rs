@@ -376,6 +376,8 @@ fn test_resign_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
 fn test_invalidmove_1times() {
@@ -614,6 +616,8 @@ fn test_invalidmove_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
 fn test_invalidmove_by_from_blank_1times() {
@@ -852,6 +856,8 @@ fn test_invalidmove_by_from_blank_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
 fn test_invalidmove_by_no_responded_oute_1times() {
@@ -881,10 +887,6 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
-											let _ = player.sender.send(Ok(ActionKind::SetPosition));
-											Ok(())
-										}),
-										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
@@ -1074,6 +1076,8 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
 fn test_win_move_1times() {
@@ -1277,6 +1281,8 @@ fn test_win_move_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
 fn test_win_invalidmove_put_fu_and_mate_1times() {
@@ -1477,6 +1483,8 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
 fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
@@ -1677,6 +1685,8 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
 fn test_win_validmove_not_sennichite_by_oute_1times() {
@@ -1891,9 +1901,11 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
-fn test_win_invalidmove_sennichite_once_move_1times() {
+fn test_win_invalid_move_sennichite_once_move_1times() {
 	let (pms1,pmr1) = mpsc::channel();
 	let (pns1,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
@@ -2091,9 +2103,11 @@ fn test_win_invalidmove_sennichite_once_move_1times() {
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 #[test]
-fn test_win_invalidmove_sennichite_by_oute_once_move_1times_with_empty_kyokumen_map() {
+fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen_map() {
 	let (pms1,pmr1) = mpsc::channel();
 	let (pns1,_) = mpsc::channel();
 	let (ts,tr) = mpsc::channel();
@@ -2369,5 +2383,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times_with_empty_kyokumen_
 	assert_eq!(res,Ok(ActionKind::Quit));
 
 	let _ = tr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive on quited timed out.");
+
+	let _ = s.send(String::from(""));
 }
 
