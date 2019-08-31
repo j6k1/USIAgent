@@ -3824,8 +3824,9 @@ impl Rule {
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut mhash:u64,mut shash:u64,
 						mut kyokumen_map:KyokumenMap<u64,u32>,
+						mut oute_kyokumen_map:KyokumenMap<u64,u32>,
 						hasher:&KyokumenHash<u64>)
-		-> (Teban,State,MochigomaCollections,u64,u64,KyokumenMap<u64,u32>) {
+		-> (Teban,State,MochigomaCollections,u64,u64,KyokumenMap<u64,u32>,KyokumenMap<u64,u32>) {
 
 		for m in m {
 			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
@@ -3842,6 +3843,19 @@ impl Rule {
 						}
 					}
 
+					if Rule::is_mate(teban,&next) {
+						match oute_kyokumen_map.get(teban, &mhash,&shash) {
+							Some(&c) => {
+								oute_kyokumen_map.insert(teban,mhash,shash,c+1);
+							},
+							None => {
+								oute_kyokumen_map.insert(teban,mhash,shash,1);
+							}
+						}
+					} else {
+						oute_kyokumen_map.clear(teban);
+					}
+
 					mc = nmc;
 					teban = teban.opposite();
 					state = next;
@@ -3849,7 +3863,7 @@ impl Rule {
 			}
 		}
 
-		(teban,state,mc,mhash,shash,kyokumen_map)
+		(teban,state,mc,mhash,shash,kyokumen_map,oute_kyokumen_map)
 	}
 
 

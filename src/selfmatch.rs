@@ -574,6 +574,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
 
 				let kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
+				let oute_kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
+
 				let hasher = KyokumenHash::new();
 
 				let (ms,mg) = match mc {
@@ -597,9 +599,12 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 					 mut mc,
 					 mut mhash,
 					 mut shash,
-					 mut kyokumen_map) = Rule::apply_moves(State::new(banmen),teban,mc,&mvs,mhash,shash,kyokumen_map,&hasher);
-
-				let mut oute_kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
+					 mut kyokumen_map,
+					 mut oute_kyokumen_map) = Rule::apply_moves(State::new(banmen),
+															 	teban,mc,&mvs,
+															 	mhash,shash,
+															 	kyokumen_map,
+															 	oute_kyokumen_map,&hasher);
 
 				while end_time.map_or(true, |t| Instant::now() - start_time < t) {
 					match ponders[cs_index] {

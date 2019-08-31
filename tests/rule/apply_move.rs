@@ -3848,6 +3848,7 @@ fn test_apply_moves() {
 	];
 
 	let kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
+	let oute_kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 	let hasher = KyokumenHash::new();
 
 	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
@@ -3865,7 +3866,8 @@ fn test_apply_moves() {
 		 _,
 		 mhash,
 		 shash,
-		 _) = Rule::apply_moves(state,teban,mc,&mvs,imhash,ishash,kyokumen_map,&hasher);
+		 _,
+		 _) = Rule::apply_moves(state,teban,mc,&mvs,imhash,ishash,kyokumen_map,oute_kyokumen_map,&hasher);
 
 	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&HashMap::new(),&HashMap::new());
 
