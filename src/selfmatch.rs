@@ -769,6 +769,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									Rule::update_sennichite_map(
 										&state,teban,mhash,shash,&mut kyokumen_map
 									);
+
 									teban = teban.opposite();
 
 									ponders[cs_index] = pm.map(|pm| pm.to_applied_move());
