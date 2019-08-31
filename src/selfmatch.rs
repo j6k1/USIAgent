@@ -1202,7 +1202,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 								return;
 							},
 							_ => {
-								break;
+								return;
 							},
 						}
 					},
