@@ -1,5 +1,6 @@
 extern crate chrono;
 extern crate rand;
+#[macro_use]
 extern crate crossbeam_channel;
 extern crate queuingtask;
 
