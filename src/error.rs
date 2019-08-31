@@ -5,8 +5,10 @@ use std::io;
 use std::sync::MutexGuard;
 use std::sync::PoisonError;
 use std::num::ParseIntError;
-use std::sync::mpsc::SendError;
-use std::sync::mpsc::RecvError;
+
+use crossbeam_channel::SendError;
+use crossbeam_channel::RecvError;
+
 use command::UsiCommand;
 use selfmatch::SelfMatchMessage;
 

@@ -6,5 +6,6 @@ authors = ["jinpu"]
 [dependencies]
 chrono = "0.4"
 rand = "0.4"
+crossbeam-channel = "0.3.9"
 [dependencies.queuingtask]
 git = "https://github.com/j6k1/queuingtask.git"

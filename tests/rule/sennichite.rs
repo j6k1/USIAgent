@@ -53,7 +53,6 @@ fn test_is_sennichite_sente() {
 			mhash = hasher.calc_main_hash(mhash,Teban::Sente,state.get_banmen(),&mc,m,&None);
 			shash = hasher.calc_sub_hash(shash,Teban::Sente,state.get_banmen(),&mc,m,&None);
 			state = next;
-			mc = nmc;
 		}
 	}
 
@@ -105,7 +104,6 @@ fn test_is_sennichite_gote() {
 			mhash = hasher.calc_main_hash(mhash,Teban::Gote,state.get_banmen(),&mc,m,&None);
 			shash = hasher.calc_sub_hash(shash,Teban::Gote,state.get_banmen(),&mc,m,&None);
 			state = next;
-			mc = nmc;
 		}
 	}
 

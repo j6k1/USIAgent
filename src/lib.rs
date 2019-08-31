@@ -1,5 +1,6 @@
 extern crate chrono;
 extern crate rand;
+extern crate crossbeam_channel;
 extern crate queuingtask;
 
 pub mod event;
@@ -24,11 +25,11 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::sync::mpsc;
 use std::marker::Send;
 use std::marker::PhantomData;
 use std::collections::HashMap;
 
+use crossbeam_channel::unbounded;
 use queuingtask::ThreadQueue;
 
 use command::*;
@@ -514,7 +515,7 @@ impl<T,E> UsiAgent<T,E>
 
 							match thread_queue.lock() {
 								Ok(mut thread_queue) => {
-									let (sender,receiver) = mpsc::channel();
+									let (sender,receiver) = unbounded();
 
 									let info_sender = USIInfoSender::new(sender.clone());
 
@@ -624,7 +625,7 @@ impl<T,E> UsiAgent<T,E>
 
 							match thread_queue.lock() {
 								Ok(mut thread_queue) => {
-									let (sender,receiver) = mpsc::channel();
+									let (sender,receiver) = unbounded();
 
 									let info_sender = USIInfoSender::new(sender.clone());
 
@@ -713,7 +714,7 @@ impl<T,E> UsiAgent<T,E>
 
 							match thread_queue.lock() {
 								Ok(mut thread_queue) => {
-									let (sender,receiver) = mpsc::channel();
+									let (sender,receiver) = unbounded();
 
 									let info_sender = USIInfoSender::new(sender.clone());
 

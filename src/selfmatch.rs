@@ -23,19 +23,20 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::sync::mpsc::Sender;
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::SendError;
 use std::thread::JoinHandle;
 use std::marker::Send;
 use std::marker::PhantomData;
-use std::sync::mpsc;
 use std::time::{Instant,Duration};
 use std::collections::HashMap;
 use std::io::Write;
 use std::io::BufWriter;
 use std::fs;
 use std::fs::OpenOptions;
+
+use crossbeam_channel::unbounded;
+use crossbeam_channel::Sender;
+use crossbeam_channel::Receiver;
+use crossbeam_channel::SendError;
 
 pub trait SelfMatchKifuWriter {
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError>;
@@ -311,9 +312,9 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 		let info_sender_arc = self.info_sender.clone();
 
-		let (ss,sr) = mpsc::channel();
-		let (cs1,cr1) = mpsc::channel();
-		let (cs2,cr2) = mpsc::channel();
+		let (ss,sr) = unbounded();
+		let (cs1,cr1) = unbounded();
+		let (cs2,cr2) = unbounded();
 		let mut cr = vec![cr1,cr2];
 
 		{

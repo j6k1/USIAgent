@@ -3,13 +3,14 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::sync::mpsc::Receiver;
-use std::sync::mpsc::Sender;
 use std::collections::HashMap;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::error::Error;
 use std::time::Instant;
+
+use crossbeam_channel::Sender;
+use crossbeam_channel::Receiver;
 
 use command::*;
 use error::*;
