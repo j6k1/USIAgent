@@ -761,7 +761,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											cs[cs_index].clone(),
 											[cs[0].clone(),cs[1].clone()],
 											&sr,
-											SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::Sennichite)
+											SelfMatchGameEndState::Foul(teban,FoulKind::Sennichite)
 										)?;
 										break;
 									}
