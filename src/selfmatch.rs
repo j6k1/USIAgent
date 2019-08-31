@@ -705,8 +705,6 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									shash = hasher.calc_sub_hash(shash,teban,&state.get_banmen(),&mc,m,&o);
 
 									mc = nmc;
-									teban = teban.opposite();
-
 									state = next;
 
 									if Rule::is_put_fu_and_mate(&state,teban,&mc,m) {
@@ -718,14 +716,14 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											cs[cs_index].clone(),
 											[cs[0].clone(),cs[1].clone()],
 											&sr,
-											SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::PutFuAndMate)
+											SelfMatchGameEndState::Foul(teban,FoulKind::PutFuAndMate)
 										)?;
 										break;
 									}
 
 									if Rule::is_sennichite_by_oute(
 										&state,
-										teban.opposite(),mhash,shash,
+										teban,mhash,shash,
 										&oute_kyokumen_map
 									) {
 										kifu_writer(&sfen,&mvs.into_iter()
@@ -736,19 +734,19 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											cs[cs_index].clone(),
 											[cs[0].clone(),cs[1].clone()],
 											&sr,
-											SelfMatchGameEndState::Foul(teban.opposite(),FoulKind::SennichiteOu)
+											SelfMatchGameEndState::Foul(teban,FoulKind::SennichiteOu)
 										)?;
 										break;
 									}
 
 									Rule::update_sennichite_by_oute_map(
 										&state,
-										teban.opposite(),mhash,shash,
+										teban,mhash,shash,
 										&mut oute_kyokumen_map
 									);
 
 									if Rule::is_sennichite(
-										&state,teban.opposite(),mhash,shash,&kyokumen_map
+										&state,teban,mhash,shash,&kyokumen_map
 									) {
 										kifu_writer(&sfen,&mvs.into_iter()
 																.map(|m| m.to_move())
@@ -764,8 +762,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 									}
 
 									Rule::update_sennichite_map(
-										&state,teban.opposite(),mhash,shash,&mut kyokumen_map
+										&state,teban,mhash,shash,&mut kyokumen_map
 									);
+									teban = teban.opposite();
+
 									ponders[cs_index] = pm.map(|pm| pm.to_applied_move());
 
 									match pm {
