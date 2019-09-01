@@ -49,7 +49,7 @@ fn test_is_sennichite_sente() {
 	let m = Move::To(KomaSrcPosition(9-4,7+1),KomaDstToPosition(9-7,7+1,false)).to_applied_move();
 
 	match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m) {
-		(next,nmc,_) => {
+		(next,_,_) => {
 			mhash = hasher.calc_main_hash(mhash,Teban::Sente,state.get_banmen(),&mc,m,&None);
 			shash = hasher.calc_sub_hash(shash,Teban::Sente,state.get_banmen(),&mc,m,&None);
 			state = next;
@@ -100,7 +100,7 @@ fn test_is_sennichite_gote() {
 	let m = Move::To(KomaSrcPosition(9-(8-4),(8-7)+1),KomaDstToPosition(9-(8-7),(8-7)+1,false)).to_applied_move();
 
 	match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m) {
-		(next,nmc,_) => {
+		(next,_,_) => {
 			mhash = hasher.calc_main_hash(mhash,Teban::Gote,state.get_banmen(),&mc,m,&None);
 			shash = hasher.calc_sub_hash(shash,Teban::Gote,state.get_banmen(),&mc,m,&None);
 			state = next;

@@ -95,6 +95,7 @@ impl SelfMatchKifuWriter for FileSfenKifuWriter {
 		Ok(())
 	}
 }
+#[derive(Debug)]
 enum TimeoutKind {
 	Never,
 	Turn,
@@ -412,6 +413,7 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 		let uptime = self.uptime.map(|t| t);
 		let number_of_games = self.number_of_games.map(|n| n);
 		let game_time_limit = self.game_time_limit;
+		let user_event_queue = user_event_queue_arc.clone();
 
 		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
 			let cs = [cs1.clone(),cs2.clone()];
@@ -632,21 +634,21 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 
 					let think_start_time = Instant::now();
 
-					let timeout = current_time_limit.and_then(|cl| uptime.map(|u| {
+					let timeout = current_time_limit.map(|cl| uptime.map(|u| {
 						if start_time + u < cl {
 							start_time + u - Instant::now()
 						} else {
 							cl - Instant::now()
 						}
-					})).map(|d| after(d)).unwrap_or(never());
+					}).unwrap_or(cl - Instant::now())).map(|d| after(d)).unwrap_or_else(|| uptime.map(|d| after(d)).unwrap_or(never()));
 
-					let timeout_kind = current_time_limit.and_then(|cl| uptime.map(|u| {
+					let timeout_kind = current_time_limit.map(|cl| uptime.map(|u| {
 						if start_time + u < cl {
 							TimeoutKind::Uptime
 						} else {
 							TimeoutKind::Turn
 						}
-					})).unwrap_or(TimeoutKind::Never);
+					}).unwrap_or(TimeoutKind::Turn)).unwrap_or(TimeoutKind::Never);
 
 					select! {
 						recv(sr) -> message => {
@@ -912,24 +914,41 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 							}
 						},
 						recv(timeout) -> message => {
-							match message {
+							match message? {
 								_ => {
 									match timeout_kind {
 										TimeoutKind::Turn => {
 											kifu_writer(&sfen,&mvs.into_iter().map(|m| m.to_move()).collect::<Vec<Move>>());
-											on_gameend(
-												cs[(cs_index+1) % 2].clone(),
-												cs[cs_index].clone(),
-												[cs[0].clone(),cs[1].clone()],
-												&sr,
-												SelfMatchGameEndState::Timeover(teban))?;
+											match user_event_queue[cs_index].lock() {
+												Ok(mut user_event_queue) => {
+													user_event_queue.push(UserEvent::Stop);
+												},
+												Err(ref e) => {
+													on_error_handler.lock().map(|h| h.call(e)).is_err();
+												}
+											}
+
+											match sr.recv()? {
+												SelfMatchMessage::NotifyMove(_) => {
+													on_gameend(
+													cs[(cs_index+1) % 2].clone(),
+													cs[cs_index].clone(),
+													[cs[0].clone(),cs[1].clone()],
+													&sr,
+													SelfMatchGameEndState::Timeover(teban))?;
+
+												},
+												_ => {
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"An invalid message was sent to the self-match management thread."
+													)));
+												}
+											}
 
 											break;
 										},
 										TimeoutKind::Uptime => {
-											if uptime.map(|u| Instant::now() - start_time >= u).unwrap_or(false) {
-												break 'gameloop;
-											}
+											break 'gameloop;
 										},
 										_ => (),
 									}
