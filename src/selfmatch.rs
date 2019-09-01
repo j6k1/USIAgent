@@ -1,20 +1,3 @@
-use command::*;
-use event::*;
-use error::*;
-use input::*;
-use output::*;
-use player::*;
-use shogi::*;
-use hash::*;
-use Logger;
-use logger::FileLogger;
-use OnErrorHandler;
-use TryFrom;
-use SandBox;
-use rule;
-use rule::*;
-use protocol::*;
-
 use chrono::prelude::*;
 
 use std::fmt;
@@ -39,6 +22,23 @@ use crossbeam_channel::Receiver;
 use crossbeam_channel::SendError;
 use crossbeam_channel::after;
 use crossbeam_channel::never;
+
+use command::*;
+use event::*;
+use error::*;
+use input::*;
+use output::*;
+use player::*;
+use shogi::*;
+use hash::*;
+use Logger;
+use logger::FileLogger;
+use OnErrorHandler;
+use TryFrom;
+use SandBox;
+use rule;
+use rule::*;
+use protocol::*;
 
 pub trait SelfMatchKifuWriter {
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError>;
