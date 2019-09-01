@@ -3169,7 +3169,7 @@ fn test_game_time_limit_less_uptime_1times() {
 			player2,
 			info_sender,
 			UsiGoTimeLimit::Limit(Some((10000,10000)),None),
-			Some(Duration::from_millis(1000)),Some(1)
+			Some(Duration::from_millis(1000)),None
 		);
 
 		let input_read_handler = create_input_read_handler(&engine.system_event_queue);
@@ -3401,7 +3401,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 			player2,
 			info_sender,
 			UsiGoTimeLimit::Limit(Some((3000,3000)),None),
-			Some(Duration::from_millis(1200)),Some(1)
+			Some(Duration::from_millis(1200)),None
 		);
 
 		let input_read_handler = create_input_read_handler(&engine.system_event_queue);
