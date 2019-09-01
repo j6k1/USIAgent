@@ -234,8 +234,6 @@ fn test_resign_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -305,6 +303,7 @@ fn test_resign_1times() {
 			|| false,
 			None,
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -470,8 +469,6 @@ fn test_invalidmove_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -541,6 +538,7 @@ fn test_invalidmove_1times() {
 			|| false,
 			None,
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -710,8 +708,6 @@ fn test_invalidmove_by_from_blank_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -781,6 +777,7 @@ fn test_invalidmove_by_from_blank_1times() {
 			|| false,
 			None,
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -942,8 +939,6 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -1013,6 +1008,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 			|| false,
 			Some(Box::new(|| String::from("startpos moves 7g7f 3c3d"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -1159,8 +1155,6 @@ fn test_win_move_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -1230,6 +1224,7 @@ fn test_win_move_1times() {
 			|| false,
 			Some(Box::new(|| String::from("sfen lnsgkgsnl/1r2G2b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGK1SNL b - 1"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -1361,8 +1356,6 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -1432,6 +1425,7 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 			|| false,
 			Some(Box::new(|| String::from("sfen 3nkn3/3s1s3/9/4L4/9/9/1PPPPPPPP/1B5R1/LNSGK1SNL b Prb2g2sl9p 1"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -1563,8 +1557,6 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -1634,6 +1626,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 			|| false,
 			Some(Box::new(|| String::from("sfen 4k4/9/5R3/9/9/9/PPPPPPPPP/1B52/LNSGKGSNL b rb2g2s2n2l9p 1 moves 4c5c 5a4a 5c4c 4a5a"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -1771,8 +1764,6 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -1842,6 +1833,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 			|| false,
 			Some(Box::new(|| String::from("sfen 4k4/9/5R3/9/9/9/PPPPPPPPP/1B52/LNSGKGSNL b rb2g2s2n2l9p 1 moves 4c5c 5a4a 5c6c 4a5a"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -1981,8 +1973,6 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -2052,6 +2042,7 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 			|| false,
 			Some(Box::new(|| String::from("startpos moves 4i4h 6a6b 4h4i 6b6a 4i4h 6a6b 4h4i 6b6a 4i4h 6a6b 4h4i 6b6a"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -2213,8 +2204,6 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -2284,6 +2273,7 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 			|| false,
 			Some(Box::new(|| String::from("sfen 4k4/9/5R3/9/9/9/PPPPPPPPP/1B52/LNSGKGSNL b rb2g2s2n2l9p 1"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -2557,8 +2547,6 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::None,
 			None,Some(1)
@@ -2628,6 +2616,7 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 			|| false,
 			Some(Box::new(|| String::from("startpos"))),
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -2921,8 +2910,6 @@ fn test_game_time_limit_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::Limit(Some((1000,1000)),None),
 			None,Some(1)
@@ -2992,6 +2979,7 @@ fn test_game_time_limit_1times() {
 			|| false,
 			None,
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -3165,8 +3153,6 @@ fn test_game_time_limit_less_uptime_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::Limit(Some((10000,10000)),None),
 			Some(Duration::from_millis(1000)),None
@@ -3236,6 +3222,7 @@ fn test_game_time_limit_less_uptime_1times() {
 			|| false,
 			None,
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
@@ -3397,8 +3384,6 @@ fn test_game_uptime_less_game_time_limit_1times() {
 		let info_sender = MockInfoSender::new(is);
 
 		let mut engine = SelfMatchEngine::new(
-			player1,
-			player2,
 			info_sender,
 			UsiGoTimeLimit::Limit(Some((3000,3000)),None),
 			Some(Duration::from_millis(1200)),None
@@ -3468,6 +3453,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 			|| false,
 			None,
 			None, input_reader, input_read_handler,
+			player1,player2,
 			create_options(), create_options(), logger, |h,e| {
 				if let Some(h) = h {
 					let _ = h.lock().map(|h| h.call(e));
