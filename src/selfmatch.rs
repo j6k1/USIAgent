@@ -948,7 +948,25 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 											break;
 										},
 										TimeoutKind::Uptime => {
-											break 'gameloop;
+											match user_event_queue[cs_index].lock() {
+												Ok(mut user_event_queue) => {
+													user_event_queue.push(UserEvent::Stop);
+												},
+												Err(ref e) => {
+													on_error_handler.lock().map(|h| h.call(e)).is_err();
+												}
+											}
+
+											match sr.recv()? {
+												SelfMatchMessage::NotifyMove(_) => {
+													break 'gameloop;
+												},
+												_ => {
+													return Err(SelfMatchRunningError::InvalidState(String::from(
+														"An invalid message was sent to the self-match management thread."
+													)));
+												}
+											}
 										},
 										_ => (),
 									}
