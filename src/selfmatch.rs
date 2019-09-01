@@ -963,7 +963,11 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 												}
 											}
 										},
-										_ => (),
+										_ => {
+											return Err(SelfMatchRunningError::InvalidState(String::from(
+												"Timeout kind is invalid."
+											)));
+										},
 									}
 								}
 							}
