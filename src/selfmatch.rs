@@ -640,7 +640,10 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						} else {
 							cl - Instant::now()
 						}
-					}).unwrap_or(cl - Instant::now())).map(|d| after(d)).unwrap_or_else(|| uptime.map(|d| after(d)).unwrap_or(never()));
+					}).unwrap_or(cl - Instant::now()))
+						.map(|d| after(d))
+						.unwrap_or_else(|| uptime.map(|u| after(start_time + u - Instant::now()))
+						.unwrap_or(never()));
 
 					let timeout_kind = current_time_limit.map(|cl| uptime.map(|u| {
 						if start_time + u < cl {
@@ -648,7 +651,8 @@ impl<T,E,S> SelfMatchEngine<T,E,S>
 						} else {
 							TimeoutKind::Turn
 						}
-					}).unwrap_or(TimeoutKind::Turn)).unwrap_or(TimeoutKind::Never);
+					}).unwrap_or(TimeoutKind::Turn))
+						.unwrap_or_else(|| uptime.map(|_| TimeoutKind::Uptime).unwrap_or(TimeoutKind::Never));
 
 					select! {
 						recv(sr) -> message => {
