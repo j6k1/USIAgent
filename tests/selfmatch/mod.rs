@@ -4129,7 +4129,7 @@ fn test_abort_1times() {
 				.add_handler(SelfMatchEventKind::GameEnd, move |_,e| {
 					match e {
 						&SelfMatchEvent::GameEnd(_) => {
-							let _ = hes.send(Err(String::from("GameEnd event is invalid.")));
+							let _ = hes.send(Ok(EventState::GameEnd));
 							Ok(())
 						},
 						e => Err(EventHandlerError::InvalidState(e.event_kind())),
