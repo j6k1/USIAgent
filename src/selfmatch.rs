@@ -111,6 +111,7 @@ pub enum SelfMatchMessage {
 	PonderHit,
 	PonderNG,
 	GameEnd(GameEndState),
+	Abort,
 	Quit,
 	Error(usize),
 }
@@ -829,6 +830,8 @@ impl<E,S> SelfMatchEngine<E,S>
 									match self_match_event_queue.lock() {
 										Ok(mut self_match_event_queue) => {
 											self_match_event_queue.push(SelfMatchEvent::Abort);
+											cs[0].send(SelfMatchMessage::Abort)?;
+											cs[1].send(SelfMatchMessage::Abort)?;
 										},
 										Err(ref e) => {
 											on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -1119,6 +1122,9 @@ impl<E,S> SelfMatchEngine<E,S>
 
 												return Ok(());
 											},
+											SelfMatchMessage::Abort => {
+												break;
+											},
 											SelfMatchMessage::Error(_) => {
 												return Ok(());
 											}
@@ -1147,6 +1153,9 @@ impl<E,S> SelfMatchEngine<E,S>
 										};
 										ss.send(SelfMatchMessage::Ready)?;
 
+										break;
+									},
+									SelfMatchMessage::Abort => {
 										break;
 									},
 									SelfMatchMessage::Quit => {
