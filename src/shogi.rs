@@ -203,7 +203,10 @@ impl MochigomaCollections {
 	pub fn is_empty(&self) -> bool {
 		match self {
 			&MochigomaCollections::Empty => true,
-			&MochigomaCollections::Pair(ref ms, ref mg) => ms.is_empty() && mg.is_empty()
+			&MochigomaCollections::Pair(ref ms, ref mg) => {
+				(ms.is_empty() && mg.is_empty()) ||
+				(ms.values().fold(0,|acc,&c| acc + c) == 0 && mg.values().fold(0,|acc,&c| acc + c) == 0)
+			}
 		}
 	}
 }
