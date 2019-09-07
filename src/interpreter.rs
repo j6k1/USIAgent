@@ -117,7 +117,13 @@ impl USIInterpreter {
 										"usinewgame" => event_queue.push(SystemEvent::UsiNewGame),
 										"position" if f.len() > 1 => {
 											match position_parser.parse(&f[1..]) {
-												Ok(e) => event_queue.push(e),
+												Ok(p) => {
+													match p {
+														PositionParseResult(t,p,n,m) => {
+															event_queue.push(SystemEvent::Position(t,p,n,m));
+														}
+													}
+												},
 												Err(ref e) => {
 													on_error_handler.lock().map(|h| h.call(e)).is_err();
 												}
@@ -125,7 +131,9 @@ impl USIInterpreter {
 										}
 										"go" => {
 											match go_parser.parse(&f[1..]) {
-												Ok(e) => event_queue.push(e),
+												Ok(g) => {
+													event_queue.push(SystemEvent::Go(g));
+												},
 												Err(ref e) => {
 													on_error_handler.lock().map(|h| h.call(e)).is_err();
 												}

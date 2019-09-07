@@ -516,6 +516,28 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 		})
 	}
 }
+pub struct PositionParseResult(pub Teban, pub UsiInitialPosition, pub u32,pub Vec<Move>);
+impl PositionParseResult {
+	pub fn extract(&self) -> (Teban, Banmen, MochigomaCollections, u32, Vec<Move>) {
+		match self {
+			&PositionParseResult(teban, ref p, n, ref m) => {
+				let (banmen,mc) = match p {
+					&UsiInitialPosition::Startpos => {
+						(BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					},
+					&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
+						(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
+					},
+					&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
+						(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					}
+				};
+
+				(teban,banmen,mc,n,m.clone())
+			}
+		}
+	}
+}
 pub struct PositionParser {
 }
 impl PositionParser {
@@ -523,7 +545,7 @@ impl PositionParser {
 		PositionParser{}
 	}
 
-	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<PositionParseResult,TypeConvertError<String>> {
 		let p = match params.len() {
 			0 => {
 				return Err(TypeConvertError::SyntaxError(String::from(
@@ -544,11 +566,11 @@ impl PositionParser {
 		}
 	}
 
-	fn parse_startpos<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+	fn parse_startpos<'a>(&self,params:&'a [&'a str]) -> Result<PositionParseResult,TypeConvertError<String>> {
 		let mut r:Vec<Move> = Vec::new();
 
 		if params.len() == 0 {
-			return Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r));
+			return Ok(PositionParseResult(Teban::Sente,UsiInitialPosition::Startpos,1,r));
 		}
 
 		match params[0] {
@@ -557,7 +579,7 @@ impl PositionParser {
 					r.push(Move::try_from(m)?);
 				}
 
-				Ok(SystemEvent::Position(Teban::Sente,UsiInitialPosition::Startpos,1,r))
+				Ok(PositionParseResult(Teban::Sente,UsiInitialPosition::Startpos,1,r))
 			},
 			_ => {
 				return Err(TypeConvertError::SyntaxError(String::from(
@@ -567,7 +589,7 @@ impl PositionParser {
 		}
 	}
 
-	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent,TypeConvertError<String>> {
+	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<PositionParseResult,TypeConvertError<String>> {
 		if params.len() > 4 && (params[4] != "moves" || params.len() <= 5) {
 			return Err(TypeConvertError::SyntaxError(String::from(
 					"The format of the position command input is invalid."
@@ -584,7 +606,7 @@ impl PositionParser {
 						}
 					}
 
-					SystemEvent::Position(
+					PositionParseResult(
 						Teban::try_from(t)?,
 						UsiInitialPosition::Sfen(Banmen::try_from(p)?,MochigomaCollections::try_from(m)?),
 						n.parse::<u32>()?,mv)
@@ -599,16 +621,16 @@ impl PositionParser {
 	}
 }
 struct UsiGoCreator {
-	f:Box<Fn(UsiGoTimeLimit) -> SystemEvent>,
+	f:Box<Fn(UsiGoTimeLimit) -> UsiGo>,
 }
 impl UsiGoCreator {
-	pub fn new(f:Box<Fn(UsiGoTimeLimit) -> SystemEvent>) -> UsiGoCreator {
+	pub fn new(f:Box<Fn(UsiGoTimeLimit) -> UsiGo>) -> UsiGoCreator {
 		UsiGoCreator {
 			f:f,
 		}
 	}
 
-	pub fn create(&self,l:UsiGoTimeLimit) -> SystemEvent {
+	pub fn create(&self,l:UsiGoTimeLimit) -> UsiGo {
 		(*self.f)(l)
 	}
 }
@@ -619,30 +641,28 @@ impl GoParser {
 		GoParser{}
 	}
 
-	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<SystemEvent, TypeConvertError<String>> {
+	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<UsiGo, TypeConvertError<String>> {
 		if params.len() == 0 {
-			return Ok(SystemEvent::Go(UsiGo::Go(UsiGoTimeLimit::None)));
+			return Ok(UsiGo::Go(UsiGoTimeLimit::None));
 		}
 
 		match params[0]{
 			"mate" if params.len() == 2 => {
 				match params[1] {
-					"infinite" => return Ok(SystemEvent::Go(UsiGo::Mate(UsiGoMateTimeLimit::Infinite))),
-					n => return Ok(SystemEvent::Go(
-									UsiGo::Mate(UsiGoMateTimeLimit::Limit(n.parse::<u32>()?)))),
+					"infinite" => return Ok(UsiGo::Mate(UsiGoMateTimeLimit::Infinite)),
+					n => return Ok(UsiGo::Mate(UsiGoMateTimeLimit::Limit(n.parse::<u32>()?))),
 				}
 			},
-			"mate" => return Ok(SystemEvent::Go(
-									UsiGo::Mate(UsiGoMateTimeLimit::None))),
+			"mate" => return Ok(UsiGo::Mate(UsiGoMateTimeLimit::None)),
 			_ => (),
 		}
 
 		let (params,f) = match params[0] {
 			"ponder" if params.len() == 1 => {
-				return Ok(SystemEvent::Go(UsiGo::Ponder(UsiGoTimeLimit::None)));
+				return Ok(UsiGo::Ponder(UsiGoTimeLimit::None));
 			},
-			"ponder" => (&params[1..], UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Ponder(l))))),
-			_ => (params, UsiGoCreator::new(Box::new(|l| SystemEvent::Go(UsiGo::Go(l))))),
+			"ponder" => (&params[1..], UsiGoCreator::new(Box::new(|l| UsiGo::Ponder(l)))),
+			_ => (params, UsiGoCreator::new(Box::new(|l| UsiGo::Go(l)))),
 		};
 
 		match params[0] {

@@ -7825,25 +7825,7 @@ fn test_legal_moves_all_sente() {
 	let position_parser = PositionParser::new();
 
 	let (_, banmen, mc, _, _) = match position_parser.parse(&INITIAL_SFEN.split(" ").collect::<Vec<&str>>()).unwrap() {
-		position => match position {
-			SystemEvent::Position(teban, p, n, m) => {
-				let(banmen,mc) = match p {
-					UsiInitialPosition::Startpos => {
-						(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
-					},
-					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
-						(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
-					},
-					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
-						(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
-					}
-				};
-				(teban,banmen,mc,n,m)
-			},
-			_ => {
-				panic!("invalid state.");
-			}
-		}
+		position => position.extract()
 	};
 
 	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
@@ -7859,25 +7841,7 @@ fn test_legal_moves_all_gote() {
 	let position_parser = PositionParser::new();
 
 	let (_, banmen, mc, _, _) = match position_parser.parse(&INITIAL_SFEN.split(" ").collect::<Vec<&str>>()).unwrap() {
-		position => match position {
-			SystemEvent::Position(teban, p, n, m) => {
-				let(banmen,mc) = match p {
-					UsiInitialPosition::Startpos => {
-						(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
-					},
-					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
-						(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
-					},
-					UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
-						(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
-					}
-				};
-				(teban,banmen,mc,n,m)
-			},
-			_ => {
-				panic!("invalid state.");
-			}
-		}
+		position => position.extract()
 	};
 
 	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),

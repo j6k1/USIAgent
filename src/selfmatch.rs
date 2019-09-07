@@ -36,7 +36,6 @@ use logger::FileLogger;
 use OnErrorHandler;
 use TryFrom;
 use SandBox;
-use rule;
 use rule::*;
 use protocol::*;
 
@@ -499,32 +498,8 @@ impl<E,S> SelfMatchEngine<E,S>
 
 				let sfen = initial_position_creator();
 				let (teban, banmen, mc, n, mvs) = match position_parser.parse(&sfen.split(" ").collect::<Vec<&str>>()) {
-					Ok(mut position) => match position {
-						SystemEvent::Position(teban, p, n, m) => {
-							let(banmen,mc) = match p {
-								UsiInitialPosition::Startpos => {
-									(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
-								},
-								UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
-									(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
-								},
-								UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
-									(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
-								}
-							};
-							(teban,banmen,mc,n,m)
-						},
-						e => {
-							cs[0].send(SelfMatchMessage::Error(0))?;
-							cs[1].send(SelfMatchMessage::Error(1))?;
-
-							quit_notification();
-
-							return Err(SelfMatchRunningError::InvalidState(format!(
-								"The type of event passed and the event being processed do not match. (Event kind = {:?})",
-								 e.event_kind()
-							)));
-						}
+					Ok(position) => {
+						position.extract()
 					},
 					Err(ref e) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
