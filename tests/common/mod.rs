@@ -25,6 +25,7 @@ use usiagent::output::USIOutputWriter;
 use usiagent::shogi::*;
 use usiagent::event::*;
 use usiagent::command::*;
+use usiagent::rule::*;
 use usiagent::logger::Logger;
 use usiagent::player::USIPlayer;
 use usiagent::player::InfoSender;
@@ -272,8 +273,10 @@ pub struct MockPlayer {
 	pub options_it:ConsumedIterator<(String,SysEventOption)>,
 	pub sender:Sender<Result<ActionKind,String>>,
 	info_send_notifier:Sender<()>,
+	pub started:bool,
 	pub stop:bool,
 	pub quited:bool,
+	pub kyokumen:Option<Kyokumen>,
 }
 impl MockPlayer {
 
@@ -322,8 +325,10 @@ impl MockPlayer {
 			]),
 			sender:sender,
 			info_send_notifier:info_send_notifier,
+			started:false,
 			stop:false,
 			quited:false,
+			kyokumen:None,
 		}
 	}
 }
@@ -393,6 +398,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 
 	fn newgame(&mut self) -> Result<(),CommonError> {
 		self.stop = false;
+		self.started = true;
 		let _ = self.sender.send(Ok(ActionKind::NewGame));
 		Ok(())
 	}
@@ -458,6 +464,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 			event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
 			_:Arc<Mutex<OnErrorHandler<L>>>)
 	-> Result<(),CommonError> where L: Logger, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
+		self.started = false;
 		(self.on_gameover.next()
 			.expect("Iterator of gameover callback is empty."))(
 			self,s,event_queue
@@ -468,6 +475,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 		let _ = self.sender.send(Ok(ActionKind::OnQuit));
 		self.stop = true;
 		self.quited = true;
+		self.started = false;
 		Ok(())
 	}
 
@@ -475,6 +483,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 		let _ = self.sender.send(Ok(ActionKind::Quit));
 		self.stop = true;
 		self.quited = true;
+		self.started = false;
 		Ok(())
 	}
 }

@@ -199,6 +199,13 @@ impl MochigomaCollections {
 			MochigomaCollections::Pair(ms,mg)
 		}
 	}
+
+	pub fn is_empty(&self) -> bool {
+		match self {
+			&MochigomaCollections::Empty => true,
+			&MochigomaCollections::Pair(ref ms, ref mg) => ms.is_empty() && mg.is_empty()
+		}
+	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum ObtainKind {

@@ -6,6 +6,8 @@ use crossbeam_channel::Receiver;
 use crossbeam_channel::unbounded;
 
 use usiagent::UsiAgent;
+use usiagent::player::USIPlayer;
+use usiagent::rule::*;
 use usiagent::shogi::*;
 use usiagent::rule::BANMEN_START_POS;
 use usiagent::command::*;
@@ -1060,6 +1062,471 @@ fn test_check_kyokumen_with_sfen_gote() {
 	assert_eq!(res,Ok(ActionKind::Think));
 
 	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+
+	assert_eq!(&*res,"bestmove resign");
+
+	let _ = s.send(String::from("gameover lose"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+
+	assert_eq!(res,Ok(ActionKind::GameOver));
+
+
+	let _ = s.send(String::from("quit"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Quit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Quit));
+
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
+}
+#[test]
+fn test_check_kyokumen_nowait() {
+	let (pms,pmr) = unbounded();
+	let (pns,_) = unbounded();
+	let (ts,tr) = unbounded();
+
+	let logger = StdErrorLogger::new();
+	let (input_reader,s) = {
+		let (s,r) = unbounded();
+
+		let input_reader = MockInputReader::new(r);
+		(input_reader,s)
+	};
+
+	let (output_writer,r) = {
+		let (s,r) = unbounded();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let _ = thread::spawn(move || {
+		let player = MockPlayer::new(pms,pns,
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,t,banmen,ms,mg,_,m| {
+											if !player.started {
+												let _ = player.sender.send(Err(String::from("player not started.")));
+											} else if t != Teban::Sente {
+												let _ = player.sender.send(Err(String::from("Teban is invalid.")));
+											} else if banmen != BANMEN_START_POS {
+												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
+											} else if !ms.is_empty() || !mg.is_empty() {
+												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
+											} else if m != vec![] {
+												let _ = player.sender.send(Err(String::from("moves is invalid.")));
+											} else {
+												let _ = player.sender.send(Ok(ActionKind::SetPosition));
+												let mc = MochigomaCollections::Pair(ms,mg);
+
+												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
+														mc,m.into_iter()
+														.map(|m| m.to_applied_move())
+														.collect::<Vec<AppliedMove>>(),
+														(),
+														|_,_,_,_,_,_,_| {
+
+														});
+												player.kyokumen = Some(Kyokumen {
+													state:state,
+													mc:mc,
+													teban:t
+												});
+											}
+											Ok(())
+										}),
+										Box::new(|player,t,banmen,ms,mg,_,m| {
+											if t != Teban::Sente {
+												let _ = player.sender.send(Err(String::from("Teban is invalid.")));
+											} else if banmen != BANMEN_START_POS {
+												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
+											} else if !ms.is_empty() || !mg.is_empty() {
+												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
+											} else if m != vec![
+												Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+												Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false))
+											] {
+												let _ = player.sender.send(Err(String::from("moves is invalid.")));
+											} else {
+												let _ = player.sender.send(Ok(ActionKind::SetPosition));
+												let mc = MochigomaCollections::Pair(ms,mg);
+
+												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
+														mc,m.into_iter()
+														.map(|m| m.to_applied_move())
+														.collect::<Vec<AppliedMove>>(),
+														(),
+														|_,_,_,_,_,_,_| {
+
+														});
+												player.kyokumen = Some(Kyokumen {
+													state:state,
+													mc:mc,
+													teban:t
+												});
+											}
+											Ok(())
+										}),
+										Box::new(|player,t,banmen,ms,mg,_,m| {
+											if t != Teban::Sente {
+												let _ = player.sender.send(Err(String::from("Teban is invalid.")));
+											} else if banmen != BANMEN_START_POS {
+												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
+											} else if !ms.is_empty() || !mg.is_empty() {
+												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
+											} else if m != vec![
+												Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+												Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+												Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),
+												Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false))
+											] {
+												let _ = player.sender.send(Err(String::from("moves is invalid.")));
+											} else {
+												let _ = player.sender.send(Ok(ActionKind::SetPosition));
+												let mc = MochigomaCollections::Pair(ms,mg);
+
+												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
+														mc,m.into_iter()
+														.map(|m| m.to_applied_move())
+														.collect::<Vec<AppliedMove>>(),
+														(),
+														|_,_,_,_,_,_,_| {
+
+														});
+												player.kyokumen = Some(Kyokumen {
+													state:state,
+													mc:mc,
+													teban:t
+												});
+											}
+											Ok(())
+										}),
+										Box::new(|player,t,banmen,ms,mg,_,m| {
+											if t != Teban::Sente {
+												let _ = player.sender.send(Err(String::from("Teban is invalid.")));
+											} else if banmen != BANMEN_START_POS {
+												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
+											} else if !ms.is_empty() || !mg.is_empty() {
+												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
+											} else if m != vec![
+												Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+												Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+												Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),
+												Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false)),
+												Move::To(KomaSrcPosition(1,5),KomaDstToPosition(1,4,false)),
+												Move::To(KomaSrcPosition(9,5),KomaDstToPosition(9,6,false))
+											] {
+												let _ = player.sender.send(Err(String::from("moves is invalid.")));
+											} else {
+												let _ = player.sender.send(Ok(ActionKind::SetPosition));
+												let mc = MochigomaCollections::Pair(ms,mg);
+
+												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
+														mc,m.into_iter()
+														.map(|m| m.to_applied_move())
+														.collect::<Vec<AppliedMove>>(),
+														(),
+														|_,_,_,_,_,_,_| {
+
+														});
+												player.kyokumen = Some(Kyokumen {
+													state:state,
+													mc:mc,
+													teban:t
+												});
+											}
+											Ok(())
+										}),
+										Box::new(|player,t,banmen,ms,mg,_,m| {
+											if t != Teban::Sente {
+												let _ = player.sender.send(Err(String::from("Teban is invalid.")));
+											} else if banmen != BANMEN_START_POS {
+												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
+											} else if !ms.is_empty() || !mg.is_empty() {
+												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
+											} else if m != vec![
+												Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+												Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+												Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),
+												Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false)),
+												Move::To(KomaSrcPosition(1,5),KomaDstToPosition(1,4,false)),
+												Move::To(KomaSrcPosition(9,5),KomaDstToPosition(9,6,false)),
+												Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),
+												Move::To(KomaSrcPosition(9,6),KomaDstToPosition(9,7,true))
+											] {
+												let _ = player.sender.send(Err(String::from("moves is invalid.")));
+											} else {
+												let _ = player.sender.send(Ok(ActionKind::SetPosition));
+												let mc = MochigomaCollections::Pair(ms,mg);
+
+												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
+														mc,m.into_iter()
+														.map(|m| m.to_applied_move())
+														.collect::<Vec<AppliedMove>>(),
+														(),
+														|_,_,_,_,_,_,_| {
+
+														});
+												player.kyokumen = Some(Kyokumen {
+													state:state,
+													mc:mc,
+													teban:t
+												});
+											}
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+											if let Some(kyokumen) = player.kyokumen.as_ref() {
+												if kyokumen.state == State::new(Banmen([
+													[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+													[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+													[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+													[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+													[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou]
+												])) && kyokumen.teban == Teban::Sente && kyokumen.mc.is_empty() {
+													let _ = player.sender.send(Ok(ActionKind::Think));
+												} else {
+													let _ = player.sender.send(Err(String::from("kyokumen is invalid.")));
+												}
+											} else {
+												let _ = player.sender.send(Err(String::from("kyokumen is not set.")));
+											}
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
+										}),Box::new(|player,_,_,_,_| {
+											if let Some(kyokumen) = player.kyokumen.as_ref() {
+												if kyokumen.state == State::new(Banmen([
+													[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+													[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+													[Blank,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+													[GFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,SFu],
+													[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,Blank],
+													[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+													[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou]
+												])) && kyokumen.teban == Teban::Sente && kyokumen.mc.is_empty() {
+													let _ = player.sender.send(Ok(ActionKind::Think));
+												} else {
+													let _ = player.sender.send(Err(String::from("kyokumen is invalid.")));
+												}
+											} else {
+												let _ = player.sender.send(Err(String::from("kyokumen is not set.")));
+											}
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
+										}),
+										Box::new(|player,_,_,_,_| {
+											if let Some(kyokumen) = player.kyokumen.as_ref() {
+												if kyokumen.state == State::new(Banmen([
+													[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+													[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+													[Blank,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[GFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank,SFu],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,Blank],
+													[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+													[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou]
+												])) && kyokumen.teban == Teban::Sente && kyokumen.mc.is_empty() {
+													let _ = player.sender.send(Ok(ActionKind::Think));
+												} else {
+													let _ = player.sender.send(Err(String::from("kyokumen is invalid.")));
+												}
+											} else {
+												let _ = player.sender.send(Err(String::from("kyokumen is not set.")));
+											}
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,5),KomaDstToPosition(1,4,false)),None))
+										}),
+										Box::new(|player,_,_,_,_| {
+											if let Some(kyokumen) = player.kyokumen.as_ref() {
+												if kyokumen.state == State::new(Banmen([
+													[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+													[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+													[Blank,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,SFu],
+													[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[GFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+													[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,Blank],
+													[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+													[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou]
+												])) && kyokumen.teban == Teban::Sente && kyokumen.mc.is_empty() {
+													let _ = player.sender.send(Ok(ActionKind::Think));
+												} else {
+													let _ = player.sender.send(Err(String::from("kyokumen is invalid.")));
+												}
+											} else {
+												let _ = player.sender.send(Err(String::from("kyokumen is not set.")));
+											}
+											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
+										}),
+										Box::new(|player,_,_,_,_| {
+											if let Some(kyokumen) = player.kyokumen.as_ref() {
+												if let &MochigomaCollections::Pair(ref ms,ref mg) = &kyokumen.mc {
+													if kyokumen.state == State::new(Banmen([
+														[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+														[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+														[Blank,GFu,GFu,GFu,GFu,GFu,GFu,GFu,SFuN],
+														[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+														[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+														[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+														[GFuN,SFu,SFu,SFu,SFu,SFu,SFu,SFu,Blank],
+														[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+														[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou]
+													])) && kyokumen.teban == Teban::Sente &&
+														ms.get(&MochigomaKind::Fu).unwrap_or(&0) ==&1 &&
+														ms.get(&MochigomaKind::Kyou).unwrap_or(&0) ==&0 &&
+														ms.get(&MochigomaKind::Kei).unwrap_or(&0) ==&0 &&
+														ms.get(&MochigomaKind::Gin).unwrap_or(&0) ==&0 &&
+														ms.get(&MochigomaKind::Kin).unwrap_or(&0) ==&0 &&
+														ms.get(&MochigomaKind::Kaku).unwrap_or(&0) ==&0 &&
+														ms.get(&MochigomaKind::Hisha).unwrap_or(&0) ==&0 &&
+														mg.get(&MochigomaKind::Fu).unwrap_or(&0) ==&1 &&
+														mg.get(&MochigomaKind::Kyou).unwrap_or(&0) ==&0 &&
+														mg.get(&MochigomaKind::Kei).unwrap_or(&0) ==&0 &&
+														mg.get(&MochigomaKind::Gin).unwrap_or(&0) ==&0 &&
+														mg.get(&MochigomaKind::Kin).unwrap_or(&0) ==&0 &&
+														mg.get(&MochigomaKind::Kaku).unwrap_or(&0) ==&0 &&
+														mg.get(&MochigomaKind::Hisha).unwrap_or(&0) ==&0 {
+
+														let _ = player.sender.send(Ok(ActionKind::Think));
+													} else {
+														let _ = player.sender.send(Err(String::from("kyokumen is invalid.")));
+													}
+												} else {
+													let _ = player.sender.send(Err(String::from("kyokumen is invalid.")));
+												}
+											} else {
+												let _ = player.sender.send(Err(String::from("kyokumen is not set.")));
+											}
+
+											Ok(BestMove::Resign)
+										})]),
+										ConsumedIterator::new(vec![]),
+										ConsumedIterator::new(vec![Box::new(|player,s,_| {
+											match s {
+												&GameEndState::Lose => {
+													let _ = player.sender.send(Ok(ActionKind::GameOver));
+												},
+												_ => {
+													let _ = player.sender.send(Err(String::from("gameend state is invalid.")));
+												}
+											}
+
+											Ok(())
+										})])
+		);
+		let agent = UsiAgent::new(player);
+
+		let _ = agent.start(input_reader,output_writer,logger,|h,e| {
+			if let Some(h) = h {
+				let _ = h.lock().map(|h| h.call(e));
+			}
+		});
+
+		let _ = ts.send(());
+	});
+
+	startup(&s,&r,&pmr);
+
+	let _ = s.send(String::from("isready"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::TakeReady timed out.");
+
+	assert_eq!(res,Ok(ActionKind::TakeReady));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'readyok' timed out.");
+
+	assert_eq!(&*res,"readyok");
+
+	let _ = s.send(String::from("usinewgame"));
+
+	let _ = s.send(String::from("position startpos"));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::NewGame timed out.");
+
+	assert_eq!(res,Ok(ActionKind::NewGame));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1g1f' timed out.");
+
+	assert_eq!(&*res,"bestmove 1g1f");
+
+	let _ = s.send(String::from("position startpos moves 1g1f 9c9d"));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1f1e' timed out.");
+
+	assert_eq!(&*res,"bestmove 1f1e");
+
+	let _ = s.send(String::from("position startpos moves 1g1f 9c9d 1f1e 9d9e"));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1e1d' timed out.");
+
+	assert_eq!(&*res,"bestmove 1e1d");
+
+	let _ = s.send(String::from("position startpos moves 1g1f 9c9d 1f1e 9d9e 1e1d 9e9f"));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1d1c+' timed out.");
+
+	assert_eq!(&*res,"bestmove 1d1c+");
+
+	let _ = s.send(String::from("position startpos moves 1g1f 9c9d 1f1e 9d9e 1e1d 9e9f 1d1c+ 9f9g+"));
+
+	let _ = s.send(String::from("go"));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+
+	assert_eq!(res,Ok(ActionKind::SetPosition));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::Think timed out.");
+
+	assert_eq!(res,Ok(ActionKind::Think));
+
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove 1d1c+' timed out.");
 
 	assert_eq!(&*res,"bestmove resign");
 
