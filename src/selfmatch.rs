@@ -122,38 +122,21 @@ pub struct SelfMatchResult {
 	pub end_dt:DateTime<Local>,
 }
 #[derive(Debug)]
-pub struct SelfMatchEngine<E,S>
-	where 	E: PlayerError,
-			S: InfoSender,
-			Arc<Mutex<S>>: Send + 'static {
+pub struct SelfMatchEngine<E>
+	where 	E: PlayerError {
 	player_error_type:PhantomData<E>,
-	info_sender:S,
-	game_time_limit:UsiGoTimeLimit,
-	uptime:Option<Duration>,
-	number_of_games:Option<u32>,
 	pub system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
 }
-impl<E,S> SelfMatchEngine<E,S>
-	where E: PlayerError,
-			S: InfoSender {
-	pub fn new(info_sender:S,
-				game_time_limit:UsiGoTimeLimit,
-				uptime:Option<Duration>,number_of_games:Option<u32>)
-	-> SelfMatchEngine<E,S>
-	where E: PlayerError,
-			S: InfoSender,
-			Arc<Mutex<S>>: Send + 'static {
+impl<E> SelfMatchEngine<E>
+	where E: PlayerError {
+	pub fn new() -> SelfMatchEngine<E> where E: PlayerError {
 		SelfMatchEngine {
 			player_error_type:PhantomData::<E>,
-			info_sender:info_sender,
-			game_time_limit:game_time_limit,
-			uptime:uptime,
-			number_of_games:number_of_games,
 			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
 		}
 	}
 
-	pub fn start_default<T,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start_default<T,S,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
 						on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
@@ -162,6 +145,10 @@ impl<E,S> SelfMatchEngine<E,S>
 						player2:T,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
+						info_sender:S,
+						game_time_limit:UsiGoTimeLimit,
+						uptime:Option<Duration>,
+						number_of_games:Option<u32>,
 						on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
@@ -169,7 +156,8 @@ impl<E,S> SelfMatchEngine<E,S>
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
-														SelfMatchEngine<E, S>,FileLogger,E>),
+														SelfMatchEngine<E>,FileLogger,E>),
+				S: InfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&SelfMatchRunningError) {
@@ -179,10 +167,15 @@ impl<E,S> SelfMatchEngine<E,S>
 								initial_position_creator,
 								kifu_writer, input_handler,
 								player1,player2,
-								player1_options, player2_options, on_error)
+								player1_options, player2_options,
+								info_sender,
+								game_time_limit,
+								uptime,
+								number_of_games,
+								on_error)
 	}
 
-	pub fn start_with_log_path<T,I,F,RH,EH>(&mut self,path:String,
+	pub fn start_with_log_path<T,S,I,F,RH,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
 						on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
@@ -192,6 +185,10 @@ impl<E,S> SelfMatchEngine<E,S>
 						player2:T,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
+						info_sender:S,
+						game_time_limit:UsiGoTimeLimit,
+						uptime:Option<Duration>,
+						number_of_games:Option<u32>,
 						mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
@@ -199,7 +196,8 @@ impl<E,S> SelfMatchEngine<E,S>
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
-														SelfMatchEngine<E, S>,FileLogger,E>),
+														SelfMatchEngine<E>,FileLogger,E>),
+				S: InfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&SelfMatchRunningError) {
@@ -219,10 +217,15 @@ impl<E,S> SelfMatchEngine<E,S>
 					initial_position_creator,
 					kifu_writer, input_reader, input_handler,
 					player1,player2,
-					player1_options, player2_options, logger, on_error)
+					player1_options, player2_options,
+					info_sender,
+					game_time_limit,
+					uptime,
+					number_of_games,
+					logger, on_error)
 	}
 
-	pub fn start<T,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start<T,S,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
 						on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
@@ -232,6 +235,10 @@ impl<E,S> SelfMatchEngine<E,S>
 						player2:T,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
+						info_sender:S,
+						game_time_limit:UsiGoTimeLimit,
+						uptime:Option<Duration>,
+						number_of_games:Option<u32>,
 						logger:L, mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
@@ -240,7 +247,8 @@ impl<E,S> SelfMatchEngine<E,S>
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
-														SelfMatchEngine<E, S>,L,E>),
+														SelfMatchEngine<E>,L,E>),
+				S: InfoSender,
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
@@ -255,6 +263,10 @@ impl<E,S> SelfMatchEngine<E,S>
 							kifu_writer, input_reader, input_handler,
 							player1,player2,
 							player1_options, player2_options,
+							info_sender,
+							game_time_limit,
+							uptime,
+							number_of_games,
 							logger_arc, on_error_handler_arc);
 
 		if let Err(ref e) = r {
@@ -264,7 +276,7 @@ impl<E,S> SelfMatchEngine<E,S>
 		r
 	}
 
-	fn run<T,I,F,R,RH,L>(&mut self, mut on_init_event_dispatcher:I,
+	fn run<T,S,I,F,R,RH,L>(&mut self, mut on_init_event_dispatcher:I,
 						mut on_before_newgame:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError> + Send + 'static>>,
@@ -274,6 +286,10 @@ impl<E,S> SelfMatchEngine<E,S>
 						mut player2:T,
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
+						info_sender:S,
+						game_time_limit:UsiGoTimeLimit,
+						uptime:Option<Duration>,
+						number_of_games:Option<u32>,
 						logger_arc:Arc<Mutex<L>>,
 						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<SelfMatchResult,SelfMatchRunningError>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
@@ -283,7 +299,8 @@ impl<E,S> SelfMatchEngine<E,S>
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
-														SelfMatchEngine<E, S>,L,E>),
+														SelfMatchEngine<E>,L,E>),
+				S: InfoSender,
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static {
 		let start_time = Instant::now();
@@ -292,12 +309,12 @@ impl<E,S> SelfMatchEngine<E,S>
 		let mut self_match_event_dispatcher = USIEventDispatcher::<
 														SelfMatchEventKind,
 														SelfMatchEvent,
-														SelfMatchEngine<E, S>,L,E>::new(&on_error_handler_arc);
+														SelfMatchEngine<E>,L,E>::new(&on_error_handler_arc);
 
 		on_init_event_dispatcher(&mut self_match_event_dispatcher);
 
 		let mut system_event_dispatcher:USIEventDispatcher<SystemEventKind,
-														SystemEvent,SelfMatchEngine<E, S>,L,E> = USIEventDispatcher::new(&on_error_handler_arc);
+														SystemEvent,SelfMatchEngine<E>,L,E> = USIEventDispatcher::new(&on_error_handler_arc);
 
 		let user_event_queue_arc:[Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>; 2] = [Arc::new(Mutex::new(EventQueue::new())),Arc::new(Mutex::new(EventQueue::new()))];
 
@@ -323,8 +340,6 @@ impl<E,S> SelfMatchEngine<E,S>
 
 		let self_match_event_queue:EventQueue<SelfMatchEvent,SelfMatchEventKind> = EventQueue::new();
 		let self_match_event_queue_arc = Arc::new(Mutex::new(self_match_event_queue));
-
-		let info_sender_arc = self.info_sender.clone();
 
 		let (ss,sr) = unbounded();
 		let (cs1,cr1) = unbounded();
@@ -395,9 +410,6 @@ impl<E,S> SelfMatchEngine<E,S>
 
 		let on_error_handler = on_error_handler_arc.clone();
 
-		let uptime = self.uptime.map(|t| t);
-		let number_of_games = self.number_of_games.map(|n| n);
-		let game_time_limit = self.game_time_limit;
 		let user_event_queue = user_event_queue_arc.clone();
 
 		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
@@ -984,8 +996,8 @@ impl<E,S> SelfMatchEngine<E,S>
 			let on_error_handler = on_error_handler_arc.clone();
 			let logger = logger_arc.clone();
 			let user_event_queue = [user_event_queue_arc[0].clone(),user_event_queue_arc[1].clone()];
-			let info_sender = info_sender_arc.clone();
-			let limit = self.game_time_limit;
+			let info_sender = info_sender.clone();
+			let limit = game_time_limit;
 
 			let ss = ss.clone();
 
