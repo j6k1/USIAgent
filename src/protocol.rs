@@ -518,22 +518,22 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 }
 pub struct PositionParseResult(pub Teban, pub UsiInitialPosition, pub u32,pub Vec<Move>);
 impl PositionParseResult {
-	pub fn extract(&self) -> (Teban, Banmen, MochigomaCollections, u32, Vec<Move>) {
+	pub fn extract(self) -> (Teban, Banmen, MochigomaCollections, u32, Vec<Move>) {
 		match self {
-			&PositionParseResult(teban, ref p, n, ref m) => {
+			PositionParseResult(teban, p, n, m) => {
 				let (banmen,mc) = match p {
-					&UsiInitialPosition::Startpos => {
-						(BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					UsiInitialPosition::Startpos => {
+						(BANMEN_START_POS, MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 					},
-					&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
-						(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
+					UsiInitialPosition::Sfen(b,MochigomaCollections::Pair(ms,mg)) => {
+						(b,MochigomaCollections::Pair(ms,mg))
 					},
-					&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
-						(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+					UsiInitialPosition::Sfen(b,MochigomaCollections::Empty) => {
+						(b,MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
 					}
 				};
 
-				(teban,banmen,mc,n,m.clone())
+				(teban,banmen,mc,n,m)
 			}
 		}
 	}
