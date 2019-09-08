@@ -18,7 +18,6 @@ use usiagent::TryFrom;
 use usiagent::Find;
 use usiagent::shogi::*;
 use usiagent::protocol::*;
-use usiagent::event::*;
 use usiagent::error::*;
 use usiagent::rule;
 use usiagent::rule::BANMEN_START_POS;
