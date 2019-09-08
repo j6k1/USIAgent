@@ -527,26 +527,8 @@ impl<E> SelfMatchEngine<E>
 					}
 				};
 
-				match self_match_event_queue.lock() {
-					Ok(mut self_match_event_queue) => {
-						self_match_event_queue.push(
-							SelfMatchEvent::GameStart(if cs_index == 1 {
-								2
-							} else {
-								1
-							}, teban, sfen.clone()));
-					},
-					Err(ref e) => {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
-						cs[0].send(SelfMatchMessage::Error(0))?;
-						cs[1].send(SelfMatchMessage::Error(1))?;
-
-						quit_notification();
-
-						return Err(SelfMatchRunningError::InvalidState(String::from(
-							"Exclusive lock on self_match_event_queue failed."
-						)));
-					}
+				if teban == Teban::Gote {
+					cs_index = (cs_index + 1) % 2;
 				}
 
 				let banmen_at_start = banmen.clone();
@@ -588,6 +570,32 @@ impl<E> SelfMatchEngine<E>
 															 	mhash,shash,
 															 	kyokumen_map,
 															 	oute_kyokumen_map,&hasher);
+
+				if teban != teban_at_start {
+					cs_index = (cs_index + 1) % 2;
+				}
+
+				match self_match_event_queue.lock() {
+					Ok(mut self_match_event_queue) => {
+						self_match_event_queue.push(
+							SelfMatchEvent::GameStart(if cs_index == 1 {
+								2
+							} else {
+								1
+							}, teban, sfen.clone()));
+					},
+					Err(ref e) => {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						cs[0].send(SelfMatchMessage::Error(0))?;
+						cs[1].send(SelfMatchMessage::Error(1))?;
+
+						quit_notification();
+
+						return Err(SelfMatchRunningError::InvalidState(String::from(
+							"Exclusive lock on self_match_event_queue failed."
+						)));
+					}
+				}
 
 				while uptime.map_or(true, |t| Instant::now() - start_time < t) {
 					match ponders[cs_index] {
