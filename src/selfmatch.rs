@@ -54,7 +54,7 @@ pub trait SelfMatchKifuWriter {
 				("sfen",p1,p2,p3,p4) => {
 					Ok(format!("sfen {} {} {} {}",p1,p2,p3,p4))
 				},
-				("startpos",_,_,_,_) if m.len() > 0=> {
+				("startpos",_,_,_,_) if m.len() > 0 => {
 					Ok(format!("startpos moves {}",m.to_sfen()?))
 				},
 				("startpos",_,_,_,_)=> {
@@ -688,6 +688,10 @@ impl<E> SelfMatchEngine<E>
 											if let Some(_) = prev_move {
 												if Rule::win_only_moves(teban.opposite(),&state).len() > 0 {
 													if Rule::win_only_moves(teban.opposite(),&next).len() > 0 {
+														mvs.push(m);
+														kifu_writer(&sfen,&mvs.into_iter()
+																				.map(|m| m.to_move())
+																				.collect::<Vec<Move>>());
 														on_gameend(
 															cs[(cs_index+1) % 2].clone(),
 															cs[cs_index].clone(),
@@ -695,10 +699,6 @@ impl<E> SelfMatchEngine<E>
 															&sr,
 															SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
 														)?;
-														mvs.push(m);
-														kifu_writer(&sfen,&mvs.into_iter()
-																				.map(|m| m.to_move())
-																				.collect::<Vec<Move>>());
 														break;
 													}
 												}

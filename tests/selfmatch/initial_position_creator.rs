@@ -32,7 +32,7 @@ fn test_initial_position_creator_3times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));

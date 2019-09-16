@@ -195,7 +195,7 @@ fn test_sequence() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -339,7 +339,7 @@ fn test_gameover() {
 		String::from("gameover draw"),
 	].into_iter();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1566,7 +1566,7 @@ fn test_ponderhit_move_already_been_decided() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1713,7 +1713,7 @@ fn test_ponderhit_thinking() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1861,7 +1861,7 @@ fn test_ponderng_move_already_been_decided() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2033,7 +2033,7 @@ fn test_ponderng_thinking() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2211,7 +2211,7 @@ fn test_stop_thinking() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2388,7 +2388,7 @@ fn test_quit_thinking() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2534,7 +2534,7 @@ fn test_go_infinite() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2680,7 +2680,7 @@ fn test_go_none_limit() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2820,7 +2820,7 @@ fn test_go_with_limit() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2972,7 +2972,7 @@ fn test_go_with_limit_and_byoyomi() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3126,7 +3126,7 @@ fn test_go_with_limit_and_inc() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3280,7 +3280,7 @@ fn test_go_with_byoyomi() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3434,7 +3434,7 @@ fn test_go_with_inc() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3595,7 +3595,7 @@ fn test_go_mate() {
 		String::from("checkmate nomate"),
 	].into_iter();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3769,7 +3769,7 @@ fn test_mate_with_limit() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3870,7 +3870,7 @@ fn test_mate_with_limit_of_infinite() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3971,7 +3971,7 @@ fn test_info_send_commands_without_str() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4129,7 +4129,7 @@ fn test_info_send_commands_without_str_and_multipv() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4286,7 +4286,7 @@ fn test_info_send_commands_without_pv_and_multipv() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4439,7 +4439,7 @@ fn test_info_send_commands_with_str_5times() {
 		(output_writer,r)
 	};
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player = MockPlayer::new(pms,pns,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));

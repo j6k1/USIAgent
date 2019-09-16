@@ -1,4 +1,5 @@
 mod initial_position_creator;
+mod kifuwriter;
 
 use std::thread;
 use std::sync::Arc;
@@ -9,7 +10,6 @@ use crossbeam_channel::Receiver;
 use crossbeam_channel::unbounded;
 use usiagent::selfmatch::*;
 use usiagent::shogi::*;
-use usiagent::rule::BANMEN_START_POS;
 use usiagent::command::*;
 use usiagent::event::*;
 use usiagent::error::*;
@@ -166,7 +166,7 @@ fn test_resign_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -401,7 +401,7 @@ fn test_invalidmove_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -640,7 +640,7 @@ fn test_invalidmove_by_from_blank_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -879,7 +879,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1098,7 +1098,7 @@ fn test_win_move_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1302,7 +1302,7 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1503,7 +1503,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1704,7 +1704,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -1919,7 +1919,7 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2120,7 +2120,7 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2399,7 +2399,7 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -2838,7 +2838,7 @@ fn test_game_time_limit_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3081,7 +3081,7 @@ fn test_game_time_limit_less_uptime_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3312,7 +3312,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3543,7 +3543,7 @@ fn test_ponderhit_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -3784,7 +3784,7 @@ fn test_ponderng_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4041,7 +4041,7 @@ fn test_abort_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4240,7 +4240,7 @@ fn test_nyugyoku_win_win_sente_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4476,7 +4476,7 @@ fn test_nyugyoku_win_win_gote_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4732,7 +4732,7 @@ fn test_nyugyoku_win_lose_sente_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
@@ -4968,7 +4968,7 @@ fn test_nyugyoku_win_lose_gote_1times() {
 
 	let (es,er) = unbounded();
 
-	let _ =thread::spawn(move || {
+	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
