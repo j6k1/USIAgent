@@ -137,7 +137,7 @@ impl<E> SelfMatchEngine<E>
 	}
 
 	pub fn start_default<T,S,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
-						on_before_newgame:F,
+						flip_players:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_handler:RH,
@@ -163,7 +163,7 @@ impl<E> SelfMatchEngine<E>
 					&SelfMatchRunningError) {
 		self.start_with_log_path(String::from("logs/log.txt"),
 								on_init_event_dispatcher,
-								on_before_newgame,
+								flip_players,
 								initial_position_creator,
 								kifu_writer, input_handler,
 								player1,player2,
@@ -177,7 +177,7 @@ impl<E> SelfMatchEngine<E>
 
 	pub fn start_with_log_path<T,S,I,F,RH,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
-						on_before_newgame:F,
+						flip_players:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_handler:RH,
@@ -213,7 +213,7 @@ impl<E> SelfMatchEngine<E>
 		let input_reader = USIStdInputReader::new();
 
 		self.start(on_init_event_dispatcher,
-					on_before_newgame,
+					flip_players,
 					initial_position_creator,
 					kifu_writer, input_reader, input_handler,
 					player1,player2,
@@ -226,7 +226,7 @@ impl<E> SelfMatchEngine<E>
 	}
 
 	pub fn start<T,S,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
-						on_before_newgame:F,
+						flip_players:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_reader:R,
@@ -258,7 +258,7 @@ impl<E> SelfMatchEngine<E>
 		let on_error_handler = on_error_handler_arc.clone();
 
 		let r = self.run(on_init_event_dispatcher,
-							on_before_newgame,
+							flip_players,
 							initial_position_creator,
 							kifu_writer, input_reader, input_handler,
 							player1,player2,
@@ -277,7 +277,7 @@ impl<E> SelfMatchEngine<E>
 	}
 
 	fn run<T,S,I,F,R,RH,L>(&mut self, mut on_init_event_dispatcher:I,
-						mut on_before_newgame:F,
+						mut flip_players:F,
 						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError> + Send + 'static>>,
 						mut input_reader:R,
@@ -502,7 +502,7 @@ impl<E> SelfMatchEngine<E>
 
 				game_count += 1;
 
-				let mut cs_index = if on_before_newgame() {
+				let mut cs_index = if flip_players() {
 					1
 				} else {
 					0
