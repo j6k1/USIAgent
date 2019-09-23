@@ -1,6 +1,7 @@
 mod initial_position_creator;
 mod kifuwriter;
 mod flip_players;
+mod quit;
 
 use std::thread;
 use std::sync::Arc;

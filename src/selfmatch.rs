@@ -469,9 +469,6 @@ impl<E> SelfMatchEngine<E>
 							)));
 						},
 						SelfMatchMessage::Quit => {
-							cs[0].send(SelfMatchMessage::Quit)?;
-							cs[1].send(SelfMatchMessage::Quit)?;
-
 							quit_notification();
 
 							return Ok(());
@@ -494,8 +491,9 @@ impl<E> SelfMatchEngine<E>
 
 			let mut game_count = 0;
 
-			'gameloop: while number_of_games.map_or(true, |n| game_count < n) &&
-			  uptime.map_or(true, |t| Instant::now() - start_time < t) {
+			'gameloop: while !quit_ready.load(Ordering::Acquire) &&
+				number_of_games.map_or(true, |n| game_count < n) &&
+				uptime.map_or(true, |t| Instant::now() - start_time < t) {
 
 				cs[0].send(SelfMatchMessage::GameStart)?;
 				cs[1].send(SelfMatchMessage::GameStart)?;
@@ -877,10 +875,10 @@ impl<E> SelfMatchEngine<E>
 									)));
 								},
 								SelfMatchMessage::Quit => {
+									quit_notification();
+
 									cs[0].send(SelfMatchMessage::Quit)?;
 									cs[1].send(SelfMatchMessage::Quit)?;
-
-									quit_notification();
 
 									return Ok(SelfMatchResult {
 										game_count: game_count,
@@ -958,11 +956,10 @@ impl<E> SelfMatchEngine<E>
 					}
 				}
 			}
+			quit_notification();
 
 			cs[0].send(SelfMatchMessage::Quit)?;
 			cs[1].send(SelfMatchMessage::Quit)?;
-
-			quit_notification();
 
 			Ok(SelfMatchResult {
 				game_count: game_count,
@@ -1004,6 +1001,7 @@ impl<E> SelfMatchEngine<E>
 			let on_error_handler = on_error_handler_arc.clone();
 			let logger = logger_arc.clone();
 			let user_event_queue = [user_event_queue_arc[0].clone(),user_event_queue_arc[1].clone()];
+			let quit_ready = quit_ready_arc.clone();
 			let info_sender = info_sender.clone();
 			let limit = game_time_limit;
 
@@ -1019,7 +1017,9 @@ impl<E> SelfMatchEngine<E>
 								Ok(_) => (),
 								Err(ref e) => {
 									on_error_handler.lock().map(|h| h.call(e)).is_err();
-									ss.send(SelfMatchMessage::Error(player_i))?;
+									if !quit_ready.load(Ordering::Acquire) {
+										ss.send(SelfMatchMessage::Error(player_i))?;
+									}
 									continue;
 								}
 							}
@@ -1027,7 +1027,9 @@ impl<E> SelfMatchEngine<E>
 								Ok(_) => (),
 								Err(ref e) => {
 									on_error_handler.lock().map(|h| h.call(e)).is_err();
-									ss.send(SelfMatchMessage::Error(player_i))?;
+									if !quit_ready.load(Ordering::Acquire) {
+										ss.send(SelfMatchMessage::Error(player_i))?;
+									}
 									continue;
 								}
 							}
@@ -1050,8 +1052,9 @@ impl<E> SelfMatchEngine<E>
 											Ok(_) => (),
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i))?;
-
+												if !quit_ready.load(Ordering::Acquire) {
+													ss.send(SelfMatchMessage::Error(player_i))?;
+												}
 												break;
 											}
 										}
@@ -1061,8 +1064,9 @@ impl<E> SelfMatchEngine<E>
 											Ok(m) => m,
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i))?;
-
+												if !quit_ready.load(Ordering::Acquire) {
+													ss.send(SelfMatchMessage::Error(player_i))?;
+												}
 												break;
 											}
 										};
@@ -1084,8 +1088,9 @@ impl<E> SelfMatchEngine<E>
 											Ok(_) => (),
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i))?;
-
+												if !quit_ready.load(Ordering::Acquire) {
+													ss.send(SelfMatchMessage::Error(player_i))?;
+												}
 												break;
 											}
 										}
@@ -1096,15 +1101,18 @@ impl<E> SelfMatchEngine<E>
 											Ok(m) => m,
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i))?;
-
+												if !quit_ready.load(Ordering::Acquire) {
+													ss.send(SelfMatchMessage::Error(player_i))?;
+												}
 												break;
 											}
 										};
 
 										match cr.recv()? {
 											SelfMatchMessage::PonderHit => {
-												ss.send(SelfMatchMessage::NotifyMove(m))?;
+												if !quit_ready.load(Ordering::Acquire) {
+													ss.send(SelfMatchMessage::NotifyMove(m))?;
+												}
 											},
 											SelfMatchMessage::PonderNG => (),
 											SelfMatchMessage::Quit => {
@@ -1130,8 +1138,12 @@ impl<E> SelfMatchEngine<E>
 													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 													false
 												}).is_err();
-												ss.send(SelfMatchMessage::Error(player_i))?;
 
+												if !quit_ready.load(Ordering::Acquire) {
+													if !quit_ready.load(Ordering::Acquire) {
+														ss.send(SelfMatchMessage::Error(player_i))?;
+													}
+												}
 												break;
 											}
 										}
@@ -1142,11 +1154,16 @@ impl<E> SelfMatchEngine<E>
 											Ok(()) => (),
 											Err(ref e) => {
 												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												ss.send(SelfMatchMessage::Error(player_i))?;
+												if !quit_ready.load(Ordering::Acquire) {
+													ss.send(SelfMatchMessage::Error(player_i))?;
+												}
 												break;
 											}
 										};
-										ss.send(SelfMatchMessage::Ready)?;
+
+										if !quit_ready.load(Ordering::Acquire) {
+											ss.send(SelfMatchMessage::Ready)?;
+										}
 
 										break;
 									},
@@ -1173,7 +1190,10 @@ impl<E> SelfMatchEngine<E>
 											USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 											false
 										}).is_err();
-										ss.send(SelfMatchMessage::Error(player_i))?;
+
+										if !quit_ready.load(Ordering::Acquire) {
+											ss.send(SelfMatchMessage::Error(player_i))?;
+										}
 
 										break;
 									}
@@ -1200,7 +1220,10 @@ impl<E> SelfMatchEngine<E>
 								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 								false
 							}).is_err();
-							ss.send(SelfMatchMessage::Error(player_i))?;
+
+							if !quit_ready.load(Ordering::Acquire) {
+								ss.send(SelfMatchMessage::Error(player_i))?;
+							}
 						}
 					}
 				}
@@ -1208,11 +1231,12 @@ impl<E> SelfMatchEngine<E>
 				match e {
 					SelfMatchRunningError::SendError(SendError(_)) |
 						SelfMatchRunningError::RecvError(_) => (),
-					_ => {
+					_ if !quit_ready.load(Ordering::Acquire) => {
 						if let Err(ref e) = ss.send(SelfMatchMessage::Error(player_i)) {
 							on_error_handler.lock().map(|h| h.call(e)).is_err();
 						}
-					}
+					},
+					_ => (),
 				}
 				e
 			})));
