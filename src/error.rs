@@ -93,6 +93,28 @@ impl<'a,T,K,E> From<EventHandlerError<K,E>> for EventDispatchError<'a,T,K,E>
 	}
 }
 #[derive(Debug)]
+pub struct InvalidStateError(pub String);
+impl fmt::Display for InvalidStateError {
+	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	 	match *self {
+	 		InvalidStateError(ref s) => write!(f, "{}",s)
+	 	}
+	 }
+}
+impl error::Error for InvalidStateError {
+	 fn description(&self) -> &str {
+	 	match *self {
+	 		InvalidStateError(_) => "invalid state."
+	 	}
+	 }
+
+	fn cause(&self) -> Option<&error::Error> {
+	 	match *self {
+	 		InvalidStateError(_) => None
+	 	}
+	 }
+}
+#[derive(Debug)]
 pub struct DanConvertError(pub u32);
 impl fmt::Display for DanConvertError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -445,8 +467,10 @@ impl error::Error for UsiProtocolError {
 	 }
 }
 #[derive(Debug)]
-pub enum SelfMatchRunningError {
+pub enum SelfMatchRunningError<E> where E: PlayerError {
 	InvalidState(String),
+	PlayerError(E),
+	PlayerThreadError(usize),
 	IOError(io::Error),
 	KifuWriteError(KifuWriteError),
 	RecvError(RecvError),
@@ -454,10 +478,12 @@ pub enum SelfMatchRunningError {
 	ThreadJoinFailed(String),
 	Fail(String),
 }
-impl fmt::Display for SelfMatchRunningError {
+impl<E> fmt::Display for SelfMatchRunningError<E> where E: PlayerError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s),
+			SelfMatchRunningError::PlayerError(ref e) => write!(f,"{}",e),
+		 	SelfMatchRunningError::PlayerThreadError(n) => write!(f,"An error occurred in player {}'s thread.",n),
 		 	SelfMatchRunningError::IOError(ref e) => write!(f,"{}",e),
 			SelfMatchRunningError::KifuWriteError(ref e) => write!(f,"{}",e),
 		 	SelfMatchRunningError::RecvError(ref e) => write!(f,"{}",e),
@@ -467,10 +493,12 @@ impl fmt::Display for SelfMatchRunningError {
 	 	}
 	 }
 }
-impl error::Error for SelfMatchRunningError {
+impl<E> error::Error for SelfMatchRunningError<E> where E: PlayerError {
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => "invalid state.",
+	 		SelfMatchRunningError::PlayerError(_) => "An error occurred in player thread.",
+	 		SelfMatchRunningError::PlayerThreadError(_) => "An error occurred in player thread.",
 		 	SelfMatchRunningError::IOError(_) => "IO Error.",
 		 	SelfMatchRunningError::KifuWriteError(_) => "There was an error writing kifu.",
 		 	SelfMatchRunningError::RecvError(_) => "An error occurred when receiving the message.",
@@ -483,6 +511,8 @@ impl error::Error for SelfMatchRunningError {
 	fn cause(&self) -> Option<&error::Error> {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => None,
+	 		SelfMatchRunningError::PlayerError(ref e) => Some(e),
+	 		SelfMatchRunningError::PlayerThreadError(_) => None,
 	 		SelfMatchRunningError::IOError(ref e) => Some(e),
 	 		SelfMatchRunningError::KifuWriteError(ref e) => Some(e),
 	 		SelfMatchRunningError::RecvError(ref e) => Some(e),
@@ -492,29 +522,34 @@ impl error::Error for SelfMatchRunningError {
 	 	}
 	 }
 }
-impl From<TypeConvertError<String>> for SelfMatchRunningError where String: fmt::Debug {
-	fn from(_: TypeConvertError<String>) -> SelfMatchRunningError {
+impl<E> From<TypeConvertError<String>> for SelfMatchRunningError<E> where String: fmt::Debug, E: PlayerError {
+	fn from(_: TypeConvertError<String>) -> SelfMatchRunningError<E> {
 		SelfMatchRunningError::Fail(String::from("An error occurred during type conversion from Move to Moved."))
 	}
 }
-impl From<RecvError> for SelfMatchRunningError {
-	fn from(err: RecvError) -> SelfMatchRunningError {
+impl<E> From<RecvError> for SelfMatchRunningError<E> where E: PlayerError {
+	fn from(err: RecvError) -> SelfMatchRunningError<E> {
 		SelfMatchRunningError::RecvError(err)
 	}
 }
-impl From<SendError<SelfMatchMessage>> for SelfMatchRunningError {
-	fn from(err: SendError<SelfMatchMessage>) -> SelfMatchRunningError {
+impl<E> From<SendError<SelfMatchMessage>> for SelfMatchRunningError<E> where E: PlayerError {
+	fn from(err: SendError<SelfMatchMessage>) -> SelfMatchRunningError<E> {
 		SelfMatchRunningError::SendError(err)
 	}
 }
-impl From<io::Error> for SelfMatchRunningError {
-	fn from(err: io::Error) -> SelfMatchRunningError {
+impl<E> From<io::Error> for SelfMatchRunningError<E> where E: PlayerError {
+	fn from(err: io::Error) -> SelfMatchRunningError<E> {
 		SelfMatchRunningError::IOError(err)
 	}
 }
-impl From<KifuWriteError> for SelfMatchRunningError {
-	fn from(err: KifuWriteError) -> SelfMatchRunningError {
+impl<E> From<KifuWriteError> for SelfMatchRunningError<E> where E: PlayerError {
+	fn from(err: KifuWriteError) -> SelfMatchRunningError<E> {
 		SelfMatchRunningError::KifuWriteError(err)
+	}
+}
+impl<E> From<E> for SelfMatchRunningError<E> where E: PlayerError {
+	fn from(err: E) -> SelfMatchRunningError<E> {
+		SelfMatchRunningError::PlayerError(err)
 	}
 }
 #[derive(Debug)]
@@ -617,4 +652,4 @@ impl From<io::Error> for KifuWriteError {
 		KifuWriteError::IOError(err)
 	}
 }
-pub trait PlayerError: Error + fmt::Debug {}
+pub trait PlayerError: Error + fmt::Debug + Send + 'static {}

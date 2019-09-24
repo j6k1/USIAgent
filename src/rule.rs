@@ -4072,12 +4072,12 @@ impl Rule {
 	}
 
 	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
-		-> Result<bool,SelfMatchRunningError> {
+		-> Result<bool,InvalidStateError> {
 
 		let o = t.opposite();
 
 		if !Rule::is_mate(o, state) {
-			return Err(SelfMatchRunningError::InvalidState(String::from(
+			return Err(InvalidStateError(String::from(
 				"The argument m is not Move of oute."
 			)));
 		}

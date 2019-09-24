@@ -2134,7 +2134,7 @@ fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Optio
 }
 #[allow(dead_code)]
 fn responded_oute(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
-	-> Result<bool,SelfMatchRunningError> {
+	-> Result<bool,InvalidStateError> {
 
 	let o = t.opposite();
 
@@ -2143,7 +2143,7 @@ fn responded_oute(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&M
 		&Move::Put(_,ref dst) if win_only_moves_with_dst_put(&o, banmen, *dst).len() == 0 => false,
 		_ => true,
 	} {
-		return Err(SelfMatchRunningError::InvalidState(String::from(
+		return Err(InvalidStateError(String::from(
 			"The argument m is not Move of oute."
 		)));
 	}

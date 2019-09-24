@@ -149,10 +149,10 @@ impl<E> SelfMatchEngine<E>
 						game_time_limit:UsiGoTimeLimit,
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
-						on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
+						on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError<E>>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
-				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -160,7 +160,7 @@ impl<E> SelfMatchEngine<E>
 				S: InfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
-					&SelfMatchRunningError) {
+					&SelfMatchRunningError<E>) {
 		self.start_with_log_path(String::from("logs/log.txt"),
 								on_init_event_dispatcher,
 								flip_players,
@@ -189,10 +189,10 @@ impl<E> SelfMatchEngine<E>
 						game_time_limit:UsiGoTimeLimit,
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
-						mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
+						mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError<E>>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
-				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -200,7 +200,7 @@ impl<E> SelfMatchEngine<E>
 				S: InfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
-					&SelfMatchRunningError) {
+					&SelfMatchRunningError<E>) {
 		let logger = match FileLogger::new(path) {
 			Err(e) => {
 				let e = SelfMatchRunningError::IOError(e);
@@ -239,11 +239,11 @@ impl<E> SelfMatchEngine<E>
 						game_time_limit:UsiGoTimeLimit,
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
-						logger:L, mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError>
+						logger:L, mut on_error:EH) -> Result<SelfMatchResult,SelfMatchRunningError<E>>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
-				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -252,7 +252,7 @@ impl<E> SelfMatchEngine<E>
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
-					&SelfMatchRunningError) {
+					&SelfMatchRunningError<E>) {
 		let logger_arc = Arc::new(Mutex::new(logger));
 		let on_error_handler_arc = Arc::new(Mutex::new(OnErrorHandler::new(logger_arc.clone())));
 		let on_error_handler = on_error_handler_arc.clone();
@@ -291,11 +291,11 @@ impl<E> SelfMatchEngine<E>
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
 						logger_arc:Arc<Mutex<L>>,
-						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<SelfMatchResult,SelfMatchRunningError>
+						on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) -> Result<SelfMatchResult,SelfMatchRunningError<E>>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
-				RH: FnMut(String) -> Result<bool,SelfMatchRunningError> + Send + 'static,
+				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut USIEventDispatcher<
 														SelfMatchEventKind,
 														SelfMatchEvent,
@@ -430,7 +430,7 @@ impl<E> SelfMatchEngine<E>
 
 			let on_gameend = move |win_cs:Sender<SelfMatchMessage>,
 									lose_cs:Sender<SelfMatchMessage>,
-									cs:[Sender<SelfMatchMessage>; 2],
+									_:[Sender<SelfMatchMessage>; 2],
 									sr:&Receiver<SelfMatchMessage>,
 									s:SelfMatchGameEndState| {
 				let mut message_state = GameEndState::Win;
@@ -445,11 +445,6 @@ impl<E> SelfMatchEngine<E>
 					},
 					Err(ref e) => {
 						on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
-						win_cs.send(SelfMatchMessage::Error(0))?;
-						lose_cs.send(SelfMatchMessage::Error(1))?;
-
-						quit_notification();
-
 						return Err(SelfMatchRunningError::InvalidState(String::from(
 							"Exclusive lock on self_match_event_queue failed."
 						)));
@@ -461,12 +456,7 @@ impl<E> SelfMatchEngine<E>
 					match sr.recv()? {
 						SelfMatchMessage::Ready => (),
 						SelfMatchMessage::Error(n) => {
-							cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2))?;
-							cs[n].send(SelfMatchMessage::Error(n))?;
-							quit_notification();
-							return Err(SelfMatchRunningError::InvalidState(String::from(
-								"An error occurred while executing the player thread."
-							)));
+							return Err(SelfMatchRunningError::PlayerThreadError(n));
 						},
 						SelfMatchMessage::Quit => {
 							quit_notification();
@@ -474,11 +464,6 @@ impl<E> SelfMatchEngine<E>
 							return Ok(());
 						},
 						_ => {
-							cs[0].send(SelfMatchMessage::Error(0))?;
-							cs[1].send(SelfMatchMessage::Error(1))?;
-
-							quit_notification();
-
 							return Err(SelfMatchRunningError::InvalidState(String::from(
 								"An invalid message was sent to the self-match management thread."
 							)));
@@ -513,12 +498,6 @@ impl<E> SelfMatchEngine<E>
 					},
 					Err(ref e) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
-
-						cs[0].send(SelfMatchMessage::Error(0))?;
-						cs[1].send(SelfMatchMessage::Error(1))?;
-
-						quit_notification();
-
 						return Err(SelfMatchRunningError::InvalidState(String::from(
 							"An error occurred parsing the sfen string."
 						)));
@@ -584,11 +563,6 @@ impl<E> SelfMatchEngine<E>
 					},
 					Err(ref e) => {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
-						cs[0].send(SelfMatchMessage::Error(0))?;
-						cs[1].send(SelfMatchMessage::Error(1))?;
-
-						quit_notification();
-
 						return Err(SelfMatchRunningError::InvalidState(String::from(
 							"Exclusive lock on self_match_event_queue failed."
 						)));
@@ -643,11 +617,6 @@ impl<E> SelfMatchEngine<E>
 										},
 										Err(ref e) => {
 											on_error_handler.lock().map(|h| h.call(e)).is_err();
-											cs[0].send(SelfMatchMessage::Error(0))?;
-											cs[1].send(SelfMatchMessage::Error(1))?;
-
-											quit_notification();
-
 											return Err(SelfMatchRunningError::InvalidState(String::from(
 												"Exclusive lock on self_match_event_queue failed."
 											)));
@@ -828,11 +797,6 @@ impl<E> SelfMatchEngine<E>
 										},
 										Err(ref e) => {
 											on_error_handler.lock().map(|h| h.call(e)).is_err();
-											cs[0].send(SelfMatchMessage::Error(0))?;
-											cs[1].send(SelfMatchMessage::Error(1))?;
-
-											quit_notification();
-
 											return Err(SelfMatchRunningError::InvalidState(String::from(
 												"Exclusive lock on self_match_event_queue failed."
 											)));
@@ -867,12 +831,7 @@ impl<E> SelfMatchEngine<E>
 									break;
 								},
 								SelfMatchMessage::Error(n) => {
-									cs[(n+1)%2].send(SelfMatchMessage::Error((n+1)%2))?;
-									cs[n].send(SelfMatchMessage::Error(n))?;
-									quit_notification();
-									return Err(SelfMatchRunningError::InvalidState(String::from(
-										"An error occurred while executing the player thread."
-									)));
+									return Err(SelfMatchRunningError::PlayerThreadError(n));
 								},
 								SelfMatchMessage::Quit => {
 									quit_notification();
@@ -888,10 +847,6 @@ impl<E> SelfMatchEngine<E>
 									});
 								},
 								_ => {
-									cs[0].send(SelfMatchMessage::Error(0))?;
-									cs[1].send(SelfMatchMessage::Error(1))?;
-
-									quit_notification();
 									return Err(SelfMatchRunningError::InvalidState(String::from(
 										"An invalid message was sent to the self-match management thread."
 									)));
@@ -948,7 +903,7 @@ impl<E> SelfMatchEngine<E>
 											return Err(SelfMatchRunningError::InvalidState(String::from(
 												"Timeout kind is invalid."
 											)));
-										},
+										}
 									}
 								}
 							}
@@ -979,6 +934,16 @@ impl<E> SelfMatchEngine<E>
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
 					}
 				},
+				SelfMatchRunningError::PlayerThreadError(0) => {
+					if let Err(ref e) = cs1.send(SelfMatchMessage::Error(0)) {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+					}
+				},
+				SelfMatchRunningError::PlayerThreadError(1) => {
+					if let Err(ref e) = cs2.send(SelfMatchMessage::Error(1)) {
+						on_error_handler.lock().map(|h| h.call(e)).is_err();
+					}
+				},
 				_ => {
 					if let Err(ref e) = cs1.send(SelfMatchMessage::Error(0)) {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
@@ -993,7 +958,7 @@ impl<E> SelfMatchEngine<E>
 		}));
 
 		let mut players = vec![player1,player2];
-		let mut handlers:Vec<JoinHandle<Result<(),SelfMatchRunningError>>> = Vec::with_capacity(2);
+		let mut handlers:Vec<JoinHandle<Result<(),SelfMatchRunningError<E>>>> = Vec::with_capacity(2);
 
 		for i in 0..2 {
 			let cr = cr.remove(0);
@@ -1013,26 +978,8 @@ impl<E> SelfMatchEngine<E>
 				loop {
 					match cr.recv()? {
 						SelfMatchMessage::GameStart => {
-							match player.take_ready() {
-								Ok(_) => (),
-								Err(ref e) => {
-									on_error_handler.lock().map(|h| h.call(e)).is_err();
-									if !quit_ready.load(Ordering::Acquire) {
-										ss.send(SelfMatchMessage::Error(player_i))?;
-									}
-									continue;
-								}
-							}
-							match player.newgame() {
-								Ok(_) => (),
-								Err(ref e) => {
-									on_error_handler.lock().map(|h| h.call(e)).is_err();
-									if !quit_ready.load(Ordering::Acquire) {
-										ss.send(SelfMatchMessage::Error(player_i))?;
-									}
-									continue;
-								}
-							}
+							player.take_ready()?;
+							player.newgame()?;
 
 							loop {
 								match cr.recv()? {
@@ -1046,30 +993,14 @@ impl<E> SelfMatchEngine<E>
 											}
 										};
 
-										match player.set_position(t, b, ms, mg, n, m.into_iter().map(|m| {
+										player.set_position(t, b, ms, mg, n, m.into_iter().map(|m| {
 											m.to_move()
-										}).collect::<Vec<Move>>()) {
-											Ok(_) => (),
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												if !quit_ready.load(Ordering::Acquire) {
-													ss.send(SelfMatchMessage::Error(player_i))?;
-												}
-												break;
-											}
-										}
-										let m = match player.think(&limit,
-													user_event_queue[player_i].clone(),
-													info_sender.clone(),on_error_handler.clone()) {
-											Ok(m) => m,
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												if !quit_ready.load(Ordering::Acquire) {
-													ss.send(SelfMatchMessage::Error(player_i))?;
-												}
-												break;
-											}
-										};
+										}).collect::<Vec<Move>>())?;
+
+										let m = player.think(&limit,
+																user_event_queue[player_i].clone(),
+																info_sender.clone(),on_error_handler.clone())?;
+
 										ss.send(SelfMatchMessage::NotifyMove(m))?;
 									},
 									SelfMatchMessage::StartPonderThink(t,b,mc,n,m) => {
@@ -1082,31 +1013,13 @@ impl<E> SelfMatchEngine<E>
 											}
 										};
 
-										match player.set_position(t, b, ms, mg, n, m.into_iter().map(|m| {
+										player.set_position(t, b, ms, mg, n, m.into_iter().map(|m| {
 											m.to_move()
-										}).collect::<Vec<Move>>()) {
-											Ok(_) => (),
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												if !quit_ready.load(Ordering::Acquire) {
-													ss.send(SelfMatchMessage::Error(player_i))?;
-												}
-												break;
-											}
-										}
+										}).collect::<Vec<Move>>())?;
 
-										let m = match player.think(&limit,
-													user_event_queue[player_i].clone(),
-													info_sender.clone(),on_error_handler.clone()) {
-											Ok(m) => m,
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												if !quit_ready.load(Ordering::Acquire) {
-													ss.send(SelfMatchMessage::Error(player_i))?;
-												}
-												break;
-											}
-										};
+										let m = player.think(&limit,
+																user_event_queue[player_i].clone(),
+																info_sender.clone(),on_error_handler.clone())?;
 
 										match cr.recv()? {
 											SelfMatchMessage::PonderHit => {
@@ -1116,12 +1029,7 @@ impl<E> SelfMatchEngine<E>
 											},
 											SelfMatchMessage::PonderNG => (),
 											SelfMatchMessage::Quit => {
-												match player.quit(){
-													Ok(()) => (),
-													Err(ref e) => {
-														on_error_handler.lock().map(|h| h.call(e)).is_err();
-													}
-												}
+												player.quit()?;
 
 												return Ok(());
 											},
@@ -1149,17 +1057,8 @@ impl<E> SelfMatchEngine<E>
 										}
 									},
 									SelfMatchMessage::GameEnd(s) => {
-										match player.gameover(&s,user_event_queue[player_i].clone(),
-														on_error_handler.clone()) {
-											Ok(()) => (),
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-												if !quit_ready.load(Ordering::Acquire) {
-													ss.send(SelfMatchMessage::Error(player_i))?;
-												}
-												break;
-											}
-										};
+										player.gameover(&s,user_event_queue[player_i].clone(),
+																		on_error_handler.clone())?;
 
 										if !quit_ready.load(Ordering::Acquire) {
 											ss.send(SelfMatchMessage::Ready)?;
@@ -1171,12 +1070,7 @@ impl<E> SelfMatchEngine<E>
 										break;
 									},
 									SelfMatchMessage::Quit => {
-										match player.quit(){
-											Ok(()) => (),
-											Err(ref e) => {
-												on_error_handler.lock().map(|h| h.call(e)).is_err();
-											}
-										}
+										player.quit()?;
 
 										return Ok(());
 									},
@@ -1201,12 +1095,7 @@ impl<E> SelfMatchEngine<E>
 							}
 						},
 						SelfMatchMessage::Quit => {
-							match player.quit(){
-								Ok(()) => (),
-								Err(ref e) => {
-									on_error_handler.lock().map(|h| h.call(e)).is_err();
-								}
-							}
+							player.quit()?;
 
 							return Ok(());
 						},
