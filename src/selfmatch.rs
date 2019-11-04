@@ -1151,9 +1151,7 @@ impl<E> SelfMatchEngine<E>
 								on_error_handler.lock().map(|h| h.call(e)).is_err();
 								return;
 							},
-							_ => {
-								return;
-							},
+							_ => (),
 						}
 					},
 					Err(ref e) if !quit_ready.load(Ordering::Acquire) => {
