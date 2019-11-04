@@ -1001,7 +1001,9 @@ impl<E> SelfMatchEngine<E>
 																user_event_queue[player_i].clone(),
 																info_sender.clone(),on_error_handler.clone())?;
 
-										ss.send(SelfMatchMessage::NotifyMove(m))?;
+										if !quit_ready.load(Ordering::Acquire) {
+											ss.send(SelfMatchMessage::NotifyMove(m))?;
+										}
 									},
 									SelfMatchMessage::StartPonderThink(t,b,mc,n,m) => {
 										let (mut ms, mut mg) = match mc {
