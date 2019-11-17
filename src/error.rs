@@ -387,7 +387,7 @@ impl<'a,T,E> fmt::Display for USIAgentRunningError<'a,T,E> where T: fmt::Debug, 
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		USIAgentRunningError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
-		 	USIAgentRunningError::StartupError(ref e) => write!(f,"{}",e),
+		 	USIAgentRunningError::StartupError(_) => write!(f,"An error occurred during startup."),
 	 	}
 	 }
 }
@@ -482,12 +482,12 @@ impl<E> fmt::Display for SelfMatchRunningError<E> where E: PlayerError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s),
-			SelfMatchRunningError::PlayerError(ref e) => write!(f,"{}",e),
+			SelfMatchRunningError::PlayerError(_) => write!(f,"An error occurred in player thread."),
 		 	SelfMatchRunningError::PlayerThreadError(n) => write!(f,"An error occurred in player {}'s thread.",n),
-		 	SelfMatchRunningError::IOError(ref e) => write!(f,"{}",e),
-			SelfMatchRunningError::KifuWriteError(ref e) => write!(f,"{}",e),
-		 	SelfMatchRunningError::RecvError(ref e) => write!(f,"{}",e),
-		 	SelfMatchRunningError::SendError(ref e) => write!(f,"{}",e),
+		 	SelfMatchRunningError::IOError(_) => write!(f,"IO Error."),
+			SelfMatchRunningError::KifuWriteError(_) => write!(f,"An error occurred when recording kifu.s"),
+		 	SelfMatchRunningError::RecvError(_) => write!(f,"An error occurred when receiving the message."),
+		 	SelfMatchRunningError::SendError(_) => write!(f,"An error occurred when sending the message."),
 		 	SelfMatchRunningError::ThreadJoinFailed(ref s) => write!(f,"{}",s),
 		 	SelfMatchRunningError::Fail(ref s) => write!(f,"{}",s),
 	 	}
@@ -561,11 +561,11 @@ pub enum SfenStringConvertError {
 impl fmt::Display for SfenStringConvertError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		SfenStringConvertError::ToMoveString(ref e) => {
-	 			e.fmt(f)
+	 		SfenStringConvertError::ToMoveString(_) => {
+	 			write!(f,"Conversion of move to string representation failed.")
 	 		},
-	 		SfenStringConvertError::TypeConvertError(ref e) => {
-	 			e.fmt(f)
+	 		SfenStringConvertError::TypeConvertError(_) => {
+	 			write!(f,"An error occurred during conversion to sfen string.")
 	 		},
 	 		SfenStringConvertError::InvalidFormat(ref sfen) => {
 	 			write!(f,"The sfen string format is invalid. (passed value: {})", sfen)
@@ -618,7 +618,7 @@ impl fmt::Display for KifuWriteError {
 	 	match *self {
 	 		KifuWriteError::Fail(ref s) => write!(f,"{}",s),
 	 		KifuWriteError::InvalidState(ref e) => write!(f,"{}", e),
-	 		KifuWriteError::SfenStringConvertError(ref e) => write!(f,"{}", e),
+	 		KifuWriteError::SfenStringConvertError(_) => write!(f,"An error occurred during conversion to sfen string."),
 		 	KifuWriteError::IOError(_) => write!(f,"IO Error."),
 	 	}
 	 }

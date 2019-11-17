@@ -335,7 +335,7 @@ impl<E> SelfMatchEngine<E>
 		};
 
 		let quit_ready_arc = Arc::new(AtomicBool::new(false));
-
+		let mut accept_message = vec![Arc::new(AtomicBool::new(true)),Arc::new(AtomicBool::new(true))];
 		let on_error_handler = on_error_handler_arc.clone();
 
 		let self_match_event_queue:EventQueue<SelfMatchEvent,SelfMatchEventKind> = EventQueue::new();
@@ -411,6 +411,8 @@ impl<E> SelfMatchEngine<E>
 		let on_error_handler = on_error_handler_arc.clone();
 
 		let user_event_queue = user_event_queue_arc.clone();
+		let accept_message_bridge = [accept_message[0].clone(),accept_message[1].clone()];
+
 
 		let bridge_h = thread::spawn(move || SandBox::immediate(|| {
 			let cs = [cs1.clone(),cs2.clone()];
@@ -570,18 +572,20 @@ impl<E> SelfMatchEngine<E>
 				}
 
 				while uptime.map_or(true, |t| Instant::now() - start_time < t) {
-					match ponders[cs_index] {
-						None => {
-							cs[cs_index].send(SelfMatchMessage::StartThink(
-								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
-						},
-						pm @ Some(_) if pm == prev_move => {
-							cs[cs_index].send(SelfMatchMessage::PonderHit)?;
-						},
-						_ => {
-							cs[cs_index].send(SelfMatchMessage::PonderNG)?;
-							cs[cs_index].send(SelfMatchMessage::StartThink(
-								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
+					if accept_message_bridge[cs_index].load(Ordering::Acquire) {
+						match ponders[cs_index] {
+							None => {
+								cs[cs_index].send(SelfMatchMessage::StartThink(
+									teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
+							},
+							pm @ Some(_) if pm == prev_move => {
+								cs[cs_index].send(SelfMatchMessage::PonderHit)?;
+							},
+							_ => {
+								cs[cs_index].send(SelfMatchMessage::PonderNG)?;
+								cs[cs_index].send(SelfMatchMessage::StartThink(
+									teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()))?;
+							}
 						}
 					}
 
@@ -926,21 +930,21 @@ impl<E> SelfMatchEngine<E>
 			match e {
 				SelfMatchRunningError::SendError(SendError(SelfMatchMessage::Error(n))) => {
 					let r = if n == 0 {
-						cs1.send(SelfMatchMessage::Error(0))
+						cs2.send(SelfMatchMessage::Error(0))
 					} else {
-						cs2.send(SelfMatchMessage::Error(1))
+						cs1.send(SelfMatchMessage::Error(1))
 					};
 					if let Err(ref e) = r {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
 					}
 				},
 				SelfMatchRunningError::PlayerThreadError(0) => {
-					if let Err(ref e) = cs1.send(SelfMatchMessage::Error(0)) {
+					if let Err(ref e) = cs2.send(SelfMatchMessage::Error(0)) {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
 					}
 				},
 				SelfMatchRunningError::PlayerThreadError(1) => {
-					if let Err(ref e) = cs2.send(SelfMatchMessage::Error(1)) {
+					if let Err(ref e) = cs1.send(SelfMatchMessage::Error(1)) {
 						on_error_handler.lock().map(|h| h.call(e)).is_err();
 					}
 				},
@@ -962,6 +966,7 @@ impl<E> SelfMatchEngine<E>
 
 		for i in 0..2 {
 			let cr = cr.remove(0);
+			let accept_message = accept_message.remove(0);
 			let mut player = players.remove(0);
 			let on_error_handler = on_error_handler_arc.clone();
 			let logger = logger_arc.clone();
@@ -1119,6 +1124,8 @@ impl<E> SelfMatchEngine<E>
 					}
 				}
 			}, on_error_handler.clone()).map_err(|e| {
+				accept_message.store(false,Ordering::Release);
+
 				match e {
 					SelfMatchRunningError::SendError(SendError(_)) |
 						SelfMatchRunningError::RecvError(_) => (),
@@ -1209,7 +1216,6 @@ impl<E> SelfMatchEngine<E>
 			"Main thread join failed."
 		)))).map_err(|e| {
 			has_error = true;
-			on_error_handler.lock().map(|h| h.call(&e)).is_err();
 			e
 		});
 
@@ -1225,7 +1231,6 @@ impl<E> SelfMatchEngine<E>
 			}).map(|r| {
 				r.map_err(|e| {
 					has_error = true;
-					on_error_handler.lock().map(|h| h.call(&e)).is_err();
 					e
 				}).is_err()
 			}).is_err();
