@@ -46,6 +46,18 @@ fn test_initial_position_creator_3times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										}),
+										Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										}),
+										Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,t,banmen,ms,mg,_,m| {
 											if t != Teban::Sente {
 												let _ = player.sender.send(Err(String::from("Teban is invalid.")));
@@ -269,6 +281,18 @@ fn test_initial_position_creator_3times() {
 										}),
 										Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										}),
+										Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										}),
+										Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,t,banmen,ms,mg,_,m| {

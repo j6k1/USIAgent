@@ -175,6 +175,10 @@ fn test_resign_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -209,6 +213,10 @@ fn test_resign_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -410,6 +418,10 @@ fn test_invalidmove_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -444,6 +456,10 @@ fn test_invalidmove_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -649,6 +665,10 @@ fn test_invalidmove_by_from_blank_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -683,6 +703,10 @@ fn test_invalidmove_by_from_blank_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -888,6 +912,10 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -914,6 +942,10 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -1107,6 +1139,10 @@ fn test_win_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -1133,6 +1169,10 @@ fn test_win_move_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -1311,6 +1351,10 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -1337,6 +1381,10 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![]),
@@ -1512,6 +1560,10 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -1538,6 +1590,10 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![]),
@@ -1713,6 +1769,10 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -1739,6 +1799,10 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -1928,6 +1992,10 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -1954,6 +2022,10 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![]),
@@ -2129,6 +2201,10 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -2171,6 +2247,10 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -2408,6 +2488,10 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -2482,6 +2566,10 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -2847,6 +2935,10 @@ fn test_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -2885,6 +2977,10 @@ fn test_game_time_limit_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -3090,6 +3186,10 @@ fn test_game_time_limit_less_uptime_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -3128,6 +3228,10 @@ fn test_game_time_limit_less_uptime_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -3321,6 +3425,10 @@ fn test_game_uptime_less_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -3359,6 +3467,10 @@ fn test_game_uptime_less_game_time_limit_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -3552,6 +3664,10 @@ fn test_ponderhit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -3592,6 +3708,10 @@ fn test_ponderhit_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -3793,6 +3913,10 @@ fn test_ponderng_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -3841,6 +3965,10 @@ fn test_ponderng_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -4050,6 +4178,10 @@ fn test_abort_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -4073,6 +4205,10 @@ fn test_abort_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -4249,6 +4385,10 @@ fn test_nyugyoku_win_win_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -4283,6 +4423,10 @@ fn test_nyugyoku_win_win_sente_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -4485,6 +4629,10 @@ fn test_nyugyoku_win_win_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -4519,6 +4667,10 @@ fn test_nyugyoku_win_win_gote_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -4741,6 +4893,10 @@ fn test_nyugyoku_win_lose_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -4775,6 +4931,10 @@ fn test_nyugyoku_win_lose_sente_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
@@ -4977,6 +5137,10 @@ fn test_nyugyoku_win_lose_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											Ok(())
+										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
@@ -5011,6 +5175,10 @@ fn test_nyugyoku_win_lose_gote_1times() {
 		let player2 = MockPlayer::new(pms2,pns2,
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
+											Ok(())
+										})]),
+										ConsumedIterator::new(vec![Box::new(|player| {
+											let _ = player.sender.send(Ok(ActionKind::NewGame));
 											Ok(())
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {

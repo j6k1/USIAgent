@@ -252,6 +252,7 @@ impl<T> Iterator for ConsumedIterator<T> where T: Send + 'static {
 }
 pub struct MockPlayer {
 	pub on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
+	pub on_newgame: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
 	pub on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
 												HashMap<MochigomaKind,u32>,
 												HashMap<MochigomaKind,u32>,u32,Vec<Move>) -> Result<(),CommonError> + Send + 'static)>>,
@@ -283,6 +284,7 @@ impl MockPlayer {
 	pub fn new(sender:Sender<Result<ActionKind,String>>,
 				info_send_notifier:Sender<()>,
 				on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
+				on_newgame: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
 				on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
 															HashMap<MochigomaKind,u32>,
 															HashMap<MochigomaKind,u32>,u32,Vec<Move>
@@ -306,6 +308,7 @@ impl MockPlayer {
 	) -> MockPlayer {
 		MockPlayer {
 			on_isready:on_isready,
+			on_newgame: on_newgame,
 			on_position:on_position,
 			on_think:on_think,
 			on_think_mate:on_think_mate,
@@ -399,8 +402,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 	fn newgame(&mut self) -> Result<(),CommonError> {
 		self.stop = false;
 		self.started = true;
-		let _ = self.sender.send(Ok(ActionKind::NewGame));
-		Ok(())
+		(self.on_newgame.next().expect("Iterator of on newgame callback is empty."))(self)
 	}
 
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
