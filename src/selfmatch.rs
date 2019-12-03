@@ -652,8 +652,8 @@ impl<E> SelfMatchEngine<E>
 											}
 
 											if let Some(_) = prev_move {
-												if Rule::win_only_moves(teban.opposite(),&state).len() > 0 {
-													if Rule::win_only_moves(teban.opposite(),&next).len() > 0 {
+												if Rule::is_mate(teban.opposite(),&state) {
+													if Rule::is_mate(teban.opposite(),&next) {
 														mvs.push(m);
 														kifu_writer(&sfen,&mvs.into_iter()
 																				.map(|m| m.to_move())
@@ -664,6 +664,21 @@ impl<E> SelfMatchEngine<E>
 															[cs[0].clone(),cs[1].clone()],
 															&sr,
 															SelfMatchGameEndState::Foul(teban,FoulKind::NotRespondedOute)
+														)?;
+														break;
+													}
+												} else {
+													if Rule::is_mate(teban.opposite(),&next) {
+														mvs.push(m);
+														kifu_writer(&sfen,&mvs.into_iter()
+																				.map(|m| m.to_move())
+																				.collect::<Vec<Move>>());
+														on_gameend(
+															cs[(cs_index+1) % 2].clone(),
+															cs[cs_index].clone(),
+															[cs[0].clone(),cs[1].clone()],
+															&sr,
+															SelfMatchGameEndState::Foul(teban,FoulKind::Suicide)
 														)?;
 														break;
 													}

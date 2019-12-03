@@ -276,6 +276,7 @@ pub enum FoulKind {
 	Sennichite,
 	SennichiteOu,
 	NotRespondedOute,
+	Suicide,
 }
 #[derive(Debug)]
 pub enum SelfMatchEventKind {
