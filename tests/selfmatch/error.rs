@@ -363,6 +363,7 @@ fn test_error_newgame_player1() {
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											thread::sleep(Duration::from_millis(60));
 											Err(CommonError::Fail(String::from(
 												"newgame process fail."
 											)))
@@ -483,7 +484,7 @@ fn test_error_newgame_player1() {
 		"An error occurred in player thread.\n  newgame process fail.",
 		"An error occurred in player 0's thread."
 	].into_iter().map(|m| m.to_string()) {
-		let res = lr.recv_timeout(Duration::from_millis(60)).expect("attempt to receive log message timed out.");
+		let res = lr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive log message timed out.");
 
 		assert_eq!(res,m);
 	}
@@ -544,6 +545,7 @@ fn test_error_newgame_player2() {
 										})]),
 										ConsumedIterator::new(vec![Box::new(|player| {
 											let _ = player.sender.send(Ok(ActionKind::NewGame));
+											thread::sleep(Duration::from_millis(60));
 											Err(CommonError::Fail(String::from(
 												"newgame process fail."
 											)))
@@ -653,7 +655,7 @@ fn test_error_newgame_player2() {
 		"An error occurred in player thread.\n  newgame process fail.",
 		"An error occurred in player 1's thread."
 	].into_iter().map(|m| m.to_string()) {
-		let res = lr.recv_timeout(Duration::from_millis(60)).expect("attempt to receive log message timed out.");
+		let res = lr.recv_timeout(Duration::from_millis(180)).expect("attempt to receive log message timed out.");
 
 		assert_eq!(res,m);
 	}
