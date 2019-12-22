@@ -313,7 +313,7 @@ impl From<UsiOutputCreateError> for InfoSendError {
 		InfoSendError::Fail(format!("{}",e))
 	}
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum TypeConvertError<T> where T: fmt::Debug {
 	SyntaxError(T),
 	LogicError(T),

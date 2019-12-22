@@ -6,3 +6,4 @@ mod rule;
 mod shogi;
 mod agent;
 mod selfmatch;
+mod protocol;
