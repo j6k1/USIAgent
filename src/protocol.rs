@@ -362,6 +362,10 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Banmen {
 				'1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => {
 					x += (c as u32) - ('0' as u32);
 				},
+				'0' => {
+					return Err(TypeConvertError::SyntaxError(
+							String::from("Invalid SFEN character string (0 is specified for the number of blank)")));
+				},
 				'+' => match chars.next() {
 					None => {
 						return Err(TypeConvertError::SyntaxError(
