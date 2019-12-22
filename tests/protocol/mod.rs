@@ -39,7 +39,7 @@ use usiagent::shogi::KomaKind::{
 };
 #[test]
 fn test_move_try_from() {
-	let mut input_and_expected:Vec<(&'static str,Result<Move, TypeConvertError<String>>)> = vec![
+	let input_and_expected:Vec<(&'static str,Result<Move, TypeConvertError<String>>)> = vec![
 		("",Err(TypeConvertError::SyntaxError(String::from(
 		"Invalid SFEN character string (number of characters of move expression is invalid)")))),
 		("Z*1a",Err(TypeConvertError::SyntaxError(String::from(
@@ -125,5 +125,48 @@ fn test_move_try_from() {
 
 	for (i,e) in input_and_expected.into_iter() {
 		assert_eq!(Move::try_from(&i),e);
+	}
+}
+#[test]
+fn test_komakind_try_from() {
+	let input_and_expected:Vec<(&'static str,Result<KomaKind, TypeConvertError<String>>)> = vec![
+		("K", Ok(KomaKind::SOu)),
+		("R", Ok(KomaKind::SHisha)),
+		("B", Ok(KomaKind::SKaku)),
+		("G", Ok(KomaKind::SKin)),
+		("S", Ok(KomaKind::SGin)),
+		("N", Ok(KomaKind::SKei)),
+		("L", Ok(KomaKind::SKyou)),
+		("P", Ok(KomaKind::SFu)),
+		("+R", Ok(KomaKind::SHishaN)),
+		("+B", Ok(KomaKind::SKakuN)),
+		("+N", Ok(KomaKind::SKeiN)),
+		("+S", Ok(KomaKind::SGinN)),
+		("+L", Ok(KomaKind::SKyouN)),
+		("+P", Ok(KomaKind::SFuN)),
+		("k", Ok(KomaKind::GOu)),
+		("r", Ok(KomaKind::GHisha)),
+		("b", Ok(KomaKind::GKaku)),
+		("g", Ok(KomaKind::GKin)),
+		("s", Ok(KomaKind::GGin)),
+		("n", Ok(KomaKind::GKei)),
+		("l", Ok(KomaKind::GKyou)),
+		("p", Ok(KomaKind::GFu)),
+		("+r", Ok(KomaKind::GHishaN)),
+		("+b", Ok(KomaKind::GKakuN)),
+		("+n", Ok(KomaKind::GKeiN)),
+		("+s", Ok(KomaKind::GGinN)),
+		("+l", Ok(KomaKind::GKyouN)),
+		("+p", Ok(KomaKind::GFuN)),
+		("a", Err(TypeConvertError::SyntaxError(String::from(
+			"Invalid SFEN character string (a)"
+		)))),
+		("*p", Err(TypeConvertError::SyntaxError(String::from(
+			"Invalid SFEN character string (*p)"
+		)))),
+	];
+
+	for (i,e) in input_and_expected.into_iter() {
+		assert_eq!(KomaKind::try_from(i.to_string()),e);
 	}
 }

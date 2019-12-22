@@ -319,7 +319,7 @@ impl TryFrom<String,TypeConvertError<String>> for KomaKind {
 			"+s" => KomaKind::GGinN,
 			"+l" => KomaKind::GKyouN,
 			"+p" => KomaKind::GFuN,
-			_ => return Err(TypeConvertError::SyntaxError(s)),
+			_ => return Err(TypeConvertError::SyntaxError(format!("Invalid SFEN character string ({})",s))),
 		})
 	}
 }
