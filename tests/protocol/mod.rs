@@ -170,3 +170,17 @@ fn test_komakind_try_from() {
 		assert_eq!(KomaKind::try_from(i.to_string()),e);
 	}
 }
+#[test]
+fn test_teban_try_from() {
+	let input_and_expected:Vec<(&'static str,Result<Teban, TypeConvertError<String>>)> = vec![
+		("b", Ok(Teban::Sente)),
+		("w", Ok(Teban::Gote)),
+		("a", Err(TypeConvertError::SyntaxError(String::from(
+			"It is an illegal character string as a character string representing a turn."
+		))))
+	];
+
+	for (i,e) in input_and_expected.into_iter() {
+		assert_eq!(Teban::try_from(i),e);
+	}
+}
