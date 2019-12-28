@@ -184,3 +184,68 @@ fn test_teban_try_from() {
 		assert_eq!(Teban::try_from(i),e);
 	}
 }
+#[test]
+fn test_banmen_try_from() {
+	let input_and_expected:Vec<(&'static str,Result<Banmen, TypeConvertError<String>>)> = vec![
+		("+l+n+sgkgsnl/1+r5+b1/+p+p+p+p+ppppp/9/9/9/PPPP+P+P+P+P+P/1B5R1/LNSGKG+S+N+L",Ok(Banmen([
+			[GKyouN,GKeiN,GGinN,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHishaN,Blank,Blank,Blank,Blank,Blank,GKakuN,Blank],
+			[GFuN,GFuN,GFuN,GFuN,GFuN,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFuN,SFuN,SFuN,SFuN,SFuN],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGinN,SKeiN,SKyouN]
+		]))),
+		("+l+n+sgkgsnl/1r5b1/+p+p+p+p+ppppp/9/9/9/PPPP+P+P+P+P+P/1+B5+R1/LNSGKG+S+N+L",Ok(Banmen([
+			[GKyouN,GKeiN,GGinN,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFuN,GFuN,GFuN,GFuN,GFuN,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFuN,SFuN,SFuN,SFuN,SFuN],
+			[Blank,SKakuN,Blank,Blank,Blank,Blank,Blank,SHishaN,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGinN,SKeiN,SKyouN]
+		]))),
+		("p8/1p7/2p6/3p5/4p4/5p3/6p2/7p1/8p",Ok(Banmen([
+			[GFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,GFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,GFu,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,GFu,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,GFu,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,GFu,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,GFu,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GFu,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,GFu]
+		]))),
+
+		("+",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (illegal expression of piece)")))),
+		("P+",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (illegal expression of piece)")))),
+		("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/+",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (illegal expression of piece)")))),
+		("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPP1/1B5R1/P+",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (illegal expression of piece)")))),
+		("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNa",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (a)")))),
+		("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSN+a",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (+a)")))),
+		("lnsgkgsnl/1r5b1/ppppppppp/0/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (0 is specified for the number of blank)")))),
+		("lnsgkgsnl/1r5b1/ppppppp2/p0p7/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (0 is specified for the number of blank)")))),
+		("lnsgkgsnl/1r5b1/pppppppp2/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (pieces outside the range of the board)")))),
+		("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPP1P/1B5R1/LNSGKGSNL",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN string (line separator '/' not found)")))),
+		("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPP2/1B5R1/LNSGKGSNL/PP7",Err(TypeConvertError::SyntaxError(String::from(
+		"Invalid SFEN character string (pieces outside the range of the board)")))),
+	];
+
+	for (i,e) in input_and_expected.into_iter() {
+		assert_eq!(Banmen::try_from(&i),e);
+	}
+}
