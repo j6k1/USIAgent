@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use usiagent::TryFrom;
 use usiagent::shogi::*;
 use usiagent::protocol::*;
@@ -247,5 +249,125 @@ fn test_banmen_try_from() {
 
 	for (i,e) in input_and_expected.into_iter() {
 		assert_eq!(Banmen::try_from(&i),e);
+	}
+}
+#[test]
+fn test_mochigomacollections_try_from() {
+	let input_and_expected:Vec<(&'static str,Result<MochigomaCollections, TypeConvertError<String>>)> = vec![
+		("-",Ok(MochigomaCollections::Pair(HashMap::new(),HashMap::new()))),
+		("2R2B2G2S2N2L9P2r2b2g2s2n2l9p",Ok(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,2),
+			(MochigomaKind::Kin,2),
+			(MochigomaKind::Gin,2),
+			(MochigomaKind::Kei,2),
+			(MochigomaKind::Kyou,2),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,2),
+			(MochigomaKind::Kin,2),
+			(MochigomaKind::Gin,2),
+			(MochigomaKind::Kei,2),
+			(MochigomaKind::Kyou,2),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})))),
+		("4R4B4G4S4N4L18P",Ok(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,4),
+			(MochigomaKind::Kaku,4),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,4),
+			(MochigomaKind::Fu,18),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),HashMap::new()))),
+		("4r4b4g4s4n4l18p",Ok(MochigomaCollections::Pair(HashMap::new(), vec![
+			(MochigomaKind::Hisha,4),
+			(MochigomaKind::Kaku,4),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,4),
+			(MochigomaKind::Fu,18),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})))),
+		("RBGSNLPrbgsnlp",Ok(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})))),
+		("RBGSNLP",Ok(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),HashMap::new()))),
+		("rbgsnlp",Ok(MochigomaCollections::Pair(HashMap::new(), vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})))),
+
+		("0P", Err(TypeConvertError::SyntaxError(String::from(
+			"Invalid SFEN character string (the number of pieces is illegal.)."
+		)))),
+		("1P", Err(TypeConvertError::SyntaxError(String::from(
+			"Invalid SFEN character string (the number of pieces is illegal.)."
+		)))),
+		("A", Err(TypeConvertError::SyntaxError(String::from(
+			"Invalid SFEN character string (illegal representation character string of the piece)"
+		)))),
+		("2A", Err(TypeConvertError::SyntaxError(String::from(
+			"Invalid SFEN character string (illegal representation character string of the piece)"
+		)))),
+		("2", Err(TypeConvertError::SyntaxError(String::from(
+			"Invalid SFEN character string (The type of piece is empty)"
+		)))),
+	];
+
+	for (i,e) in input_and_expected.into_iter() {
+		assert_eq!(MochigomaCollections::try_from(i),e);
 	}
 }

@@ -176,7 +176,7 @@ impl Move {
 		AppliedMove::from(*self)
 	}
 }
-#[derive(Debug)]
+#[derive(Debug,Eq)]
 pub enum MochigomaCollections {
 	Empty,
 	Pair(HashMap<MochigomaKind,u32>,HashMap<MochigomaKind,u32>),
@@ -187,6 +187,32 @@ impl Clone for MochigomaCollections {
 			MochigomaCollections::Empty => MochigomaCollections::Empty,
 			MochigomaCollections::Pair(ref ms, ref mg) => {
 				MochigomaCollections::Pair(ms.clone(),mg.clone())
+			}
+		}
+	}
+}
+impl PartialEq for MochigomaCollections {
+	fn eq(&self, other: &Self) -> bool {
+		match self {
+			&MochigomaCollections::Empty => {
+				match other {
+					&MochigomaCollections::Empty => {
+						true
+					}
+					&MochigomaCollections::Pair(ref ms,ref mg) => {
+						ms.is_empty() && mg.is_empty()
+					}
+				}
+			},
+			&MochigomaCollections::Pair(ref ms, ref mg) => {
+				match other {
+					&MochigomaCollections::Empty => {
+						false
+					}
+					&MochigomaCollections::Pair(ref oms,ref omg) => {
+						ms == oms && mg == omg
+					}
+				}
 			}
 		}
 	}

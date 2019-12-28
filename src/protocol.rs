@@ -424,7 +424,7 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 							_ if !ns.is_empty() => {
 								n = ns.parse::<u32>()?;
 
-								if n == 1 {
+								if n <= 1 {
 									return Err(TypeConvertError::LogicError(String::from(
 										"Invalid SFEN character string (the number of pieces is illegal.).")
 									));
