@@ -1160,7 +1160,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 				for m in v {
 					match *m {
 						ref m if !m.validate() => {
-							return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
+							return Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))
 						},
 						ref m => {
 							mv.push(MoveStringCreator::str_from(m)?);
