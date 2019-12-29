@@ -138,8 +138,8 @@ impl<E> SelfMatchEngine<E>
 
 	pub fn start_default<T,S,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
-						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
+						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
+						kifu_writer:Option<Box<dyn FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_handler:RH,
 						player1:T,
 						player2:T,
@@ -178,8 +178,8 @@ impl<E> SelfMatchEngine<E>
 	pub fn start_with_log_path<T,S,I,F,RH,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
 						flip_players:F,
-						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
+						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
+						kifu_writer:Option<Box<dyn FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_handler:RH,
 						player1:T,
 						player2:T,
@@ -227,8 +227,8 @@ impl<E> SelfMatchEngine<E>
 
 	pub fn start<T,S,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
-						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
+						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
+						kifu_writer:Option<Box<dyn FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
 						input_reader:R,
 						input_handler:RH,
 						player1:T,
@@ -278,8 +278,8 @@ impl<E> SelfMatchEngine<E>
 
 	fn run<T,S,I,F,R,RH,L>(&mut self, mut on_init_event_dispatcher:I,
 						mut flip_players:F,
-						initial_position_creator:Option<Box<FnMut() -> String + Send + 'static>>,
-						kifu_writer:Option<Box<FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError> + Send + 'static>>,
+						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
+						kifu_writer:Option<Box<dyn FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError> + Send + 'static>>,
 						mut input_reader:R,
 						mut input_handler:RH,
 						mut player1:T,
@@ -320,7 +320,7 @@ impl<E> SelfMatchEngine<E>
 
 		let user_event_queue = [user_event_queue_arc[0].clone(),user_event_queue_arc[1].clone()];
 
-		let mut initial_position_creator:Box<FnMut() -> String + Send + 'static> =
+		let mut initial_position_creator:Box<dyn FnMut() -> String + Send + 'static> =
 			initial_position_creator.map_or(Box::new(|| String::from("startpos")), |f| {
 				f
 			});
@@ -330,7 +330,7 @@ impl<E> SelfMatchEngine<E>
 		let mut kifu_writer = kifu_writer;
 		let mut kifu_writer = move |sfen:&String,m:&Vec<Move>| {
 			let _ = kifu_writer.as_mut().map(|w| {
-				let _= w(sfen,m).map_err(|e| on_error_handler.lock().map(|h| h.call(&e)).is_err());
+				let _= w(sfen,m).map_err(|e| on_error_handler.lock().map(|h| h.call(&e)));
 			});
 		};
 
@@ -360,14 +360,14 @@ impl<E> SelfMatchEngine<E>
 									user_event_queue.push(UserEvent::Quit);
 								},
 								Err(ref e) => {
-									on_error_handler.lock().map(|h| h.call(e)).is_err();
+									let _ = on_error_handler.lock().map(|h| h.call(e));
 								}
 							};
 						};
 
 						if !quit_ready.load(Ordering::Acquire) {
 							if let Err(ref e) = ss.send(SelfMatchMessage::Quit) {
-								on_error_handler.lock().map(|h| h.call(e)).is_err();
+								let _ = on_error_handler.lock().map(|h| h.call(e));
 							}
 						}
 
@@ -382,7 +382,7 @@ impl<E> SelfMatchEngine<E>
 			match player1.set_option(k,v) {
 				Ok(()) => (),
 				Err(ref e) => {
-					on_error_handler.lock().map(|h| h.call(e)).is_err();
+					let _ = on_error_handler.lock().map(|h| h.call(e));
 					return Err(SelfMatchRunningError::Fail(String::from(
 						"An error occurred while executing a self match. Please see the log for details ..."
 					)));
@@ -394,7 +394,7 @@ impl<E> SelfMatchEngine<E>
 			match player2.set_option(k,v) {
 				Ok(()) => (),
 				Err(ref e) => {
-					on_error_handler.lock().map(|h| h.call(e)).is_err();
+					let _ = on_error_handler.lock().map(|h| h.call(e));
 					return Err(SelfMatchRunningError::Fail(String::from(
 						"An error occurred while executing a self match. Please see the log for details ..."
 					)));
@@ -443,7 +443,7 @@ impl<E> SelfMatchEngine<E>
 						self_match_event_queue.push(SelfMatchEvent::GameEnd(s));
 					},
 					Err(ref e) => {
-						on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 						return Err(SelfMatchRunningError::InvalidState(String::from(
 							"Exclusive lock on self_match_event_queue failed."
 						)));
@@ -496,7 +496,7 @@ impl<E> SelfMatchEngine<E>
 						position.extract()
 					},
 					Err(ref e) => {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 						return Err(SelfMatchRunningError::InvalidState(String::from(
 							"An error occurred parsing the sfen string."
 						)));
@@ -561,7 +561,7 @@ impl<E> SelfMatchEngine<E>
 							}, teban, sfen.clone()));
 					},
 					Err(ref e) => {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 						return Err(SelfMatchRunningError::InvalidState(String::from(
 							"Exclusive lock on self_match_event_queue failed."
 						)));
@@ -615,7 +615,7 @@ impl<E> SelfMatchEngine<E>
 											self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&state.get_banmen(),&m))?));
 										},
 										Err(ref e) => {
-											on_error_handler.lock().map(|h| h.call(e)).is_err();
+											let _ = on_error_handler.lock().map(|h| h.call(e));
 											return Err(SelfMatchRunningError::InvalidState(String::from(
 												"Exclusive lock on self_match_event_queue failed."
 											)));
@@ -808,7 +808,7 @@ impl<E> SelfMatchEngine<E>
 											cs[1].send(SelfMatchMessage::Abort)?;
 										},
 										Err(ref e) => {
-											on_error_handler.lock().map(|h| h.call(e)).is_err();
+											let _ = on_error_handler.lock().map(|h| h.call(e));
 											return Err(SelfMatchRunningError::InvalidState(String::from(
 												"Exclusive lock on self_match_event_queue failed."
 											)));
@@ -873,7 +873,7 @@ impl<E> SelfMatchEngine<E>
 											user_event_queue.push(UserEvent::Stop);
 										},
 										Err(ref e) => {
-											on_error_handler.lock().map(|h| h.call(e)).is_err();
+											let _ = on_error_handler.lock().map(|h| h.call(e));
 										}
 									}
 
@@ -943,25 +943,25 @@ impl<E> SelfMatchEngine<E>
 						cs1.send(SelfMatchMessage::Error(1))
 					};
 					if let Err(ref e) = r {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 					}
 				},
 				SelfMatchRunningError::PlayerThreadError(0) => {
 					if let Err(ref e) = cs2.send(SelfMatchMessage::Error(0)) {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 					}
 				},
 				SelfMatchRunningError::PlayerThreadError(1) => {
 					if let Err(ref e) = cs1.send(SelfMatchMessage::Error(1)) {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 					}
 				},
 				_ => {
 					if let Err(ref e) = cs1.send(SelfMatchMessage::Error(0)) {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 					}
 					if let Err(ref e) = cs2.send(SelfMatchMessage::Error(1)) {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 					}
 				}
 			}
@@ -996,7 +996,7 @@ impl<E> SelfMatchEngine<E>
 							loop {
 								match cr.recv()? {
 									SelfMatchMessage::StartThink(t,b,mc,n,m) => {
-										let (mut ms, mut mg) = match mc {
+										let (ms, mg) = match mc {
 											MochigomaCollections::Pair(ref ms, ref mg) => {
 												(ms.clone(),mg.clone())
 											},
@@ -1018,7 +1018,7 @@ impl<E> SelfMatchEngine<E>
 										}
 									},
 									SelfMatchMessage::StartPonderThink(t,b,mc,n,m) => {
-										let (mut ms, mut mg) = match mc {
+										let (ms, mg) = match mc {
 											MochigomaCollections::Pair(ref ms, ref mg) => {
 												(ms.clone(),mg.clone())
 											},
@@ -1054,12 +1054,12 @@ impl<E> SelfMatchEngine<E>
 												return Ok(());
 											}
 											_ => {
-												logger.lock().map(|mut logger| {
+												let _ = logger.lock().map(|mut logger| {
 													logger.logging(&format!("Invalid message."))
 												}).map_err(|_| {
 													USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 													false
-												}).is_err();
+												});
 
 												if !quit_ready.load(Ordering::Acquire) {
 													if !quit_ready.load(Ordering::Acquire) {
@@ -1092,12 +1092,12 @@ impl<E> SelfMatchEngine<E>
 										return Ok(());
 									},
 									_ => {
-										logger.lock().map(|mut logger| {
+										let _ = logger.lock().map(|mut logger| {
 											logger.logging(&format!("Invalid message."))
 										}).map_err(|_| {
 											USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 											false
-										}).is_err();
+										});
 
 										if !quit_ready.load(Ordering::Acquire) {
 											ss.send(SelfMatchMessage::Error(player_i))?;
@@ -1117,12 +1117,12 @@ impl<E> SelfMatchEngine<E>
 							return Ok(());
 						},
 						_ => {
-							logger.lock().map(|mut logger| {
+							let _ = logger.lock().map(|mut logger| {
 								logger.logging(&format!("Invalid message."))
 							}).map_err(|_| {
 								USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 								false
-							}).is_err();
+							});
 
 							if !quit_ready.load(Ordering::Acquire) {
 								ss.send(SelfMatchMessage::Error(player_i))?;
@@ -1136,7 +1136,7 @@ impl<E> SelfMatchEngine<E>
 						SelfMatchRunningError::RecvError(_) => (),
 					_ if !quit_ready.load(Ordering::Acquire) => {
 						if let Err(ref e) = ss.send(SelfMatchMessage::Error(player_i)) {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
+							let _ = on_error_handler.lock().map(|h| h.call(e));
 						}
 					},
 					_ => (),
@@ -1160,14 +1160,14 @@ impl<E> SelfMatchEngine<E>
 								return;
 							},
 							Err(ref e) => {
-								on_error_handler.lock().map(|h| h.call(e)).is_err();
+								let _ = on_error_handler.lock().map(|h| h.call(e));
 								return;
 							},
 							_ => (),
 						}
 					},
 					Err(ref e) if !quit_ready.load(Ordering::Acquire) => {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 						return;
 					},
 					_ => (),
@@ -1182,13 +1182,13 @@ impl<E> SelfMatchEngine<E>
 		while !quit_ready.load(Ordering::Acquire) || (match self.system_event_queue.lock() {
 			Ok(system_event_queue) => system_event_queue.has_event(),
 			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				let _ = on_error_handler.lock().map(|h| h.call(e));
 				false
 			}
 		}) || (match self_match_event_queue.lock() {
 			Ok(self_match_event_queue) => self_match_event_queue.has_event(),
 			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				let _ = on_error_handler.lock().map(|h| h.call(e));
 				false
 			}
 		}) {
@@ -1211,12 +1211,12 @@ impl<E> SelfMatchEngine<E>
 
 		let result = bridge_h.join().map_err(|_| {
 			has_error = true;
-			logger.lock().map(|mut logger| {
+			let _ = logger.lock().map(|mut logger| {
 				logger.logging(&format!("Main thread join failed."))
 			}).map_err(|_| {
 				USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 				false
-			}).is_err();
+			});
 		}).unwrap_or(Err(SelfMatchRunningError::ThreadJoinFailed(String::from(
 			"Main thread join failed."
 		)))).map_err(|e| {
@@ -1225,20 +1225,20 @@ impl<E> SelfMatchEngine<E>
 		});
 
 		for h in handlers {
-			h.join().map_err(|_| {
+			let _ = h.join().map_err(|_| {
 				has_error = true;
-				logger.lock().map(|mut logger| {
+				let _ = logger.lock().map(|mut logger| {
 					logger.logging(&format!("Sub thread join failed."))
 				}).map_err(|_| {
 					USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
 					false
-				}).is_err();
+				});
 			}).map(|r| {
 				r.map_err(|e| {
 					has_error = true;
 					e
 				}).is_err()
-			}).is_err();
+			});
 		}
 
 		if has_error {

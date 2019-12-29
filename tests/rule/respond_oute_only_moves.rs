@@ -75,7 +75,7 @@ fn test_respond_oute_only_moves_all_sente() {
 	base_banmen.0[0][0] = Blank;
 
 	for (mvs,answer) in mvs.into_iter().zip(answer.into_iter()) {
-		let mut banmen = base_banmen.clone();
+		let banmen = base_banmen.clone();
 
 		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 
@@ -166,7 +166,7 @@ fn test_respond_oute_only_moves_all_gote() {
 	base_banmen.0[8-0][8-0] = Blank;
 
 	for (mvs,answer) in mvs.into_iter().zip(answer.into_iter()) {
-		let mut banmen = base_banmen.clone();
+		let banmen = base_banmen.clone();
 
 		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 

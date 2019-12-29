@@ -625,10 +625,10 @@ impl PositionParser {
 	}
 }
 struct UsiGoCreator {
-	f:Box<Fn(UsiGoTimeLimit) -> UsiGo>,
+	f:Box<dyn Fn(UsiGoTimeLimit) -> UsiGo>,
 }
 impl UsiGoCreator {
-	pub fn new(f:Box<Fn(UsiGoTimeLimit) -> UsiGo>) -> UsiGoCreator {
+	pub fn new(f:Box<dyn Fn(UsiGoTimeLimit) -> UsiGo>) -> UsiGoCreator {
 		UsiGoCreator {
 			f:f,
 		}

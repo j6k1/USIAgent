@@ -81,7 +81,7 @@ impl SandBox {
 		match r {
 			Ok(_) => (),
 			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				let _ = on_error_handler.lock().map(|h| h.call(e));
 			}
 		}
 		r
@@ -107,11 +107,11 @@ impl OnAcceptMove {
 							system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
 						},
 						Err(ref e) => {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
+							let _ = on_error_handler.lock().map(|h| h.call(e));
 						}
 					},
 					Err(ref e) => {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 					}
 				}
 			},
@@ -241,10 +241,10 @@ impl<T,E> UsiAgent<T,E>
 						&SystemEvent::SendUsiCommand(UsiOutput::Command(ref s)) => {
 							match writer.lock() {
 								Err(ref e) => {
-									on_error_handler.lock().map(|h| h.call(e)).is_err()
+									let _ = on_error_handler.lock().map(|h| h.call(e));
 								},
 								Ok(ref writer) => {
-									writer.write(s).is_err()
+									let _ = writer.write(s);
 								}
 							};
 							Ok(())
@@ -291,7 +291,7 @@ impl<T,E> UsiAgent<T,E>
 									}
 								},
 								Err(ref e) => {
-									on_error_handler.lock().map(|h| h.call(e)).is_err();
+									let _ = on_error_handler.lock().map(|h| h.call(e));
 								}
 							};
 							Ok(())
@@ -318,7 +318,7 @@ impl<T,E> UsiAgent<T,E>
 												match player.take_ready() {
 													Ok(_) => (),
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 														return;
 													}
 												}
@@ -329,17 +329,17 @@ impl<T,E> UsiAgent<T,E>
 																system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
 															},
 															Err(ref e) => {
-																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 															}
 														};
 													},
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												}
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 									}).map(|_| {
@@ -434,12 +434,12 @@ impl<T,E> UsiAgent<T,E>
 												match player.set_position(t, b, ms, mg, n, v) {
 													Ok(_) => (),
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												}
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 									}).map(|_| {
@@ -534,7 +534,7 @@ impl<T,E> UsiAgent<T,E>
 																info_sender,on_error_handler_inner.clone()) {
 																	Ok(bm) => bm,
 																	Err(ref e) => {
-																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 																		return;
 																	}
 																};
@@ -542,7 +542,7 @@ impl<T,E> UsiAgent<T,E>
 												thinking_inner.store(false,Ordering::Release);
 
 												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
-													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													return;
 												}
 
@@ -551,7 +551,7 @@ impl<T,E> UsiAgent<T,E>
 														*busy = false;
 													},
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												};
 
@@ -572,7 +572,7 @@ impl<T,E> UsiAgent<T,E>
 																			system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
 																		},
 																		Err(ref e) => {
-																			on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																			let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 																		}
 																	}
 																} else {
@@ -581,24 +581,24 @@ impl<T,E> UsiAgent<T,E>
 																			*on_delay_move_handler_inner = OnAcceptMove::new(bm);
 																		},
 																		Err(ref e) => {
-																			on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																			let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 																		}
 																	}
 																}
 															},
 															Err(ref e) => {
-																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 																return;
 															}
 														}
 													},
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												}
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 									}).map(|_| {
@@ -644,7 +644,7 @@ impl<T,E> UsiAgent<T,E>
 																info_sender,on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
-																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 																		return;
 																	}
 																};
@@ -652,7 +652,7 @@ impl<T,E> UsiAgent<T,E>
 												thinking_inner.store(false,Ordering::Release);
 
 												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
-													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													return;
 												}
 
@@ -661,7 +661,7 @@ impl<T,E> UsiAgent<T,E>
 														*busy = false;
 													},
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												};
 
@@ -677,17 +677,17 @@ impl<T,E> UsiAgent<T,E>
 														match system_event_queue.lock() {
 															Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
 															Err(ref e) => {
-																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 															}
 														};
 													},
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												}
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 									}).map(|_| {
@@ -733,14 +733,14 @@ impl<T,E> UsiAgent<T,E>
 																info_sender,on_error_handler_inner.clone()) {
 																	Ok(m) => m,
 																	Err(ref e) => {
-																		on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																		let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 																		return;
 																	}
 																};
 												thinking_inner.store(false,Ordering::Release);
 
 												if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
-													on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													return;
 												}
 
@@ -749,7 +749,7 @@ impl<T,E> UsiAgent<T,E>
 														*busy = false;
 													},
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												};
 
@@ -765,17 +765,17 @@ impl<T,E> UsiAgent<T,E>
 														match system_event_queue.lock() {
 															Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
 															Err(ref e) => {
-																on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+																let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 															}
 														};
 													},
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												}
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 									}).map(|_| {
@@ -903,13 +903,13 @@ impl<T,E> UsiAgent<T,E>
 												user_event_queue.push(UserEvent::Quit);
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										}
 									}
 								},
 								Err(ref e) => {
-									on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+									let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 									return Err(EventHandlerError::Fail(String::from(
 										"Could not get exclusive lock on busy object."
 									)));
@@ -924,12 +924,12 @@ impl<T,E> UsiAgent<T,E>
 												match player.quit() {
 													Ok(_) => (),
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												}
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 										match system_event_queue.lock() {
@@ -937,7 +937,7 @@ impl<T,E> UsiAgent<T,E>
 												system_event_queue.push(SystemEvent::QuitReady);
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 									}).map(|_| {
@@ -995,12 +995,12 @@ impl<T,E> UsiAgent<T,E>
 																				on_error_handler_inner.clone()) {
 													Ok(_) => (),
 													Err(ref e) => {
-														on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												}
 											},
 											Err(ref e) => {
-												on_error_handler_inner.lock().map(|h| h.call(e)).is_err();
+												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
 										};
 									}).map(|_| {
@@ -1055,7 +1055,7 @@ impl<T,E> UsiAgent<T,E>
 			let option_kinds = match player.get_option_kinds() {
 				Ok(option_kinds) => option_kinds,
 				Err(ref e) => {
-					on_error_handler.lock().map(|h| h.call(e)).is_err();
+					let _ = on_error_handler.lock().map(|h| h.call(e));
 					return false;
 				}
 			};
@@ -1078,7 +1078,7 @@ impl<T,E> UsiAgent<T,E>
 		while !(match quit_ready.lock() {
 			Ok(quit_ready) => *quit_ready,
 			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				let _ = on_error_handler.lock().map(|h| h.call(e));
 				true
 			}
 		}) {

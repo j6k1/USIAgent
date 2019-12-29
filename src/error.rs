@@ -14,13 +14,13 @@ use selfmatch::SelfMatchMessage;
 
 #[derive(Debug)]
 pub enum EventDispatchError<'a,T,K,E>
-	where T: fmt::Debug + 'a, K: fmt::Debug, E: Error + fmt::Debug {
+	where T: fmt::Debug + 'a, K: fmt::Debug, E: Error + fmt::Debug + 'static {
 	ErrorFromHandler(EventHandlerError<K,E>),
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
 	ContainError,
 }
 #[derive(Debug)]
-pub enum EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
+pub enum EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug + 'static {
 	Fail(String),
 	InvalidState(K),
 	PlayerError(E),
@@ -44,7 +44,7 @@ impl<K,E> error::Error for EventHandlerError<K,E> where K: fmt::Debug, E: Error 
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		EventHandlerError::Fail(_) => None,
 	 		EventHandlerError::InvalidState(_) => None,
@@ -72,10 +72,10 @@ impl<'a,T,K,E> error::Error for EventDispatchError<'a,T,K,E>
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(_) => None,
-	 		EventDispatchError::MutexLockFailedError(ref e) => Some(e),
+	 		EventDispatchError::MutexLockFailedError(_) => None,
 	 		EventDispatchError::ContainError => None,
 	 	}
 	 }
@@ -108,7 +108,7 @@ impl error::Error for InvalidStateError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		InvalidStateError(_) => None
 	 	}
@@ -130,7 +130,7 @@ impl error::Error for DanConvertError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		DanConvertError(_) => None
 	 	}
@@ -165,7 +165,7 @@ impl error::Error for ToMoveStringConvertError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		ToMoveStringConvertError::CharConvert(ref e) => Some(e),
 	 		ToMoveStringConvertError::AbortedError => None,
@@ -221,7 +221,7 @@ impl error::Error for UsiOutputCreateError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		UsiOutputCreateError::ConvertError(ref e) => Some(e),
 	 		UsiOutputCreateError::InvalidStateError(_) => None,
@@ -267,10 +267,10 @@ impl<'a,T> error::Error for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		UsiEventSendError::FailCreateOutput(ref e) => Some(e),
-	 		UsiEventSendError::MutexLockFailedError(ref e) => Some(e),
+	 		UsiEventSendError::MutexLockFailedError(_) => None,
 	 	}
 	 }
 }
@@ -302,7 +302,7 @@ impl error::Error for InfoSendError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		InfoSendError::Fail(_) => None,
 	 	}
@@ -334,7 +334,7 @@ impl<T> error::Error for TypeConvertError<T> where T: fmt::Debug {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		TypeConvertError::SyntaxError(_) => None,
 	 		TypeConvertError::LogicError(_) => None,
@@ -370,7 +370,7 @@ impl<E> error::Error for USIAgentStartupError<E> where E: PlayerError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		USIAgentStartupError::MutexLockFailedOtherError(_) => None,
 	 		USIAgentStartupError::IOError(_) => None,
@@ -399,9 +399,9 @@ impl<'a,T,E> error::Error for USIAgentRunningError<'a,T,E> where T: fmt::Debug, 
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
-	 		USIAgentRunningError::MutexLockFailedError(ref e) => Some(e),
+	 		USIAgentRunningError::MutexLockFailedError(_) => None,
 	 		USIAgentRunningError::StartupError(ref e) => Some(e),
 	 	}
 	 }
@@ -436,7 +436,7 @@ impl error::Error for ShogiError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		ShogiError::InvalidState(_) => None,
 	 	}
@@ -460,7 +460,7 @@ impl error::Error for UsiProtocolError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		UsiProtocolError::InvalidState(_) => None,
 	 	}
@@ -508,7 +508,7 @@ impl<E> error::Error for SelfMatchRunningError<E> where E: PlayerError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		SelfMatchRunningError::InvalidState(_) => None,
 	 		SelfMatchRunningError::PlayerError(ref e) => Some(e),
@@ -588,7 +588,7 @@ impl error::Error for SfenStringConvertError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		SfenStringConvertError::ToMoveString(ref e) => Some(e),
 	 		SfenStringConvertError::TypeConvertError(ref e) => Some(e),
@@ -633,7 +633,7 @@ impl error::Error for KifuWriteError {
 	 	}
 	 }
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
 	 		KifuWriteError::Fail(_) => None,
 	 		KifuWriteError::InvalidState(_) => None,

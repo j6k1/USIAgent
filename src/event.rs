@@ -527,8 +527,8 @@ pub struct USIEventDispatcher<'b,K,E,T,L,UE>
 	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>,
 	context_type:PhantomData<T>,
 	event_kind:PhantomData<K>,
-	handlers:Vec<Vec<Box<FnMut(&T,&E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
-	once_handlers:Vec<Vec<Box<FnMut(&T, &E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
+	handlers:Vec<Vec<Box<dyn FnMut(&T,&E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
+	once_handlers:Vec<Vec<Box<dyn FnMut(&T, &E) -> Result<(), EventHandlerError<K,UE>> + 'b>>>,
 }
 impl<'b,K,E,T,L,UE> USIEventDispatcher<'b,K,E,T,L,UE>
 	where K: MaxIndex + fmt::Debug,
@@ -595,7 +595,7 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 			}
 
 			if !self.once_handlers[usize::from(e.event_kind())].is_empty() {
-				let mut once_handlers:Vec<Box<FnMut(&T, &E) -> Result<(), EventHandlerError<K,UE>>>> =
+				let mut once_handlers:Vec<Box<dyn FnMut(&T, &E) -> Result<(), EventHandlerError<K,UE>>>> =
 											self.once_handlers[usize::from(e.event_kind())].drain(0..)
 																							.collect();
 				for h in once_handlers.iter_mut() {

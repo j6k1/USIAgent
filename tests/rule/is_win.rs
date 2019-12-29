@@ -31,7 +31,7 @@ fn test_is_win_sente() {
 			banmen.0[pk.1][pk.0] = pk.2;
 		}
 
-		let mut state = State::new(banmen);
+		let state = State::new(banmen);
 
 		assert_eq!(*answer,Rule::is_win(
 								&state,Teban::Sente,m.to_applied_move()),
@@ -65,7 +65,7 @@ fn test_is_win_gote() {
 			banmen.0[pk.1][pk.0] = pk.2;
 		}
 
-		let mut state = State::new(banmen);
+		let state = State::new(banmen);
 
 		assert_eq!(*answer,Rule::is_win(
 								&state,Teban::Gote,m.to_applied_move()),

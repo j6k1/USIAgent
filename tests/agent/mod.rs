@@ -4670,7 +4670,7 @@ fn test_info_send_commands_with_str_5times() {
 	for i in 0..5 {
 		let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
 
-		let res = r.recv_timeout(Duration::from_millis(200)).expect(format!("attempt to receive 'info string hellow! {}' timed out.",i+1).as_str());;
+		let res = r.recv_timeout(Duration::from_millis(200)).expect(format!("attempt to receive 'info string hellow! {}' timed out.",i+1).as_str());
 
 		assert_eq!(&*res,format!("info string hellow! {}",i+1).as_str());
 	}

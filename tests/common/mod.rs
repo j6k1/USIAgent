@@ -55,7 +55,7 @@ impl error::Error for CommonError {
 		}
 	}
 
-	fn cause(&self) -> Option<&error::Error> {
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 		match *self {
 			CommonError::Fail(_) => None,
 		}
@@ -143,7 +143,7 @@ impl StdErrorLogger {
 }
 impl Logger for StdErrorLogger {
 	fn logging(&mut self, message:&String) -> bool {
-		writeln!(&mut std::io::stderr(),"errror: {}",message);
+		let _ = writeln!(&mut std::io::stderr(),"errror: {}",message);
 		true
 	}
 }

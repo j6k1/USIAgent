@@ -23,6 +23,6 @@ impl USIInputReader for USIStdInputReader {
 
 		let ptn:&[_] = &['\r','\n'];
 
-		Ok(buf.as_str().trim_right_matches(ptn).to_string())
+		Ok(buf.as_str().trim_end_matches(ptn).to_string())
 	}
 }

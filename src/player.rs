@@ -53,7 +53,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		Ok(match self.dispatch_events(event_queue,&on_error_handler) {
 			Ok(_)=> true,
 			Err(ref e) => {
-				on_error_handler.lock().map(|h| h.call(e)).is_err();
+				let _ = on_error_handler.lock().map(|h| h.call(e));
 				false
 			}
 		})
@@ -77,7 +77,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 					match self.on_stop(e) {
 						Ok(_) => (),
 						Err(ref e) => {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
+							let _ = on_error_handler.lock().map(|h| h.call(e));
 							has_error = true;
 						}
 					};
@@ -86,7 +86,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 					match self.on_quit(e) {
 						Ok(_) => (),
 						Err(ref e) => {
-							on_error_handler.lock().map(|h| h.call(e)).is_err();
+							let _ = on_error_handler.lock().map(|h| h.call(e));
 							has_error = true;
 						}
 					};
@@ -196,7 +196,7 @@ impl USIInfoSender {
 							Ok(UsiOutput::Command(ref s)) => {
 								match writer.lock() {
 									Err(ref e) => {
-										on_error_handler.lock().map(|h| h.call(e)).is_err();
+										let _ = on_error_handler.lock().map(|h| h.call(e));
 										break;
 									},
 									Ok(ref writer) => {
@@ -207,7 +207,7 @@ impl USIInfoSender {
 								};
 							},
 							Err(ref e) => {
-								on_error_handler.lock().map(|h| h.call(e)).is_err();
+								let _ = on_error_handler.lock().map(|h| h.call(e));
 								break;
 							}
 						}
@@ -216,7 +216,7 @@ impl USIInfoSender {
 						break;
 					},
 					Err(ref e) => {
-						on_error_handler.lock().map(|h| h.call(e)).is_err();
+						let _ = on_error_handler.lock().map(|h| h.call(e));
 						break;
 					}
 				}

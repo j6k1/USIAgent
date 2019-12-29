@@ -15,9 +15,9 @@ pub trait Logger {
 
 		messages.push(format!("{}", e).add_indent(indent*2));
 
-		let mut e:&Error = e;
+		let mut e:&(dyn Error) = e;
 
-		while let Some(cause) = e.cause() {
+		while let Some(cause) = e.source() {
 			indent += 1;
 			messages.push(format!("{}", cause).add_indent(indent*2));
 			e = cause;
@@ -46,7 +46,7 @@ impl Logger for FileLogger {
 			Ok(_) => !self.writer.flush().is_err(),
 			Err(_)=> {
 				USIStdErrorWriter::write("The log could not be written to the file.").unwrap();
-				self.writer.flush().is_err();
+				let _ = self.writer.flush();
 				false
 			}
 		}
