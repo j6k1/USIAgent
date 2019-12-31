@@ -4,6 +4,7 @@ use usiagent::TryFrom;
 use usiagent::shogi::*;
 use usiagent::protocol::*;
 use usiagent::error::*;
+use usiagent::event::UsiInitialPosition;
 use usiagent::rule;
 use usiagent::rule::BANMEN_START_POS;
 
@@ -369,5 +370,112 @@ fn test_mochigomacollections_try_from() {
 
 	for (i,e) in input_and_expected.into_iter() {
 		assert_eq!(MochigomaCollections::try_from(i),e);
+	}
+}
+#[test]
+fn test_position_parser_parse() {
+	let input_and_expected:Vec<(&'static [&'static str],Result<PositionParseResult,TypeConvertError<String>>)> = vec![
+		(&["startpos"],Ok(PositionParseResult(Teban::Sente,UsiInitialPosition::Startpos,1,vec![]))),
+		(&["startpos","moves","1g1f"],Ok(PositionParseResult(Teban::Sente,UsiInitialPosition::Startpos,1,vec![
+			Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))
+		]))),
+		(&["startpos","moves","7g7f","3c3d","8h3c+"],Ok(PositionParseResult(Teban::Sente,UsiInitialPosition::Startpos,1,vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true)),
+		]))),
+
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1"],
+			Ok(PositionParseResult(Teban::Gote,
+				UsiInitialPosition::Sfen(Banmen([
+					[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+					[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+					[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+					[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+					[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+				]),MochigomaCollections::Empty),
+				1,vec![])
+			)
+		),
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1","moves","3c3d"],
+			Ok(PositionParseResult(Teban::Gote,
+				UsiInitialPosition::Sfen(Banmen([
+					[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+					[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+					[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+					[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+					[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+				]),MochigomaCollections::Empty),
+				1,vec![
+					Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false))
+				])
+			)
+		),
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1","moves","3c3d","7g7f","2b7g"],
+			Ok(PositionParseResult(Teban::Gote,
+				UsiInitialPosition::Sfen(Banmen([
+					[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+					[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+					[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+					[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+					[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+					[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+				]),MochigomaCollections::Empty),
+				1,vec![
+					Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+					Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+					Move::To(KomaSrcPosition(2,2),KomaDstToPosition(7,7,false))
+				])
+			)
+		),
+
+		(&[],Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["hoge"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the position command is invalid. (Insufficient parameters)"
+		)))),
+		(&["startpos","hoge"],Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["startpos","hoge","1g1f"],Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["startpos","moves"],Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1","hoge"],
+			Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1","hoge","1g1f"],
+			Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1","moves"],
+			Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-"],
+			Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+	];
+
+	let parser = PositionParser::new();
+
+	for (i,e) in input_and_expected.into_iter() {
+		assert_eq!(parser.parse(i),e);
 	}
 }

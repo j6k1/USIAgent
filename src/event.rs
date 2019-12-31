@@ -100,7 +100,7 @@ pub enum SysEventOptionKind {
 	Bool,
 	Exist,
 }
-#[derive(Debug)]
+#[derive(Eq,PartialEq,Debug)]
 pub enum UsiInitialPosition {
 	Sfen(Banmen, MochigomaCollections),
 	Startpos,

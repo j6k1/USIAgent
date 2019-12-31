@@ -520,6 +520,7 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 		})
 	}
 }
+#[derive(Eq,PartialEq,Debug)]
 pub struct PositionParseResult(pub Teban, pub UsiInitialPosition, pub u32,pub Vec<Move>);
 impl PositionParseResult {
 	pub fn extract(self) -> (Teban, Banmen, MochigomaCollections, u32, Vec<Move>) {

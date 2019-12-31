@@ -207,7 +207,7 @@ impl PartialEq for MochigomaCollections {
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
 				match other {
 					&MochigomaCollections::Empty => {
-						false
+						ms.is_empty() && mg.is_empty()
 					}
 					&MochigomaCollections::Pair(ref oms,ref omg) => {
 						ms == oms && mg == omg
