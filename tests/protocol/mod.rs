@@ -419,7 +419,7 @@ fn test_position_parser_parse() {
 				])
 			)
 		),
-		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1","moves","3c3d","7g7f","2b7g"],
+		(&["sfen","lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL","w","-","1","moves","3c3d","7g7f","2b7g+"],
 			Ok(PositionParseResult(Teban::Gote,
 				UsiInitialPosition::Sfen(Banmen([
 					[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
@@ -435,7 +435,7 @@ fn test_position_parser_parse() {
 				1,vec![
 					Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
 					Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
-					Move::To(KomaSrcPosition(2,2),KomaDstToPosition(7,7,false))
+					Move::To(KomaSrcPosition(2,2),KomaDstToPosition(7,7,true))
 				])
 			)
 		),
@@ -810,5 +810,135 @@ fn test_mochigomacollections_to_sfen() {
 		assert_eq!(i.to_sfen(),r);
 	}
 }
+#[test]
+fn test_teban_banmen_mc_moves_to_sfen() {
+	let input_and_expected:Vec<(
+		(Teban,Banmen,MochigomaCollections,Vec<Move>),Result<String,SfenStringConvertError>)> = vec![
 
+		((Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Empty,vec![]),Ok(String::from("startpos"))),
+		((Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![]),Ok(String::from("startpos"))),
+		((Teban::Gote,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![]),
+		Ok(String::from("sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1"))),
+		((Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Empty,vec![
+			Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))
+		]),Ok(String::from("startpos moves 1g1f"))),
+		((Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+			Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))
+		]),Ok(String::from("startpos moves 1g1f"))),
+		((Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Empty,vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true)),
+		]),Ok(String::from("startpos moves 7g7f 3c3d 8h3c+"))),
+		((Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true)),
+		]),Ok(String::from("startpos moves 7g7f 3c3d 8h3c+"))),
+		((Teban::Gote,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false))
+		]),
+		Ok(String::from("sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1 moves 3c3d"))),
+		((Teban::Gote,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(2,2),KomaDstToPosition(7,7,true))
+		]),
+		Ok(String::from("sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1 moves 3c3d 7g7f 2b7g+"))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
 

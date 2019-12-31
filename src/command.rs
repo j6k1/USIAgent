@@ -4,7 +4,7 @@ use std::clone::Clone;
 use shogi::*;
 use Validate;
 
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum UsiCommand {
 	UsiOk,
 	UsiId(String, String),
@@ -21,7 +21,7 @@ pub enum BestMove {
 	Win,
 	Abort,
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,Eq,PartialEq)]
 pub enum UsiInfoSubCommand {
 	Depth(u32),
 	SelDepth(u32),
@@ -49,7 +49,7 @@ pub enum UsiInfoSubCommandKind {
 	Nps,
 	Str,
 }
-#[derive(Clone, Debug)]
+#[derive(Clone,Debug,Eq,PartialEq)]
 pub enum UsiScore {
 	Cp(i64),
 	CpUpper(i64),
@@ -58,13 +58,13 @@ pub enum UsiScore {
 	MateUpper(i64),
 	MateLower(i64),
 }
-#[derive(Clone, Debug)]
+#[derive(Clone,Debug,Eq,PartialEq)]
 pub enum UsiScoreMate {
 	Num(i64),
 	Plus,
 	Minus,
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum CheckMate {
 	Moves(Vec<Move>),
 	NotiImplemented,
@@ -72,7 +72,7 @@ pub enum CheckMate {
 	Nomate,
 	Abort,
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum UsiOptType {
 	Check(Option<bool>),
 	Spin(i64, i64,Option<i64>),

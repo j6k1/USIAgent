@@ -92,7 +92,7 @@ impl<'a,T,K,E> From<EventHandlerError<K,E>> for EventDispatchError<'a,T,K,E>
 		EventDispatchError::ErrorFromHandler(err)
 	}
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub struct InvalidStateError(pub String);
 impl fmt::Display for InvalidStateError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -114,7 +114,7 @@ impl error::Error for InvalidStateError {
 	 	}
 	 }
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub struct DanConvertError(pub u32);
 impl fmt::Display for DanConvertError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -136,7 +136,7 @@ impl error::Error for DanConvertError {
 	 	}
 	 }
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum ToMoveStringConvertError {
 	CharConvert(DanConvertError),
 	AbortedError,
@@ -177,7 +177,7 @@ impl From<DanConvertError> for ToMoveStringConvertError {
 		ToMoveStringConvertError::CharConvert(err)
 	}
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum UsiOutputCreateError {
 	ValidationError(UsiCommand),
 	InvalidStateError(String),
@@ -284,7 +284,7 @@ impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for UsiEventSendError<'a,T> where
 		UsiEventSendError::MutexLockFailedError(err)
 	}
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum InfoSendError {
 	Fail(String)
 }
@@ -418,7 +418,7 @@ impl<'a,T,E> From<USIAgentStartupError<E>> for USIAgentRunningError<'a,T,E>
 		USIAgentRunningError::StartupError(err)
 	}
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum ShogiError {
 	InvalidState(String),
 }
@@ -442,7 +442,7 @@ impl error::Error for ShogiError {
 	 	}
 	 }
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum UsiProtocolError {
 	InvalidState(String),
 }
@@ -552,7 +552,7 @@ impl<E> From<E> for SelfMatchRunningError<E> where E: PlayerError {
 		SelfMatchRunningError::PlayerError(err)
 	}
 }
-#[derive(Debug)]
+#[derive(Debug,Eq,PartialEq)]
 pub enum SfenStringConvertError {
 	ToMoveString(ToMoveStringConvertError),
 	TypeConvertError(TypeConvertError<String>),
