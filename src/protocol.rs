@@ -949,8 +949,10 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 
 				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_SENTE {
 					if let Some(n) = ms.get(&k) {
-						if *n > 0 {
+						if *n > 1 {
 							sfen.push_str(&n.to_string());
+							sfen.push(c);
+						} else if *n == 1 {
 							sfen.push(c);
 						}
 					}

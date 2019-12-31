@@ -126,8 +126,8 @@ fn test_move_try_from() {
 		("9i1a+",Ok(Move::To(KomaSrcPosition(9,9),KomaDstToPosition(1,1,true)))),
 	];
 
-	for (i,e) in input_and_expected.into_iter() {
-		assert_eq!(Move::try_from(&i),e);
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(Move::try_from(&i),r);
 	}
 }
 #[test]
@@ -169,8 +169,8 @@ fn test_komakind_try_from() {
 		)))),
 	];
 
-	for (i,e) in input_and_expected.into_iter() {
-		assert_eq!(KomaKind::try_from(i.to_string()),e);
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(KomaKind::try_from(i.to_string()),r);
 	}
 }
 #[test]
@@ -183,8 +183,8 @@ fn test_teban_try_from() {
 		))))
 	];
 
-	for (i,e) in input_and_expected.into_iter() {
-		assert_eq!(Teban::try_from(i),e);
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(Teban::try_from(i),r);
 	}
 }
 #[test]
@@ -248,8 +248,8 @@ fn test_banmen_try_from() {
 		"Invalid SFEN character string (pieces outside the range of the board)")))),
 	];
 
-	for (i,e) in input_and_expected.into_iter() {
-		assert_eq!(Banmen::try_from(&i),e);
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(Banmen::try_from(&i),r);
 	}
 }
 #[test]
@@ -368,8 +368,8 @@ fn test_mochigomacollections_try_from() {
 		)))),
 	];
 
-	for (i,e) in input_and_expected.into_iter() {
-		assert_eq!(MochigomaCollections::try_from(i),e);
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(MochigomaCollections::try_from(i),r);
 	}
 }
 #[test]
@@ -475,8 +475,8 @@ fn test_position_parser_parse() {
 
 	let parser = PositionParser::new();
 
-	for (i,e) in input_and_expected.into_iter() {
-		assert_eq!(parser.parse(i),e);
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(parser.parse(i),r);
 	}
 }
 #[test]
@@ -648,7 +648,167 @@ fn test_go_parser_parse() {
 
 	let parser = GoParser::new();
 
-	for (i,e) in input_and_expected.into_iter() {
-		assert_eq!(parser.parse(i),e);
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(parser.parse(i),r);
 	}
 }
+#[test]
+fn test_banmen_to_sfen() {
+	let input_and_expected:Vec<(Banmen,Result<String,TypeConvertError<String>>)> = vec![
+		(Banmen([
+			[GKyouN,GKeiN,GGinN,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHishaN,Blank,Blank,Blank,Blank,Blank,GKakuN,Blank],
+			[GFuN,GFuN,GFuN,GFuN,GFuN,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFuN,SFuN,SFuN,SFuN,SFuN],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGinN,SKeiN,SKyouN]
+		]),Ok(String::from("+l+n+sgkgsnl/1+r5+b1/+p+p+p+p+ppppp/9/9/9/PPPP+P+P+P+P+P/1B5R1/LNSGKG+S+N+L"))),
+		(Banmen([
+			[GKyouN,GKeiN,GGinN,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFuN,GFuN,GFuN,GFuN,GFuN,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFuN,SFuN,SFuN,SFuN,SFuN],
+			[Blank,SKakuN,Blank,Blank,Blank,Blank,Blank,SHishaN,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGinN,SKeiN,SKyouN]
+		]),Ok(String::from("+l+n+sgkgsnl/1r5b1/+p+p+p+p+ppppp/9/9/9/PPPP+P+P+P+P+P/1+B5+R1/LNSGKG+S+N+L"))),
+		(Banmen([
+			[GFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,GFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,GFu,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,GFu,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,GFu,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,GFu,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,GFu,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GFu,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,GFu]
+		]),Ok(String::from("p8/1p7/2p6/3p5/4p4/5p3/6p2/7p1/8p"))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
+#[test]
+fn test_teban_to_sfen() {
+	let input_and_expected:Vec<(Teban,Result<String,TypeConvertError<String>>)> = vec![
+		(Teban::Sente,Ok(String::from("b"))),
+		(Teban::Gote,Ok(String::from("w"))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
+#[test]
+fn test_mochigomacollections_to_sfen() {
+	let input_and_expected:Vec<(MochigomaCollections,Result<String, TypeConvertError<String>>)> = vec![
+		(MochigomaCollections::Pair(HashMap::new(),HashMap::new()),Ok(String::from("-"))),
+		(MochigomaCollections::Empty,Ok(String::from("-"))),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,2),
+			(MochigomaKind::Kin,2),
+			(MochigomaKind::Gin,2),
+			(MochigomaKind::Kei,2),
+			(MochigomaKind::Kyou,2),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,2),
+			(MochigomaKind::Kin,2),
+			(MochigomaKind::Gin,2),
+			(MochigomaKind::Kei,2),
+			(MochigomaKind::Kyou,2),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),Ok(String::from("2R2B2G2S2N2L9P2r2b2g2s2n2l9p"))),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,4),
+			(MochigomaKind::Kaku,4),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,4),
+			(MochigomaKind::Fu,18),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),HashMap::new()),Ok(String::from("4R4B4G4S4N4L18P"))),
+		(MochigomaCollections::Pair(HashMap::new(), vec![
+			(MochigomaKind::Hisha,4),
+			(MochigomaKind::Kaku,4),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,4),
+			(MochigomaKind::Fu,18),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),Ok(String::from("4r4b4g4s4n4l18p"))),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),Ok(String::from("RBGSNLPrbgsnlp"))),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),HashMap::new()),Ok(String::from("RBGSNLP"))),
+		(MochigomaCollections::Pair(HashMap::new(), vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),Ok(String::from("rbgsnlp"))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
+
+
