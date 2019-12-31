@@ -724,6 +724,11 @@ impl GoParser {
 									Err(_) => Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer.")))
 								})?
 						},
+						Some(&t) => {
+							return Err(TypeConvertError::SyntaxError(format!(
+								"The input form of the go command is invalid. (Unexpected parameter '{}')",t
+							)));
+						},
 						_ => {
 							return Err(TypeConvertError::SyntaxError(String::from(
 								"The input form of the go command is invalid. (Insufficient parameters)"
@@ -766,6 +771,11 @@ impl GoParser {
 									Err(_) => Err(TypeConvertError::SyntaxError(String::from("Failed parse string to integer.")))
 								})?
 						},
+						Some(&inc) => {
+							return Err(TypeConvertError::SyntaxError(format!(
+								"The input form of the go command is invalid. (Unexpected parameter '{}')",inc
+							)));
+						},
 						_ => {
 							return Err(TypeConvertError::SyntaxError(String::from(
 								"The input form of the go command is invalid. (Insufficient parameters)"
@@ -801,16 +811,12 @@ impl GoParser {
 			}
 		}
 
-		it.next().map_or(
-			limit.map_or(
-				byori.map_or(
-					Ok(f.create(UsiGoTimeLimit::None)),
-					|ref byori| Ok(f.create(UsiGoTimeLimit::Limit(None, Some(*byori))))
-				),
-				|ref limit| Ok(f.create(UsiGoTimeLimit::Limit(Some(*limit), byori)))
+		limit.map_or(
+			byori.map_or(
+				Ok(f.create(UsiGoTimeLimit::None)),
+				|ref byori| Ok(f.create(UsiGoTimeLimit::Limit(None, Some(*byori))))
 			),
-			|_| Err(TypeConvertError::SyntaxError(String::from(
-				"The input form of the go command is invalid. (Unknown parameter)")))
+			|ref limit| Ok(f.create(UsiGoTimeLimit::Limit(Some(*limit), byori)))
 		)
 	}
 }

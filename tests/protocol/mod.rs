@@ -4,7 +4,7 @@ use usiagent::TryFrom;
 use usiagent::shogi::*;
 use usiagent::protocol::*;
 use usiagent::error::*;
-use usiagent::event::UsiInitialPosition;
+use usiagent::event::*;
 use usiagent::rule;
 use usiagent::rule::BANMEN_START_POS;
 
@@ -474,6 +474,179 @@ fn test_position_parser_parse() {
 	];
 
 	let parser = PositionParser::new();
+
+	for (i,e) in input_and_expected.into_iter() {
+		assert_eq!(parser.parse(i),e);
+	}
+}
+#[test]
+fn test_go_parser_parse() {
+	let input_and_expected:Vec<(&'static [&'static str],Result<UsiGo,TypeConvertError<String>>)> = vec![
+		(&["mate","infinite"],Ok(UsiGo::Mate(UsiGoMateTimeLimit::Infinite))),
+		(&["mate","1"],Ok(UsiGo::Mate(UsiGoMateTimeLimit::Limit(1)))),
+		(&["mate"],Ok(UsiGo::Mate(UsiGoMateTimeLimit::None))),
+		(&["infinite"],Ok(UsiGo::Go(UsiGoTimeLimit::Infinite))),
+
+		(&["btime","1","wtime","2"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(Some((1,2)),None)))),
+		(&["wtime","2","btime","1"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(Some((1,2)),None)))),
+
+		(&["binc","1","winc","2"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(1,2)))))),
+		(&["winc","2","binc","1"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(1,2)))))),
+
+		(&["byoyomi","1"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(1)))))),
+
+		(&["btime","1","wtime","2","binc","3","winc","4"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Inc(3,4)))))),
+		(&["wtime","2","btime","1","winc","4","binc","3"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Inc(3,4)))))),
+
+		(&["btime","1","wtime","2","byoyomi","3"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Byoyomi(3)))))),
+		(&["wtime","2","btime","1","byoyomi","3"],Ok(UsiGo::Go(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Byoyomi(3)))))),
+
+		(&["ponder","btime","1","wtime","2"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(Some((1,2)),None)))),
+		(&["ponder","wtime","2","btime","1"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(Some((1,2)),None)))),
+
+		(&["ponder","binc","1","winc","2"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(1,2)))))),
+		(&["ponder","winc","2","binc","1"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(1,2)))))),
+
+		(&["ponder","byoyomi","1"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(1)))))),
+
+		(&["ponder","btime","1","wtime","2","binc","3","winc","4"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Inc(3,4)))))),
+		(&["ponder","wtime","2","btime","1","winc","4","binc","3"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Inc(3,4)))))),
+
+		(&["ponder","btime","1","wtime","2","byoyomi","3"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Byoyomi(3)))))),
+		(&["ponder","wtime","2","btime","1","byoyomi","3"],Ok(UsiGo::Ponder(UsiGoTimeLimit::Limit(Some((1,2)),Some(UsiGoByoyomiOrInc::Byoyomi(3)))))),
+
+		(&["mate","1","2"],Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid. (go mate has too many parameters)"
+		)))),
+		(&["infinite","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["btime"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["btime","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["btime","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Insufficient parameters)"
+		)))),
+		(&["btime","1","btime","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Unexpected parameter 'btime')"
+		)))),
+		(&["btime","1","wtime"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["btime","1","wtime","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["btime","1","wtime","1","btime","1","wtime","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["binc"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["binc","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["binc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Insufficient parameters)"
+		)))),
+		(&["binc","1","binc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Unexpected parameter 'binc')"
+		)))),
+		(&["binc","1","winc"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["binc","1","winc","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["binc","1","winc","1","binc","1","winc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["binc","1","winc","1","byoyomi","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["byoyomi"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["byoyomi","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["byoyomi","1","byoyomi","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["byoyomi","1","binc","1","winc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["hoge","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Unknown parameter)"
+		)))),
+		(&["ponder","infinite","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The format of the position command input is invalid."
+		)))),
+		(&["ponder","btime"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["ponder","btime","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["ponder","btime","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Insufficient parameters)"
+		)))),
+		(&["ponder","btime","1","btime","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Unexpected parameter 'btime')"
+		)))),
+		(&["ponder","btime","1","wtime"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["ponder","btime","1","wtime","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["ponder","btime","1","wtime","1","btime","1","wtime","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["ponder","binc"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["ponder","binc","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["ponder","binc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Insufficient parameters)"
+		)))),
+		(&["ponder","binc","1","binc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Unexpected parameter 'binc')"
+		)))),
+		(&["ponder","binc","1","winc"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["ponder","binc","1","winc","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["ponder","binc","1","winc","1","binc","1","winc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["ponder","binc","1","winc","1","byoyomi","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["ponder","byoyomi"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (There is no value for item)"
+		)))),
+		(&["ponder","byoyomi","a"],Err(TypeConvertError::SyntaxError(String::from(
+			"Failed parse string to integer."
+		)))),
+		(&["ponder","byoyomi","1","byoyomi","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["ponder","byoyomi","1","binc","1","winc","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Duplicate parameters)"
+		)))),
+		(&["ponder","hoge","1"],Err(TypeConvertError::SyntaxError(String::from(
+			"The input form of the go command is invalid. (Unknown parameter)"
+		)))),
+	];
+
+	let parser = GoParser::new();
 
 	for (i,e) in input_and_expected.into_iter() {
 		assert_eq!(parser.parse(i),e);
