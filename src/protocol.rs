@@ -657,7 +657,12 @@ impl GoParser {
 					n => return Ok(UsiGo::Mate(UsiGoMateTimeLimit::Limit(n.parse::<u32>()?))),
 				}
 			},
-			"mate" => return Ok(UsiGo::Mate(UsiGoMateTimeLimit::None)),
+			"mate" if params.len() == 1 => return Ok(UsiGo::Mate(UsiGoMateTimeLimit::None)),
+			"mate" => {
+				return Err(TypeConvertError::SyntaxError(String::from(
+					"The format of the position command input is invalid. (go mate has too many parameters)"
+				)));
+			},
 			_ => (),
 		}
 
