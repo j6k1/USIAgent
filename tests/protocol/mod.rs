@@ -989,7 +989,7 @@ fn test_bestmove_to_sfen() {
 	}
 }
 #[test]
-fn test_usiinfo_subcommand_vec_to_sfen() {
+fn test_usiinfo_subcommand_vec_to_usi_command() {
 	let input_and_expected:Vec<(Vec<UsiInfoSubCommand>,Result<String,UsiOutputCreateError>)> = vec![
 		(vec![
 			UsiInfoSubCommand::Depth(1),
@@ -1171,6 +1171,49 @@ fn test_usiinfo_subcommand_vec_to_sfen() {
 		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
 			"multipv must be specified along with pv"
 		)))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_usi_command(),r);
+	}
+}
+#[test]
+fn test_usiinfo_subcommand_to_usi_command() {
+	let input_and_expected:Vec<(UsiInfoSubCommand,Result<String,UsiOutputCreateError>)> = vec![
+		(UsiInfoSubCommand::Depth(1),Ok(String::from("depth 1"))),
+		(UsiInfoSubCommand::SelDepth(1),Ok(String::from("seldepth 1"))),
+		(UsiInfoSubCommand::Time(100),Ok(String::from("time 100"))),
+		(UsiInfoSubCommand::Nodes(1000),Ok(String::from("nodes 1000"))),
+		(UsiInfoSubCommand::MultiPv(1),Ok(String::from("multipv 1"))),
+		(UsiInfoSubCommand::Pv(vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+		]),Ok(String::from("pv 7g7f"))),
+		(UsiInfoSubCommand::Pv(vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true))
+		]),Ok(String::from("pv 7g7f 3c3d 8h3c+"))),
+		(UsiInfoSubCommand::Score(UsiScore::Cp(1000)),Ok(String::from("score cp 1000"))),
+		(UsiInfoSubCommand::Score(UsiScore::CpUpper(1000)),Ok(String::from("score cp 1000 upperbound"))),
+		(UsiInfoSubCommand::Score(UsiScore::CpLower(1000)),Ok(String::from("score cp 1000 lowerbound"))),
+		(UsiInfoSubCommand::Score(UsiScore::Mate(UsiScoreMate::Num(1000))),Ok(String::from("score mate 1000"))),
+		(UsiInfoSubCommand::Score(UsiScore::Mate(UsiScoreMate::Plus)),Ok(String::from("score mate +"))),
+		(UsiInfoSubCommand::Score(UsiScore::Mate(UsiScoreMate::Minus)),Ok(String::from("score mate -"))),
+		(UsiInfoSubCommand::Score(UsiScore::MateUpper(1000)),Ok(String::from("score mate 1000 upperbound"))),
+		(UsiInfoSubCommand::Score(UsiScore::MateLower(1000)),Ok(String::from("score mate 1000 lowerbound"))),
+		(UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)))
+		,Ok(String::from("curmove 7g7f"))),
+		(UsiInfoSubCommand::Hashfull(10000),Ok(String::from("hashfull 10000"))),
+		(UsiInfoSubCommand::Nps(10000),Ok(String::from("nps 10000"))),
+		(UsiInfoSubCommand::Str(String::from("hellow world!")),Ok(String::from("string hellow world!"))),
+
+		(UsiInfoSubCommand::Pv(vec![]),Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))),
+		(UsiInfoSubCommand::Pv(vec![
+			Move::To(KomaSrcPosition(10,7),KomaDstToPosition(1,6,false)),
+		]),Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))),
+		(UsiInfoSubCommand::Pv(vec![
+			Move::To(KomaSrcPosition(7,10),KomaDstToPosition(1,6,false)),
+		]),Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))),
 	];
 
 	for (i,r) in input_and_expected.into_iter() {
