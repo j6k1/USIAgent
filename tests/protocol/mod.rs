@@ -5,6 +5,7 @@ use usiagent::shogi::*;
 use usiagent::protocol::*;
 use usiagent::error::*;
 use usiagent::event::*;
+use usiagent::command::*;
 use usiagent::rule;
 use usiagent::rule::BANMEN_START_POS;
 
@@ -935,6 +936,52 @@ fn test_teban_banmen_mc_moves_to_sfen() {
 			Move::To(KomaSrcPosition(2,2),KomaDstToPosition(7,7,true))
 		]),
 		Ok(String::from("sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1 moves 3c3d 7g7f 2b7g+"))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
+#[test]
+fn test_checkmate_to_sfen() {
+	let input_and_expected:Vec<(CheckMate,Result<String,UsiOutputCreateError>)> = vec![
+		(CheckMate::Moves(vec![
+			Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))
+		]),Ok(String::from("1g1f"))),
+		(CheckMate::Moves(vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true))
+		]),Ok(String::from("7g7f 3c3d 8h3c+"))),
+		(CheckMate::NotiImplemented,Ok(String::from("notimplemented"))),
+		(CheckMate::Timeout,Ok(String::from("timeout"))),
+		(CheckMate::Nomate,Ok(String::from("nomate"))),
+
+		(CheckMate::Abort,Err(UsiOutputCreateError::AbortedError)),
+		(CheckMate::Moves(vec![]),Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))),
+		(CheckMate::Moves(vec![
+			Move::To(KomaSrcPosition(10,1),KomaDstToPosition(9,1,false))
+		]),Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))),
+		(CheckMate::Moves(vec![
+			Move::To(KomaSrcPosition(1,10),KomaDstToPosition(2,10,false))
+		]),Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
+#[test]
+fn test_bestmove_to_sfen() {
+	let input_and_expected:Vec<(BestMove,Result<String,ToMoveStringConvertError>)> = vec![
+		(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None),Ok(String::from("1g1f"))),
+		(BestMove::Move(Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Some(Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)))
+		),Ok(String::from("7g7f ponder 3c3d"))),
+		(BestMove::Resign,Ok(String::from("resign"))),
+		(BestMove::Win,Ok(String::from("win"))),
+
+		(BestMove::Abort,Err(ToMoveStringConvertError::AbortedError)),
 	];
 
 	for (i,r) in input_and_expected.into_iter() {
