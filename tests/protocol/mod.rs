@@ -6,8 +6,6 @@ use usiagent::protocol::*;
 use usiagent::error::*;
 use usiagent::event::*;
 use usiagent::command::*;
-use usiagent::rule;
-use usiagent::rule::BANMEN_START_POS;
 
 #[allow(unused)]
 use usiagent::shogi::KomaKind::{
@@ -1242,6 +1240,50 @@ fn test_usi_opt_type_to_usi_command() {
 
 		(UsiOptType::Combo(Some(String::from("d")),vec![]),Err(UsiOutputCreateError::InvalidStateError(String::from("There is no selection item of combo")))),
 		(UsiOptType::Combo(None,vec![]),Err(UsiOutputCreateError::InvalidStateError(String::from("There is no selection item of combo")))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_usi_command(),r);
+	}
+}
+#[test]
+fn test_usi_command_to_usi_command() {
+	let input_and_expected:Vec<(UsiCommand,Result<Vec<String>,UsiOutputCreateError>)> = vec![
+		(UsiCommand::UsiOk,Ok(vec![String::from("usiok")])),
+		(UsiCommand::UsiId(String::from("testengine"),String::from("j6k1")),Ok(vec![
+			String::from("id name testengine"),String::from("id author j6k1")
+		])),
+		(UsiCommand::UsiReadyOk,Ok(vec![String::from("readyok")])),
+		(UsiCommand::UsiBestMove(BestMove::Move(Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),None)),Ok(vec![
+			String::from("bestmove 7g7f")
+		])),
+		(UsiCommand::UsiInfo(vec![
+			UsiInfoSubCommand::Depth(1),
+			UsiInfoSubCommand::SelDepth(3),
+			UsiInfoSubCommand::Time(10000),
+			UsiInfoSubCommand::Nodes(1000000),
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+			]),
+			UsiInfoSubCommand::MultiPv(1),
+			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+			UsiInfoSubCommand::Hashfull(10000),
+			UsiInfoSubCommand::Nps(100)
+		]),Ok(vec![
+			String::from("info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e")
+		])),
+		(UsiCommand::UsiOption(String::from("item"),UsiOptType::String(Some(String::from("aaa")))),Ok(vec![
+			String::from("option name item type string default aaa")
+		])),
+		(UsiCommand::UsiCheckMate(CheckMate::Moves(vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true))
+		])),Ok(vec![String::from("checkmate 7g7f 3c3d 8h3c+")])),
+
 	];
 
 	for (i,r) in input_and_expected.into_iter() {
