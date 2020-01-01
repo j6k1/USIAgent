@@ -988,4 +988,183 @@ fn test_bestmove_to_sfen() {
 		assert_eq!(i.to_sfen(),r);
 	}
 }
+#[test]
+fn test_usiinfo_subcommand_vec_to_sfen() {
+	let input_and_expected:Vec<(Vec<UsiInfoSubCommand>,Result<String,UsiOutputCreateError>)> = vec![
+		(vec![
+			UsiInfoSubCommand::Depth(1),
+			UsiInfoSubCommand::SelDepth(3),
+			UsiInfoSubCommand::Time(10000),
+			UsiInfoSubCommand::Nodes(1000000),
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+			]),
+			UsiInfoSubCommand::MultiPv(1),
+			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+			UsiInfoSubCommand::Hashfull(10000),
+			UsiInfoSubCommand::Nps(100)
+		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e"))),
+		(vec![
+			UsiInfoSubCommand::Depth(1),
+			UsiInfoSubCommand::SelDepth(3),
+			UsiInfoSubCommand::Time(10000),
+			UsiInfoSubCommand::Nodes(1000000),
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+			]),
+			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+			UsiInfoSubCommand::Hashfull(10000),
+			UsiInfoSubCommand::Nps(100)
+		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e"))),
+		(vec![
+			UsiInfoSubCommand::Depth(1),
+			UsiInfoSubCommand::SelDepth(3),
+			UsiInfoSubCommand::Time(10000),
+			UsiInfoSubCommand::Nodes(1000000),
+			UsiInfoSubCommand::Str(String::from("hellow!")),
+			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+			UsiInfoSubCommand::Hashfull(10000),
+			UsiInfoSubCommand::Nps(100)
+		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 curmove 1g1f hashfull 10000 nps 100"))),
+		(vec![
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+			]),
+			UsiInfoSubCommand::Str(String::from("hellow!")),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"specified pv and str with together"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Str(String::from("hellow!")),
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+			]),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"specified pv and str with together"
+		)))),
+		(vec![
+			UsiInfoSubCommand::SelDepth(3),
+			UsiInfoSubCommand::Depth(1),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"seldepth must be specified immediately after depth"
+		)))),
+		(vec![
+			UsiInfoSubCommand::SelDepth(3),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"seldepth must be specified immediately after depth"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Pv(vec![
+			]),
+		],Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))),
+		(vec![
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(10,7,false))
+			]),
+		],Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))),
+		(vec![
+			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(10,8,false)))
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"parameter of curmove is invalid"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Depth(1),
+			UsiInfoSubCommand::Depth(2),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::SelDepth(1),
+			UsiInfoSubCommand::SelDepth(2),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Time(1),
+			UsiInfoSubCommand::Time(2),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Nodes(1),
+			UsiInfoSubCommand::Nodes(2),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+			UsiInfoSubCommand::Score(UsiScore::CpUpper(100)),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
+			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(9,7),KomaDstToPosition(9,6,false))),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Hashfull(1),
+			UsiInfoSubCommand::Hashfull(2),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Nps(1),
+			UsiInfoSubCommand::Nps(2),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Str(String::from("hellow!")),
+			UsiInfoSubCommand::Str(String::from("hellow!!!!!")),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+			]),
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			]),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::MultiPv(1),
+			UsiInfoSubCommand::MultiPv(2),
+			UsiInfoSubCommand::Pv(vec![
+				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
+				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
+				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
+			]),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"The same subcommand is specified more than once"
+		)))),
+		(vec![
+			UsiInfoSubCommand::MultiPv(1),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"multipv must be specified along with pv"
+		)))),
+	];
 
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_usi_command(),r);
+	}
+}

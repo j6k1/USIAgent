@@ -1142,6 +1142,11 @@ impl ToUsiCommand<String,UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
 					"The same subcommand is specified more than once"
 				)))
 			}
+			else if hs.contains(&UsiInfoSubCommandKind::Str) {
+				return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+					"specified pv and str with together"
+				)));
+			}
 			else {
 				hs.insert(cmd.get_kind());
 			}
@@ -1166,7 +1171,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 			UsiInfoSubCommand::Time(t) => format!("time {}",t),
 			UsiInfoSubCommand::Nodes(n) => format!("nodes {}", n),
 			UsiInfoSubCommand::Pv(ref v) if v.len() < 1 => {
-				return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
+				return Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))
 			},
 			UsiInfoSubCommand::MultiPv(n) => format!("multipv {}", n),
 			UsiInfoSubCommand::Pv(ref v) => {
