@@ -1060,6 +1060,13 @@ fn test_usiinfo_subcommand_vec_to_sfen() {
 			"seldepth must be specified immediately after depth"
 		)))),
 		(vec![
+			UsiInfoSubCommand::Depth(1),
+			UsiInfoSubCommand::Nodes(1),
+			UsiInfoSubCommand::SelDepth(3),
+		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+			"seldepth must be specified immediately after depth"
+		)))),
+		(vec![
 			UsiInfoSubCommand::SelDepth(3),
 		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
 			"seldepth must be specified immediately after depth"
@@ -1087,7 +1094,9 @@ fn test_usiinfo_subcommand_vec_to_sfen() {
 			"The same subcommand is specified more than once"
 		)))),
 		(vec![
+			UsiInfoSubCommand::Depth(1),
 			UsiInfoSubCommand::SelDepth(1),
+			UsiInfoSubCommand::Nodes(1),
 			UsiInfoSubCommand::SelDepth(2),
 		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
 			"The same subcommand is specified more than once"

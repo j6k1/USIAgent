@@ -1092,6 +1092,11 @@ impl ToUsiCommand<String,UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
 						"specified pv and str with together"
 					)));
 				},
+				&UsiInfoSubCommand::SelDepth(_) if hs.contains(&cmd.get_kind()) => {
+					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
+						"The same subcommand is specified more than once"
+					)))
+				},
 				&UsiInfoSubCommand::SelDepth(_) if !prev_kind.map(|k| k == UsiInfoSubCommandKind::Depth).unwrap_or(false) => {
 					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
 						"seldepth must be specified immediately after depth"
