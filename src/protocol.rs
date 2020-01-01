@@ -1226,7 +1226,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiOptType {
 			UsiOptType::Check(None) => format!("check"),
 			UsiOptType::Spin(min, max,Some(d)) => format!("spin default {} min {} max {}",d,min,max),
 			UsiOptType::Spin(min, max,None) => format!("spin min {} max {}", min, max),
-			UsiOptType::Combo(Some(_), ref v) if v.len() < 1 => {
+			UsiOptType::Combo(_, ref v) if v.len() < 1 => {
 				return Err(UsiOutputCreateError::InvalidStateError(String::from("There is no selection item of combo")))
 			},
 			UsiOptType::Combo(Some(ref d), ref v) => {

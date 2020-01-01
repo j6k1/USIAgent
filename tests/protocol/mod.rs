@@ -1220,3 +1220,31 @@ fn test_usiinfo_subcommand_to_usi_command() {
 		assert_eq!(i.to_usi_command(),r);
 	}
 }
+#[test]
+fn test_usi_opt_type_to_usi_command() {
+	let input_and_expected:Vec<(UsiOptType,Result<String,UsiOutputCreateError>)> = vec![
+		(UsiOptType::Check(Some(true)),Ok(String::from("check default true"))),
+		(UsiOptType::Check(Some(false)),Ok(String::from("check default false"))),
+		(UsiOptType::Check(None),Ok(String::from("check"))),
+		(UsiOptType::Spin(1,1000,Some(100)),Ok(String::from("spin default 100 min 1 max 1000"))),
+		(UsiOptType::Spin(1,1000,None),Ok(String::from("spin min 1 max 1000"))),
+		(UsiOptType::Combo(Some(String::from("d")),["aaa","bbb","d"].into_iter().map(|v| v.to_string()).collect::<Vec<String>>()),
+		Ok(String::from("combo default d var aaa var bbb var d"))),
+		(UsiOptType::Combo(None,["aaa","bbb","d"].into_iter().map(|v| v.to_string()).collect::<Vec<String>>()),
+		Ok(String::from("combo var aaa var bbb var d"))),
+		(UsiOptType::Button,Ok(String::from("button"))),
+		(UsiOptType::String(Some(String::from(""))),Ok(String::from("string default <empty>"))),
+		(UsiOptType::String(Some(String::from("aaa"))),Ok(String::from("string default aaa"))),
+		(UsiOptType::String(None),Ok(String::from("string"))),
+		(UsiOptType::FileName(Some(String::from(""))),Ok(String::from("filename default <empty>"))),
+		(UsiOptType::FileName(Some(String::from("aaa"))),Ok(String::from("filename default aaa"))),
+		(UsiOptType::FileName(None),Ok(String::from("filename"))),
+
+		(UsiOptType::Combo(Some(String::from("d")),vec![]),Err(UsiOutputCreateError::InvalidStateError(String::from("There is no selection item of combo")))),
+		(UsiOptType::Combo(None,vec![]),Err(UsiOutputCreateError::InvalidStateError(String::from("There is no selection item of combo")))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_usi_command(),r);
+	}
+}
