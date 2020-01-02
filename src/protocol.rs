@@ -282,9 +282,9 @@ impl ToSfen<ToMoveStringConvertError> for Vec<Move> {
 		Ok(strs.join(" "))
 	}
 }
-impl TryFrom<String,TypeConvertError<String>> for KomaKind {
-	fn try_from(s: String) -> Result<KomaKind, TypeConvertError<String>> {
-		Ok(match &*s {
+impl<'a> TryFrom<&'a str,TypeConvertError<String>> for KomaKind {
+	fn try_from(s:&'a str) -> Result<KomaKind, TypeConvertError<String>> {
+		Ok(match s {
 			"K" => KomaKind::SOu,
 			"R" => KomaKind::SHisha,
 			"B" => KomaKind::SKaku,
@@ -367,12 +367,12 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Banmen {
 					},
 					Some(n) => {
 						s.push(n);
-						banmen[y as usize][x as usize] = KomaKind::try_from(s)?;
+						banmen[y as usize][x as usize] = KomaKind::try_from(&s)?;
 						x += 1;
 					}
 				},
 				_ =>  {
-					banmen[y as usize][x as usize] = KomaKind::try_from(s)?;
+					banmen[y as usize][x as usize] = KomaKind::try_from(&s)?;
 					x += 1;
 				}
 			}

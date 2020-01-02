@@ -169,7 +169,7 @@ fn test_komakind_try_from() {
 	];
 
 	for (i,r) in input_and_expected.into_iter() {
-		assert_eq!(KomaKind::try_from(i.to_string()),r);
+		assert_eq!(KomaKind::try_from(i),r);
 	}
 }
 #[test]
