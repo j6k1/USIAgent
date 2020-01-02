@@ -21,7 +21,7 @@ impl USIInterpreter {
 	}
 
 	pub fn start<L,R>(&self,
-		event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
+		event_queue:Arc<Mutex<SystemEventQueue>>,
 		reader:Arc<Mutex<R>>,optmap:BTreeMap<String,SysEventOptionKind>, logger:&Arc<Mutex<L>>)
 		where R: USIInputReader, L: Logger,
 				Arc<Mutex<R>>: Send + 'static, Arc<Mutex<L>>: Send + 'static {

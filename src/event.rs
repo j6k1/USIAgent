@@ -15,6 +15,8 @@ use UsiOutput;
 use Logger;
 use OnErrorHandler;
 use shogi::*;
+use selfmatch::*;
+
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
 }
@@ -616,3 +618,9 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 		}
 	}
 }
+pub type SystemEventQueue = EventQueue<SystemEvent,SystemEventKind>;
+pub type SystemEventDispatcher<'a,T,E,L> = USIEventDispatcher<'a,SystemEventKind,SystemEvent,T,L,E>;
+pub type UserEventQueue = EventQueue<UserEvent,UserEventKind>;
+pub type UserEventDispatcher<'a,T,E,L> = USIEventDispatcher<'a,UserEventKind,UserEvent,T,L,E>;
+pub type SelfMatchEventQueue = EventQueue<SelfMatchEvent,SelfMatchEventKind>;
+pub type SelfMatchEventDispatcher<'a,E,L> = USIEventDispatcher<'a,SelfMatchEventKind,SelfMatchEvent,SelfMatchEngine<E>,L,E>;

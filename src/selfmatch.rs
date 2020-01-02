@@ -125,7 +125,7 @@ pub struct SelfMatchResult {
 pub struct SelfMatchEngine<E>
 	where 	E: PlayerError {
 	player_error_type:PhantomData<E>,
-	pub system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
+	pub system_event_queue:Arc<Mutex<SystemEventQueue>>,
 }
 impl<E> SelfMatchEngine<E>
 	where E: PlayerError {
@@ -153,10 +153,7 @@ impl<E> SelfMatchEngine<E>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
-				I: FnMut(&mut USIEventDispatcher<
-														SelfMatchEventKind,
-														SelfMatchEvent,
-														SelfMatchEngine<E>,FileLogger,E>),
+				I: FnMut(&mut SelfMatchEventDispatcher<E,FileLogger>),
 				S: InfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
@@ -193,10 +190,7 @@ impl<E> SelfMatchEngine<E>
 		where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 				F: FnMut() -> bool + Send + 'static,
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
-				I: FnMut(&mut USIEventDispatcher<
-														SelfMatchEventKind,
-														SelfMatchEvent,
-														SelfMatchEngine<E>,FileLogger,E>),
+				I: FnMut(&mut SelfMatchEventDispatcher<E,FileLogger>),
 				S: InfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
@@ -244,10 +238,7 @@ impl<E> SelfMatchEngine<E>
 				F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
-				I: FnMut(&mut USIEventDispatcher<
-														SelfMatchEventKind,
-														SelfMatchEvent,
-														SelfMatchEngine<E>,L,E>),
+				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static,
@@ -296,27 +287,20 @@ impl<E> SelfMatchEngine<E>
 				F: FnMut() -> bool + Send + 'static,
 				R: USIInputReader + Send + 'static,
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
-				I: FnMut(&mut USIEventDispatcher<
-														SelfMatchEventKind,
-														SelfMatchEvent,
-														SelfMatchEngine<E>,L,E>),
+				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
 				L: Logger + fmt::Debug,
 				Arc<Mutex<L>>: Send + 'static {
 		let start_time = Instant::now();
 		let start_dt = Local::now();
 
-		let mut self_match_event_dispatcher = USIEventDispatcher::<
-														SelfMatchEventKind,
-														SelfMatchEvent,
-														SelfMatchEngine<E>,L,E>::new(&on_error_handler_arc);
+		let mut self_match_event_dispatcher:SelfMatchEventDispatcher<E,L> = USIEventDispatcher::new(&on_error_handler_arc);
 
 		on_init_event_dispatcher(&mut self_match_event_dispatcher);
 
-		let mut system_event_dispatcher:USIEventDispatcher<SystemEventKind,
-														SystemEvent,SelfMatchEngine<E>,L,E> = USIEventDispatcher::new(&on_error_handler_arc);
+		let mut system_event_dispatcher:SystemEventDispatcher<SelfMatchEngine<E>,E,L> = USIEventDispatcher::new(&on_error_handler_arc);
 
-		let user_event_queue_arc:[Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>; 2] = [Arc::new(Mutex::new(EventQueue::new())),Arc::new(Mutex::new(EventQueue::new()))];
+		let user_event_queue_arc:[Arc<Mutex<UserEventQueue>>; 2] = [Arc::new(Mutex::new(EventQueue::new())),Arc::new(Mutex::new(EventQueue::new()))];
 
 		let user_event_queue = [user_event_queue_arc[0].clone(),user_event_queue_arc[1].clone()];
 
@@ -337,7 +321,7 @@ impl<E> SelfMatchEngine<E>
 		let quit_ready_arc = Arc::new(AtomicBool::new(false));
 		let on_error_handler = on_error_handler_arc.clone();
 
-		let self_match_event_queue:EventQueue<SelfMatchEvent,SelfMatchEventKind> = EventQueue::new();
+		let self_match_event_queue:SelfMatchEventQueue = EventQueue::new();
 		let self_match_event_queue_arc = Arc::new(Mutex::new(self_match_event_queue));
 
 		let (ss,sr) = unbounded();

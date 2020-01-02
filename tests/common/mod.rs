@@ -257,19 +257,19 @@ pub struct MockPlayer {
 												HashMap<MochigomaKind,u32>,
 												HashMap<MochigomaKind,u32>,u32,Vec<Move>) -> Result<(),CommonError> + Send + 'static)>>,
 	pub on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
-												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+												Arc<Mutex<UserEventQueue>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
 												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 	) -> Result<BestMove,CommonError> + Send + 'static)>>,
 
 	pub on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
-												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+												Arc<Mutex<UserEventQueue>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
 												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 	) -> Result<CheckMate,CommonError> + Send + 'static)>>,
 
 	pub on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
-												Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>)
+												Arc<Mutex<UserEventQueue>>)
 				-> Result<(),CommonError> + Send + 'static)>>,
 	pub options_it:ConsumedIterator<(String,SysEventOption)>,
 	pub sender:Sender<Result<ActionKind,String>>,
@@ -291,19 +291,19 @@ impl MockPlayer {
 				) -> Result<(),CommonError> + Send + 'static)>>,
 
 				on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
-															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+															Arc<Mutex<UserEventQueue>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
 															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 				) -> Result<BestMove,CommonError> + Send + 'static)>>,
 
 				on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
-															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+															Arc<Mutex<UserEventQueue>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
 															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 				) -> Result<CheckMate,CommonError> + Send + 'static)>>,
 
 				on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
-															Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>)
+															Arc<Mutex<UserEventQueue>>)
 				-> Result<(),CommonError> + Send + 'static)>>
 	) -> MockPlayer {
 		MockPlayer {
@@ -412,7 +412,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 		)
 	}
 
-	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		let mut info_sender = info_sender.clone();
@@ -434,7 +434,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 		)
 	}
 
-	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		let mut info_sender = info_sender.clone();
@@ -463,7 +463,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 	}
 
 	fn gameover<L>(&mut self,s:&GameEndState,
-			event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+			event_queue:Arc<Mutex<UserEventQueue>>,
 			_:Arc<Mutex<OnErrorHandler<L>>>)
 	-> Result<(),CommonError> where L: Logger, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		self.started = false;

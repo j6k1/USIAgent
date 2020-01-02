@@ -97,7 +97,7 @@ impl OnAcceptMove {
 	}
 
 	pub fn notify<L>(&self,
-		system_event_queue:&Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
+		system_event_queue:&Arc<Mutex<SystemEventQueue>>,
 		on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>) where L: Logger, Arc<Mutex<L>>: Send + 'static {
 		match *self {
 			OnAcceptMove::Some(m) => {
@@ -126,7 +126,7 @@ pub struct UsiAgent<T,E>
 			EventHandlerError<SystemEventKind, E>: From<E> {
 	player_error_type:PhantomData<E>,
 	player:Arc<Mutex<T>>,
-	system_event_queue:Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>,
+	system_event_queue:Arc<Mutex<SystemEventQueue>>,
 }
 impl<T,E> UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug + Send + 'static,
@@ -144,16 +144,16 @@ impl<T,E> UsiAgent<T,E>
 	}
 
 	pub fn start_default<F>(&self,on_error:F) ->
-		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
+		Result<(),USIAgentRunningError<SystemEventQueue,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
-					&USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>) {
+					&USIAgentRunningError<SystemEventQueue,E>) {
 		self.start_with_log_path(String::from("logs/log.txt"),on_error)
 	}
 
 	pub fn start_with_log_path<F>(&self,path:String,mut on_error:F) ->
-		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
+		Result<(),USIAgentRunningError<SystemEventQueue,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
-					&USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>) {
+					&USIAgentRunningError<SystemEventQueue,E>) {
 
 		let logger = match FileLogger::new(path) {
 			Err(_) => {
@@ -174,10 +174,10 @@ impl<T,E> UsiAgent<T,E>
 	}
 
 	pub fn start<R,W,L,F>(&self,reader:R,writer:W,logger:L,mut on_error:F) ->
-		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
+		Result<(),USIAgentRunningError<SystemEventQueue,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
 			F: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
-					&USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>),
+					&USIAgentRunningError<SystemEventQueue,E>),
 			EventHandlerError<SystemEventKind, E>: From<E>,
 			R: Send + 'static,
 			L: Send + 'static,
@@ -199,7 +199,7 @@ impl<T,E> UsiAgent<T,E>
 
 	fn run<R,W,L>(&self,reader:R,writer:W,logger_arc:Arc<Mutex<L>>,
 								on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) ->
-		Result<(),USIAgentRunningError<EventQueue<SystemEvent,SystemEventKind>,E>>
+		Result<(),USIAgentRunningError<SystemEventQueue,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
 			EventHandlerError<SystemEventKind, E>: From<E>,
 			R: Send + 'static,
@@ -211,14 +211,13 @@ impl<T,E> UsiAgent<T,E>
 
 		let system_event_queue_arc = self.system_event_queue.clone();
 
-		let system_event_dispatcher:USIEventDispatcher<SystemEventKind,
-														SystemEvent,UsiAgent<T,E>,L,E> = USIEventDispatcher::new(&on_error_handler_arc);
+		let system_event_dispatcher:SystemEventDispatcher<UsiAgent<T,E>,E,L> = USIEventDispatcher::new(&on_error_handler_arc);
 
 		let system_event_dispatcher_arc = Arc::new(Mutex::new(system_event_dispatcher));
 
 		let system_event_dispatcher = system_event_dispatcher_arc.clone();
 
-		let user_event_queue:EventQueue<UserEvent,UserEventKind> = EventQueue::new();
+		let user_event_queue:UserEventQueue = EventQueue::new();
 		let user_event_queue_arc = Arc::new(Mutex::new(user_event_queue));
 		let thread_queue_arc = Arc::new(Mutex::new(ThreadQueue::new()));
 

@@ -33,19 +33,19 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn newgame(&mut self) -> Result<(),E>;
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
-	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
-	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn gameover<L>(&mut self,s:&GameEndState,
-			event_queue:Arc<Mutex<EventQueue<UserEvent,UserEventKind>>>,
+			event_queue:Arc<Mutex<UserEventQueue>>,
 			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E> where L: Logger, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	fn on_quit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn quit(&mut self) -> Result<(),E>;
-	fn handle_events<'a,L>(&mut self,event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
+	fn handle_events<'a,L>(&mut self,event_queue:&'a Mutex<UserEventQueue>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,E>
 						where L: Logger, E: Error + fmt::Debug,
 								Arc<Mutex<OnErrorHandler<L>>>: Send + 'static,
@@ -59,9 +59,9 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		})
 	}
 
-	fn dispatch_events<'a,L>(&mut self, event_queue:&'a Mutex<EventQueue<UserEvent,UserEventKind>>,
+	fn dispatch_events<'a,L>(&mut self, event_queue:&'a Mutex<UserEventQueue>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) ->
-						Result<(), EventDispatchError<'a,EventQueue<UserEvent,UserEventKind>,UserEvent,E>>
+						Result<(), EventDispatchError<'a,UserEventQueue,UserEvent,E>>
 							where L: Logger, E: Error + fmt::Debug,
 									Arc<Mutex<OnErrorHandler<L>>>: Send + 'static,
 									EventHandlerError<UserEventKind,E>: From<E> {

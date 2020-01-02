@@ -125,7 +125,7 @@ fn gamestart_process(pmr:&[Receiver<Result<ActionKind,String>>; 2]) {
 		assert_eq!(res,Ok(ActionKind::NewGame));
 	}
 }
-fn create_input_read_handler(system_event_queue:&Arc<Mutex<EventQueue<SystemEvent,SystemEventKind>>>)
+fn create_input_read_handler(system_event_queue:&Arc<Mutex<SystemEventQueue>>)
 	-> impl FnMut(String) -> Result<bool,SelfMatchRunningError<CommonError>> + Send + 'static {
 	let system_event_queue = system_event_queue.clone();
 
