@@ -452,8 +452,11 @@ impl fmt::Display for Moved {
 	 		Moved::To(MovedKind::GOu,(sx,sy),(dx,dy),false) => {
 				write!(f,"{}{}玉 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
 	 		},
-	 		Moved::To(MovedKind::Blank,(sx,sy),(dx,dy),_) => {
+	 		Moved::To(MovedKind::Blank,(sx,sy),(dx,dy),false) => {
 				write!(f,"{}{}駒無し -> {}{}（不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
+	 		},
+	 		Moved::To(MovedKind::Blank,(sx,sy),(dx,dy),true) => {
+				write!(f,"{}{}駒無し -> {}{}成（不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
 	 		},
 	 		Moved::Put(MochigomaKind::Fu,(x,y)) => {
 	 			write!(f,"{}{}歩",x,KANSUJI_MAP[y as usize])
