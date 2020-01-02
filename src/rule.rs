@@ -783,6 +783,58 @@ impl Validate for Move {
 		}
 	}
 }
+impl Validate for Moved {
+	fn validate(&self) -> bool {
+		match self {
+			&Moved::To(_,(sx,sy),(dx,dy),_) if sx < 1 || sx > 9 || sy < 1 || sy > 9 || dx < 1 || dx > 9 || dy < 1 || dy > 9 => {
+				return false;
+			},
+			&Moved::Put(_,(x,y)) if x < 1 || x > 9 || y < 1 || y > 9 => {
+				return false;
+			},
+			_ => ()
+		};
+
+		match self {
+			&Moved::Put(_,_) |
+			&Moved::To(MovedKind::Fu,_,_,true) |
+			&Moved::To(MovedKind::Kyou,_,_,true) |
+			&Moved::To(MovedKind::Kei,_,_,true) |
+			&Moved::To(MovedKind::Gin,_,_,true)|
+			&Moved::To(MovedKind::Kin,_,_,false) |
+			&Moved::To(MovedKind::SOu,_,_,false) |
+			&Moved::To(MovedKind::GOu,_,_,false) |
+			&Moved::To(MovedKind::Kaku,_,_,true) |
+			&Moved::To(MovedKind::Hisha,_,_,true) |
+			&Moved::To(MovedKind::Fu,_,_,false) |
+			&Moved::To(MovedKind::Kyou,_,_,false) |
+			&Moved::To(MovedKind::Kei,_,_,false) |
+			&Moved::To(MovedKind::Gin,_,_,false) |
+			&Moved::To(MovedKind::Kaku,_,_,false) |
+			&Moved::To(MovedKind::Hisha,_,_,false) |
+			&Moved::To(MovedKind::FuN,_,_,false) |
+			&Moved::To(MovedKind::KyouN,_,_,false) |
+			&Moved::To(MovedKind::KeiN,_,_,false) |
+			&Moved::To(MovedKind::GinN,_,_,false) |
+			&Moved::To(MovedKind::KakuN,_,_,false) |
+			&Moved::To(MovedKind::HishaN,_,_,false) => {
+				true
+			},
+			&Moved::To(MovedKind::Kin,_,_,true) |
+			&Moved::To(MovedKind::SOu,_,_,true) |
+			&Moved::To(MovedKind::GOu,_,_,true) |
+			&Moved::To(MovedKind::FuN,_,_,true) |
+			&Moved::To(MovedKind::KyouN,_,_,true) |
+			&Moved::To(MovedKind::KeiN,_,_,true) |
+			&Moved::To(MovedKind::GinN,_,_,true) |
+			&Moved::To(MovedKind::KakuN,_,_,true) |
+			&Moved::To(MovedKind::HishaN,_,_,true) |
+			&Moved::To(MovedKind::Blank,_,_,_) => {
+				false
+			}
+		}
+	}
+}
 pub struct Rule {
 
 }

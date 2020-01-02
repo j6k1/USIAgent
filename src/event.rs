@@ -16,6 +16,7 @@ use Logger;
 use OnErrorHandler;
 use shogi::*;
 use selfmatch::*;
+use rule::Validate;
 
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
@@ -307,6 +308,28 @@ impl MaxIndex for SelfMatchEventKind {
 		SelfMatchEventKind::Abort as usize
 	}
 }
+impl fmt::Display for MovedKind {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			MovedKind::Fu => write!(f,"歩"),
+			MovedKind::Kyou => write!(f,"香"),
+			MovedKind::Kei => write!(f,"桂"),
+			MovedKind::Gin => write!(f,"銀"),
+			MovedKind::Kin => write!(f,"金"),
+			MovedKind::Kaku => write!(f,"角"),
+			MovedKind::Hisha => write!(f,"飛"),
+			MovedKind::SOu => write!(f,"王"),
+			MovedKind::GOu => write!(f,"玉"),
+			MovedKind::FuN => write!(f,"成歩"),
+			MovedKind::KyouN => write!(f,"成香"),
+			MovedKind::KeiN => write!(f,"成桂"),
+			MovedKind::GinN => write!(f,"成銀"),
+			MovedKind::KakuN => write!(f,"馬"),
+			MovedKind::HishaN => write!(f,"龍"),
+			MovedKind::Blank => write!(f,"駒無し"),
+		}
+	}
+}
 impl<'a> TryFrom<(&'a Banmen,&'a Move),TypeConvertError<String>> for Moved {
 	fn try_from(s:(&'a Banmen,&'a Move)) -> Result<Moved, TypeConvertError<String>> {
 		Ok(match s {
@@ -358,127 +381,43 @@ impl<'a> TryFrom<(&'a Banmen,&'a Move),TypeConvertError<String>> for Moved {
 	}
 }
 const KANSUJI_MAP:[char; 10] = ['零','一','二','三','四','五','六','七','八','九'];
+const MOCHIGOMA_DISPLAY_MAP:[char; 7] = ['歩','香','桂','銀','金','角','飛'];
 
 impl fmt::Display for Moved {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	 	match *self {
-	 		Moved::To(MovedKind::Fu,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}歩 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kyou,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}香 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kei,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}桂 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Gin,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}銀 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kin,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}金 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kaku,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}角 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Hisha,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}飛 -> {}{}成",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::SOu,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}王 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::GOu,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}玉 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::FuN,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}成歩 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::FuN,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}成歩 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::KyouN,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}成香 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::KyouN,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}成香 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::KeiN,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}成桂 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::KeiN,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}成桂 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::GinN,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}成銀 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::GinN,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}成銀 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::KakuN,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}馬 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::KakuN,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}馬 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::HishaN,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}龍 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::HishaN,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}龍 -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Fu,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}歩 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kyou,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}香 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kei,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}桂 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Gin,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}銀 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kin,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}金 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Kaku,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}角 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Hisha,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}飛 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::SOu,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}王 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::GOu,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}玉 -> {}{}",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Blank,(sx,sy),(dx,dy),false) => {
-				write!(f,"{}{}駒無し -> {}{}（不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::To(MovedKind::Blank,(sx,sy),(dx,dy),true) => {
-				write!(f,"{}{}駒無し -> {}{}成（不正な手です）",sx,KANSUJI_MAP[sy as usize],dx,KANSUJI_MAP[dy as usize])
-	 		},
-	 		Moved::Put(MochigomaKind::Fu,(x,y)) => {
-	 			write!(f,"{}{}歩",x,KANSUJI_MAP[y as usize])
-	 		},
-	 		Moved::Put(MochigomaKind::Kyou,(x,y)) => {
-	 			write!(f,"{}{}香",x,KANSUJI_MAP[y as usize])
-	 		},
-	 		Moved::Put(MochigomaKind::Kei,(x,y)) => {
-	 			write!(f,"{}{}桂",x,KANSUJI_MAP[y as usize])
-	 		},
-	 		Moved::Put(MochigomaKind::Gin,(x,y)) => {
-	 			write!(f,"{}{}銀",x,KANSUJI_MAP[y as usize])
-	 		},
-	 		Moved::Put(MochigomaKind::Kin,(x,y)) => {
-	 			write!(f,"{}{}金",x,KANSUJI_MAP[y as usize])
-	 		},
-	 		Moved::Put(MochigomaKind::Kaku,(x,y)) => {
-	 			write!(f,"{}{}角",x,KANSUJI_MAP[y as usize])
-	 		},
-	 		Moved::Put(MochigomaKind::Hisha,(x,y)) => {
-	 			write!(f,"{}{}飛",x,KANSUJI_MAP[y as usize])
-	 		},
+	 	if !self.validate() {
+	 		match self {
+		 		&Moved::To(k,(sx,sy),(dx,dy),true) if sy > 9 || dy > 9 => {
+					write!(f,"{},{}{} -> {},{}成 （不正な手です）",sx,sy,k,dx,dy)
+		 		},
+		 		&Moved::To(k,(sx,sy),(dx,dy),false) if sy > 9 || dy > 9 => {
+					write!(f,"{},{}{} -> {},{} （不正な手です）",sx,sy,k,dx,dy)
+		 		},
+		 		&Moved::To(k,(sx,sy),(dx,dy),true) => {
+					write!(f,"{}{}{} -> {}{}成 （不正な手です）",sx,KANSUJI_MAP[sy as usize],k,dx,KANSUJI_MAP[dy as usize])
+		 		},
+		 		&Moved::To(k,(sx,sy),(dx,dy),false) => {
+					write!(f,"{}{}{} -> {}{} （不正な手です）",sx,KANSUJI_MAP[sy as usize],k,dx,KANSUJI_MAP[dy as usize])
+		 		},
+		 		&Moved::Put(k,(x,y)) if y > 9 => {
+		 			write!(f,"{},{}{} （不正な手です）",x,y,MOCHIGOMA_DISPLAY_MAP[k as usize])
+		 		},
+		 		&Moved::Put(k,(x,y)) => {
+		 			write!(f,"{}{}{} （不正な手です）",x,KANSUJI_MAP[y as usize],MOCHIGOMA_DISPLAY_MAP[k as usize])
+		 		},
+	 		}
+	 	} else {
+		 	match self {
+		 		&Moved::To(k,(sx,sy),(dx,dy),true) => {
+					write!(f,"{}{}{} -> {}{}成",sx,KANSUJI_MAP[sy as usize],k,dx,KANSUJI_MAP[dy as usize])
+		 		},
+		 		&Moved::To(k,(sx,sy),(dx,dy),false) => {
+					write!(f,"{}{}{} -> {}{}",sx,KANSUJI_MAP[sy as usize],k,dx,KANSUJI_MAP[dy as usize])
+		 		},
+		 		&Moved::Put(k,(x,y)) => {
+		 			write!(f,"{}{}{}",x,KANSUJI_MAP[y as usize],MOCHIGOMA_DISPLAY_MAP[k as usize])
+		 		},
+		 	}
 	 	}
 	 }
 }

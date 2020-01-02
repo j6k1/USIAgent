@@ -10,6 +10,7 @@ mod is_put_fu_and_mate;
 mod is_win;
 mod is_mate;
 mod sennichite;
+mod validate;
 
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
