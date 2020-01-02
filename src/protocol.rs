@@ -39,7 +39,7 @@ impl DanCharFromNum for DanCharCreator {
 		const DAN_MAP:[char; 9] = ['a','b','c','d','e','f','g','h','i'];
 
 		match n {
-			n if n > 9 => Err(DanConvertError(n)),
+			n if n > 9 || n < 1 => Err(DanConvertError(n)),
 			n => Ok(DAN_MAP[n as usize - 1]),
 		}
 	}
@@ -57,15 +57,9 @@ impl KomaStrFromKind<MochigomaKind> for KomaStringCreator {
 		format!("{}",MOCHIGOMA_MAP[k as usize])
 	}
 }
-trait MoveStringFrom {
-	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError>;
-}
-struct MoveStringCreator {
-
-}
-impl MoveStringFrom for MoveStringCreator {
-	fn str_from(m:&Move) -> Result<String, ToMoveStringConvertError> {
-		match m {
+impl ToSfen<ToMoveStringConvertError> for Move {
+	fn to_sfen(&self) -> Result<String, ToMoveStringConvertError> {
+		match self {
 			&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,false)) => {
 				Ok(format!("{}{}{}{}", sx, DanCharCreator::char_from(sy)?, dx, DanCharCreator::char_from(dy)?))
 			},
@@ -282,7 +276,7 @@ impl ToSfen<ToMoveStringConvertError> for Vec<Move> {
 		let mut strs:Vec<String> = Vec::with_capacity(self.len());
 
 		for m in self {
-			strs.push(MoveStringCreator::str_from(m)?);
+			strs.push(m.to_sfen()?);
 		}
 
 		Ok(strs.join(" "))
@@ -1026,7 +1020,7 @@ impl ToSfen<UsiOutputCreateError> for CheckMate {
 							return Err(UsiOutputCreateError::InvalidStateError(String::from("checkmate")))
 						},
 						ref m => {
-							mv.push(MoveStringCreator::str_from(m)?);
+							mv.push(m.to_sfen()?);
 						}
 					}
 				}
@@ -1046,11 +1040,11 @@ impl ToSfen<ToMoveStringConvertError> for BestMove {
 		match *self {
 			BestMove::Resign => Ok(String::from("resign")),
 			BestMove::Win => Ok(String::from("win")),
-			BestMove::Move(ref m,None) => Ok(MoveStringCreator::str_from(m)?),
+			BestMove::Move(ref m,None) => Ok(m.to_sfen()?),
 			BestMove::Move(ref m,Some(ref pm)) => {
 				Ok(format!("{} ponder {}",
-						MoveStringCreator::str_from(m)?,
-						MoveStringCreator::str_from(pm)?))
+						m.to_sfen()?,
+						pm.to_sfen()?))
 
 			},
 			BestMove::Abort => {
@@ -1187,7 +1181,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 							return Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))
 						},
 						ref m => {
-							mv.push(MoveStringCreator::str_from(m)?);
+							mv.push(m.to_sfen()?);
 						}
 					}
 				}
@@ -1210,7 +1204,7 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 				format!("score mate {} lowerbound",n)
 			},
 			UsiInfoSubCommand::CurMove(ref m) => {
-				format!("curmove {}",MoveStringCreator::str_from(m)?)
+				format!("curmove {}",m.to_sfen()?)
 			},
 			UsiInfoSubCommand::Hashfull(v) => format!("hashfull {}", v),
 			UsiInfoSubCommand::Nps(v) => format!("nps {}",v),
