@@ -680,6 +680,25 @@ fn test_move_to_sfen() {
 	}
 }
 #[test]
+fn test_move_vec_to_sfen() {
+	let input_and_expected:Vec<(Vec<Move>,Result<String,ToMoveStringConvertError>)> = vec![
+		(vec![],Ok(String::from(""))),
+		(vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+		],Ok(String::from("7g7f"))),
+		(vec![
+			Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9,6)),
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true)),
+		],Ok(String::from("P*9f 7g7f 3c3d 8h3c+")))
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
+#[test]
 fn test_banmen_to_sfen() {
 	let input_and_expected:Vec<(Banmen,Result<String,TypeConvertError<String>>)> = vec![
 		(Banmen([
