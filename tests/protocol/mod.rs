@@ -1337,3 +1337,123 @@ fn test_usi_command_to_usi_command() {
 		assert_eq!(i.to_usi_command(),r);
 	}
 }
+#[test]
+fn test_position_parse_result_extract() {
+	let input_and_expected:Vec<(PositionParseResult,(Teban,Banmen,MochigomaCollections,u32,Vec<Move>))> = vec![
+		(PositionParseResult(
+			Teban::Sente,UsiInitialPosition::Startpos,1,vec![]
+		),(Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),1,vec![])),
+		(PositionParseResult(
+			Teban::Gote,UsiInitialPosition::Sfen(Banmen([
+				[Blank,Blank,Blank,Blank,GOu,GKin,GGin,GKei,GKyou],
+				[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+				[Blank,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+				[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+				[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+				[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+				[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,Blank],
+				[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+				[SKyou,SKei,SGin,SKin,SOu,Blank,Blank,Blank,Blank],
+			]),MochigomaCollections::Pair(vec![
+				(MochigomaKind::Hisha,1),
+				(MochigomaKind::Kaku,1),
+				(MochigomaKind::Kin,1),
+				(MochigomaKind::Gin,1),
+				(MochigomaKind::Kei,1),
+				(MochigomaKind::Kyou,1),
+				(MochigomaKind::Fu,1),
+			].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+				acc.insert(k,n);
+				acc
+			}),vec![
+				(MochigomaKind::Hisha,1),
+				(MochigomaKind::Kaku,1),
+				(MochigomaKind::Kin,1),
+				(MochigomaKind::Gin,1),
+				(MochigomaKind::Kei,1),
+				(MochigomaKind::Kyou,1),
+				(MochigomaKind::Fu,1),
+			].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+				acc.insert(k,n);
+				acc
+			}))),1,vec![
+				Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+				Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+				Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,false)),
+			]
+		),(Teban::Gote,Banmen([
+			[Blank,Blank,Blank,Blank,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,GFu,GFu,GFu,GFu,GFu,GFu,GFu,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,Blank,Blank,Blank,Blank],
+		]),MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,1),
+			(MochigomaKind::Kaku,1),
+			(MochigomaKind::Kin,1),
+			(MochigomaKind::Gin,1),
+			(MochigomaKind::Kei,1),
+			(MochigomaKind::Kyou,1),
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),1,vec![
+			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
+			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
+			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,false)),
+		])),
+		(PositionParseResult(
+			Teban::Sente,UsiInitialPosition::Sfen(Banmen([
+				[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+				[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+				[GFu,GFu,GFu,GFu,GFu,GFu,GFu,Blank,GFu],
+				[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GFu,Blank],
+				[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+				[Blank,SFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+				[SFu,Blank,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+				[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+				[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+			]),MochigomaCollections::Empty),1,vec![]
+		),(Teban::Sente,Banmen([
+			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
+			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
+			[GFu,GFu,GFu,GFu,GFu,GFu,GFu,Blank,GFu],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,GFu,Blank],
+			[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[Blank,SFu,Blank,Blank,Blank,Blank,Blank,Blank,Blank],
+			[SFu,Blank,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
+			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
+			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
+		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),1,vec![])),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.extract(),r);
+	}
+}
