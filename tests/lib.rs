@@ -8,3 +8,4 @@ mod agent;
 mod selfmatch;
 mod protocol;
 mod event;
+mod player;

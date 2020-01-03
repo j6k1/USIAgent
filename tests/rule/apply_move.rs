@@ -3921,7 +3921,7 @@ fn test_apply_moves_with_callback() {
 											 	mc,
 											 	&mvs,
 											 	(imhash,ishash),
-											 	|banmen,teban,mc,m,o,r:(u64,u64)| {
+											 	|teban,banmen,mc,m,o,r:(u64,u64)| {
 			let (mhash,shash) = r;
 
 			if let Some(m) = m {

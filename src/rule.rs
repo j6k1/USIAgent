@@ -3925,13 +3925,13 @@ impl Rule {
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut r:T,mut f:F)
 		-> (Teban,State,MochigomaCollections,T)
-		where F: FnMut(&Banmen,Teban,
+		where F: FnMut(Teban,&Banmen,
 						&MochigomaCollections,&Option<AppliedMove>,
 						&Option<MochigomaKind>,T) -> T {
 		for m in m {
 			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
 				(next,nmc,o) => {
-					r = f(&state.banmen,teban,&mc,&Some(*m),&o,r);
+					r = f(teban,&state.banmen,&mc,&Some(*m),&o,r);
 					state = next;
 					mc = nmc;
 					teban = teban.opposite();
@@ -3939,7 +3939,7 @@ impl Rule {
 			}
 		}
 
-		r = f(&state.banmen,teban,&mc,&None,&None,r);
+		r = f(teban,&state.banmen,&mc,&None,&None,r);
 
 		(teban,state,mc,r)
 	}

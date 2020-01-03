@@ -126,16 +126,16 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		}
 	}
 
-	fn apply_moves<T,F>(&self,mut teban:Teban,
-						mut state:State,
+	fn apply_moves<T,F>(&self,mut state:State,
+						mut teban:Teban,
 						mut mc:MochigomaCollections,
-						m:Vec<AppliedMove>,mut r:T,mut f:F)
+						m:&Vec<AppliedMove>,mut r:T,mut f:F)
 		-> (Teban,State,MochigomaCollections,T)
 		where F: FnMut(&Self,Teban,&Banmen,
 						&MochigomaCollections,&Option<AppliedMove>,
 						&Option<MochigomaKind>,T) -> T {
 
-		for m in &m {
+		for m in m {
 			match Rule::apply_move_none_check(&state,teban,&mc,*m) {
 				(next,nmc,o) => {
 					r = f(self,teban,&state.get_banmen(),&mc,&Some(*m),&o,r);

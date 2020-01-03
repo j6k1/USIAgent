@@ -1154,8 +1154,8 @@ fn test_check_kyokumen_nowait() {
 												let _ = player.sender.send(Ok(ActionKind::SetPosition));
 												let mc = MochigomaCollections::Pair(ms,mg);
 
-												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
-														mc,m.into_iter()
+												let (t,state,mc,_) = player.apply_moves(State::new(banmen),t,
+														mc,&m.into_iter()
 														.map(|m| m.to_applied_move())
 														.collect::<Vec<AppliedMove>>(),
 														(),
@@ -1186,8 +1186,8 @@ fn test_check_kyokumen_nowait() {
 												let _ = player.sender.send(Ok(ActionKind::SetPosition));
 												let mc = MochigomaCollections::Pair(ms,mg);
 
-												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
-														mc,m.into_iter()
+												let (t,state,mc,_) = player.apply_moves(State::new(banmen),t,
+														mc,&m.into_iter()
 														.map(|m| m.to_applied_move())
 														.collect::<Vec<AppliedMove>>(),
 														(),
@@ -1220,8 +1220,8 @@ fn test_check_kyokumen_nowait() {
 												let _ = player.sender.send(Ok(ActionKind::SetPosition));
 												let mc = MochigomaCollections::Pair(ms,mg);
 
-												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
-														mc,m.into_iter()
+												let (t,state,mc,_) = player.apply_moves(State::new(banmen),t,
+														mc,&m.into_iter()
 														.map(|m| m.to_applied_move())
 														.collect::<Vec<AppliedMove>>(),
 														(),
@@ -1256,8 +1256,8 @@ fn test_check_kyokumen_nowait() {
 												let _ = player.sender.send(Ok(ActionKind::SetPosition));
 												let mc = MochigomaCollections::Pair(ms,mg);
 
-												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
-														mc,m.into_iter()
+												let (t,state,mc,_) = player.apply_moves(State::new(banmen),t,
+														mc,&m.into_iter()
 														.map(|m| m.to_applied_move())
 														.collect::<Vec<AppliedMove>>(),
 														(),
@@ -1294,8 +1294,8 @@ fn test_check_kyokumen_nowait() {
 												let _ = player.sender.send(Ok(ActionKind::SetPosition));
 												let mc = MochigomaCollections::Pair(ms,mg);
 
-												let (t,state,mc,_) = player.apply_moves(t,State::new(banmen),
-														mc,m.into_iter()
+												let (t,state,mc,_) = player.apply_moves(State::new(banmen),t,
+														mc,&m.into_iter()
 														.map(|m| m.to_applied_move())
 														.collect::<Vec<AppliedMove>>(),
 														(),
