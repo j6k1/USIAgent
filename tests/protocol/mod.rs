@@ -652,6 +652,34 @@ fn test_go_parser_parse() {
 	}
 }
 #[test]
+fn test_move_to_sfen() {
+	let input_and_expected:Vec<(Move,Result<String,ToMoveStringConvertError>)> = vec![
+		(Move::To(KomaSrcPosition(9,0),KomaDstToPosition(8,2,false)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(0)))),
+		(Move::To(KomaSrcPosition(9,10),KomaDstToPosition(8,2,false)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(10)))),
+		(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(8,0,false)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(0)))),
+		(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(8,10,false)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(10)))),
+		(Move::To(KomaSrcPosition(9,0),KomaDstToPosition(8,2,true)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(0)))),
+		(Move::To(KomaSrcPosition(9,10),KomaDstToPosition(8,2,true)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(10)))),
+		(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(8,0,true)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(0)))),
+		(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(8,10,true)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(10)))),
+		(Move::Put(MochigomaKind::Fu,KomaDstPutPosition(8,0)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(0)))),
+		(Move::Put(MochigomaKind::Fu,KomaDstPutPosition(8,10)),Err(ToMoveStringConvertError::CharConvert(DanConvertError(10)))),
+		(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(8,2,false)),Ok(String::from("9a8b"))),
+		(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(8,2,true)),Ok(String::from("9a8b+"))),
+		(Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9,1)),Ok(String::from("P*9a"))),
+		(Move::Put(MochigomaKind::Kyou,KomaDstPutPosition(9,1)),Ok(String::from("L*9a"))),
+		(Move::Put(MochigomaKind::Kei,KomaDstPutPosition(9,1)),Ok(String::from("N*9a"))),
+		(Move::Put(MochigomaKind::Gin,KomaDstPutPosition(9,1)),Ok(String::from("S*9a"))),
+		(Move::Put(MochigomaKind::Kin,KomaDstPutPosition(9,1)),Ok(String::from("G*9a"))),
+		(Move::Put(MochigomaKind::Kaku,KomaDstPutPosition(9,1)),Ok(String::from("B*9a"))),
+		(Move::Put(MochigomaKind::Hisha,KomaDstPutPosition(9,1)),Ok(String::from("R*9a"))),
+	];
+
+	for (i,r) in input_and_expected.into_iter() {
+		assert_eq!(i.to_sfen(),r);
+	}
+}
+#[test]
 fn test_banmen_to_sfen() {
 	let input_and_expected:Vec<(Banmen,Result<String,TypeConvertError<String>>)> = vec![
 		(Banmen([
