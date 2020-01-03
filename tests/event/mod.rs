@@ -280,3 +280,31 @@ fn test_usi_go_mate_time_limit_to_insant() {
 		assert_eq!(l.to_instant(now),r);
 	}
 }
+#[test]
+fn test_usi_go_time_limit_calc_next_limit() {
+	let think_start_time = Instant::now();
+	let now = think_start_time + Duration::from_millis(10);
+
+	let input_and_expected:Vec<((UsiGoTimeLimit,Teban),Option<u64>)> = vec![
+		((UsiGoTimeLimit::None,Teban::Sente),None),
+		((UsiGoTimeLimit::None,Teban::Gote),None),
+		((UsiGoTimeLimit::Infinite,Teban::Sente),None),
+		((UsiGoTimeLimit::Infinite,Teban::Gote),None),
+		((UsiGoTimeLimit::Limit(Some((100,1000)),None),Teban::Sente),Some(100)),
+		((UsiGoTimeLimit::Limit(Some((100,1000)),None),Teban::Gote),Some(1000)),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Sente),Some(1000)),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Gote),Some(10000)),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Inc(10,100))),Teban::Sente),Some(2000)),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Inc(10,100))),Teban::Gote),Some(20090)),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Sente),Some(0)),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Gote),Some(0)),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(20,100))),Teban::Sente),Some(10)),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(20,100))),Teban::Gote),Some(90)),
+		((UsiGoTimeLimit::Limit(None,None),Teban::Sente),Some(0)),
+		((UsiGoTimeLimit::Limit(None,None),Teban::Gote),Some(0)),
+	];
+
+	for ((l,t),r) in input_and_expected.into_iter() {
+		assert_eq!(l.calc_next_limit(t,think_start_time,now),r);
+	}
+}

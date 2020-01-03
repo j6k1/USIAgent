@@ -174,7 +174,7 @@ impl UsiGoTimeLimit {
 		})
 	}
 
-	pub fn calc_next_limit(&self,teban:Teban,think_start_time:Instant,now:Instant) -> Option<u32> {
+	pub fn calc_next_limit(&self,teban:Teban,think_start_time:Instant,now:Instant) -> Option<u64> {
 		let limit = self.to_instant(teban, think_start_time);
 
 		limit.and_then(|limit| match self {
@@ -183,17 +183,19 @@ impl UsiGoTimeLimit {
 			&UsiGoTimeLimit::Limit(Some((ms,mg)),None) |
 			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Byoyomi(_))) => {
 				Some(match teban {
-					Teban::Sente => ms,
-					Teban::Gote => mg,
+					Teban::Sente => ms as u64,
+					Teban::Gote => mg as u64,
 				})
 			},
 			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Inc(_,_))) => {
+				let elapsed = limit - now;
+
 				Some(match teban {
 					Teban::Sente => {
-						ms + (limit - now).subsec_nanos() * 1000000
+						ms as u64 + elapsed.as_secs() * 1000 + elapsed.subsec_millis() as u64
 					},
 					Teban::Gote => {
-						mg + (limit - now).subsec_nanos() * 1000000
+						mg as u64 + elapsed.as_secs() * 1000 + elapsed.subsec_millis() as u64
 					}
 				})
 			},
@@ -202,14 +204,9 @@ impl UsiGoTimeLimit {
 				Some(0)
 			}
 			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(_,_))) => {
-				Some(match teban {
-					Teban::Sente => {
-						(limit - now).subsec_nanos() * 1000000
-					},
-					Teban::Gote => {
-						(limit - now).subsec_nanos() * 1000000
-					}
-				})
+				let elapsed = limit - now;
+
+				Some(elapsed.as_secs() * 1000 + elapsed.subsec_millis() as u64)
 			},
 		})
 	}
