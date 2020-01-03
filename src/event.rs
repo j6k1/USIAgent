@@ -121,8 +121,7 @@ pub enum UsiGoTimeLimit {
 	Infinite,
 }
 impl UsiGoTimeLimit {
-	pub fn to_instant(&self,teban:Teban) -> Option<Instant> {
-		let now = Instant::now();
+	pub fn to_instant(&self,teban:Teban,now:Instant) -> Option<Instant> {
 		(match self {
 			&UsiGoTimeLimit::None => None,
 			&UsiGoTimeLimit::Infinite => None,
@@ -174,6 +173,46 @@ impl UsiGoTimeLimit {
 			}
 		})
 	}
+
+	pub fn calc_next_limit(&self,teban:Teban,think_start_time:Instant,now:Instant) -> Option<u32> {
+		let limit = self.to_instant(teban, think_start_time);
+
+		limit.and_then(|limit| match self {
+			&UsiGoTimeLimit::None => None,
+			&UsiGoTimeLimit::Infinite => None,
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),None) |
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Byoyomi(_))) => {
+				Some(match teban {
+					Teban::Sente => ms,
+					Teban::Gote => mg,
+				})
+			},
+			&UsiGoTimeLimit::Limit(Some((ms,mg)),Some(UsiGoByoyomiOrInc::Inc(_,_))) => {
+				Some(match teban {
+					Teban::Sente => {
+						ms + (limit - now).subsec_nanos() * 1000000
+					},
+					Teban::Gote => {
+						mg + (limit - now).subsec_nanos() * 1000000
+					}
+				})
+			},
+			&UsiGoTimeLimit::Limit(None,None) |
+			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(_))) => {
+				Some(0)
+			}
+			&UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(_,_))) => {
+				Some(match teban {
+					Teban::Sente => {
+						(limit - now).subsec_nanos() * 1000000
+					},
+					Teban::Gote => {
+						(limit - now).subsec_nanos() * 1000000
+					}
+				})
+			},
+		})
+	}
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoMateTimeLimit {
@@ -182,11 +221,10 @@ pub enum UsiGoMateTimeLimit {
 	Infinite,
 }
 impl UsiGoMateTimeLimit {
-	pub fn to_instant(&self) -> Option<Instant> {
+	pub fn to_instant(&self,now:Instant) -> Option<Instant> {
 		match *self {
 			UsiGoMateTimeLimit::Infinite | UsiGoMateTimeLimit::None => None,
 			UsiGoMateTimeLimit::Limit(limit) => {
-				let now = Instant::now();
 				Some(now + Duration::from_millis(limit as u64))
 			}
 		}

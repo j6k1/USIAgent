@@ -7,7 +7,6 @@ use std::collections::HashMap;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::error::Error;
-use std::time::Instant;
 
 use crossbeam_channel::Sender;
 use crossbeam_channel::Receiver;
@@ -100,32 +99,6 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		}
 	}
 
-	fn extract_kyokumen(&self,kyokumen:&Option<Kyokumen>)
-		-> Result<Kyokumen,UsiProtocolError>
-		where E: Error + fmt::Debug + From<UsiProtocolError> {
-
-		match kyokumen {
-			&Some(ref kyokumen) => {
-				Ok(kyokumen.clone())
-			},
-			&None => Err(UsiProtocolError::InvalidState(
-						String::from("Position information is not initialized."))),
-		}
-	}
-
-	fn extract_teban(&self,kyokumen:&Option<Kyokumen>)
-		-> Result<Teban,UsiProtocolError>
-		where E: Error + fmt::Debug + From<UsiProtocolError> {
-
-		match kyokumen {
-			&Some(ref kyokumen) => {
-				Ok(kyokumen.teban.clone())
-			},
-			&None => Err(UsiProtocolError::InvalidState(
-						String::from("Position information is not initialized."))),
-		}
-	}
-
 	fn apply_moves<T,F>(&self,mut state:State,
 						mut teban:Teban,
 						mut mc:MochigomaCollections,
@@ -148,15 +121,6 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		r = f(self,teban,&state.get_banmen(),&mc,&None,&None,r);
 
 		(teban,state,mc,r)
-	}
-
-	fn get_update_inc(&self,tinc:&u32,limit:&Option<Instant>) -> Option<u32> {
-		match limit {
-			&Some(limit) => {
-				Some(tinc + (limit - Instant::now()).subsec_nanos() * 1000000)
-			},
-			&None => None,
-		}
 	}
 }
 #[derive(Clone, Debug)]

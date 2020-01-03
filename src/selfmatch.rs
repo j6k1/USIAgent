@@ -496,7 +496,7 @@ impl<E> SelfMatchEngine<E>
 				let teban_at_start = teban.clone();
 
 				let mut current_game_time_limit = [game_time_limit,game_time_limit];
-				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
+				let mut current_time_limit = current_game_time_limit[cs_index].to_instant(teban,Instant::now());
 
 				let kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 				let oute_kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
@@ -610,7 +610,7 @@ impl<E> SelfMatchEngine<E>
 										&current_game_time_limit[cs_index],
 										teban,think_start_time.elapsed()
 									);
-									current_time_limit = current_game_time_limit[cs_index].to_instant(teban);
+									current_time_limit = current_game_time_limit[cs_index].to_instant(teban,Instant::now());
 
 									let m = m.to_applied_move();
 
