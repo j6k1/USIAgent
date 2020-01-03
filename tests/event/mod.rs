@@ -1,3 +1,5 @@
+use std::time::{Instant,Duration};
+
 use usiagent::shogi::*;
 use usiagent::event::*;
 use usiagent::error::*;
@@ -235,5 +237,46 @@ fn test_moved_display() {
 
 	for (i,r) in input_and_expected.into_iter() {
 		assert_eq!(format!("{}",i).as_str(),r);
+	}
+}
+#[test]
+fn test_usi_go_time_limit_to_insant() {
+	let now = Instant::now();
+
+	let input_and_expected:Vec<((UsiGoTimeLimit,Teban),Option<Instant>)> = vec![
+		((UsiGoTimeLimit::None,Teban::Sente),None),
+		((UsiGoTimeLimit::None,Teban::Gote),None),
+		((UsiGoTimeLimit::Infinite,Teban::Sente),None),
+		((UsiGoTimeLimit::Infinite,Teban::Gote),None),
+		((UsiGoTimeLimit::Limit(Some((10,100)),None),Teban::Sente),Some(now + Duration::from_millis(10 as u64))),
+		((UsiGoTimeLimit::Limit(Some((10,100)),None),Teban::Gote),Some(now + Duration::from_millis(100 as u64))),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Sente),Some(now + Duration::from_millis(1100 as u64))),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Gote),Some(now + Duration::from_millis(10100 as u64))),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Inc(10,100))),Teban::Sente),Some(now + Duration::from_millis(1010 as u64))),
+		((UsiGoTimeLimit::Limit(Some((1000,10000)),Some(UsiGoByoyomiOrInc::Inc(10,100))),Teban::Gote),Some(now + Duration::from_millis(10100 as u64))),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Sente),Some(now + Duration::from_millis(100 as u64))),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Byoyomi(100))),Teban::Gote),Some(now + Duration::from_millis(100 as u64))),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(10,100))),Teban::Sente),Some(now + Duration::from_millis(10 as u64))),
+		((UsiGoTimeLimit::Limit(None,Some(UsiGoByoyomiOrInc::Inc(10,100))),Teban::Gote),Some(now + Duration::from_millis(100 as u64))),
+		((UsiGoTimeLimit::Limit(None,None),Teban::Sente),Some(now)),
+		((UsiGoTimeLimit::Limit(None,None),Teban::Gote),Some(now)),
+	];
+
+	for ((l,t),r) in input_and_expected.into_iter() {
+		assert_eq!(l.to_instant(t,now),r);
+	}
+}
+#[test]
+fn test_usi_go_mate_time_limit_to_insant() {
+	let now = Instant::now();
+
+	let input_and_expected:Vec<(UsiGoMateTimeLimit,Option<Instant>)> = vec![
+		(UsiGoMateTimeLimit::None,None),
+		(UsiGoMateTimeLimit::Infinite,None),
+		(UsiGoMateTimeLimit::Limit(100),Some(now + Duration::from_millis(100 as u64))),
+	];
+
+	for (l,r) in input_and_expected.into_iter() {
+		assert_eq!(l.to_instant(now),r);
 	}
 }
