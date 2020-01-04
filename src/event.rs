@@ -235,17 +235,20 @@ pub enum UsiGoByoyomiOrInc {
 #[derive(Debug)]
 pub enum UserEvent {
 	Stop,
+	PonderHit(Instant),
 	Quit,
 }
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UserEventKind {
 	Stop = 0,
+	PonderHit,
 	Quit,
 }
 impl MapEventKind<UserEventKind> for UserEvent {
 	fn event_kind(&self) -> UserEventKind {
 		match *self {
 			UserEvent::Stop => UserEventKind::Stop,
+			UserEvent::PonderHit(_) => UserEventKind::PonderHit,
 			UserEvent::Quit => UserEventKind::Quit,
 		}
 	}

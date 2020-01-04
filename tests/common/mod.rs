@@ -10,8 +10,11 @@ use std::collections::HashMap;
 use std::collections::BTreeMap;
 use std::iter::Iterator;
 use std::ops::Add;
+use std::time::Instant;
+
 use crossbeam_channel::Sender;
 use crossbeam_channel::Receiver;
+
 use usiagent::event::SystemEventKind;
 use usiagent::event::UserEventKind;
 use usiagent::error::USIAgentRunningError;
@@ -256,7 +259,9 @@ pub struct MockPlayer {
 	pub on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
 												HashMap<MochigomaKind,u32>,
 												HashMap<MochigomaKind,u32>,u32,Vec<Move>) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
+	pub on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,
+												Option<Instant>,
+												&UsiGoTimeLimit,
 												Arc<Mutex<UserEventQueue>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
 												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
@@ -278,9 +283,10 @@ pub struct MockPlayer {
 	pub stop:bool,
 	pub quited:bool,
 	pub kyokumen:Option<Kyokumen>,
+	pub ponderhit_time:Option<Instant>,
+	pub game_start_time:Option<Instant>,
 }
 impl MockPlayer {
-
 	pub fn new(sender:Sender<Result<ActionKind,String>>,
 				info_send_notifier:Sender<()>,
 				on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
@@ -290,7 +296,9 @@ impl MockPlayer {
 															HashMap<MochigomaKind,u32>,u32,Vec<Move>
 				) -> Result<(),CommonError> + Send + 'static)>>,
 
-				on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoTimeLimit,
+				on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,
+															Option<Instant>,
+															&UsiGoTimeLimit,
 															Arc<Mutex<UserEventQueue>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
 															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
@@ -332,7 +340,31 @@ impl MockPlayer {
 			stop:false,
 			quited:false,
 			kyokumen:None,
+			ponderhit_time:None,
+			game_start_time:None,
 		}
+	}
+
+	fn think_inner<L,S>(&mut self,think_start_time:Option<Instant>,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
+		let mut info_sender = info_sender.clone();
+		let info_send_notifier = self.info_send_notifier.clone();
+		let event_queue = event_queue.clone();
+		let on_error_handler = on_error_handler.clone();
+
+		(self.on_think.next().expect("Iterator of on think callback is empty."))(
+			self,think_start_time,limit,event_queue.clone(),Box::new(move |commands| {
+				let r = info_sender.send(commands);
+
+				if let Ok(_) = r {
+					let _ = info_send_notifier.send(());
+				}
+				r
+			}),Box::new(move |player| {
+				player.handle_events(&*event_queue,&*on_error_handler)
+			})
+		)
 	}
 }
 impl fmt::Debug for MockPlayer {
@@ -402,6 +434,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 	fn newgame(&mut self) -> Result<(),CommonError> {
 		self.stop = false;
 		self.started = true;
+		self.game_start_time = Some(Instant::now());
 		(self.on_newgame.next().expect("Iterator of on newgame callback is empty."))(self)
 	}
 
@@ -412,26 +445,16 @@ impl USIPlayer<CommonError> for MockPlayer {
 		)
 	}
 
-	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+	fn think<L,S>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
-		let mut info_sender = info_sender.clone();
-		let info_send_notifier = self.info_send_notifier.clone();
-		let event_queue = event_queue.clone();
-		let on_error_handler = on_error_handler.clone();
+		self.think_inner(Some(think_start_time), limit, event_queue, info_sender, on_error_handler)
+	}
 
-		(self.on_think.next().expect("Iterator of on think callback is empty."))(
-			self,limit,event_queue.clone(),Box::new(move |commands| {
-				let r = info_sender.send(commands);
-
-				if let Ok(_) = r {
-					let _ = info_send_notifier.send(());
-				}
-				r
-			}),Box::new(move |player| {
-				player.handle_events(&*event_queue,&*on_error_handler)
-			})
-		)
+	fn think_ponder<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
+		self.think_inner(None, limit, event_queue, info_sender, on_error_handler)
 	}
 
 	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
@@ -459,6 +482,14 @@ impl USIPlayer<CommonError> for MockPlayer {
 	fn on_stop(&mut self,_:&UserEvent) -> Result<(), CommonError> {
 		let _ = self.sender.send(Ok(ActionKind::OnStop));
 		self.stop = true;
+		Ok(())
+	}
+
+	fn on_ponderhit(&mut self,e:&UserEvent) -> Result<(), CommonError> {
+		let _ = self.sender.send(Ok(ActionKind::OnStop));
+		if let &UserEvent::PonderHit(t) = e {
+			self.ponderhit_time = Some(t);
+		}
 		Ok(())
 	}
 

@@ -104,7 +104,7 @@ enum TimeoutKind {
 pub enum SelfMatchMessage {
 	Ready,
 	GameStart,
-	StartThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>),
+	StartThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>,Instant),
 	StartPonderThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>),
 	NotifyMove(BestMove),
 	PonderHit,
@@ -556,15 +556,31 @@ impl<E> SelfMatchEngine<E>
 					match ponders[cs_index] {
 						None => {
 							let _ = cs[cs_index].send(SelfMatchMessage::StartThink(
-								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()));
+								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone(),Instant::now()));
 						},
 						pm @ Some(_) if pm == prev_move => {
+							match user_event_queue[cs_index].lock() {
+								Ok(mut user_event_queue) => {
+									user_event_queue.push(UserEvent::PonderHit(Instant::now()));
+								},
+								Err(ref e) => {
+									let _ = on_error_handler.lock().map(|h| h.call(e));
+								}
+							}
 							let _ = cs[cs_index].send(SelfMatchMessage::PonderHit);
 						},
 						_ => {
+							match user_event_queue[cs_index].lock() {
+								Ok(mut user_event_queue) => {
+									user_event_queue.push(UserEvent::Stop);
+								},
+								Err(ref e) => {
+									let _ = on_error_handler.lock().map(|h| h.call(e));
+								}
+							}
 							let _ = cs[cs_index].send(SelfMatchMessage::PonderNG);
 							let _ = cs[cs_index].send(SelfMatchMessage::StartThink(
-								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone()));
+								teban_at_start.clone(),banmen_at_start.clone(),mc_at_start.clone(),n,mvs.clone(),Instant::now()));
 						}
 					}
 
@@ -979,7 +995,7 @@ impl<E> SelfMatchEngine<E>
 
 							loop {
 								match cr.recv()? {
-									SelfMatchMessage::StartThink(t,b,mc,n,m) => {
+									SelfMatchMessage::StartThink(t,b,mc,n,m,s) => {
 										let (ms, mg) = match mc {
 											MochigomaCollections::Pair(ref ms, ref mg) => {
 												(ms.clone(),mg.clone())
@@ -993,9 +1009,9 @@ impl<E> SelfMatchEngine<E>
 											m.to_move()
 										}).collect::<Vec<Move>>())?;
 
-										let m = player.think(&limit,
-																user_event_queue[player_i].clone(),
-																info_sender.clone(),on_error_handler.clone())?;
+										let m = player.think(s,&limit,
+															user_event_queue[player_i].clone(),
+															info_sender.clone(),on_error_handler.clone())?;
 
 										if !quit_ready.load(Ordering::Acquire) {
 											ss.send(SelfMatchMessage::NotifyMove(m))?;
@@ -1015,7 +1031,7 @@ impl<E> SelfMatchEngine<E>
 											m.to_move()
 										}).collect::<Vec<Move>>())?;
 
-										let m = player.think(&limit,
+										let m = player.think_ponder(&limit,
 																user_event_queue[player_i].clone(),
 																info_sender.clone(),on_error_handler.clone())?;
 

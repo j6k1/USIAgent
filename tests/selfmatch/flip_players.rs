@@ -179,15 +179,15 @@ fn test_kifuwrite_7times() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -389,15 +389,15 @@ fn test_kifuwrite_7times() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),

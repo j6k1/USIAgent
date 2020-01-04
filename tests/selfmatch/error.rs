@@ -203,7 +203,7 @@ fn test_error_take_ready_player2() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -530,7 +530,7 @@ fn test_error_newgame_player2() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -866,7 +866,7 @@ fn test_error_set_position_player2() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										})]),
@@ -1049,7 +1049,7 @@ fn test_error_think_player1() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Err(CommonError::Fail(String::from(
 												"think process fail."
@@ -1221,7 +1221,7 @@ fn test_error_set_think_player2() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										})]),
@@ -1242,7 +1242,7 @@ fn test_error_set_think_player2() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Err(CommonError::Fail(String::from(
 												"think process fail."
@@ -1417,7 +1417,7 @@ fn test_error_ponder_player1_set_position_recv_opponents_turn() {
 												"set position process fail."
 											)))
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 												Some(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)))))
@@ -1439,7 +1439,7 @@ fn test_error_ponder_player1_set_position_recv_opponents_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											thread::sleep(Duration::from_millis(350));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),None))
@@ -1611,12 +1611,12 @@ fn test_error_ponder_player1_think_recv_opponents_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 												Some(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Err(CommonError::Fail(String::from(
 												"think process fail."
@@ -1639,7 +1639,7 @@ fn test_error_ponder_player1_think_recv_opponents_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											thread::sleep(Duration::from_millis(350));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),None))
@@ -1814,7 +1814,7 @@ fn test_error_ponder_player1_set_position_recv_next_turn() {
 												"set position process fail."
 											)))
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 												Some(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)))))
@@ -1836,7 +1836,7 @@ fn test_error_ponder_player1_set_position_recv_next_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),None))
 										})]),
@@ -2008,12 +2008,12 @@ fn test_error_ponder_player1_think_recv_next_turn() {
 											thread::sleep(Duration::from_millis(350));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 												Some(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Err(CommonError::Fail(String::from(
 												"think process fail."
@@ -2036,7 +2036,7 @@ fn test_error_ponder_player1_think_recv_next_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),None))
 										})]),
@@ -2207,11 +2207,11 @@ fn test_error_ponder_player2_set_position_recv_opponents_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											thread::sleep(Duration::from_millis(350));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
@@ -2239,7 +2239,7 @@ fn test_error_ponder_player2_set_position_recv_opponents_turn() {
 												"set position process fail."
 											)))
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),
 												Some(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)))))
@@ -2423,11 +2423,11 @@ fn test_error_ponder_player2_think_recv_opponents_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											thread::sleep(Duration::from_millis(350));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
@@ -2453,12 +2453,12 @@ fn test_error_ponder_player2_think_recv_opponents_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),
 												Some(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)))))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Err(CommonError::Fail(String::from(
 												"think process fail."
@@ -2643,11 +2643,11 @@ fn test_error_ponder_player2_set_position_recv_next_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										})]),
@@ -2675,7 +2675,7 @@ fn test_error_ponder_player2_set_position_recv_next_turn() {
 												"set position process fail."
 											)))
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),
 												Some(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)))))
@@ -2859,11 +2859,11 @@ fn test_error_ponder_player2_set_think_recv_next_turn() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										})]),
@@ -2889,12 +2889,12 @@ fn test_error_ponder_player2_set_think_recv_next_turn() {
 											thread::sleep(Duration::from_millis(350));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,3),KomaDstToPosition(1,4,false)),
 												Some(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)))))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Err(CommonError::Fail(String::from(
 												"think process fail."
@@ -3075,7 +3075,7 @@ fn test_error_gameover_player1() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -3273,7 +3273,7 @@ fn test_error_gameover_player2() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										})]),
@@ -3305,7 +3305,7 @@ fn test_error_gameover_player2() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),

@@ -190,11 +190,11 @@ fn test_resign_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -226,7 +226,7 @@ fn test_resign_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -441,11 +441,11 @@ fn test_invalidmove_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(8,8),KomaDstToPosition(7,8,false)),None))
 										})]),
@@ -477,7 +477,7 @@ fn test_invalidmove_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -696,11 +696,11 @@ fn test_invalidmove_by_from_blank_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(7,8),KomaDstToPosition(7,7,false)),None))
 										})]),
@@ -732,7 +732,7 @@ fn test_invalidmove_by_from_blank_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -947,7 +947,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,false)),None))
 										})]),
@@ -979,7 +979,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										})]),
@@ -1182,7 +1182,7 @@ fn test_invalidmove_by_suicide_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,8),KomaDstToPosition(5,9,false)),None))
 										})]),
@@ -1399,7 +1399,7 @@ fn test_win_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,2),KomaDstToPosition(5,1,false)),None))
 										})]),
@@ -1619,7 +1619,7 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::Put(MochigomaKind::Fu,KomaDstPutPosition(5,2)),None))
 										})]),
@@ -1836,7 +1836,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,3),KomaDstToPosition(5,3,false)),None))
 										})]),
@@ -2053,7 +2053,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,3),KomaDstToPosition(5,3,false)),None))
 										})]),
@@ -2085,7 +2085,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -2284,7 +2284,7 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										})]),
@@ -2509,15 +2509,15 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,3),KomaDstToPosition(5,3,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,3),KomaDstToPosition(4,3,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,3),KomaDstToPosition(5,3,false)),None))
 										})]),
@@ -2553,11 +2553,11 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,1),KomaDstToPosition(4,1,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,1),KomaDstToPosition(5,1,false)),None))
 										})]),
@@ -2820,31 +2820,31 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,8),KomaDstToPosition(4,9,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,8),KomaDstToPosition(4,9,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,8),KomaDstToPosition(4,9,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										})]),
@@ -2896,27 +2896,27 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,2),KomaDstToPosition(6,1,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,2),KomaDstToPosition(6,1,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,2),KomaDstToPosition(6,1,false)),None))
 										})]),
@@ -3255,11 +3255,11 @@ fn test_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											while !player.stop {
 												thread::sleep(Duration::from_millis(10));
@@ -3295,7 +3295,7 @@ fn test_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -3511,11 +3511,11 @@ fn test_game_time_limit_less_uptime_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											while !player.stop {
 												thread::sleep(Duration::from_millis(10));
@@ -3551,7 +3551,7 @@ fn test_game_time_limit_less_uptime_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -3750,11 +3750,11 @@ fn test_game_uptime_less_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											while !player.stop {
 												thread::sleep(Duration::from_millis(10));
@@ -3790,7 +3790,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -3994,12 +3994,12 @@ fn test_ponderhit_1times() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -4031,7 +4031,7 @@ fn test_ponderhit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -4247,16 +4247,16 @@ fn test_ponderng_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -4288,7 +4288,7 @@ fn test_ponderng_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),None))
 										})]),
@@ -4503,11 +4503,11 @@ fn test_abort_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Abort)
 										})]),
@@ -4528,7 +4528,7 @@ fn test_abort_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -4713,11 +4713,11 @@ fn test_nyugyoku_win_win_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),
@@ -4749,7 +4749,7 @@ fn test_nyugyoku_win_win_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,6),KomaDstToPosition(9,7,true)),None))
 										})]),
@@ -4964,11 +4964,11 @@ fn test_nyugyoku_win_win_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										})]),
@@ -5004,11 +5004,11 @@ fn test_nyugyoku_win_win_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,6),KomaDstToPosition(9,7,true)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),
@@ -5235,11 +5235,11 @@ fn test_nyugyoku_win_lose_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),
@@ -5271,7 +5271,7 @@ fn test_nyugyoku_win_lose_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,6),KomaDstToPosition(9,7,true)),None))
 										})]),
@@ -5486,11 +5486,11 @@ fn test_nyugyoku_win_lose_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										})]),
@@ -5526,11 +5526,11 @@ fn test_nyugyoku_win_lose_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),

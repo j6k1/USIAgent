@@ -1,4 +1,5 @@
 use std::{thread,time};
+use std::time::Instant;
 use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
@@ -32,13 +33,17 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	fn newgame(&mut self) -> Result<(),E>;
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
-	fn think<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+	fn think<L,S>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	fn think_ponder<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
+	fn on_ponderhit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	fn gameover<L>(&mut self,s:&GameEndState,
 			event_queue:Arc<Mutex<UserEventQueue>>,
 			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E> where L: Logger, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
@@ -74,6 +79,15 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 			match e {
 				&UserEvent::Stop => {
 					match self.on_stop(e) {
+						Ok(_) => (),
+						Err(ref e) => {
+							let _ = on_error_handler.lock().map(|h| h.call(e));
+							has_error = true;
+						}
+					};
+				},
+				&UserEvent::PonderHit(_) => {
+					match self.on_ponderhit(e) {
 						Ok(_) => (),
 						Err(ref e) => {
 							let _ = on_error_handler.lock().map(|h| h.call(e));

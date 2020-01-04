@@ -211,23 +211,23 @@ fn test_initial_position_creator_3times() {
 											Ok(())
 										}),
 										]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										})]),
@@ -429,19 +429,19 @@ fn test_initial_position_creator_3times() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(9,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
