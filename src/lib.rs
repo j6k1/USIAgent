@@ -489,10 +489,13 @@ impl<T,E> UsiAgent<T,E>
 				let thread_queue = thread_queue_arc.clone();
 
 				let thinking_arc = Arc::new(AtomicBool::new(false));
+				let in_ponder_arc = Arc::new(AtomicBool::new(false));
 
 				let writer = writer_arc.clone();
 
 				let think_start_time = think_start_time_arc.clone();
+
+				let in_ponder = in_ponder_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Go, move |ctx,e| {
 					match busy.lock() {
@@ -508,9 +511,7 @@ impl<T,E> UsiAgent<T,E>
 
 					let think_start_time = match think_start_time.lock() {
 						Ok(mut think_start_time) => {
-							let t = think_start_time.unwrap_or(Instant::now());
-							*think_start_time = None;
-							t
+							think_start_time.take().unwrap_or(Instant::now())
 						},
 						Err(_) => {
 							return Err(EventHandlerError::Fail(String::from(
@@ -524,6 +525,8 @@ impl<T,E> UsiAgent<T,E>
 					} else {
 						false
 					};
+
+					in_ponder.store(is_ponder,Ordering::Release);
 
 					match *e {
 						SystemEvent::Go(UsiGo::Ponder(ref opt)) |
@@ -575,7 +578,7 @@ impl<T,E> UsiAgent<T,E>
 														}
 													}
 												} else {
-													match player.think(think_start_time,
+													match player.think(Instant::now(),
 															&*opt,
 															user_event_queue_inner.clone(),
 															info_sender,on_error_handler_inner.clone()) {
@@ -849,10 +852,27 @@ impl<T,E> UsiAgent<T,E>
 				let allow_immediate_move = allow_immediate_move_arc.clone();
 				let on_delay_move_handler = on_delay_move_handler_arc.clone();
 				let on_error_handler = on_error_handler_arc.clone();
+				let in_ponder = in_ponder_arc.clone();
+				let think_start_time = think_start_time_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::Stop, move |ctx,e| {
 					match e {
 						&SystemEvent::Stop => {
+							if in_ponder.load(Ordering::Acquire) {
+								match think_start_time.lock() {
+									Ok(mut think_start_time) => {
+										*think_start_time = Some(Instant::now());
+									},
+									Err(_) => {
+										return Err(EventHandlerError::Fail(String::from(
+											"Could not get exclusive lock on think_start_time object"
+										)));
+									}
+								}
+							}
+
+							in_ponder.store(false,Ordering::Release);
+
 							if *busy.lock().or(Err(EventHandlerError::Fail(String::from(
 								"Could not get exclusive lock on busy flag object."
 							))))? {
@@ -899,10 +919,13 @@ impl<T,E> UsiAgent<T,E>
 				let allow_immediate_move = allow_immediate_move_arc.clone();
 				let on_delay_move_handler = on_delay_move_handler_arc.clone();
 				let on_error_handler = on_error_handler_arc.clone();
+				let in_ponder = in_ponder_arc.clone();
 
 				system_event_dispatcher.add_handler(SystemEventKind::PonderHit, move |ctx,e| {
 					match e {
 						&SystemEvent::PonderHit => {
+							in_ponder.store(false,Ordering::Release);
+
 							match user_event_queue.lock() {
 								Ok(mut user_event_queue) => {
 									user_event_queue.push(UserEvent::PonderHit(Instant::now()));

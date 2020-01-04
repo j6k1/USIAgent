@@ -1,5 +1,5 @@
 use std::thread;
-use std::time::Duration;
+use std::time::{Instant,Duration};
 
 use crossbeam_channel::Sender;
 use crossbeam_channel::Receiver;
@@ -1772,10 +1772,20 @@ fn test_ponderhit_thinking() {
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 
-											thread::sleep(Duration::from_millis(300));
+											thread::sleep(Duration::from_millis(400));
+											handle_events(player)?;
+
+											let now = Instant::now();
+
+											if player.ponderhit_time.map(|t| now - t < Duration::from_millis(100)).unwrap_or(false) {
+												let _ = player.sender.send(Err(format!(
+															"ponderhit state is invalid. ({:?})",
+															player.ponderhit_time.map(|t| (now - t).subsec_millis()))));
+											}
+
 											Ok(BestMove::Resign)
 										})]),
 										ConsumedIterator::new(vec![]),
@@ -1859,7 +1869,11 @@ fn test_ponderhit_thinking() {
 
 	let _  = s.send(String::from("ponderhit"));
 
-	thread::sleep(Duration::from_millis(300));
+	thread::sleep(Duration::from_millis(400));
+
+	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::PonderHit timed out.");
+
+	assert_eq!(res,Ok(ActionKind::PonderHit));
 
 	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
 
@@ -2110,10 +2124,19 @@ fn test_ponderng_thinking() {
 												handle_events(player)?;
 												thread::sleep(Duration::from_millis(10));
 											}
+											thread::sleep(Duration::from_millis(100));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
-											let _ = player.sender.send(Ok(ActionKind::Think));
+										Box::new(|player,think_start_time,_,_,_,_| {
+											let now = Instant::now();
+
+											if think_start_time.map(|t| now - t >= Duration::from_millis(100)).unwrap_or(false) {
+												let _ = player.sender.send(Ok(ActionKind::Think));
+											} else {
+												let _ = player.sender.send(Err(format!(
+															"think_start_time is invalid. ({:?})",
+															think_start_time.map(|t| (now - t).subsec_millis()))));
+											}
 
 											Ok(BestMove::Resign)
 										})]),
