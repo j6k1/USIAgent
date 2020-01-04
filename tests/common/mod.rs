@@ -176,6 +176,7 @@ pub enum ActionKind {
 	Think,
 	ThinkMate,
 	OnStop,
+	PonderHit,
 	GameOver,
 	OnQuit,
 	Quit,
@@ -486,7 +487,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 	}
 
 	fn on_ponderhit(&mut self,e:&UserEvent) -> Result<(), CommonError> {
-		let _ = self.sender.send(Ok(ActionKind::OnStop));
+		let _ = self.sender.send(Ok(ActionKind::PonderHit));
 		if let &UserEvent::PonderHit(t) = e {
 			self.ponderhit_time = Some(t);
 		}
