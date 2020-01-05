@@ -553,6 +553,15 @@ impl<E> SelfMatchEngine<E>
 				}
 
 				while uptime.map_or(true, |t| Instant::now() - start_time < t) {
+					match user_event_queue[cs_index].lock() {
+						Ok(mut user_event_queue) => {
+							user_event_queue.clear();
+						},
+						Err(ref e) => {
+							let _ = on_error_handler.lock().map(|h| h.call(e));
+						}
+					}
+
 					match ponders[cs_index] {
 						None => {
 							let _ = cs[cs_index].send(SelfMatchMessage::StartThink(
