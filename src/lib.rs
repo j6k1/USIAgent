@@ -507,7 +507,18 @@ impl<T,E> UsiAgent<T,E>
 								"Could not get exclusive lock on busy flag object."
 							)));
 						}
-					};
+					}
+
+					match user_event_queue.lock() {
+						Ok(mut user_event_queue) => {
+							user_event_queue.clear();
+						},
+						Err(_) => {
+							return Err(EventHandlerError::Fail(String::from(
+								"Could not get exclusive lock on user event queue object."
+							)));
+						}
+					}
 
 					let think_start_time = match think_start_time.lock() {
 						Ok(mut think_start_time) => {

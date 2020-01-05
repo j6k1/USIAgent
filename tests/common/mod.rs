@@ -441,6 +441,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),CommonError> {
+		self.stop = false;
 		(self.on_position.next().expect("Iterator of on set_position callback is empty."))(
 			self,teban,ban,ms,mg,n,m
 		)
