@@ -56,17 +56,17 @@ impl<'a,T,K,E> fmt::Display for EventDispatchError<'a,T,K,E>
 	where T: fmt::Debug, K: fmt::Debug, E: Error + fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		EventDispatchError::ErrorFromHandler(ref e) => e.fmt(f),
+	 		EventDispatchError::ErrorFromHandler(_) => write!(f, "An error occurred while processing an event."),
 	 		EventDispatchError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
 	 		EventDispatchError::ContainError => write!(f, "One or more errors occurred while executing the event handler."),
 	 	}
 	 }
 }
 impl<'a,T,K,E> error::Error for EventDispatchError<'a,T,K,E>
-	where T: fmt::Debug, K: fmt::Debug, E: Error + fmt::Debug {
+	where T: fmt::Debug, K: fmt::Debug + 'static, E: Error + fmt::Debug {
 	 fn description(&self) -> &str {
 	 	match *self {
-	 		EventDispatchError::ErrorFromHandler(ref e) => e.description(),
+	 		EventDispatchError::ErrorFromHandler(_) => "An error occurred while processing an event.",
 	 		EventDispatchError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
 	 		EventDispatchError::ContainError => "Error executing event handler",
 	 	}
@@ -74,7 +74,7 @@ impl<'a,T,K,E> error::Error for EventDispatchError<'a,T,K,E>
 
 	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 	 	match *self {
-	 		EventDispatchError::ErrorFromHandler(_) => None,
+	 		EventDispatchError::ErrorFromHandler(ref e) => Some(e),
 	 		EventDispatchError::MutexLockFailedError(_) => None,
 	 		EventDispatchError::ContainError => None,
 	 	}
