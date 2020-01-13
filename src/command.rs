@@ -107,9 +107,9 @@ pub enum UsiScore {
 pub enum UsiScoreMate {
 	/// 数値
 	Num(i64),
-	/// +
+	/// \+
 	Plus,
-	/// -
+	/// \-
 	Minus,
 }
 /// 詰め将棋の解答
