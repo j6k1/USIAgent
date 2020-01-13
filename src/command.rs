@@ -123,23 +123,33 @@ pub enum CheckMate {
 	Timeout,
 	/// 詰まない
 	Nomate,
-	/// USIプロトコルの仕様にはない。返してもGUI側にコマンドは送信されない
+	/// 中断（USIプロトコルの仕様にはない。返してもGUI側にコマンドは送信されない）
 	Abort,
 }
 /// optionコマンドの値
 #[derive(Debug,Eq,PartialEq)]
 pub enum UsiOptType {
 	/// check
+	///
+	/// デフォルト値としてtrueかfalseを指定可能
 	Check(Option<bool>),
 	/// spin
+	///
+	/// min,max,デフォルト値（オプション）を指定
 	Spin(i64, i64,Option<i64>),
 	/// combo
+	///
+	/// デフォルト値、項目のVecを指定。項目は一つ以上なければならない。
 	Combo(Option<String>, Vec<String>),
 	/// button
 	Button,
 	/// string
+	///
+	/// デフォルト値を指定可能
 	String(Option<String>),
 	/// filename
+	///
+	/// デフォルト値を指定可能
 	FileName(Option<String>),
 }
 impl Clone for UsiOptType {
