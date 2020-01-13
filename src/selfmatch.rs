@@ -39,8 +39,11 @@ use SandBox;
 use rule::*;
 use protocol::*;
 
+/// 棋譜を記録する
 pub trait SelfMatchKifuWriter {
+	/// 棋譜の書き込みを行う
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError>;
+	/// 開始時の局面のsfen文字列と`Vec<Move>`から棋譜のsfen文字列を生成するメソッドのデフォルト実装
 	fn to_sfen(&self,initial_sfen:&String,m:&Vec<Move>)
 		-> Result<String, SfenStringConvertError> {
 
@@ -75,11 +78,13 @@ pub trait SelfMatchKifuWriter {
 		}
 	}
 }
+/// ファイルに記録する`SelfMatchKifuWriter`の実装
 #[derive(Debug)]
 pub struct FileSfenKifuWriter {
 	writer:BufWriter<fs::File>,
 }
 impl FileSfenKifuWriter {
+	/// FileSfenKifuWriterの生成
 	pub fn new(file:String) -> Result<FileSfenKifuWriter,KifuWriteError> {
 		Ok(FileSfenKifuWriter {
 			writer:BufWriter::new(OpenOptions::new().append(true).create(true).open(file)?),
@@ -87,6 +92,7 @@ impl FileSfenKifuWriter {
 	}
 }
 impl SelfMatchKifuWriter for FileSfenKifuWriter {
+	/// ファイルに棋譜を書き込む
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError> {
 		let sfen = self.to_sfen(initial_sfen,m)?;
 
@@ -94,41 +100,65 @@ impl SelfMatchKifuWriter for FileSfenKifuWriter {
 		Ok(())
 	}
 }
+/// タイムアウトの種別
 #[derive(Debug)]
 enum TimeoutKind {
+	/// タイムアウト無し
 	Never,
+	/// 現在のターンのタイムアウト
 	Turn,
+	/// 自己対局機能の起動時に指定した終了時刻に達した
 	Uptime,
 }
+/// 自己対局機能の実装内でやり取りするメッセージオブジェクト
 #[derive(Debug)]
 pub enum SelfMatchMessage {
+	/// 準備完了
 	Ready,
+	/// ゲーム開始
 	GameStart,
+	/// プレイヤーの思考を開始する
 	StartThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>,Instant),
+	// プレイヤーの思考を開始する（go ponder)
 	StartPonderThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>),
+	/// プレイヤーから指し手を返す
 	NotifyMove(BestMove),
+	/// ponderで予測した指し手と一致した
 	PonderHit,
+	/// ponderで予測した指し手と一致しない
 	PonderNG,
+	/// 対局終了
 	GameEnd(GameEndState),
+	/// 中断
 	Abort,
+	/// 自己対局終了
 	Quit,
+	/// エラー発生を通知
 	Error(usize),
 }
+/// 自己対局の結果
 #[derive(Debug)]
 pub struct SelfMatchResult {
+	/// 実施した対局回数
 	pub game_count:u32,
+	/// 自己対局開始からの経過時間
 	pub elapsed:Duration,
+	/// 自己対局の開始時間
 	pub start_dt:DateTime<Local>,
+	/// 自己対局の終了時間
 	pub end_dt:DateTime<Local>,
 }
+/// 自己対局エンジン
 #[derive(Debug)]
 pub struct SelfMatchEngine<E>
 	where 	E: PlayerError {
 	player_error_type:PhantomData<E>,
+	/// システムイベントキュー
 	pub system_event_queue:Arc<Mutex<SystemEventQueue>>,
 }
 impl<E> SelfMatchEngine<E>
 	where E: PlayerError {
+	/// `SelfMatchEngine`の生成
 	pub fn new() -> SelfMatchEngine<E> where E: PlayerError {
 		SelfMatchEngine {
 			player_error_type:PhantomData::<E>,
@@ -136,6 +166,7 @@ impl<E> SelfMatchEngine<E>
 		}
 	}
 
+	/// デフォルト設定で開始（ログファイルのパスlogs/log.txt,ログをファイルに記録）
 	pub fn start_default<T,S,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
@@ -172,6 +203,7 @@ impl<E> SelfMatchEngine<E>
 								on_error)
 	}
 
+	/// ログファイルのパスを指定して開始
 	pub fn start_with_log_path<T,S,I,F,RH,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
 						flip_players:F,
@@ -219,6 +251,7 @@ impl<E> SelfMatchEngine<E>
 					logger, on_error)
 	}
 
+	/// Logger,USIInputReaderを指定して開始
 	pub fn start<T,S,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,

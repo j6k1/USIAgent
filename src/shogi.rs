@@ -8,40 +8,70 @@ use error::*;
 
 use Find;
 use MaxIndex;
-
+/// 盤面上の駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaKind {
+	/// 先手歩
 	SFu = 0,
+	/// 先手香
 	SKyou,
+	/// 先手桂
 	SKei,
+	/// 先手銀
 	SGin,
+	/// 先手金
 	SKin,
+	/// 先手角
 	SKaku,
+	/// 先手飛車
 	SHisha,
+	/// 王
 	SOu,
+	/// 先手と金
 	SFuN,
+	/// 先手成り香
 	SKyouN,
+	/// 先手成り桂
 	SKeiN,
+	/// 先手成銀
 	SGinN,
+	/// 先手馬
 	SKakuN,
+	/// 先手龍
 	SHishaN,
+	/// 後手歩
 	GFu,
+	/// 後手香
 	GKyou,
+	/// 後手桂
 	GKei,
+	/// 後手銀
 	GGin,
+	/// 後手金
 	GKin,
+	/// 後手角
 	GKaku,
+	/// 後手飛車
 	GHisha,
+	/// 玉
 	GOu,
+	/// 後手と金
 	GFuN,
+	/// 後手成り香
 	GKyouN,
+	/// 後手成り桂
 	GKeiN,
+	/// 後手成銀
 	GGinN,
+	/// 後手馬
 	GKakuN,
+	/// 後手龍
 	GHishaN,
+	/// 駒無し
 	Blank,
 }
 impl KomaKind {
+	/// 成駒のKomaKindを取得
 	pub fn to_nari(&self) -> KomaKind {
 		match *self {
 			KomaKind::SFu => {
@@ -83,7 +113,7 @@ impl KomaKind {
 			kind => kind
 		}
 	}
-
+	/// 駒が成っているか否か
 	pub fn is_nari(&self) -> bool {
 		match *self {
 			KomaKind::SFuN | KomaKind::SKyouN | KomaKind::SKeiN | KomaKind::SGinN | KomaKind::SHishaN | KomaKind::SKakuN |
@@ -145,12 +175,16 @@ impl Find<KomaKind,Vec<KomaPosition>> for Banmen {
 		}
 	}
 }
+/// 手番
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum Teban {
+	/// 先手
 	Sente,
+	/// 後手
 	Gote,
 }
 impl Teban {
+	/// 相手の手番を取得
 	pub fn opposite(&self) -> Teban {
 		match *self {
 			Teban::Sente => Teban::Gote,
@@ -158,27 +192,42 @@ impl Teban {
 		}
 	}
 }
+/// 駒の位置
+/// `KomaPosition(x,y)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaPosition(pub u32,pub u32);
+/// 駒の位置
+/// `KomaSrcPosition(x,y)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaSrcPosition(pub u32,pub u32);
+/// 駒の位置
+/// `KomaDstToPosition(x,y,b)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス`b`は成るか否か
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaDstToPosition(pub u32,pub u32,pub bool);
+/// 駒の位置
+/// `KomaDstPutPosition(x,y)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaDstPutPosition(pub u32,pub u32);
+/// 指し手
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum Move {
+	/// 盤面上の駒を移動
 	To(KomaSrcPosition,KomaDstToPosition),
+	/// 持ち駒を置く
 	Put(MochigomaKind,KomaDstPutPosition),
 }
 impl Move {
+	/// 指し手を`AppliedMove`に変換(フレームワーク側で実装している手の適用処理に渡すために型変換が必要)
 	pub fn to_applied_move(&self) -> AppliedMove {
 		AppliedMove::from(*self)
 	}
 }
+/// 持ち駒
 #[derive(Debug,Eq)]
 pub enum MochigomaCollections {
+	/// 持ち駒が先手後手とも無し
 	Empty,
+	/// 先手後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で表現
 	Pair(HashMap<MochigomaKind,u32>,HashMap<MochigomaKind,u32>),
 }
 impl Clone for MochigomaCollections {
@@ -218,6 +267,8 @@ impl PartialEq for MochigomaCollections {
 	}
 }
 impl MochigomaCollections {
+	/// MochigomaCollectionsを生成
+	/// 先手と後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で渡す
 	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
 		if ms.len() == 0 && mg.len() == 0 {
 			MochigomaCollections::Empty
@@ -226,6 +277,7 @@ impl MochigomaCollections {
 		}
 	}
 
+	/// 持ち駒は先手後手とも空か？
 	pub fn is_empty(&self) -> bool {
 		match self {
 			&MochigomaCollections::Empty => true,
@@ -236,21 +288,36 @@ impl MochigomaCollections {
 		}
 	}
 }
+/// 獲った駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum ObtainKind {
+	/// 歩
 	Fu = 0,
+	/// 香
 	Kyou,
+	/// 桂
 	Kei,
+	/// 銀
 	Gin,
+	/// 金
 	Kin,
+	/// 角
 	Kaku,
+	/// 飛車
 	Hisha,
+	/// 王または玉
 	Ou,
+	/// と金
 	FuN,
+	/// 成り香
 	KyouN,
+	/// 成り桂
 	KeiN,
+	/// 成銀
 	GinN,
+	/// 馬
 	KakuN,
+	/// 龍
 	HishaN,
 }
 impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
@@ -328,14 +395,22 @@ impl TryFrom<KomaKind,TypeConvertError<String>> for MochigomaKind {
 		})
 	}
 }
+// 持ち駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum MochigomaKind {
+	/// 歩
 	Fu = 0,
+	/// 香
 	Kyou,
+	/// 桂
 	Kei,
+	/// 銀
 	Gin,
+	/// 金
 	Kin,
+	/// 角
 	Kaku,
+	/// 飛車
 	Hisha,
 }
 impl TryFrom<ObtainKind,TypeConvertError<String>> for MochigomaKind {
@@ -359,6 +434,7 @@ impl MaxIndex for MochigomaKind {
 		MochigomaKind::Hisha as usize
 	}
 }
+/// 持ち駒の種別の配列
 pub const MOCHIGOMA_KINDS:[MochigomaKind; 7] = [
 	MochigomaKind::Fu,
 	MochigomaKind::Kyou,

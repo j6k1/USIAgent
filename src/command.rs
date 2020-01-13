@@ -3,82 +3,142 @@ use std::clone::Clone;
 
 use shogi::*;
 use Validate;
-
+/// USIプロトコル準拠のコマンド
 #[derive(Debug,Eq,PartialEq)]
 pub enum UsiCommand {
+	/// usiok
 	UsiOk,
+	/// id name {name}, id author {author}
 	UsiId(String, String),
+	/// readyok
 	UsiReadyOk,
+	/// bestmove
 	UsiBestMove(BestMove),
+	/// info
 	UsiInfo(Vec<UsiInfoSubCommand>),
+	/// option
 	UsiOption(String,UsiOptType),
+	/// checkmate
 	UsiCheckMate(CheckMate),
 }
+/// 指し手
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum BestMove {
+	/// 通常の指し手（ponderをOptionで指定可能）
 	Move(Move,Option<Move>),
+	/// 投了
 	Resign,
+	/// 入玉勝ち宣言
 	Win,
+	/// 中断（USIプロトコルの仕様にはない。返してもGUI側にコマンドは送信されない）
 	Abort,
 }
+/// infoコマンドのサブコマンド
 #[derive(Clone, Debug,Eq,PartialEq)]
 pub enum UsiInfoSubCommand {
+	/// depth
 	Depth(u32),
+	/// seldepth
 	SelDepth(u32),
+	/// time
 	Time(u64),
+	/// nodes
 	Nodes(u64),
+	/// pv
 	Pv(Vec<Move>),
+	/// multipv
 	MultiPv(u32),
+	/// score
 	Score(UsiScore),
+	/// curmove
 	CurMove(Move),
+	/// hashfull
 	Hashfull(u64),
+	/// nps
 	Nps(u64),
+	/// string
 	Str(String),
 }
+/// infoサブコマンドの種別
 #[derive(Clone, Copy, Hash, Eq, PartialEq, Debug)]
 pub enum UsiInfoSubCommandKind {
+	/// depth
 	Depth,
+	/// seldepth
 	SelDepth,
+	/// time
 	Time,
+	/// nodes
 	Nodes,
+	/// pv
 	Pv,
+	/// multipv
 	MultiPv,
+	/// score
 	Score,
+	/// curmove
 	CurMove,
+	/// hashfull
 	Hashfull,
+	/// nps
 	Nps,
+	/// string
 	Str,
 }
+/// infoコマンドのscore
 #[derive(Clone,Debug,Eq,PartialEq)]
 pub enum UsiScore {
+	/// score cp <x>
 	Cp(i64),
+	/// score cp upper
 	CpUpper(i64),
+	/// score cp lower
 	CpLower(i64),
+	/// score mate <y>
 	Mate(UsiScoreMate),
+	/// score mate upper
 	MateUpper(i64),
+	/// score mate lower
 	MateLower(i64),
 }
+/// infoコマンドのscoreサブコマンドのmateの値
 #[derive(Clone,Debug,Eq,PartialEq)]
 pub enum UsiScoreMate {
+	/// 数値
 	Num(i64),
+	/// +
 	Plus,
+	/// -
 	Minus,
 }
+/// 詰め将棋の解答
 #[derive(Debug,Eq,PartialEq)]
 pub enum CheckMate {
+	/// 詰みまでの指し手
 	Moves(Vec<Move>),
+	/// 未実装であることをGUI側に伝える
 	NotiImplemented,
+	/// 時間内に詰みを見つけられなかった
 	Timeout,
+	/// 詰まない
 	Nomate,
+	/// USIプロトコルの仕様にはない。返してもGUI側にコマンドは送信されない
 	Abort,
 }
+/// optionコマンドの値
 #[derive(Debug,Eq,PartialEq)]
 pub enum UsiOptType {
+	/// check
 	Check(Option<bool>),
+	/// spin
 	Spin(i64, i64,Option<i64>),
+	/// combo
 	Combo(Option<String>, Vec<String>),
+	/// button
 	Button,
+	/// string
 	String(Option<String>),
+	/// filename
 	FileName(Option<String>),
 }
 impl Clone for UsiOptType {
