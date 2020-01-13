@@ -1,3 +1,4 @@
+//! USIプロトコルの入力を解釈するインタプリタ
 use std::thread;
 use std::sync::Mutex;
 use std::sync::Arc;

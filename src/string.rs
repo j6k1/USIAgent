@@ -1,3 +1,4 @@
+//! Stringに関連した機能のtrait定義
 /// 文字列の各行をインデントするtrait
 pub trait AddIndent {
 	fn add_indent(&self, u32) -> String;

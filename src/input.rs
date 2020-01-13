@@ -1,3 +1,4 @@
+//! 標準入力の読み取り
 use std::io;
 use std::io::BufRead;
 

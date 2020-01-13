@@ -1,3 +1,4 @@
+//! 局面のハッシュ表現を取り扱う
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::Add;

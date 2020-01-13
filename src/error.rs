@@ -1,3 +1,4 @@
+//! 各種エラーの定義
 use std::error;
 use std::error::Error;
 use std::fmt;

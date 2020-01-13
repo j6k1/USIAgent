@@ -1,3 +1,4 @@
+//! 合法手の列挙等、将棋のルールに関連した機能
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::fmt;

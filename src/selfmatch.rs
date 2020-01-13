@@ -1,3 +1,4 @@
+//! 自己対局機能
 use chrono::prelude::*;
 
 use std::fmt;

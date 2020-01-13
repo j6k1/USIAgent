@@ -1,3 +1,4 @@
+//! USIプロトコル文字列のパース、組み立て
 use std::fmt;
 use std::error::Error;
 use std::collections::HashMap;

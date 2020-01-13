@@ -1,3 +1,4 @@
+//! 将棋の盤面や持ち駒等の定義
 use std::fmt;
 use std::fmt::Formatter;
 use std::collections::HashMap;
@@ -129,6 +130,7 @@ impl MaxIndex for KomaKind {
 		KomaKind::Blank as usize
 	}
 }
+/// 盤面
 #[derive(PartialEq, Eq)]
 pub struct Banmen(pub [[KomaKind; 9]; 9]);
 impl Clone for Banmen {
@@ -193,19 +195,19 @@ impl Teban {
 	}
 }
 /// 駒の位置
-/// `KomaPosition(x,y)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス
+/// `KomaPosition(x,y)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaPosition(pub u32,pub u32);
 /// 駒の位置
-/// `KomaSrcPosition(x,y)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス
+/// `KomaSrcPosition(x,y)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaSrcPosition(pub u32,pub u32);
 /// 駒の位置
-/// `KomaDstToPosition(x,y,b)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス`b`は成るか否か
+/// `KomaDstToPosition(x,y,b)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス`b`は成るか否か
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaDstToPosition(pub u32,pub u32,pub bool);
 /// 駒の位置
-/// `KomaDstPutPosition(x,y)`,`x`は右側から1originのインデックス、`y`は上側から1originのインデックス
+/// `KomaDstPutPosition(x,y)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub struct KomaDstPutPosition(pub u32,pub u32);
 /// 指し手
@@ -395,7 +397,7 @@ impl TryFrom<KomaKind,TypeConvertError<String>> for MochigomaKind {
 		})
 	}
 }
-// 持ち駒の種別
+/// 持ち駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum MochigomaKind {
 	/// 歩

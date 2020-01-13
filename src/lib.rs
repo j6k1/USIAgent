@@ -1,3 +1,4 @@
+//! USIプロトコルを用いた将棋AIを実装するためのフレームワーク
 extern crate chrono;
 extern crate rand;
 #[macro_use]

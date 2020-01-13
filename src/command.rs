@@ -1,3 +1,4 @@
+//! USIプロトコル準拠のcommandを取り扱う
 use std::collections::HashSet;
 use std::clone::Clone;
 

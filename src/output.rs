@@ -1,3 +1,4 @@
+//! 標準出力、標準エラー出力への書き込み機能
 use std::io::{self, Write,Result};
 use std::ops::Add;
 

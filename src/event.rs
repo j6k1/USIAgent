@@ -1,3 +1,4 @@
+//! イベント処理
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;

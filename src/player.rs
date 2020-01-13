@@ -1,3 +1,4 @@
+//! AIの本体を実装するためのtrait
 use std::{thread,time};
 use std::time::Instant;
 use std::sync::Mutex;

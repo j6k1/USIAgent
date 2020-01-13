@@ -1,3 +1,4 @@
+//! ログ出力
 use std::error::Error;
 use std::io::{ self, BufWriter, Write  };
 use std::fs;
