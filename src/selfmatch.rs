@@ -120,7 +120,7 @@ pub enum SelfMatchMessage {
 	GameStart,
 	/// プレイヤーの思考を開始する
 	StartThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>,Instant),
-	// プレイヤーの思考を開始する（go ponder)
+	/// プレイヤーの思考を開始する（go ponder)
 	StartPonderThink(Teban,Banmen,MochigomaCollections,u32,Vec<AppliedMove>),
 	/// プレイヤーから指し手を返す
 	NotifyMove(BestMove),
@@ -168,6 +168,22 @@ impl<E> SelfMatchEngine<E>
 	}
 
 	/// デフォルト設定で開始（ログファイルのパスlogs/log.txt,ログをファイルに記録）
+	///
+	/// # Arguments
+	/// * `on_init_event_dispatcher` - 自己対局時に通知されるSelfMatchEventのイベントディスパッチャーを初期化
+	/// * `flip_players` - 対局時の初期局面時のplayer1とplayer2の手番の割り当てを逆にする。(通常はplayer1が先手)
+	/// * `initial_position_creator` - 対局毎の初期局面を生成して返す関数
+	/// * `kifu_writer` - 対局終了時に棋譜を書き込むためのコールバック関数
+	/// * `input_handler` - 標準入力から読みこんだ行が渡されるコールバック関数。システムイベントの発行などに使う（'quit'で終了など）
+	/// * `player1` - USIPlayerを実装したプレイヤーオブジェクト
+	/// * `player2` - USIPlayerを実装したプレイヤーオブジェクト
+	/// * `player1_options` - player1に渡されるオプション
+	/// * `player2_options` - player2に渡されるオプション
+	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
+	/// * `game_time_limit` - 対局毎の制限時間
+	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
+	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
+	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start_default<T,S,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
@@ -205,6 +221,23 @@ impl<E> SelfMatchEngine<E>
 	}
 
 	/// ログファイルのパスを指定して開始
+	///
+	/// # Arguments
+	/// * `path` - ログファイルのパス
+	/// * `on_init_event_dispatcher` - 自己対局時に通知されるSelfMatchEventのイベントディスパッチャーを初期化
+	/// * `flip_players` - 対局時の初期局面時のplayer1とplayer2の手番の割り当てを逆にする。(通常はplayer1が先手)
+	/// * `initial_position_creator` - 対局毎の初期局面を生成して返す関数
+	/// * `kifu_writer` - 対局終了時に棋譜を書き込むためのコールバック関数
+	/// * `input_handler` - 標準入力から読みこんだ行が渡されるコールバック関数。システムイベントの発行などに使う（'quit'で終了など）
+	/// * `player1` - USIPlayerを実装したプレイヤーオブジェクト
+	/// * `player2` - USIPlayerを実装したプレイヤーオブジェクト
+	/// * `player1_options` - player1に渡されるオプション
+	/// * `player2_options` - player2に渡されるオプション
+	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
+	/// * `game_time_limit` - 対局毎の制限時間
+	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
+	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
+	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start_with_log_path<T,S,I,F,RH,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
 						flip_players:F,
@@ -253,6 +286,24 @@ impl<E> SelfMatchEngine<E>
 	}
 
 	/// Logger,USIInputReaderを指定して開始
+	///
+	/// # Arguments
+	/// * `on_init_event_dispatcher` - 自己対局時に通知されるSelfMatchEventのイベントディスパッチャーを初期化
+	/// * `flip_players` - 対局時の初期局面時のplayer1とplayer2の手番の割り当てを逆にする。(通常はplayer1が先手)
+	/// * `initial_position_creator` - 対局毎の初期局面を生成して返す関数
+	/// * `kifu_writer` - 対局終了時に棋譜を書き込むためのコールバック関数
+	/// * `input_reader` - 入力を読み取るためのオブジェクト。実装によって標準入力以外から読み取るものを指定することも可能。
+	/// * `input_handler` - 標準入力から読みこんだ行が渡されるコールバック関数。システムイベントの発行などに使う（'quit'で終了など）
+	/// * `player1` - USIPlayerを実装したプレイヤーオブジェクト
+	/// * `player2` - USIPlayerを実装したプレイヤーオブジェクト
+	/// * `player1_options` - player1に渡されるオプション
+	/// * `player2_options` - player2に渡されるオプション
+	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
+	/// * `game_time_limit` - 対局毎の制限時間
+	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
+	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
+	/// * `logger` - ログを書き込むためのオブジェクト。実装によってファイル以外に書き込むものを指定することも可能。
+	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start<T,S,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,

@@ -72,7 +72,7 @@ pub enum KomaKind {
 	Blank,
 }
 impl KomaKind {
-	/// 成駒のKomaKindを取得
+	/// 駒が成った時のKomaKindを取得
 	pub fn to_nari(&self) -> KomaKind {
 		match *self {
 			KomaKind::SFu => {
@@ -114,7 +114,7 @@ impl KomaKind {
 			kind => kind
 		}
 	}
-	/// 駒が成っているか否か
+	/// 駒が成っているか否かを取得
 	pub fn is_nari(&self) -> bool {
 		match *self {
 			KomaKind::SFuN | KomaKind::SKyouN | KomaKind::SKeiN | KomaKind::SGinN | KomaKind::SHishaN | KomaKind::SKakuN |
@@ -219,7 +219,7 @@ pub enum Move {
 	Put(MochigomaKind,KomaDstPutPosition),
 }
 impl Move {
-	/// 指し手を`AppliedMove`に変換(フレームワーク側で実装している手の適用処理に渡すために型変換が必要)
+	/// 指し手を`AppliedMove`に変換
 	pub fn to_applied_move(&self) -> AppliedMove {
 		AppliedMove::from(*self)
 	}
@@ -270,7 +270,10 @@ impl PartialEq for MochigomaCollections {
 }
 impl MochigomaCollections {
 	/// MochigomaCollectionsを生成
-	/// 先手と後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で渡す
+	///
+	/// # Arguments
+	/// * 'ms' - 先手の持ち駒のハッシュマップ
+	/// * 'mg' - 後手の持ち駒のハッシュマップ
 	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
 		if ms.len() == 0 && mg.len() == 0 {
 			MochigomaCollections::Empty

@@ -494,7 +494,7 @@ impl fmt::Debug for BitBoard {
 		write!(f, "{}", unsafe { self.merged_bitboard })
 	}
 }
-/// 合法手生成に内部で利用するビットボードと盤面を管理する構造体
+/// 合法手生成に内部で利用するビットボード群と盤面を管理する構造体
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct State {
 	banmen:Banmen,
@@ -880,14 +880,20 @@ impl Validate for Moved {
 		}
 	}
 }
-/// 合法手の列挙等を行う将棋のルールを管理する構造体
+/// 合法手の列挙等を行う将棋のルールを管理
 pub struct Rule {
 
 }
 impl Rule {
-	/// 合法手をビットボードに列挙
+	/// 盤面上の駒を移動する合法手をビットボードに列挙
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `self_occupied` - 手番側から見た手番側の駒の配置を表すビットボード。(後手の場合は上下逆さになっている)
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合も逆さまにならない）
+	/// * `kind` - 移動する駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn gen_candidate_bits(
 		teban:Teban,self_occupied:BitBoard,from:u32,kind:KomaKind
 	) -> BitBoard {
@@ -936,7 +942,17 @@ impl Rule {
 
 	/// 合法手をバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `m` - 盤面の左上を0,0とし、x * 9 + yで表される移動先の駒の位置。後手の手の場合は上下さかさまになっている
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 移動する駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `inverse_position` - ビットボードを上下逆さにするか否か
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn append_legal_moves_from_banmen<F>(
 		m:Square,
 		from:u32,
@@ -971,7 +987,16 @@ impl Rule {
 
 	/// 王を取る合法手をバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `m` - 盤面の左上を0,0とし、x * 9 + yで表される移動先の駒の位置。後手の手の場合は上下さかさまになっている
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 移動する駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `inverse_position` - ビットボードを上下逆さにするか否か
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn append_win_only_move(
 		m:Square,
 		from:u32,
@@ -1007,7 +1032,18 @@ impl Rule {
 
 	/// 一マスだけ駒を動かす合法手を列挙してバッファに追加する
 	///
-	/// 渡されたパラメータが不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `self_occupied` - 手番側から見た手番側の駒の配置を表すビットボード。(後手の場合は上下逆さになっている)
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 移動する駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `inverse_position` - ビットボードを上下逆さにするか否か
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F>(
 		teban:Teban,
 		self_occupied:BitBoard,
@@ -1034,7 +1070,17 @@ impl Rule {
 
 	/// 一マスだけ駒を動かす合法手を列挙して返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `self_occupied` - 手番側から見た手番側の駒の配置を表すビットボード。(後手の場合は上下逆さになっている)
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 移動する駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `inverse_position` - ビットボードを上下逆さにするか否か
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
 	pub fn legal_moves_once_with_point_and_kind_and_bitboard<F>(
 		teban:Teban,
@@ -1055,7 +1101,18 @@ impl Rule {
 
 	/// 先手の角の合法手を列挙してバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `self_occupied_for_repeat_move` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		self_occupied_for_repeat_move:BitBoard,
@@ -1191,7 +1248,18 @@ impl Rule {
 
 	/// 後手の角の合法手を列挙してバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。(先手と上下逆さになっている)
+	/// * `self_occupied_for_repeat_move` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		self_occupied_for_repeat_move:BitBoard,
@@ -1408,7 +1476,19 @@ impl Rule {
 
 	/// 先手の飛車の合法手を列挙してバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `self_occupied_for_repeat_move` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		self_occupied_for_repeat_move:BitBoard,
@@ -1532,7 +1612,19 @@ impl Rule {
 
 	/// 後手の飛車の合法手を列挙してバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `self_occupied_for_repeat_move` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		self_occupied_for_repeat_move:BitBoard,
@@ -1676,7 +1768,16 @@ impl Rule {
 
 	/// 先手の香車の合法手を列挙してバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied_for_repeat_move` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied_for_repeat_move:BitBoard,
 		bitboard:BitBoard,from:u32,
@@ -1716,7 +1817,16 @@ impl Rule {
 
 	/// 後手の香車の合法手を列挙してバッファに追加
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied_for_repeat_move` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied_for_repeat_move:BitBoard,
 		bitboard:BitBoard,from:u32,
@@ -1829,7 +1939,14 @@ impl Rule {
 
 	/// 盤面上の位置と駒の種別を元に合法手を列挙して返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `x` - 左上を0,0とする移動元のx座標
+	/// * `y` - 左上を0,0とする移動元のy座標
+	/// * `kind` - 移動する駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_with_point_and_kind(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
@@ -1843,6 +1960,10 @@ impl Rule {
 	}
 
 	/// ビットボードから列挙された合法手の情報から`LegalMove`を生成して返す
+	///
+	/// # Arguments
+	/// * `banmen` - 現在の盤面
+	/// * `opponent_bitboard` - 相手の駒の配置を表すビットボード。常に先手視点
 	pub fn default_moveto_builder<'a>(banmen:&'a Banmen,opponent_bitboard:u128) -> impl Fn(u32,u32,bool) -> LegalMove + 'a {
 		move |from,to,nari| {
 			let to_mask = 1 << (to + 1);
@@ -1865,7 +1986,15 @@ impl Rule {
 
 	/// 盤面上の位置と駒の種別を元に合法手を列挙してバッファに追加する
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `x` - 左上を0,0とする移動元のx座標
+	/// * `y` - 左上を0,0とする移動元のy座標
+	/// * `kind` - 移動する駒の種類
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_with_point_and_kind_and_buffer(
 		t:Teban,state:&State,
 		x:u32,y:u32,kind:KomaKind,
@@ -1994,7 +2123,13 @@ impl Rule {
 
 	/// 盤面上の位置を元に合法手を列挙して返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `x` - 左上を0,0とする移動元のx座標
+	/// * `y` - 左上を0,0とする移動元のy座標
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_with_point(t:Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
 		match &state.banmen {
@@ -2006,6 +2141,11 @@ impl Rule {
 
 	/// 盤面上の位置と駒の種別を元に合法手を列挙して返す
 	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `src` - 移動元の位置
+	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	pub fn legal_moves_with_src(t:Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
@@ -2016,6 +2156,12 @@ impl Rule {
 
 	/// 盤面上の位置と駒の種別を元に合法手を列挙して返す
 	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `dst` - 移動元の位置
+	///
+	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	pub fn legal_moves_with_dst_to(t:Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
@@ -2026,6 +2172,12 @@ impl Rule {
 
 	/// 盤面上の位置と駒の種別を元に合法手を列挙して返す
 	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `dst` - 移動元の位置
+	///
+	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	pub fn legal_moves_with_dst_put(t:Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
@@ -2036,8 +2188,11 @@ impl Rule {
 
 	/// 手番と盤面の状態を元に合法手を生成して返す
 	///
-	/// `State`の状態が不正な時の動作は未定義
-	/// # Examples
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	///
+	/// `State`の状態が不正な場合の動作は未定義
 	/// ```
 	/// use usiagent::rule::*;
 	/// use usiagent::shogi::*;
@@ -2055,6 +2210,11 @@ impl Rule {
 	}
 
 	/// 手番と盤面の状態を元に合法手を生成してバッファに追加
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mvs` - 手を追加するバッファ
 	///
 	/// `State`の状態が不正な時の動作は未定義
 	/// # Examples
@@ -2087,6 +2247,11 @@ impl Rule {
 
 	/// 手番と盤面の状態と持ち駒を元に駒を置く合法手を生成して返す
 	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `state` - 盤面の状態
+	///
 	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
 	/// # Examples
 	/// ```
@@ -2108,6 +2273,10 @@ impl Rule {
 
 	/// 手番と盤面の状態と持ち駒を元に駒を置く合法手を生成してバッファに追加
 	///
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `state` - 盤面の状態
+	/// * `mvs` - 手を追加するバッファ
 	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
 	/// # Examples
 	/// ```
@@ -2218,6 +2387,11 @@ impl Rule {
 
 	/// 手番と盤面の状態と持ち駒を元に合法手を生成して返す
 	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	///
 	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
 	/// # Examples
 	/// ```
@@ -2238,7 +2412,14 @@ impl Rule {
 
 	/// 王を取る手のうち一マスだけ駒を動かす手を返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `self_occupied` - 手番側から見た手番側の駒の配置を表すビットボード。(後手の場合は上下逆さになっている)
+	/// * `opponent_ou_bitboard` - 手番側から見た相手の王の配置を表すビットボード。(後手の場合は上下逆さになっている)
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 移動する駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_once_with_point_and_kind_and_bitboard(
 		teban:Teban,self_occupied:BitBoard,opponent_ou_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Option<Square> {
@@ -2260,7 +2441,14 @@ impl Rule {
 
 	/// 先手の角を動かす手で王を取れる手を返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
+	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
@@ -2338,7 +2526,14 @@ impl Rule {
 
 	/// 後手の角を動かす手で王を取れる手を返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。(先手と上下逆さになっている)
+	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
+	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
@@ -2416,7 +2611,15 @@ impl Rule {
 
 	/// 先手の飛車を動かす手で王を取れる手を返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
+	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
@@ -2481,7 +2684,15 @@ impl Rule {
 
 	/// 後手の飛車を動かす手で王を取れる手を返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
+	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
 		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
@@ -2546,7 +2757,12 @@ impl Rule {
 
 	/// 先手の香車を動かす手で王を取れる手を返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
+	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
 		_:BitBoard,opponent_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
 	) -> Option<Square> {
@@ -2571,7 +2787,12 @@ impl Rule {
 
 	/// 後手の香車を動かす手で王を取れる手を返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
+	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
 		_:BitBoard,opponent_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
 	) -> Option<Square> {
@@ -2596,7 +2817,14 @@ impl Rule {
 
 	/// 王を取れる手のうち一マスだけ駒を動かす合法手を列挙して返す
 	///
-	/// 渡されたパラメータが不正な場合の動作は未定義
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `x` - 盤面左上を0,0とする移動元のx座標
+	/// * `y` - 盤面左上を0,0とする移動元のy座標
+	/// * `kind` - 駒の種類
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_moves_with_point_and_kind(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
@@ -2607,7 +2835,15 @@ impl Rule {
 
 	/// 王を取れる手のうち一マスだけ駒を動かす合法手を列挙してバッファに追加する
 	///
-	/// 渡されたパラメータが不正な場合の動作は未定義
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `x` - 盤面左上を0,0とする移動元のx座標
+	/// * `y` - 盤面左上を0,0とする移動元のy座標
+	/// * `kind` - 駒の種類
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_moves_with_point_and_kind_and_buffer(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
 	) {
@@ -2719,7 +2955,13 @@ impl Rule {
 
 	/// 盤面上の位置を元に王を取れる合法手のみを列挙して返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `x` - 盤面左上を0,0とする移動元のx座標
+	/// * `y` - 盤面左上を0,0とする移動元のy座標
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_moves_with_point(t:Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
 		match &state.banmen {
@@ -2730,6 +2972,13 @@ impl Rule {
 	}
 
 	/// 盤面上の位置を元に王を取れる合法手のみを列挙して返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `src` - 移動元の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
 	pub fn win_only_moves_with_src(t:Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
@@ -2738,6 +2987,13 @@ impl Rule {
 	}
 
 	/// 盤面上の位置を元に王を取れる合法手のみを列挙して返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `dst` - 移動元の位置
+	///
+	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
 	pub fn win_only_moves_with_dst_to(t:Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
@@ -2746,6 +3002,13 @@ impl Rule {
 	}
 
 	/// 盤面上の位置を元に王を取れる合法手のみを列挙して返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `dst` - 移動元の位置
+	///
+	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
 	pub fn win_only_moves_with_dst_put(t:Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
@@ -2754,6 +3017,10 @@ impl Rule {
 	}
 
 	/// 手番と盤面の状態を元に王を取れる合法手のみを生成して返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
 	///
 	/// `State`の状態が不正な時の動作は未定義
 	/// # Examples
@@ -2788,7 +3055,14 @@ impl Rule {
 
 	/// 盤面上の位置を元に王を取れる手か王手の合法手のみを列挙して返す
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常は直接呼び出さない）
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	/// * `x` - 左上を0,0とする移動元のx座標
+	/// * `y` - 左上を0,0とする移動元のy座標
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::oute_only_moves_allの内部から呼び出される）
 	pub fn oute_only_moves_with_point(
 		t:Teban,state:&State,mc:&MochigomaCollections,x:u32,y:u32
 	) -> Vec<LegalMove> {
@@ -2832,7 +3106,12 @@ impl Rule {
 
 	/// 手番と盤面の状態と持ち駒を元に王を取れる手か王手の盤面上の駒を動かす合法手のみを生成して返す
 	///
-	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	///
+	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義（通常,Rule::oute_only_moves_allの内部から呼び出される）
 	/// # Examples
 	/// ```
 	/// use usiagent::rule::*;
@@ -2886,7 +3165,12 @@ impl Rule {
 
 	/// 手番と盤面の状態と持ち駒を元に駒を置く王手の合法手のみを生成して返す
 	///
-	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `state` - 盤面の状態
+	///
+	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義（通常,Rule::oute_only_moves_allの内部から呼び出される）
 	/// # Examples
 	/// ```
 	/// use usiagent::rule::*;
@@ -2921,6 +3205,11 @@ impl Rule {
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に王を取れる手か王手の合法手のみを生成して返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
 	///
 	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
 	/// # Examples
@@ -2981,8 +3270,13 @@ impl Rule {
 
 	/// 手番と盤面の状態と持ち駒を元に王手に応ずる合法手のみを生成して返す
 	///
-	/// 王手がかかってない状態で呼ばれると手を適用した結果相手に王を取られない手が列挙される
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	///
 	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
+	/// 王手がかかってない状態で呼ばれると手を適用した結果相手に王を取られない手が列挙される
 	/// # Examples
 	/// ```
 	/// use usiagent::rule::*;
@@ -3010,6 +3304,10 @@ impl Rule {
 
 	/// 盤面の状態を管理するビットボードを手を適用した状態に更新して返す
 	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `t` - 手を列挙したい手番
+	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な時の動作は未定義
 	/// # Examples
 	/// ```
@@ -3432,6 +3730,14 @@ impl Rule {
 		ps
 	}
 
+	/// 現在の局面に手を適用した結果を返す。合法手か否かのチェックは行わない。
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// `State`もしくは`AppliedMove`の状態が不正な時の動作は未定義
 	pub fn apply_move_none_check(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> (State,MochigomaCollections,Option<MochigomaKind>) {
 		let ps = Rule::apply_move_to_partial_state_none_check(state,t,mc,m);
@@ -3441,6 +3747,14 @@ impl Rule {
 		(ps.to_full_state(banmen),mc,o)
 	}
 
+	/// 現在の局面に手を適用した結果を返す。適用対象は盤面と持ち駒のみで`State`は返さない。
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// `State`もしくは`AppliedMove`の状態が不正な時の動作は未定義
 	pub fn apply_move_to_banmen_and_mochigoma_none_check(
 		banmen:&Banmen,t:Teban,mc:&MochigomaCollections,m:AppliedMove
 	) -> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
@@ -3628,6 +3942,14 @@ impl Rule {
 		(Banmen(kinds),nmc,obtained)
 	}
 
+	/// 手が合法かどうかを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// `State`が不正な時の動作は未定義
 	pub fn is_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
 		match m {
 			AppliedMove::To(m) => {
@@ -4124,6 +4446,18 @@ impl Rule {
 		}
 	}
 
+	/// 手が合法かチェック後現在の局面に手を適用して返す。
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// `State`が不正な時の動作は未定義
+	/// #Errors
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`InvalidState`]: 手が合法手でない
+	/// [`InvalidState`]: ../error/enum.ShogiError.html#variant.InvalidState
 	pub fn apply_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<(State,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
@@ -4136,6 +4470,19 @@ impl Rule {
 		}
 	}
 
+	/// 現在の局面に手のシーケンスを適用して返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `teban` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// * `mhash` - 局面を表すハッシュ(第一キー)
+	/// * `shash` - 局面を表すハッシュ(第二キー)
+	/// * `kyokumen_map` - 千日手を検出するためのマップ
+	/// * `oute_kyokumen_map` - 連続王手の千日手を検出するためのマップ
+	/// * `hasher` - 局面のハッシュを計算するためのオブジェクト
+	/// 引数の状態が不正な場合の動作は未定義
 	pub fn apply_moves(mut state:State,mut teban:Teban,
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut mhash:u64,mut shash:u64,
@@ -4182,7 +4529,16 @@ impl Rule {
 		(teban,state,mc,mhash,shash,kyokumen_map,oute_kyokumen_map)
 	}
 
-
+	/// 現在の局面に手のシーケンスを適用しつつコールバックを呼び出して結果を返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `teban` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// * `r` - コールバックから返されて最終的にこの関数からの返却値の一部となる値
+	/// * `f` - コールバック関数
+	/// 引数の状態が不正な場合の動作は未定義
 	pub fn apply_moves_with_callback<T,F>(
 						mut state:State,
 						mut teban:Teban,
@@ -4208,6 +4564,14 @@ impl Rule {
 		(teban,state,mc,r)
 	}
 
+	/// 入玉宣言勝ちが成立しているかどうかを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `teban` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `limit` - 持ち時間を使い切った時点の時間
+	/// `State`の状態が不正な場合の動作は未定義
 	pub fn is_nyugyoku_win(state:&State,t:Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
 		if Rule::is_mate(t.opposite(),state) {
 			return false
@@ -4387,6 +4751,18 @@ impl Rule {
 		}
 	}
 
+	/// 王手に応じたか否か
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `teban` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
+	/// #Errors
+	/// この関数は以下のエラーを返すケースがあります
+	/// * [`InvalidStateError`]: 王手をかけられていない状態で呼び出された
+	/// [`InvalidStateError`]: ../error/struct.InvalidStateError.html
 	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<bool,InvalidStateError> {
 
@@ -4403,6 +4779,14 @@ impl Rule {
 		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(o, &state.banmen, &ps, m))
 	}
 
+	/// 手が打ち歩詰めか否かを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `teban` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
 	pub fn is_put_fu_and_mate(state:&State,teban:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
 		match m {
 			AppliedMove::Put(m) => {
@@ -4437,6 +4821,14 @@ impl Rule {
 		}
 	}
 
+	/// 手が王を取る手か否かを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `teban` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `m` - 適用する手
+	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
 	pub fn is_win(state:&State,teban:Teban,m:AppliedMove) -> bool {
 		match m {
 			AppliedMove::To(m) => {
@@ -4463,6 +4855,12 @@ impl Rule {
 		}
 	}
 
+	/// 相手が詰んでいるか否かを返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// `State`が不正な場合の動作は未定義
 	pub fn is_mate(t:Teban,state:&State)
 		-> bool {
 
@@ -4486,12 +4884,29 @@ impl Rule {
 		false
 	}
 
+	/// 相手が詰んでいるか否かビットボードと移動元座標と駒の種類から返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `ps` - 盤面の状態を表すビットボード
+	/// * `x` - 盤面左上を0,0とした時の移動元のx座標
+	/// * `y` - 盤面左上を0,0とした時の移動元のy座標
+	/// * `kind` - 駒の種類
+	/// 引数が不正な場合の動作は未定義
 	pub fn is_mate_with_partial_state_and_point_and_kind(t:Teban,ps:&PartialState,x:u32,y:u32,kind:KomaKind) -> bool {
 		let from = x * 9 + y;
 
 		Rule::is_mate_with_partial_state_and_from_and_kind(t,ps,from,kind)
 	}
 
+	/// 相手が詰んでいるか否かビットボードと移動元座標(x*9+y)と駒の種類から返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `ps` - 盤面の状態を表すビットボード
+	/// * `from` - 盤面左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 駒の種類
+	/// 引数が不正な場合の動作は未定義
 	pub fn is_mate_with_partial_state_and_from_and_kind(t:Teban,ps:&PartialState,from:u32,kind:KomaKind) -> bool {
 		let state = ps;
 
@@ -4548,6 +4963,12 @@ impl Rule {
 		}).is_some()
 	}
 
+	/// 相手が詰んでいるか否かビットボードから返す(香車、飛車、角のいずれかで詰むケースのみ)
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `ps` - 盤面の状態を表すビットボード
+	/// `PartialState`が不正な場合の動作は未定義
 	pub fn is_mate_with_partial_state_repeat_move_kinds(t:Teban,ps:&PartialState) -> bool {
 		match t {
 			Teban::Sente => {
@@ -4639,6 +5060,14 @@ impl Rule {
 		false
 	}
 
+	/// 相手の手番側が詰んでいるか否か手の適用後のビットボードと手の適用前の盤面と手番側の打った手から返す
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `banmen` - 手の適用前の盤面
+	/// * `ps` - 相手の手番側の手の適用後の盤面の状態を表すビットボード
+	/// * `m` - 相手の手番側が打った手
+	/// 引数が不正な場合の動作は未定義
 	pub fn is_mate_with_partial_state_and_old_banmen_and_opponent_move(
 		t:Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
 	) -> bool {
@@ -4701,6 +5130,13 @@ impl Rule {
 		false
 	}
 
+	/// 千日手検出用マップの更新関数
+	///
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `mhash` - 局面を表すハッシュ（第一キー)
+	/// * `shash` - 局面を表すハッシュ（第二キー)
+	/// * `kyokumen_map` - 千日手検出用のマップ
 	pub fn update_sennichite_map(_:&State,teban:Teban,mhash:u64,shash:u64,
 									kyokumen_map:&mut KyokumenMap<u64,u32>) {
 		match kyokumen_map.get(teban,&mhash,&shash) {
@@ -4713,6 +5149,13 @@ impl Rule {
 		}
 	}
 
+	/// 現在の局面が千日手か否かを返す
+	///
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `mhash` - 局面を表すハッシュ（第一キー)
+	/// * `shash` - 局面を表すハッシュ（第二キー)
+	/// * `kyokumen_map` - 千日手検出用のマップ
 	pub fn is_sennichite(_:&State,teban:Teban,mhash:u64,shash:u64,
 									kyokumen_map:&KyokumenMap<u64,u32>) -> bool {
 		match kyokumen_map.get(teban,&mhash,&shash) {
@@ -4723,6 +5166,13 @@ impl Rule {
 		}
 	}
 
+	/// 連続王手の千日手検出用マップの更新関数
+	///
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `mhash` - 局面を表すハッシュ（第一キー)
+	/// * `shash` - 局面を表すハッシュ（第二キー)
+	/// * `oute_kyokumen_map` - 千日手検出用のマップ
 	pub fn update_sennichite_by_oute_map(state:&State,teban:Teban,mhash:u64,shash:u64,
 									oute_kyokumen_map:&mut KyokumenMap<u64,u32>) {
 
@@ -4735,6 +5185,13 @@ impl Rule {
 		}
 	}
 
+	/// 現在の局面が連続王手の千日手か否かを返す
+	///
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `mhash` - 局面を表すハッシュ（第一キー)
+	/// * `shash` - 局面を表すハッシュ（第二キー)
+	/// * `oute_kyokumen_map` - 千日手検出用のマップ
 	pub fn is_sennichite_by_oute(state:&State,teban:Teban,mhash:u64,shash:u64,
 									oute_kyokumen_map:&KyokumenMap<u64,u32>)
 		-> bool {
@@ -4748,6 +5205,11 @@ impl Rule {
 		}
 	}
 
+	/// 現在の持ち時間を更新して返す(フィッシャークロックルール対応)
+	/// # Arguments
+	/// * `limit` - 持ち時間
+	/// * `teban` - 現在の手番
+	/// * `consumed` - 手番中の現在までの経過時間
 	pub fn update_time_limit(limit:&UsiGoTimeLimit,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
 		match teban {
 			Teban::Sente => {
@@ -4803,6 +5265,9 @@ impl Rule {
 		}
 	}
 
+	/// 持ち駒の状態を平手初期局面の時の駒を全部持ち駒にした状態で返す。
+	///
+	/// 返されるのは`HashMap<MochigomaKind,u32>`なので先手後手それぞれについて呼び出す必要がある
 	pub fn filled_mochigoma_hashmap() -> HashMap<MochigomaKind,u32> {
 		let mut m:HashMap<MochigomaKind,u32> = HashMap::new();
 
