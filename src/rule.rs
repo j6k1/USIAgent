@@ -797,6 +797,7 @@ pub const BANMEN_START_POS:Banmen = Banmen([
 ]);
 /// オブジェクトの状態の検証用
 pub trait Validate {
+	/// 状態が正しければtrueを、そうでなければfalseを返す
 	fn validate(&self) -> bool;
 }
 impl Validate for KomaSrcPosition {
