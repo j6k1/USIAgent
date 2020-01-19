@@ -4454,9 +4454,11 @@ impl Rule {
 	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`が不正な時の動作は未定義
-	/// #Errors
+	/// # Errors
+	///
 	/// この関数は以下のエラーを返すケースがあります。
-	/// * [`InvalidState`]: 手が合法手でない
+	/// * [`InvalidState`] 手が合法手でない
+	///
 	/// [`InvalidState`]: ../error/enum.ShogiError.html#variant.InvalidState
 	pub fn apply_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<(State,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
@@ -4759,9 +4761,13 @@ impl Rule {
 	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
-	/// #Errors
+	///
+	/// # Errors
+	///
 	/// この関数は以下のエラーを返すケースがあります
-	/// * [`InvalidStateError`]: 王手をかけられていない状態で呼び出された
+	///
+	/// * [`InvalidStateError`] 王手をかけられていない状態で呼び出された
+	///
 	/// [`InvalidStateError`]: ../error/struct.InvalidStateError.html
 	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<bool,InvalidStateError> {
