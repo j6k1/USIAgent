@@ -4755,7 +4755,7 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `state` - 盤面の状態
-	/// * `teban` - 手を列挙したい手番
+	/// * `t` - 手を列挙したい手番
 	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
@@ -4826,7 +4826,6 @@ impl Rule {
 	/// # Arguments
 	/// * `state` - 盤面の状態
 	/// * `teban` - 手を列挙したい手番
-	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
 	pub fn is_win(state:&State,teban:Teban,m:AppliedMove) -> bool {
