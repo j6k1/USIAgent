@@ -8,8 +8,17 @@ use chrono::prelude::*;
 use output::USIStdErrorWriter;
 use string::AddIndent;
 
+/// ログの出力
 pub trait Logger {
+	/// ログの出力処理の本体の実装
+	///
+	/// # Arguments
+	/// * `msg` - 出力するログ
 	fn logging(&mut self, msg:&String) -> bool;
+	/// エラーを発生元へたどりながら改行しつつインデントして出力する
+	///
+	/// # Arguments
+	/// * `e` - ログに出力するエラー
 	fn logging_error<E: Error>(&mut self, e:&E) -> bool {
 		let mut messages:Vec<String> = vec![];
 		let mut indent:u32 = 0;
@@ -27,11 +36,16 @@ pub trait Logger {
 		self.logging(&messages.join("\n"))
 	}
 }
+/// ファイルへ出力する`Logger`の実装
 #[derive(Debug)]
 pub struct FileLogger {
 	writer:BufWriter<fs::File>,
 }
 impl FileLogger {
+	/// `FileLogger`の生成
+	/// # Arguments
+	///
+	/// * `file` - 書き込み先のファイル
 	pub fn new(file:String) -> Result<FileLogger,io::Error> {
 		Ok(FileLogger {
 			writer:BufWriter::new(OpenOptions::new().append(true).create(true).open(file)?),

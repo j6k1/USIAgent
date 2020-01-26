@@ -47,25 +47,37 @@ use shogi::*;
 use protocol::*;
 use rule::*;
 
+/// 値の変換を試みる
 pub trait TryFrom<T,E> where Self: Sized, E: Error + fmt::Display {
 	fn try_from(s:T) -> Result<Self, E> where E: fmt::Debug;
 }
+/// enumの各項目にインデックスが対応する型の最大のインデックスを取得する
 pub trait MaxIndex {
 	fn max_index() -> usize;
 }
+/// `query`で表されるものを検索する
 pub trait Find<Q,R> {
 	fn find(&self,query:&Q) -> Option<R>;
 }
+/// エラーを受け取ってロガーで出力する構造体
 pub struct OnErrorHandler<L> where L: Logger {
 	logger:Arc<Mutex<L>>,
 }
 impl<L> OnErrorHandler<L> where L: Logger {
+	/// `OnErrorHanderl`の生成
+	///
+	/// # Arguments
+	/// * `logger` - ロガー
 	pub fn new(logger:Arc<Mutex<L>>) -> OnErrorHandler<L> {
 		OnErrorHandler {
 			logger:logger,
 		}
 	}
 
+	/// エラーを出力する
+	///
+	/// # Arguments
+	/// * `e` - エラーオブジェクト
 	pub fn call<E>(&self,e:&E) -> bool where E: Error {
 		self.logger.lock().map(|mut logger| logger.logging_error(e)).map_err(|_| {
 			USIStdErrorWriter::write("Logger's exclusive lock could not be secured").unwrap();
@@ -73,10 +85,16 @@ impl<L> OnErrorHandler<L> where L: Logger {
 		}).is_err()
 	}
 }
+/// 処理を実行した結果発生したエラーを自動で出力するためのサンドボックス
 pub struct SandBox {
 
 }
 impl SandBox {
+	/// その場で処理を実行してエラー発生時`OnErrorHandler`を用いて出力する
+	///
+	/// # Arguments
+	/// * `f` - 処理を実行する関数
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	pub fn immediate<F,R,E,L>(f:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<R,E>
 	where E: Error, F: FnOnce() -> Result<R,E>, L: Logger {
 		let r = f();
@@ -89,15 +107,27 @@ impl SandBox {
 		r
 	}
 }
+/// go ponderによって生成された手を相手の指し手が決まるまで覚えておくための構造体
 pub enum OnAcceptMove  {
+	/// 指し手を格納済み
 	Some(BestMove),
+	/// まだ指し手が格納されていない
 	None,
 }
 impl OnAcceptMove {
+	/// `OnAcceptMove`の生成
+	///
+	/// # Arguments
+	/// * `m` - 指し手
 	pub fn new(m:BestMove) -> OnAcceptMove {
 		OnAcceptMove::Some(m)
 	}
 
+	/// 覚えておいた手を通知する
+	///
+	/// # Arguments
+	/// * `system_event_queue` - システムイベントキュー
+	/// * `on_error_handler` - エラーハンドラー
 	pub fn notify<L>(&self,
 		system_event_queue:&Arc<Mutex<SystemEventQueue>>,
 		on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>) where L: Logger, Arc<Mutex<L>>: Send + 'static {
@@ -121,6 +151,7 @@ impl OnAcceptMove {
 		};
 	}
 }
+/// USIプロトコルをイベントシステムを用いてやり取りするための機能の実装
 #[derive(Debug)]
 pub struct UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug + Send + 'static,
@@ -134,6 +165,10 @@ impl<T,E> UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug + Send + 'static,
 			E: PlayerError,
 			EventHandlerError<SystemEventKind, E>: From<E> {
+	/// `UsiAgent`の生成
+	///
+	/// # Arguments
+	/// * `player` - プレイヤーオブジェクト
 	pub fn new(player:T) -> UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug,
 			Arc<Mutex<T>>: Send + 'static,
@@ -145,6 +180,10 @@ impl<T,E> UsiAgent<T,E>
 		}
 	}
 
+	/// デフォルト設定で開始（ログファイルのパスlogs/log.txt,ログをファイルに記録）
+	///
+	/// # Arguments
+	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start_default<F>(&self,on_error:F) ->
 		Result<(),USIAgentRunningError<SystemEventQueue,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
@@ -152,6 +191,11 @@ impl<T,E> UsiAgent<T,E>
 		self.start_with_log_path(String::from("logs/log.txt"),on_error)
 	}
 
+	/// ログファイルのパスを指定して開始
+	///
+	/// # Arguments
+	/// * `path` - ログファイルのパス
+	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start_with_log_path<F>(&self,path:String,mut on_error:F) ->
 		Result<(),USIAgentRunningError<SystemEventQueue,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
@@ -175,6 +219,13 @@ impl<T,E> UsiAgent<T,E>
 		self.start(input_reader,output_writer,logger,on_error)
 	}
 
+	/// `Logger`,`USIInputReader`,`USIOutputWriter`を指定して開始
+	///
+	/// # Arguments
+	/// * `reader` - 入力を読み取るためのオブジェクト。実装によって標準入力以外から読み取るものを指定することも可能。
+	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
+	/// * `logger` - ログを書き込むためのオブジェクト。実装によってファイル以外に書き込むものを指定することも可能。
+	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start<R,W,L,F>(&self,reader:R,writer:W,logger:L,mut on_error:F) ->
 		Result<(),USIAgentRunningError<SystemEventQueue,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,

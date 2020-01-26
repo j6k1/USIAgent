@@ -119,6 +119,12 @@ pub enum LegalMove {
 pub struct LegalMoveTo(u32);
 impl LegalMoveTo {
 	/// `LegalMoveTo`を生成
+	///
+	/// # Arguments
+	/// * `src` - 盤面左上を0,0とし、x * 9 + yで表される移動元の位置
+	/// * `to` - 盤面左上を0,0とし、x * 9 + yで表される移動先の駒の位置
+	/// * `nari` - 成るか否か
+	/// * `obtaind` - 獲った駒
 	pub fn new(src:u32,to:u32,nari:bool,obtaind:Option<ObtainKind>) -> LegalMoveTo {
 		let n:u32 = if nari {
 			1
@@ -166,6 +172,10 @@ impl LegalMoveTo {
 pub struct LegalMovePut(u32);
 impl LegalMovePut {
 	/// `LegalMovePut`を生成
+	///
+	/// # Arguments
+	/// * `kind` - 置く駒の種類
+	/// * `to` - 盤面左上を0,0とし、x * 9 + yで表される移動先の駒の位置
 	pub fn new(kind:MochigomaKind,to:u32) -> LegalMovePut {
 		LegalMovePut(
 			(to & 0b1111111) << 3 |
@@ -502,6 +512,9 @@ pub struct State {
 }
 impl State {
 	/// `State`の生成
+	///
+	/// # Arguments
+	/// * `banmen` - 盤面
 	pub fn new(banmen:Banmen) -> State {
 		let mut sente_self_board:u128 = 0;
 		let mut sente_opponent_board:u128 = 0;
@@ -606,10 +619,16 @@ impl State {
 	}
 
 	/// 関数を盤面に適用する
+	///
+	/// # Arguments
+	/// * `f` - コールバック関数
 	pub fn map_banmen<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen) -> T {
 		f(&self.banmen)
 	}
 	/// 関数を盤面と`PartialState`に適用する
+	///
+	/// # Arguments
+	/// * `f` - コールバック関数
 	pub fn map<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen,&PartialState) -> T {
 		f(&self.banmen,&self.part)
 	}
@@ -662,6 +681,9 @@ impl PartialState {
 	/// 自身に対応する盤面を引数に受け取り`State`へと変換して返す。
 	///
 	/// 引数に渡した`Banmen`が自身の状態に対して正しくない場合は正しく動作しない。
+	///
+	/// # Arguments
+	/// * `banmen` - 自身に対応する盤面
 	pub fn to_full_state(&self,banmen:Banmen) -> State {
 		State {
 			banmen:banmen,

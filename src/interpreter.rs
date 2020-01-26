@@ -12,15 +12,24 @@ use input::USIInputReader;
 use Logger;
 use OnErrorHandler;
 
+/// USIプロトコルのコマンド文字列を読み取りイベントを発火する構造体
 pub struct USIInterpreter {
 }
 impl USIInterpreter {
+	/// `USIInterpreter`の生成
 	pub fn new() -> USIInterpreter {
 		USIInterpreter {
 
 		}
 	}
 
+	/// 処理の開始
+	///
+	/// # Arguments
+	/// * `event_queue` - システムイベントキュー
+	/// * `reader` - 入力を読み取るためのオブジェクト。実装によって標準入力以外から読み取るものを指定することも可能。
+	/// * `optmap` - プレイヤーオブジェクトに渡されるオプションの種類のマップ
+	/// * `logger` - ログを書き込むためのオブジェクト。実装によってファイル以外に書き込むものを指定することも可能。
 	pub fn start<L,R>(&self,
 		event_queue:Arc<Mutex<SystemEventQueue>>,
 		reader:Arc<Mutex<R>>,optmap:BTreeMap<String,SysEventOptionKind>, logger:&Arc<Mutex<L>>)

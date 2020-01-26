@@ -12,10 +12,12 @@ use std::num::Wrapping;
 use shogi::*;
 use rule::AppliedMove;
 
+/// 主キーとサブキーの二つのキーを用いたマップ
 pub struct TwoKeyHashMap<K,T> where K: Eq + Hash {
 	map:HashMap<K,Vec<(K,T)>>
 }
 impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
+	/// `TwoKeyHashMap`の生成
 	pub fn new() -> TwoKeyHashMap<K,T> {
 		let map:HashMap<K,Vec<(K,T)>> = HashMap::new();
 
@@ -24,6 +26,11 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 		}
 	}
 
+	/// 主キーとサブキーに一致する項目の変更不能な参照を取得
+	///
+	/// # Arguments
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
 	pub fn get(&self,k:&K,sk:&K) -> Option<&T> {
 		match self.map.get(k) {
 			Some(v) if v.len() == 1 => {
@@ -41,6 +48,11 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 		}
 	}
 
+	/// 主キーとサブキーに一致する項目の変更可能な参照を取得
+	///
+	/// # Arguments
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
 	pub fn get_mut(&mut self,k:&K,sk:&K) -> Option<&mut T> {
 		match self.map.get_mut(k) {
 			Some(v) => {
@@ -61,6 +73,12 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 		}
 	}
 
+	/// 主キーとサブキーを指定して項目を挿入する
+	///
+	/// # Arguments
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
+	/// * `nv` - キーに対応する新しい項目（対応するキーがある場合は上書き、ない場合は追加される）
 	pub fn insert(&mut self,k:K,sk:K,nv:T) -> Option<T> {
 		match self.map.get_mut(&k) {
 			Some(ref mut v) if v.len() == 1 => {
@@ -92,6 +110,7 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 		None
 	}
 
+	/// マップをクリア
 	pub fn clear(&mut self) {
 		self.map.clear();
 	}
@@ -103,11 +122,13 @@ impl<T,K> Clone for TwoKeyHashMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		}
 	}
 }
+/// 先手と後手の局面を`TwoKeyHashMap`を使って管理する
 pub struct KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 	sente_map:TwoKeyHashMap<K,T>,
 	gote_map:TwoKeyHashMap<K,T>
 }
 impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
+	/// `KyokumenMap`の生成
 	pub fn new()
 		-> KyokumenMap<K,T> {
 
@@ -117,6 +138,12 @@ impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		}
 	}
 
+	/// 指定された手番の主キーとサブキーに一致する項目の変更不能な参照を取得
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
 	pub fn get(&self,teban:Teban,k:&K,sk:&K) -> Option<&T> {
 		match teban {
 			Teban::Sente => self.sente_map.get(k,sk),
@@ -124,6 +151,12 @@ impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		}
 	}
 
+	/// 指定された手番の主キーとサブキーに一致する項目の変更可能な参照を取得
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
 	pub fn get_mut(&mut self,teban:Teban,k:&K,sk:&K) -> Option<&mut T> {
 		match teban {
 			Teban::Sente => self.sente_map.get_mut(k,sk),
@@ -131,6 +164,13 @@ impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		}
 	}
 
+	/// 手番と主キーとサブキーを指定して項目を挿入する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
+	/// * `nv` - キーに対応する新しい項目（対応するキーがある場合は上書き、ない場合は追加される）
 	pub fn insert(&mut self,teban:Teban,k:K,sk:K,nv:T) -> Option<T> {
 		match teban {
 			Teban::Sente => self.sente_map.insert(k,sk,nv),
@@ -138,6 +178,10 @@ impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		}
 	}
 
+	/// 手番を指定してマップをクリア
+	///
+	/// # Arguments
+	/// * `teban` - 手番
 	pub fn clear(&mut self,teban:Teban) {
 		match teban {
 			Teban::Sente => self.sente_map.clear(),
@@ -159,6 +203,7 @@ const MOCHIGOMA_MAX:usize = 18;
 const SUJI_MAX:usize = 9;
 const DAN_MAX:usize = 9;
 
+/// 型に対応するハッシュの初期値
 pub trait InitialHash {
 	const INITIAL_HASH:Self;
 }
@@ -177,6 +222,7 @@ impl InitialHash for u16 {
 impl InitialHash for u8 {
 	const INITIAL_HASH:u8 = 0;
 }
+/// 局面のハッシュ値を計算する。差分計算対応
 pub struct KyokumenHash<T>
 	where T: Add + Sub + BitXor<Output = T> + Rand + Copy + InitialHash,
 			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy {
@@ -186,6 +232,7 @@ pub struct KyokumenHash<T>
 impl<T> KyokumenHash<T>
 	where T: Add + Sub + BitXor<Output = T> + Rand + Copy + InitialHash,
 			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy {
+	/// `KyokumenHash`の生成
 	pub fn new() -> KyokumenHash<T> {
 		let mut rnd = rand::XorShiftRng::new_unseeded();
 
@@ -368,10 +415,28 @@ impl<T> KyokumenHash<T>
 		}
 	}
 
+	/// メインハッシュを計算
+	///
+	/// # Arguments
+	/// * `h` - 現在のハッシュ
+	/// * `t` - 手番
+	/// * `b` - 手の適用前の盤面
+	/// * `mc` - 手の適用前の持ち駒
+	/// * `m` - 現在のハッシュに対して適用する指し手
+	/// * `obtained` - 獲った駒
 	pub fn calc_main_hash(&self,h:T,t:Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| h ^ v, |h,v| h ^ v)
 	}
 
+	/// サブハッシュを計算
+	///
+	/// # Arguments
+	/// * `h` - 現在のハッシュ
+	/// * `b` - 手の適用前の盤面
+	/// * `t` - 手番
+	/// * `mc` - 手の適用前の持ち駒
+	/// * `m` - 現在のハッシュに対して適用する指し手
+	/// * `obtained` - 獲った駒
 	pub fn calc_sub_hash(&self,h:T,t:Teban,b:&Banmen,mc:&MochigomaCollections,m:AppliedMove,obtained:&Option<MochigomaKind>) -> T {
 		self.calc_hash(h,t,b,mc,m,obtained,|h,v| {
 			let h = Wrapping(h);
@@ -384,7 +449,12 @@ impl<T> KyokumenHash<T>
 		})
 	}
 
-
+	/// ハッシュの初期値を計算
+	///
+	/// # Arguments
+	/// * `b` - 盤面
+	/// * `ms` - 先手の持ち駒
+	/// * `mg` - 後手の持ち駒
 	pub fn calc_initial_hash(&self,b:&Banmen,
 		ms:&HashMap<MochigomaKind,u32>,mg:&HashMap<MochigomaKind,u32>) -> (T,T) {
 		let mut mhash:T = T::INITIAL_HASH;

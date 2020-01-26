@@ -19,37 +19,64 @@ use shogi::*;
 use selfmatch::*;
 use rule::Validate;
 
+/// enumを自身の各項目に対応する種別を表現する型の対応する項目にマップする
 pub trait MapEventKind<K> {
 	fn event_kind(&self) -> K;
 }
+/// システムイベント
 #[derive(Debug)]
 pub enum SystemEvent {
+	/// usiコマンド受信イベント
 	Usi,
+	/// isreadyコマンド受信イベント
 	IsReady,
+	/// setoptionコマンド受信イベント
 	SetOption(String,SysEventOption),
+	/// usinewgameコマンド受信イベント
 	UsiNewGame,
+	/// positionコマンド受信イベント
 	Position(Teban,UsiInitialPosition,u32,Vec<Move>),
+	/// goコマンド受信イベント
 	Go(UsiGo),
+	/// stopコマンド受信イベント
 	Stop,
+	/// ponderhitコマンド受信イベント
 	PonderHit,
+	/// quitコマンド受信イベント
 	Quit,
+	/// gomeoverコマンド受信イベント
 	GameOver(GameEndState),
+	/// USIコマンド送信要求
 	SendUsiCommand(UsiOutput),
+	/// 終了
 	QuitReady,
 }
+/// システムイベント種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum SystemEventKind {
+	/// usiコマンド受信イベント
 	Usi = 0,
+	/// isreadyコマンド受信イベント
 	IsReady,
+	/// setoptionコマンド受信イベント
 	SetOption,
+	/// usinewgameコマンド受信イベント
 	UsiNewGame,
+	/// positionコマンド受信イベント
 	Position,
+	/// goコマンド受信イベント
 	Go,
+	/// stopコマンド受信イベント
 	Stop,
+	/// ponderhitコマンド受信イベント
 	PonderHit,
+	/// quitコマンド受信イベント
 	Quit,
+	/// gomeoverコマンド受信イベント
 	GameOver,
+	/// USIコマンド送信要求
 	SendUsiCommand,
+	/// 終了
 	QuitReady,
 }
 impl From<SystemEventKind> for usize {
@@ -80,11 +107,16 @@ impl MapEventKind<SystemEventKind> for SystemEvent {
 		}
 	}
 }
+/// USIオプション項目
 #[derive(Debug, Eq, PartialEq)]
 pub enum SysEventOption {
+	/// 文字列
 	Str(String),
+	/// 数値
 	Num(i64),
+	/// 真偽値
 	Bool(bool),
+	/// 存在する（値がないオプション用）
 	Exist,
 }
 impl Clone for SysEventOption {
@@ -97,31 +129,52 @@ impl Clone for SysEventOption {
 		}
 	}
 }
+/// USIオプション項目の種別
 #[derive(Debug)]
 pub enum SysEventOptionKind {
+	/// 文字列
 	Str,
+	/// 数値
 	Num,
+	/// 真偽値
 	Bool,
+	/// 存在する（値がないオプション用）
 	Exist,
 }
+/// 初期局面
 #[derive(Eq,PartialEq,Debug)]
 pub enum UsiInitialPosition {
+	/// 平手初期局面以外
 	Sfen(Banmen, MochigomaCollections),
+	/// 平手初期局面
 	Startpos,
 }
+/// goコマンド
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGo {
+	/// go
 	Go(UsiGoTimeLimit),
+	/// go ponder
 	Ponder(UsiGoTimeLimit),
+	/// go mate
 	Mate(UsiGoMateTimeLimit),
 }
+/// 持ち時間
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoTimeLimit {
+	/// 指定なし
 	None,
+	/// 指定あり
 	Limit(Option<(u32,u32)>,Option<UsiGoByoyomiOrInc>),
+	/// 無制限(go infinite)
 	Infinite,
 }
 impl UsiGoTimeLimit {
+	/// `Instant`へ変換(制限時間未指定時やinfinite指定時などはNoneが返る)
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `now` - 現在時刻
 	pub fn to_instant(&self,teban:Teban,now:Instant) -> Option<Instant> {
 		(match self {
 			&UsiGoTimeLimit::None => None,
@@ -175,6 +228,13 @@ impl UsiGoTimeLimit {
 		})
 	}
 
+	/// 次の手番時の制限時間を計算
+	/// (フィッシャークロックルール時以外は持ち時間から消費した時間を引いたものが返る。制限時間未指定時やinfinite指定時などはNoneが返る)
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `think_start_time` - 現在の局面が開始した時刻
+	/// * `now` - 現在時刻
 	pub fn calc_next_limit(&self,teban:Teban,think_start_time:Instant,now:Instant) -> Option<u64> {
 		let limit = self.to_instant(teban, think_start_time);
 
@@ -212,13 +272,21 @@ impl UsiGoTimeLimit {
 		})
 	}
 }
+/// go mate時の制限時間
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoMateTimeLimit {
+	/// 未指定
 	None,
+	/// 指定あり
 	Limit(u32),
+	/// 無制限(go mate infinite)
 	Infinite,
 }
 impl UsiGoMateTimeLimit {
+	/// `Instant`へ変換(制限時間未指定時やinfinite指定時などはNoneが返る)
+	///
+	/// # Arguments
+	/// * `now` - 現在時刻
 	pub fn to_instant(&self,now:Instant) -> Option<Instant> {
 		match *self {
 			UsiGoMateTimeLimit::Infinite | UsiGoMateTimeLimit::None => None,
@@ -228,21 +296,32 @@ impl UsiGoMateTimeLimit {
 		}
 	}
 }
+/// 持ち時間（'go byoyomi <x>' or 'go binc <x>, winc<x>'）
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UsiGoByoyomiOrInc {
+	/// 秒読み
 	Byoyomi(u32),
+	/// 加算時間（フィッシャークロックルール）
 	Inc(u32,u32),
 }
+/// ユーザーイベント
 #[derive(Debug)]
 pub enum UserEvent {
+	/// 思考の停止
 	Stop,
+	/// go ponderの予測手にHit
 	PonderHit(Instant),
+	/// 終了要求
 	Quit,
 }
+/// ユーザーイベントの種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum UserEventKind {
+	/// 思考の停止
 	Stop = 0,
+	/// go ponderの予測手にHit
 	PonderHit,
+	/// 終了要求
 	Quit,
 }
 impl MapEventKind<UserEventKind> for UserEvent {
@@ -264,67 +343,116 @@ impl MaxIndex for UserEventKind {
 		UserEventKind::Quit as usize
 	}
 }
+/// 自己対局時のイベント
 #[derive(Debug)]
 pub enum SelfMatchEvent {
+	/// 対局開始
 	GameStart(u32,Teban,String),
+	/// 手が指された
 	Moved(Teban,Moved),
+	/// 対局終了
 	GameEnd(SelfMatchGameEndState),
+	/// 中断
 	Abort,
 }
+/// 指された手
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum Moved {
+	/// 盤面上の駒の移動
 	To(MovedKind,(u32,u32),(u32,u32),bool),
+	/// 持ち駒を置いた
 	Put(MochigomaKind,(u32,u32)),
 }
+/// 動かした駒の種類
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum MovedKind {
+	/// 歩
 	Fu = 0,
+	/// 香
 	Kyou,
+	/// 桂
 	Kei,
+	/// 銀
 	Gin,
+	/// 金
 	Kin,
+	/// 角
 	Kaku,
+	/// 飛車
 	Hisha,
+	/// 王
 	SOu,
+	/// 玉
 	GOu,
+	/// と金
 	FuN,
+	/// 成香
 	KyouN,
+	/// 成桂
 	KeiN,
+	/// 成銀
 	GinN,
+	/// 馬
 	KakuN,
+	/// 龍
 	HishaN,
+	/// 空白
 	Blank,
 }
+/// 自己対局時の対局終了時の状態
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum SelfMatchGameEndState {
+	/// 勝ち
 	Win(Teban),
+	/// 投了
 	Resign(Teban),
+	/// 入玉宣言勝ち
 	NyuGyokuWin(Teban),
+	/// 入玉宣言勝ちを宣言したが条件を満たさず負けになった
 	NyuGyokuLose(Teban),
+	/// 引き分け
 	Draw,
+	/// 反則負け
 	Foul(Teban,FoulKind),
+	/// 時間切れ負け
 	Timeover(Teban),
 }
+/// 対局の勝敗
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum GameEndState {
+	/// 勝ち
 	Win,
+	/// 負け
 	Lose,
+	/// 引き分け
 	Draw,
 }
+/// 自己対局時の反則負けの種類
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum FoulKind {
+	/// 合法手でない
 	InvalidMove,
+	/// 打ち歩詰め
 	PutFuAndMate,
+	/// 千日手
 	Sennichite,
+	/// 連続王手の千日手
 	SennichiteOu,
+	/// 王手に応じなかった
 	NotRespondedOute,
+	/// 自分から相手に王を取られる位置に駒を動かした
 	Suicide,
 }
+/// 自己対局時のイベントの種別
 #[derive(Debug)]
 pub enum SelfMatchEventKind {
+	/// 対局開始
 	GameStart = 0,
+	/// 手が指された
 	Moved,
+	/// 対局終了
 	GameEnd,
+	/// 中断
 	Abort,
 }
 impl MapEventKind<SelfMatchEventKind> for SelfMatchEvent {
@@ -460,42 +588,88 @@ impl fmt::Display for Moved {
 	 	}
 	 }
 }
+/// イベントキュー
 #[derive(Debug)]
 pub struct EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 	event_kind:PhantomData<K>,
 	events:Vec<E>,
 }
 impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
+	/// `EventQueue`の生成
 	pub fn new() -> EventQueue<E,K> {
 		EventQueue {
 			event_kind:PhantomData::<K>,
 			events: Vec::new()
 		}
 	}
+	/// イベントの追加
+	///
+	/// # Arguments
+	/// * `e` - イベント
 	pub fn push(&mut self,e:E) {
 		self.events.push(e);
 	}
+	/// イベントキューのクリア
 	pub fn clear(&mut self) {
 		self.events.clear();
 	}
+	/// イベントキューの中身の取り出し（呼出し直後キューは空になる）
 	pub fn drain_events(&mut self) -> Vec<E> {
 		self.events.drain(0..).collect()
 	}
+	/// キューにイベントがあるか否か？
 	pub fn has_event(&self) -> bool {
 		self.events.len() > 0
 	}
 }
+/// イベントディスパッチャ
 pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
 											E: MapEventKind<K> + fmt::Debug,
 											UE: PlayerError,
 											EventHandlerError<K,UE>: From<UE>,
 											usize: From<K> {
+	/// イベントハンドラの追加
+	///
+	/// # Arguments
+	/// * `id` - イベント種別
+	/// * `handler` - イベントハンドラ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`EventHandlerError`] 手が合法手でない
+	///
+	/// [`EventHandlerError`]: ../error/enum.EventHandlerError.html
 	fn add_handler<F>(&mut self, id:K, handler:F) where F: FnMut(&T,&E) ->
 													Result<(), EventHandlerError<K,UE>> + 'b;
 
+	/// 一度だけ実行されるイベントハンドラの追加
+	///
+	/// # Arguments
+	/// * `id` - イベント種別
+	/// * `handler` - イベントハンドラ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`EventHandlerError`] 手が合法手でない
+	///
+	/// [`EventHandlerError`]: ../error/enum.EventHandlerError.html
 	fn add_once_handler<F>(&mut self, id:K, handler:F) where F: FnMut(&T,&E) ->
 													Result<(), EventHandlerError<K,UE>> + 'b;
 
+	/// イベントのディスパッチ
+	///
+	/// # Arguments
+	/// * `ctx` - コンテキストオブジェクト
+	/// * `event_queue` - イベントキュー
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`EventDispatchError`] 手が合法手でない
+	///
+	/// [`EventDispatchError`]: ../error/enum.EventDispatchError.html
 	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
 										Result<(), EventDispatchError<'a,EventQueue<E,K>,E,UE>>
 										where E: fmt::Debug, K: fmt::Debug,
@@ -503,6 +677,7 @@ pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
 												EventHandlerError<K,UE>: From<UE>,
 												usize: From<K>;
 }
+/// `EventDispatcher`の実装
 pub struct USIEventDispatcher<'b,K,E,T,L,UE>
 	where K: MaxIndex + fmt::Debug,
 			E: MapEventKind<K> + fmt::Debug,
@@ -523,6 +698,10 @@ impl<'b,K,E,T,L,UE> USIEventDispatcher<'b,K,E,T,L,UE>
 			UE: PlayerError,
 			EventHandlerError<K,UE>: From<UE>,
 			usize: From<K> {
+	/// `USIEventDispatcher`の生成
+	///
+	/// # Arguments
+	/// * `error_handler` - エラーを書き込むためのオブジェクト
 	pub fn new(on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>) -> USIEventDispatcher<'b,K,E,T,L,UE>
 											where K: MaxIndex + fmt::Debug, usize: From<K>,
 											E: MapEventKind<K> + fmt::Debug,
@@ -602,9 +781,15 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 		}
 	}
 }
+/// システムイベントキュー
 pub type SystemEventQueue = EventQueue<SystemEvent,SystemEventKind>;
+/// システムイベントキューを処理するためのイベントディスパッチャ
 pub type SystemEventDispatcher<'a,T,E,L> = USIEventDispatcher<'a,SystemEventKind,SystemEvent,T,L,E>;
+/// ユーザーイベントキュー
 pub type UserEventQueue = EventQueue<UserEvent,UserEventKind>;
+/// システムイベントキューを処理するためのイベントディスパッチャ
 pub type UserEventDispatcher<'a,T,E,L> = USIEventDispatcher<'a,UserEventKind,UserEvent,T,L,E>;
+/// 自己対局イベントキュー
 pub type SelfMatchEventQueue = EventQueue<SelfMatchEvent,SelfMatchEventKind>;
+/// 自己対局イベントキューを処理するためのイベントディスパッチャ
 pub type SelfMatchEventDispatcher<'a,E,L> = USIEventDispatcher<'a,SelfMatchEventKind,SelfMatchEvent,SelfMatchEngine<E>,L,E>;

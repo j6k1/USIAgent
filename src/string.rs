@@ -1,7 +1,11 @@
 //! Stringに関連した機能
-/// 文字列の各行をインデントするtrait
+/// 文字列の各行をインデントする
 pub trait AddIndent {
-	fn add_indent(&self, u32) -> String;
+	/// 文字列の各行をインデントした結果を返す
+	///
+	/// # Arguments
+	/// * `sz` - インデントの回数
+	fn add_indent(&self, sz:u32) -> String;
 }
 impl AddIndent for String {
 	fn add_indent(&self, sz:u32) -> String {

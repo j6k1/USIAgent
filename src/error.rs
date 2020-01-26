@@ -13,17 +13,25 @@ use crossbeam_channel::RecvError;
 use command::UsiCommand;
 use selfmatch::SelfMatchMessage;
 
+/// イベント処理時のエラー
 #[derive(Debug)]
 pub enum EventDispatchError<'a,T,K,E>
 	where T: fmt::Debug + 'a, K: fmt::Debug, E: Error + fmt::Debug + 'static {
+	/// イベントハンドラ内エラー発生
 	ErrorFromHandler(EventHandlerError<K,E>),
+	/// イベントキューの排他的ロックの取得に失敗した
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+	/// エラーが含まれる
 	ContainError,
 }
+/// イベントハンドラ内で発生したエラー
 #[derive(Debug)]
 pub enum EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug + 'static {
+	/// その他のエラー
 	Fail(String),
+	/// 内部状態不正
 	InvalidState(K),
+	/// `USIPlayer`の実装が投げたエラー
 	PlayerError(E),
 }
 impl<K,E> fmt::Display for EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
@@ -93,6 +101,7 @@ impl<'a,T,K,E> From<EventHandlerError<K,E>> for EventDispatchError<'a,T,K,E>
 		EventDispatchError::ErrorFromHandler(err)
 	}
 }
+/// 状態不正
 #[derive(Debug,Eq,PartialEq)]
 pub struct InvalidStateError(pub String);
 impl fmt::Display for InvalidStateError {
@@ -115,6 +124,7 @@ impl error::Error for InvalidStateError {
 	 	}
 	 }
 }
+/// 盤面上の段に値をマッピングできなかった
 #[derive(Debug,Eq,PartialEq)]
 pub struct DanConvertError(pub u32);
 impl fmt::Display for DanConvertError {
@@ -137,9 +147,12 @@ impl error::Error for DanConvertError {
 	 	}
 	 }
 }
+/// 指し手の文字列表現と内部表現の変換時のエラー
 #[derive(Debug,Eq,PartialEq)]
 pub enum ToMoveStringConvertError {
+	/// 値から盤面の段への変換に失敗した
 	CharConvert(DanConvertError),
+	/// 思考を中断したケースで指し手文字列を生成しようとした
 	AbortedError,
 }
 impl fmt::Display for ToMoveStringConvertError {
@@ -178,12 +191,18 @@ impl From<DanConvertError> for ToMoveStringConvertError {
 		ToMoveStringConvertError::CharConvert(err)
 	}
 }
+/// USIコマンドの生成時のエラー
 #[derive(Debug,Eq,PartialEq)]
 pub enum UsiOutputCreateError {
+	/// 生成元のオブジェクトの状態が不正
 	ValidationError(UsiCommand),
+	/// 状態が不正
 	InvalidStateError(String),
+	/// infoコマンドの生成元のオブジェクトの状態が不正
 	InvalidInfoCommand(String),
+	/// 指し手の文字列生成時のエラー
 	ConvertError(ToMoveStringConvertError),
+	/// 思考を中断したケースで指し手文字列を生成しようとした
 	AbortedError,
 }
 impl fmt::Display for UsiOutputCreateError {
@@ -247,44 +266,7 @@ impl<T,E> From<E> for EventHandlerError<T,E> where T: fmt::Debug, E: PlayerError
 		EventHandlerError::PlayerError(err)
 	}
 }
-#[derive(Debug)]
-pub enum UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
-	FailCreateOutput(UsiOutputCreateError),
-	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
-}
-impl<'a,T> fmt::Display for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
-	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-	 	match *self {
-	 		UsiEventSendError::FailCreateOutput(_) => write!(f, "Failed to generate command string to send from AI to USI."),
-	 		UsiEventSendError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
-	 	}
-	 }
-}
-impl<'a,T> error::Error for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
-	 fn description(&self) -> &str {
-	 	match *self {
-	 		UsiEventSendError::FailCreateOutput(_) => "Failed to generate command string to send from AI to USI.",
-	 		UsiEventSendError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
-	 	}
-	 }
-
-	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-	 	match *self {
-	 		UsiEventSendError::FailCreateOutput(ref e) => Some(e),
-	 		UsiEventSendError::MutexLockFailedError(_) => None,
-	 	}
-	 }
-}
-impl<'a,T> From<UsiOutputCreateError> for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
-	fn from(err: UsiOutputCreateError) -> UsiEventSendError<'a,T> {
-		UsiEventSendError::FailCreateOutput(err)
-	}
-}
-impl<'a,T> From<PoisonError<MutexGuard<'a,T>>> for UsiEventSendError<'a,T> where T: fmt::Debug + 'a {
-	fn from(err: PoisonError<MutexGuard<'a,T>>) -> UsiEventSendError<'a,T> {
-		UsiEventSendError::MutexLockFailedError(err)
-	}
-}
+/// infoコマンド出力時のエラー
 #[derive(Debug,Eq,PartialEq)]
 pub enum InfoSendError {
 	Fail(String)
@@ -314,9 +296,12 @@ impl From<UsiOutputCreateError> for InfoSendError {
 		InfoSendError::Fail(format!("{}",e))
 	}
 }
+/// USIコマンド文字列の型変換エラー
 #[derive(Debug,Eq,PartialEq)]
 pub enum TypeConvertError<T> where T: fmt::Debug {
+	/// 書式エラー
 	SyntaxError(T),
+	/// 内部実装の誤りを検出
 	LogicError(T),
 }
 impl<T> fmt::Display for TypeConvertError<T> where T: fmt::Debug {
@@ -347,10 +332,14 @@ impl From<ParseIntError> for TypeConvertError<String> where String: fmt::Debug {
 		TypeConvertError::SyntaxError(String::from("Failed parse string to integer."))
 	}
 }
+/// USIAgent開始時のエラー
 #[derive(Debug)]
 pub enum USIAgentStartupError<E> where E: PlayerError {
+	/// オブジェクトの排他的ロックの獲得に失敗
 	MutexLockFailedOtherError(String),
+	/// 入出力時のエラー
 	IOError(String),
+	/// `USIPlayer`の実装がエラーを投げた
 	PlayerError(E),
 }
 impl<E> fmt::Display for USIAgentStartupError<E> where E: PlayerError {
@@ -379,9 +368,12 @@ impl<E> error::Error for USIAgentStartupError<E> where E: PlayerError {
 	 	}
 	 }
 }
+/// USIAgentの実行中のエラー
 #[derive(Debug)]
 pub enum USIAgentRunningError<'a,T,E> where T: fmt::Debug + 'a, E: PlayerError {
+	/// オブジェクトの排他的ロックの獲得に失敗
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+	/// 開始時のエラー
 	StartupError(USIAgentStartupError<E>),
 }
 impl<'a,T,E> fmt::Display for USIAgentRunningError<'a,T,E> where T: fmt::Debug, E: PlayerError {
@@ -419,8 +411,10 @@ impl<'a,T,E> From<USIAgentStartupError<E>> for USIAgentRunningError<'a,T,E>
 		USIAgentRunningError::StartupError(err)
 	}
 }
+/// 将棋のルールに関するエラー
 #[derive(Debug,Eq,PartialEq)]
 pub enum ShogiError {
+	/// 状態不正
 	InvalidState(String),
 }
 impl fmt::Display for ShogiError {
@@ -443,8 +437,10 @@ impl error::Error for ShogiError {
 	 	}
 	 }
 }
+/// usiプロトコル関係のエラー
 #[derive(Debug,Eq,PartialEq)]
 pub enum UsiProtocolError {
+	/// 状態不正
 	InvalidState(String),
 }
 impl fmt::Display for UsiProtocolError {
@@ -467,16 +463,26 @@ impl error::Error for UsiProtocolError {
 	 	}
 	 }
 }
+/// 自己対局機能実行時のエラー
 #[derive(Debug)]
 pub enum SelfMatchRunningError<E> where E: PlayerError {
+	/// 状態不正
 	InvalidState(String),
+	/// `USIPlayer`の実装がエラーを投げた
 	PlayerError(E),
+	/// プレイヤースレッド内でエラー発生
 	PlayerThreadError(usize),
+	/// 入出力時のエラー
 	IOError(io::Error),
+	/// 棋譜書き込み時のエラー
 	KifuWriteError(KifuWriteError),
+	/// `crossbeam_channel`によるメッセージ受信時のエラー
 	RecvError(RecvError),
+	/// `crossbeam_channel`によるメッセージ送信時のエラー
 	SendError(SendError<SelfMatchMessage>),
+	/// ブリッジスレッド内でエラー発生
 	ThreadJoinFailed(String),
+	/// その他
 	Fail(String),
 }
 impl<E> fmt::Display for SelfMatchRunningError<E> where E: PlayerError {
@@ -553,10 +559,14 @@ impl<E> From<E> for SelfMatchRunningError<E> where E: PlayerError {
 		SelfMatchRunningError::PlayerError(err)
 	}
 }
+/// sfen文字列の生成時エラー
 #[derive(Debug,Eq,PartialEq)]
 pub enum SfenStringConvertError {
+	/// 指し手文字列生成時のエラー
 	ToMoveString(ToMoveStringConvertError),
+	/// 型変換時のエラー
 	TypeConvertError(TypeConvertError<String>),
+	/// 不正なsfen文字列フォーマット
 	InvalidFormat(String),
 }
 impl fmt::Display for SfenStringConvertError {
@@ -607,11 +617,16 @@ impl From<TypeConvertError<String>> for SfenStringConvertError {
 		SfenStringConvertError::TypeConvertError(err)
 	}
 }
+/// 棋譜書き込み時のエラー
 #[derive(Debug)]
 pub enum KifuWriteError {
+	/// その他
 	Fail(String),
+	/// 状態不正
 	InvalidState(String),
+	/// sfen文字←→内部表現変換時のエラー
 	SfenStringConvertError(SfenStringConvertError),
+	/// 入出力時のエラー
 	IOError(io::Error),
 }
 impl fmt::Display for KifuWriteError {
@@ -653,4 +668,5 @@ impl From<io::Error> for KifuWriteError {
 		KifuWriteError::IOError(err)
 	}
 }
+/// `USIPlayer`の実装から投げられるエラーであることを示すマーカートレイト
 pub trait PlayerError: Error + fmt::Debug + Send + 'static {}

@@ -1,4 +1,4 @@
-//! USIプロトコル文字列のパース、組み立て
+//! USIプロトコル文字列のパース、組み立て機能
 use std::fmt;
 use std::error::Error;
 use std::collections::HashMap;
@@ -12,8 +12,10 @@ use error::*;
 use TryFrom;
 use Validate;
 
+/// USIプロトコル準拠のコマンド文字列
 #[derive(Debug)]
 pub enum UsiOutput {
+	/// USIプロトコル準拠のコマンド文字列のリスト
 	Command(Vec<String>),
 }
 impl UsiOutput {
@@ -23,9 +25,11 @@ impl<'a> TryFrom<&'a UsiCommand,UsiOutputCreateError> for UsiOutput {
 		Ok(UsiOutput::Command(cmd.to_usi_command()?))
 	}
 }
+/// USIプロトコル準拠のsfen形式文字列へ変換する
 pub trait ToSfen<E> where E: Error + fmt::Display {
 	fn to_sfen(&self) -> Result<String,E>;
 }
+/// USIプロトコル準拠のコマンドを表現するオブジェクトへ変換する
 pub trait ToUsiCommand<T,E> where T: fmt::Debug, E: fmt::Debug + Error {
 	fn to_usi_command(&self) -> Result<T,E>;
 }
@@ -515,9 +519,11 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 		})
 	}
 }
+/// sfen文字列をパースして得られた局面の情報を表す構造体
 #[derive(Eq,PartialEq,Debug)]
 pub struct PositionParseResult(pub Teban, pub UsiInitialPosition, pub u32,pub Vec<Move>);
 impl PositionParseResult {
+	/// 局面の情報を分解してタプルで返す
 	pub fn extract(self) -> (Teban, Banmen, MochigomaCollections, u32, Vec<Move>) {
 		match self {
 			PositionParseResult(teban, p, n, m) => {
@@ -538,13 +544,16 @@ impl PositionParseResult {
 		}
 	}
 }
+/// 局面を表すsfen文字列のパーサ
 pub struct PositionParser {
 }
 impl PositionParser {
+	/// `PositionParser`の生成
 	pub fn new() -> PositionParser {
 		PositionParser{}
 	}
 
+	/// スペースで分割された局面のsfen文字列をパースした結果を返す
 	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<PositionParseResult,TypeConvertError<String>> {
 		let p = match params.len() {
 			0 => {
@@ -566,6 +575,7 @@ impl PositionParser {
 		}
 	}
 
+	/// スペースで分割された'startpos'から始まる局面のsfen文字列をパースした結果を返す
 	fn parse_startpos<'a>(&self,params:&'a [&'a str]) -> Result<PositionParseResult,TypeConvertError<String>> {
 		let mut r:Vec<Move> = Vec::new();
 
@@ -589,6 +599,7 @@ impl PositionParser {
 		}
 	}
 
+	/// スペースで分割された'sfen'から始まる局面のsfen文字列をパースした結果を返す
 	fn parse_sfen<'a>(&self,params:&'a [&'a str]) -> Result<PositionParseResult,TypeConvertError<String>> {
 		if params.len() > 4 && (params[4] != "moves" || params.len() <= 5) {
 			return Err(TypeConvertError::SyntaxError(String::from(
@@ -634,13 +645,16 @@ impl UsiGoCreator {
 		(*self.f)(l)
 	}
 }
+/// goコマンドのパーサ
 pub struct GoParser {
 }
 impl GoParser {
+	/// `GoParser`の生成
 	pub fn new() -> GoParser {
 		GoParser{}
 	}
 
+	/// USIプロトコルのgoコマンドを半角スペースで分割したものから先頭の'go'を除いたリストを受け取りパースした結果を返す
 	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<UsiGo, TypeConvertError<String>> {
 		if params.len() == 0 {
 			return Ok(UsiGo::Go(UsiGoTimeLimit::None));

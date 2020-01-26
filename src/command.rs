@@ -1,4 +1,4 @@
-//! USIプロトコル準拠のcommandを取り扱う
+//! USIプロトコル準拠のコマンドを取り扱う
 use std::collections::HashSet;
 use std::clone::Clone;
 
@@ -222,6 +222,7 @@ impl Validate for UsiCommand {
 	}
 }
 impl UsiInfoSubCommand {
+	/// 対応するコマンド種別を取得する
 	pub fn get_kind(&self) -> UsiInfoSubCommandKind {
 		match *self {
 			UsiInfoSubCommand::Depth(_) => UsiInfoSubCommandKind::Depth,

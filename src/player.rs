@@ -1,4 +1,4 @@
-//! AIの本体を実装するためのtrait
+//! AIの本体を実装するためのtrait等
 use std::{thread,time};
 use std::time::Instant;
 use std::sync::Mutex;
@@ -24,32 +24,83 @@ use Logger;
 use OnErrorHandler;
 use TryFrom;
 
+/// プレイヤー（AI本体）の実装
 pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
+	/// このAIの名前
 	const ID: &'static str;
+	/// このAIの作者
 	const AUTHOR: &'static str;
+	/// サポートしているオブションの一覧をオプション名をキーとしたマップで返す
 	fn get_option_kinds(&mut self) -> Result<BTreeMap<String,SysEventOptionKind>,E>;
+	/// サポートしているオプションに関する設定情報（maxとminの値など）をオプション名をキーとしたマップで返す
 	fn get_options(&mut self) -> Result<BTreeMap<String,UsiOptType>,E>;
+	/// プレイヤーの機能で必要な時間のかかる前処理などをここで行う
 	fn take_ready(&mut self) -> Result<(),E>;
+	/// オプションを設定する
+	/// # Arguments
+	/// * `name` - オプションの名前
+	/// * `value` - オプションの値
 	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),E>;
+	/// ゲーム開始前の処理。対局ごとに毎回呼ばれる
 	fn newgame(&mut self) -> Result<(),E>;
+	/// 局面の初期化。毎回初期局面と現在の局面までの全ての指し手のリストが送られてくる。
+	/// # Arguments
+	/// * `teban` - 初期局面時の手番
+	/// * `ban` - 盤面
+	/// * `ms` - 先手の持ち駒
+	/// * `mg` - 後手の持ち駒
+	/// * `n` - 次の手が何手目か。（USIプロトコルのSFENの原案にあるために存在するが、現在固定で1が送られてくるため無視してかまわない）
+	/// * `m` - 指し手のリスト
 	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
+	/// 思考開始。この関数の戻り値が指し手となる。AIの実装の核となる部分
+	/// # Arguments
+	/// * `think_start_time` - 思考開始時の時間。通常は現在の時刻だが、go ponderの後に予想した指し手が外れた場合などはstopコマンドを受け取った時刻となる。
+	/// * `limit` - 持ち時間
+	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
+	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think<L,S>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	/// 思考開始。この関数の戻り値が指し手となる。AIの実装の核となる部分
+	/// # Arguments
+	/// * `limit` - 持ち時間
+	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
+	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_ponder<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	/// 詰め将棋回答時に呼ばれる関数
+	/// # Arguments
+	/// * `limit` - 持ち時間
+	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
+	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	/// `UserEvent::Stop`イベントがキューに追加されている状態で`dispatch_events`でイベントを処理すると呼ばれる。
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
+	/// `UserEvent::PonderHit`イベントがキューに追加されている状態で`dispatch_events`でイベントを処理すると呼ばれる。
 	fn on_ponderhit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
+	/// 対局終了時に呼ばれる
+	/// # Arguments
+	/// * `s` - 勝敗を表すオブジェクト
+	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn gameover<L>(&mut self,s:&GameEndState,
 			event_queue:Arc<Mutex<UserEventQueue>>,
 			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> Result<(),E> where L: Logger, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	/// `UserEvent::Quit`イベントがキューに追加されている状態で`dispatch_events`でイベントを処理すると呼ばれる。
 	fn on_quit(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
+	/// 終了時に呼ばれる関数
 	fn quit(&mut self) -> Result<(),E>;
+	/// イベントを処理する関数。これにイベントキューを渡すか`EventDispatcher`を実装したオブジェクトの`dispatch_events`にイベントキューを渡すまでイベントは処理されない。
+	/// # Arguments
+	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn handle_events<'a,L>(&mut self,event_queue:&'a Mutex<UserEventQueue>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) -> Result<bool,E>
 						where L: Logger, E: Error + fmt::Debug,
@@ -64,6 +115,10 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		})
 	}
 
+	/// `USIPlayer::handle_events`から呼ばれる内部関数。イベントキュー内のイベントを処理する。
+	/// # Arguments
+	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn dispatch_events<'a,L>(&mut self, event_queue:&'a Mutex<UserEventQueue>,
 						on_error_handler:&Mutex<OnErrorHandler<L>>) ->
 						Result<(), EventDispatchError<'a,UserEventQueue,UserEvent,E>>
@@ -114,6 +169,14 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		}
 	}
 
+	/// 手のリストを現在の局面に適用した結果を返す
+	/// # Arguments
+	/// * `state` - 手の列挙に使うビットボードと盤面などの内部状態を持つオブジェクト
+	/// * `teban` - 局面開始時の手番
+	/// * `mc` - 局面開始時の持ち駒
+	/// * `m` - 開始局面から現在までの指し手のリスト
+	/// * `r` - コールバック関数に渡され関数の戻り値の一部となるオブジェクト(任意の型)
+	/// * `f` - 手の適用のたびに呼ばれるコールバック関数
 	fn apply_moves<T,F>(&self,mut state:State,
 						mut teban:Teban,
 						mut mc:MochigomaCollections,
@@ -138,18 +201,31 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 		(teban,state,mc,r)
 	}
 }
+/// infoコマンドの発行スレッドに対してコマンドの出力、スレッドの停止などを通知するためのメッセージオブジェクト
 #[derive(Clone, Debug)]
 pub enum UsiInfoMessage {
+	/// infoコマンドのサブコマンドのリスト
 	Commands(Vec<UsiInfoSubCommand>),
+	/// infoコマンド発行スレッドを停止させる
 	Quit,
 }
+/// infoコマンドを出力する
 pub trait InfoSender: Clone + Send + 'static {
+	/// infoコマンドを出力する
+	///
+	/// # Arguments
+	/// * `commands` - infoサブコマンドのリスト
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError>;
 }
+/// infoコマンドを標準出力へ出力する`InfoSender`の実装
 pub struct USIInfoSender {
 	sender:Sender<UsiInfoMessage>
 }
 impl USIInfoSender {
+	/// `USIInfoSender`の生成
+	///
+	/// # Arguments
+	/// * `sender` - infoコマンド出力スレッドへ通知するためのSender
 	pub fn new(sender:Sender<UsiInfoMessage>) -> USIInfoSender {
 		USIInfoSender {
 			sender:sender
@@ -218,11 +294,16 @@ impl Clone for USIInfoSender {
 		USIInfoSender::new(self.sender.clone())
 	}
 }
+/// コンソールへ出力する`InfoSender`の実装（出力用に別にスレッドを持ってはおらず呼び出し時に直接出力する）
 pub struct ConsoleInfoSender {
 	writer:USIStdOutputWriter,
 	silent:bool,
 }
 impl ConsoleInfoSender {
+	/// `ConsoleInfoSender`の生成
+	///
+	/// # Arguments
+	/// * `silent` - infoコマンドを出力するか否かのフラグ。`true`の場合、出力しない
 	pub fn new(silent:bool) -> ConsoleInfoSender {
 		ConsoleInfoSender {
 			writer:USIStdOutputWriter::new(),

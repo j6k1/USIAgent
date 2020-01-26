@@ -43,8 +43,16 @@ use protocol::*;
 /// 棋譜を記録する
 pub trait SelfMatchKifuWriter {
 	/// 棋譜の書き込みを行う
+	///
+	/// # Arguments
+	/// * `initial_sfen` - 開始時の局面のsfen文字列表現
+	/// * `m` - 開始局面からの指し手のリスト
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError>;
 	/// 開始時の局面のsfen文字列と`Vec<Move>`から棋譜のsfen文字列を生成するメソッドのデフォルト実装
+	///
+	/// # Arguments
+	/// * `initial_sfen` - 開始時の局面のsfen文字列表現
+	/// * `m` - 開始局面からの指し手のリスト
 	fn to_sfen(&self,initial_sfen:&String,m:&Vec<Move>)
 		-> Result<String, SfenStringConvertError> {
 
@@ -86,6 +94,9 @@ pub struct FileSfenKifuWriter {
 }
 impl FileSfenKifuWriter {
 	/// FileSfenKifuWriterの生成
+	///
+	/// # Arguments
+	/// * `file` - 書き込み先ファイル
 	pub fn new(file:String) -> Result<FileSfenKifuWriter,KifuWriteError> {
 		Ok(FileSfenKifuWriter {
 			writer:BufWriter::new(OpenOptions::new().append(true).create(true).open(file)?),
@@ -94,6 +105,10 @@ impl FileSfenKifuWriter {
 }
 impl SelfMatchKifuWriter for FileSfenKifuWriter {
 	/// ファイルに棋譜を書き込む
+	///
+	/// # Arguments
+	/// * `initial_sfen` - 開始時の局面のsfen文字列表現
+	/// * `m` - 開始局面からの指し手のリスト
 	fn write(&mut self,initial_sfen:&String,m:&Vec<Move>) -> Result<(),KifuWriteError> {
 		let sfen = self.to_sfen(initial_sfen,m)?;
 
@@ -285,7 +300,7 @@ impl<E> SelfMatchEngine<E>
 					logger, on_error)
 	}
 
-	/// Logger,USIInputReaderを指定して開始
+	/// `Logger`,`USIInputReader`を指定して開始
 	///
 	/// # Arguments
 	/// * `on_init_event_dispatcher` - 自己対局時に通知されるSelfMatchEventのイベントディスパッチャーを初期化
