@@ -1,4 +1,5 @@
 //! USIプロトコルを用いた将棋AIを実装するためのフレームワーク
+#![doc(html_root_url="https://j6k1.github.io/USIAgent/")]
 extern crate chrono;
 extern crate rand;
 #[macro_use]
