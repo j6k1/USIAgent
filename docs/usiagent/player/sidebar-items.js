@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["UsiInfoMessage","infoコマンドの発行スレッドに対してコマンドの出力、スレッドの停止などを通知するためのメッセージオブジェクト"]],"struct":[["ConsoleInfoSender","コンソールへ出力する`InfoSender`の実装（出力用に別にスレッドを持ってはおらず呼び出し時に直接出力する）"],["USIInfoSender","infoコマンドを標準出力へ出力する`InfoSender`の実装"]],"trait":[["InfoSender","infoコマンドを出力する"],["USIPlayer","プレイヤー（AI本体）の実装"]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["BestMove","指し手"],["CheckMate","詰め将棋の解答"],["UsiCommand","USIプロトコル準拠のコマンド"],["UsiInfoSubCommand","infoコマンドのサブコマンド"],["UsiInfoSubCommandKind","infoサブコマンドの種別"],["UsiOptType","optionコマンドの値"],["UsiScore","infoコマンドのscore"],["UsiScoreMate","infoコマンドのscoreサブコマンドのmateの値"]]});

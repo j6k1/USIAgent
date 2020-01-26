@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["UsiOutput","USIプロトコル準拠のコマンド文字列"]],"struct":[["GoParser","goコマンドのパーサ"],["PositionParseResult","sfen文字列をパースして得られた局面の情報を表す構造体"],["PositionParser","局面を表すsfen文字列のパーサ"]],"trait":[["ToSfen","USIプロトコル準拠のsfen形式文字列へ変換する"],["ToUsiCommand","USIプロトコル準拠のコマンドを表現するオブジェクトへ変換する"]]});

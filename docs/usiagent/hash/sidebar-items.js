@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["KyokumenHash","局面のハッシュ値を計算する。差分計算対応"],["KyokumenMap","先手と後手の局面を`TwoKeyHashMap`を使って管理する"],["TwoKeyHashMap","主キーとサブキーの二つのキーを用いたマップ"]],"trait":[["InitialHash","型に対応するハッシュの初期値"]]});

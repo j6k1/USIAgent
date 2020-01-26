@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SelfMatchMessage","自己対局機能の実装内でやり取りするメッセージオブジェクト"]],"struct":[["FileSfenKifuWriter","ファイルに記録する`SelfMatchKifuWriter`の実装"],["SelfMatchEngine","自己対局エンジン"],["SelfMatchResult","自己対局の結果"]],"trait":[["SelfMatchKifuWriter","棋譜を記録する"]]});

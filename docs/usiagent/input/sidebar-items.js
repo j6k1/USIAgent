@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["USIStdInputReader","標準入力から読み取る`USIInputReader`の実装"]],"trait":[["USIInputReader","入力を読み取る"]]});

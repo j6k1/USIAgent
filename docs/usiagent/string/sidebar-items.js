@@ -1,0 +1,1 @@
+initSidebarItems({"trait":[["AddIndent","文字列の各行をインデントする"]]});

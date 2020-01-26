@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["FileLogger","ファイルへ出力する`Logger`の実装"]],"trait":[["Logger","ログの出力"]]});
