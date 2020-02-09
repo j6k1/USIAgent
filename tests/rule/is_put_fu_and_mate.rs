@@ -17,6 +17,9 @@ fn test_is_put_fu_and_mate_sente() {
 			(3,0,GFu),(3,1,GKyou),(4,0,GOu),(5,0,GFu),(5,1,GKyou),(4,8,SKyou)
 		],
 		vec![
+			(3,0,GFu),(3,1,GKyou),(4,0,GOu),(5,0,GFu),(5,1,GKyou),(4,2,SKin)
+		],
+		vec![
 			(3,0,GKin),(3,1,GKyou),(4,0,GOu),(5,0,GKin),(5,1,GKyou),(4,8,SKyou)
 		],
 		vec![
@@ -27,8 +30,8 @@ fn test_is_put_fu_and_mate_sente() {
 		]
 	];
 
-	let answer:[bool; 4] = [
-		true,false,false,false
+	let answer:[bool; 5] = [
+		true,true,false,false,false
 	];
 
 	for (pk,answer) in position_and_kinds.iter().zip(&answer) {
@@ -70,6 +73,9 @@ fn test_is_put_fu_and_mate_gote() {
 			(8-3,8-0,SFu),(8-3,8-1,SKyou),(8-4,8-0,SOu),(8-5,8-0,SFu),(8-5,8-1,SKyou),(8-4,8-8,GKyou)
 		],
 		vec![
+			(8-3,8-0,SFu),(8-3,8-1,SKyou),(8-4,8-0,SOu),(8-5,8-0,SFu),(8-5,8-1,SKyou),(8-4,8-2,GKin)
+		],
+		vec![
 			(8-3,8-0,SKin),(8-3,8-1,SKyou),(8-4,8-0,SOu),(8-5,8-0,SKin),(8-5,8-1,SKyou),(8-4,8-8,GKyou)
 		],
 		vec![
@@ -80,8 +86,8 @@ fn test_is_put_fu_and_mate_gote() {
 		]
 	];
 
-	let answer:[bool; 4] = [
-		true,false,false,false
+	let answer:[bool; 5] = [
+		true,true,false,false,false
 	];
 
 	for (pk,answer) in position_and_kinds.iter().zip(&answer) {

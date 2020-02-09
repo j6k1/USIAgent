@@ -5146,6 +5146,7 @@ impl Rule {
 						} else {
 							kinds[y as usize][x as usize]
 						};
+
 						if Rule::is_mate_with_partial_state_and_point_and_kind(
 							t, &ps, x as u32, y as u32, kind
 						) {

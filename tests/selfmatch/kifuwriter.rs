@@ -477,7 +477,7 @@ fn test_kifuwrite_7times() {
 					"sfen ln5n+P/1+R+B1K3+P/+P+P+P+P+P2+P1/ln6P/9/pp5NL/2+p1+p+p+p+p+p/2+b1k3+p/+pN5NL b R2G2S2g2s 1",
 					"sfen ln5n+P/1+R+B1K3+P/+P+P+P+P+P2+P1/ln6P/9/pp5NL/2+p1+p+p+p+p+p/2+b1k3+p/+pN5NL b R2G2S2g2s 1",
 					"startpos moves 1g1f 9c9d 1f1e 9d9e",
-					"startpos"].into_iter().map(|s| s.to_string());
+					"startpos"].iter().map(|s| s.to_string());
 
 
 		let _ = engine.start(|self_match_event_dispatcher| {

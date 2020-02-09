@@ -41,12 +41,26 @@ use usiagent::shogi::KomaKind::{
 
 #[test]
 fn test_respond_oute_only_moves_all_sente() {
+	let opponents:Vec<(KomaKind,u32,u32)> = vec![
+		(GKyou,4,2),
+		(GKei,3,5),
+		(GKyou,4,2),
+	];
+
 	let mvs:Vec<Vec<Move>> = vec![
+		vec![ Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,7+1)) ],
 		vec![ Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,7+1)) ],
 		vec![]
 	];
 
 	let answer:Vec<Vec<Move>> =  vec![
+		vec![
+			Move::To(KomaSrcPosition(9-7,7+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-3,8+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-3,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-5,7+1,false)),
+			Move::To(KomaSrcPosition(9-5,8+1),KomaDstToPosition(9-4,7+1,false)),
+		],
 		vec![
 			Move::To(KomaSrcPosition(9-7,7+1),KomaDstToPosition(9-4,7+1,false)),
 			Move::To(KomaSrcPosition(9-3,8+1),KomaDstToPosition(9-4,7+1,false)),
@@ -70,12 +84,13 @@ fn test_respond_oute_only_moves_all_sente() {
 
 	let mut base_banmen = BANMEN_START_POS.clone();
 
-	base_banmen.0[2][4] = GKyou;
 	base_banmen.0[6][4] = Blank;
 	base_banmen.0[0][0] = Blank;
 
-	for (mvs,answer) in mvs.into_iter().zip(answer.into_iter()) {
-		let banmen = base_banmen.clone();
+	for (o,(mvs,answer)) in opponents.into_iter().zip(mvs.into_iter().zip(answer.into_iter())) {
+		let mut banmen = base_banmen.clone();
+
+		banmen.0[o.2 as usize][o.1 as usize] = o.0;
 
 		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 
@@ -132,12 +147,26 @@ fn test_respond_oute_only_moves_all_win_move_sente() {
 }
 #[test]
 fn test_respond_oute_only_moves_all_gote() {
+	let opponents:Vec<(KomaKind,u32,u32)> = vec![
+		(SKyou,8-4,8-2),
+		(SKei,8-3,8-5),
+		(SKyou,8-4,8-2),
+	];
+
 	let mvs:Vec<Vec<Move>> = vec![
+		vec![ Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,7+1)) ],
 		vec![ Move::Put(MochigomaKind::Fu,KomaDstPutPosition(9-4,7+1)) ],
 		vec![]
 	];
 
 	let answer:Vec<Vec<Move>> =  vec![
+		vec![
+			Move::To(KomaSrcPosition(9-7,7+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-3,8+1),KomaDstToPosition(9-4,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-3,7+1,false)),
+			Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-5,7+1,false)),
+			Move::To(KomaSrcPosition(9-5,8+1),KomaDstToPosition(9-4,7+1,false)),
+		],
 		vec![
 			Move::To(KomaSrcPosition(9-7,7+1),KomaDstToPosition(9-4,7+1,false)),
 			Move::To(KomaSrcPosition(9-3,8+1),KomaDstToPosition(9-4,7+1,false)),
@@ -161,12 +190,13 @@ fn test_respond_oute_only_moves_all_gote() {
 
 	let mut base_banmen = BANMEN_START_POS.clone();
 
-	base_banmen.0[8-2][8-4] = SKyou;
 	base_banmen.0[8-6][8-4] = Blank;
 	base_banmen.0[8-0][8-0] = Blank;
 
-	for (mvs,answer) in mvs.into_iter().zip(answer.into_iter()) {
-		let banmen = base_banmen.clone();
+	for (o,(mvs,answer)) in opponents.into_iter().zip(mvs.into_iter().zip(answer.into_iter())) {
+		let mut banmen = base_banmen.clone();
+
+		banmen.0[o.2 as usize][o.1 as usize] = o.0;
 
 		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 

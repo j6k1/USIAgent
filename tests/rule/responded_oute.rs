@@ -17,6 +17,7 @@ fn test_responded_oute_sente() {
 		Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-5,7+1,false)),
 		Move::To(KomaSrcPosition(9-3,8+1),KomaDstToPosition(9-3,7+1,false)),
 		Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-4,7+1,false)),
+		Move::To(KomaSrcPosition(9-4,8+1),KomaDstToPosition(9-4,7+1,false)),
 	];
 
 	let position_and_kinds:Vec<Vec<(usize,usize,KomaKind)>> = vec![
@@ -38,10 +39,13 @@ fn test_responded_oute_sente() {
 		vec![
 			(5,8,SKin),(4,8,SOu),(3,8,SKin),(4,7,GKin),(4,0,GKyou)
 		],
+		vec![
+			(5,8,SKin),(4,8,SOu),(3,8,SKin),(4,7,GKin),(4,6,GKin)
+		],
 	];
 
-	let answer:[bool; 6] = [
-		true,true,true,true,false,false
+	let answer:[bool; 7] = [
+		true,true,true,true,false,false,false
 	];
 
 	for ((pk,m),answer) in position_and_kinds.iter().zip(&mvs).zip(&answer) {
@@ -117,6 +121,7 @@ fn test_responded_oute_gote() {
 		Move::To(KomaSrcPosition(9-(8-4),(8-8)+1),KomaDstToPosition(9-(8-5),(8-7)+1,false)),
 		Move::To(KomaSrcPosition(9-(8-3),(8-8)+1),KomaDstToPosition(9-(8-3),(8-7)+1,false)),
 		Move::To(KomaSrcPosition(9-(8-4),(8-8)+1),KomaDstToPosition(9-(8-4),(8-7)+1,false)),
+		Move::To(KomaSrcPosition(9-(8-4),(8-8)+1),KomaDstToPosition(9-(8-4),(8-7)+1,false)),
 	];
 
 	let position_and_kinds:Vec<Vec<(usize,usize,KomaKind)>> = vec![
@@ -138,10 +143,13 @@ fn test_responded_oute_gote() {
 		vec![
 			(8-5,8-8,GKin),(8-4,8-8,GOu),(8-3,8-8,GKin),(8-4,8-7,SKin),(8-4,8-0,SKyou)
 		],
+		vec![
+			(8-5,8-8,GKin),(8-4,8-8,GOu),(8-3,8-8,GKin),(8-4,8-7,SKin),(8-4,8-6,SKin)
+		],
 	];
 
-	let answer:[bool; 6] = [
-		true,true,true,true,false,false
+	let answer:[bool; 7] = [
+		true,true,true,true,false,false,false
 	];
 
 	for ((pk,m),answer) in position_and_kinds.iter().zip(&mvs).zip(&answer) {

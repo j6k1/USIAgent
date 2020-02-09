@@ -494,12 +494,12 @@ fn test_initial_position_creator_3times() {
 		let mut it = [
 					"startpos",
 					"sfen ln5n+P/1+R+B1K3+P/+P+P+P+P+P2+P1/ln6P/9/pp5NL/2+p1+p+p+p+p+p/2+b1k3+p/+pN5NL b R2G2S2g2s 1 moves 1f1e 9d9e",
-					"sfen l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w RGgsn5p 1" ].into_iter().map(|s| s.to_string());
+					"sfen l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w RGgsn5p 1" ].iter().map(|s| s.to_string());
 
 
 		let _ = engine.start(|self_match_event_dispatcher| {
 			let hes = es.clone();
-			let mut game_start_it = [(1,Teban::Sente),(1,Teban::Sente),(2,Teban::Gote)].into_iter();
+			let mut game_start_it = [(1,Teban::Sente),(1,Teban::Sente),(2,Teban::Gote)].iter();
 
 			self_match_event_dispatcher
 				.add_handler(SelfMatchEventKind::GameStart, move |_,e| {
@@ -529,7 +529,7 @@ fn test_initial_position_creator_3times() {
 					}
 				});
 			let hes = es.clone();
-			let mut resign_teban_it = [Teban::Sente,Teban::Sente,Teban::Gote].into_iter();
+			let mut resign_teban_it = [Teban::Sente,Teban::Sente,Teban::Gote].iter();
 
 			self_match_event_dispatcher
 				.add_handler(SelfMatchEventKind::GameEnd, move |_,e| {

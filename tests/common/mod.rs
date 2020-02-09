@@ -402,11 +402,11 @@ impl USIPlayer<CommonError> for MockPlayer {
 		options.insert(String::from("OptionCheck"),UsiOptType::Check(None));
 		options.insert(String::from("OptionCombo"),UsiOptType::Combo(Some(String::from("bbbb")),
 																	["bbbb","cccc"]
-																		.into_iter()
+																		.iter()
 																		.map(|&s| String::from(s))
 																		.collect::<Vec<String>>()));
 		options.insert(String::from("OptionCombo2"),UsiOptType::Combo(None,["dddd","eeee"]
-																		.into_iter()
+																		.iter()
 																		.map(|&s| String::from(s))
 																		.collect::<Vec<String>>()));
 		options.insert(String::from("OptionFileName"),UsiOptType::FileName(Some(String::from("filename."))));
