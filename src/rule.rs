@@ -10,6 +10,7 @@ use shogi::*;
 use hash::*;
 use error::*;
 use event::*;
+use cpu::*;
 
 use shogi::KomaKind::{
 	SFu,
@@ -1431,7 +1432,7 @@ impl Rule {
 			if row == 0 {
 				row_width - 1 - offset
 			} else {
-				row.trailing_zeros() + 1
+				row.tzcnt() + 1
 			}
 		}
 	}
@@ -1477,7 +1478,7 @@ impl Rule {
 		if row == 0 {
 			offset
 		} else {
-			row.leading_zeros() + 1
+			row.lzcnt() + 1
 		}
 	}
 
@@ -1904,7 +1905,7 @@ impl Rule {
 		if board == 0 {
 			8 - board_y
 		} else {
-			board.trailing_zeros() + 1
+			board.tzcnt() + 1
 		}
 	}
 
@@ -1927,7 +1928,7 @@ impl Rule {
 		if board == 0 {
 			board_y
 		} else {
-			board.leading_zeros() + 1
+			board.lzcnt() + 1
 		}
 	}
 
@@ -1944,15 +1945,15 @@ impl Rule {
 		};
 
 		if bl != 0 {
-			let p = bl.trailing_zeros() as Square;
+			let p = bl.tzcnt() as Square;
 			unsafe {
-				*(bitboard.bitboard.get_unchecked_mut(0)) = bl & (bl - 1);
+				*(bitboard.bitboard.get_unchecked_mut(0)) = bl.blsr();
 			}
 			return p - 1;
 		} else if br != 0 {
-			let p = br.trailing_zeros() as Square;
+			let p = br.tzcnt() as Square;
 			unsafe {
-				*(bitboard.bitboard.get_unchecked_mut(1)) = br & (br - 1);
+				*(bitboard.bitboard.get_unchecked_mut(1)) = br.blsr();
 			}
 			return p + 63;
 		} else {
