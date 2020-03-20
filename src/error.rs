@@ -37,7 +37,7 @@ pub enum EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug + 'st
 impl<K,E> fmt::Display for EventHandlerError<K,E> where K: fmt::Debug, E: Error + fmt::Debug {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		EventHandlerError::Fail(ref s) => write!(f,"{}",s),
+	 		EventHandlerError::Fail(ref s) => write!(f,"An error occurred while executing the event handler. ({})",s),
 	 		EventHandlerError::InvalidState(ref e) => write!(f,
 	 			"The type of event passed and the event being processed do not match. (Event kind = {:?})", e),
 		 	EventHandlerError::PlayerError(_) => write!(f,"An error occurred while processing the player object in the event handler."),
@@ -258,7 +258,7 @@ impl From<ToMoveStringConvertError> for UsiOutputCreateError {
 }
 impl<T,E> From<UsiOutputCreateError> for EventHandlerError<T,E> where T: fmt::Debug, E: Error + fmt::Debug {
 	fn from(err: UsiOutputCreateError) -> EventHandlerError<T,E> {
-		EventHandlerError::Fail(err.description().to_string())
+		EventHandlerError::Fail(err.to_string())
 	}
 }
 impl<T,E> From<E> for EventHandlerError<T,E> where T: fmt::Debug, E: PlayerError {
@@ -274,7 +274,7 @@ pub enum InfoSendError {
 impl fmt::Display for InfoSendError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		InfoSendError::Fail(ref e) => e.fmt(f),
+	 		InfoSendError::Fail(ref s) => write!(f,"An error occurred when sending the info command. ({})",s),
 	 	}
 	 }
 }
@@ -298,21 +298,21 @@ impl From<UsiOutputCreateError> for InfoSendError {
 }
 /// USIコマンド文字列の型変換エラー
 #[derive(Debug,Eq,PartialEq)]
-pub enum TypeConvertError<T> where T: fmt::Debug {
+pub enum TypeConvertError<T> where T: fmt::Debug + fmt::Display {
 	/// 書式エラー
 	SyntaxError(T),
 	/// 内部実装の誤りを検出
 	LogicError(T),
 }
-impl<T> fmt::Display for TypeConvertError<T> where T: fmt::Debug {
+impl<T> fmt::Display for TypeConvertError<T> where T: fmt::Debug + fmt::Display {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
 	 		TypeConvertError::SyntaxError(ref e) => write!(f, "An error occurred in type conversion. from = ({:?})",e),
-		 	TypeConvertError::LogicError(ref e) => e.fmt(f),
+		 	TypeConvertError::LogicError(ref e) => write!(f, "An error occurred in type conversion (logic error, {})",e),
 	 	}
 	 }
 }
-impl<T> error::Error for TypeConvertError<T> where T: fmt::Debug {
+impl<T> error::Error for TypeConvertError<T> where T: fmt::Debug + fmt::Display {
 	 fn description(&self) -> &str {
 	 	match *self {
 	 		TypeConvertError::SyntaxError(_) => "An error occurred in type conversion",
@@ -345,8 +345,8 @@ pub enum USIAgentStartupError<E> where E: PlayerError {
 impl<E> fmt::Display for USIAgentStartupError<E> where E: PlayerError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-		 	USIAgentStartupError::MutexLockFailedOtherError(ref s) => write!(f, "{}",s),
-		 	USIAgentStartupError::IOError(ref s) => write!(f, "{}",s),
+		 	USIAgentStartupError::MutexLockFailedOtherError(ref s) => write!(f, "Could not get exclusive lock on object. ({})",s),
+		 	USIAgentStartupError::IOError(ref s) => write!(f, "IO Error. ({})",s),
 		 	USIAgentStartupError::PlayerError(_) => write!(f,"An error occurred in the processing within the player object."),
 	 	}
 	 }
@@ -446,7 +446,7 @@ pub enum UsiProtocolError {
 impl fmt::Display for UsiProtocolError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-		 	UsiProtocolError::InvalidState(ref s) => write!(f,"{}",s)
+		 	UsiProtocolError::InvalidState(ref s) => write!(f,"invalid state.(protocol was not processed proper, {})",s)
 	 	}
 	 }
 }
@@ -488,15 +488,15 @@ pub enum SelfMatchRunningError<E> where E: PlayerError {
 impl<E> fmt::Display for SelfMatchRunningError<E> where E: PlayerError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"{}",s),
+		 	SelfMatchRunningError::InvalidState(ref s) => write!(f,"invalid state. ({})",s),
 			SelfMatchRunningError::PlayerError(_) => write!(f,"An error occurred in player thread."),
 		 	SelfMatchRunningError::PlayerThreadError(n) => write!(f,"An error occurred in player {}'s thread.",n),
 		 	SelfMatchRunningError::IOError(_) => write!(f,"IO Error."),
 			SelfMatchRunningError::KifuWriteError(_) => write!(f,"An error occurred when recording kifu.s"),
 		 	SelfMatchRunningError::RecvError(_) => write!(f,"An error occurred when receiving the message."),
 		 	SelfMatchRunningError::SendError(_) => write!(f,"An error occurred when sending the message."),
-		 	SelfMatchRunningError::ThreadJoinFailed(ref s) => write!(f,"{}",s),
-		 	SelfMatchRunningError::Fail(ref s) => write!(f,"{}",s),
+		 	SelfMatchRunningError::ThreadJoinFailed(ref s) => write!(f,"An panic occurred in child thread. ({})",s),
+		 	SelfMatchRunningError::Fail(ref s) => write!(f,"An error occurred while running the self-match. ({})",s),
 	 	}
 	 }
 }
@@ -632,10 +632,10 @@ pub enum KifuWriteError {
 impl fmt::Display for KifuWriteError {
 	 fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 	 	match *self {
-	 		KifuWriteError::Fail(ref s) => write!(f,"{}",s),
-	 		KifuWriteError::InvalidState(ref e) => write!(f,"{}", e),
+	 		KifuWriteError::Fail(ref s) => write!(f,"There was an error writing kifu. ({})",s),
+	 		KifuWriteError::InvalidState(ref e) => write!(f,"There was an error writing kifu. (invalid state, {}).", e),
 	 		KifuWriteError::SfenStringConvertError(_) => write!(f,"An error occurred during conversion to sfen string."),
-		 	KifuWriteError::IOError(_) => write!(f,"IO Error."),
+		 	KifuWriteError::IOError(ref e) => write!(f,"IO Error. ({})",e),
 	 	}
 	 }
 }

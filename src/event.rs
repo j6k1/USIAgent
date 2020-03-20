@@ -176,7 +176,7 @@ impl UsiGoTimeLimit {
 	/// * `teban` - 手番
 	/// * `now` - 現在時刻
 	pub fn to_instant(&self,teban:Teban,now:Instant) -> Option<Instant> {
-		(match self {
+		match self {
 			&UsiGoTimeLimit::None => None,
 			&UsiGoTimeLimit::Infinite => None,
 			&UsiGoTimeLimit::Limit(Some((ms,mg)),None) => {
@@ -225,7 +225,7 @@ impl UsiGoTimeLimit {
 			&UsiGoTimeLimit::Limit(None,None) => {
 				Some(now)
 			}
-		})
+		}
 	}
 
 	/// 次の手番時の制限時間を計算

@@ -2350,7 +2350,7 @@ impl Rule {
 					};
 
 					let sente_fu_bitboard = unsafe {
-						(state.part.sente_fu_board.merged_bitboard >> 1)
+						state.part.sente_fu_board.merged_bitboard >> 1
 					};
 
 					(deny_move_bitboard,candidate_bitboard,sente_fu_bitboard)
@@ -2367,7 +2367,7 @@ impl Rule {
 					};
 
 					let gote_fu_bitboard = unsafe {
-						(state.part.gote_fu_board.merged_bitboard >> 1)
+						state.part.gote_fu_board.merged_bitboard >> 1
 					};
 
 					(deny_move_bitboard,candidate_bitboard,gote_fu_bitboard)
@@ -3379,7 +3379,7 @@ impl Rule {
 								}
 							};
 
-							(unsafe { ps.sente_opponent_board.merged_bitboard } & to_mask != 0)
+							(unsafe { ps.sente_opponent_board.merged_bitboard } & to_mask) != 0
 						} else if kind < Blank {
 							ps.gote_self_board = unsafe {
 								BitBoard {
@@ -3392,7 +3392,7 @@ impl Rule {
 								}
 							};
 
-							(unsafe { ps.gote_opponent_board.merged_bitboard } & inverse_to_mask != 0)
+							(unsafe { ps.gote_opponent_board.merged_bitboard } & inverse_to_mask) != 0
 						} else {
 							false
 						};
