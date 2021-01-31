@@ -251,17 +251,25 @@ impl PartialEq for MochigomaCollections {
 						true
 					}
 					&MochigomaCollections::Pair(ref ms,ref mg) => {
-						ms.is_empty() && mg.is_empty()
+						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
+						(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
 					}
 				}
 			},
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
 				match other {
 					&MochigomaCollections::Empty => {
-						ms.is_empty() && mg.is_empty()
+						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
+						(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
 					}
 					&MochigomaCollections::Pair(ref oms,ref omg) => {
-						ms == oms && mg == omg
+						MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
+							acc = acc && ms.get(k).map(|&c| c).unwrap_or(0) == oms.get(k).map(|&c| c).unwrap_or(0);
+							acc
+						}) && MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
+							acc = acc && mg.get(k).map(|&c| c).unwrap_or(0) == omg.get(k).map(|&c| c).unwrap_or(0);
+							acc
+						})
 					}
 				}
 			}

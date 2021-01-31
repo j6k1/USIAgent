@@ -199,6 +199,147 @@ fn test_mochigoma_collections_eq() {
 			acc
 		})),true),
 		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,0),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,0),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,0),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,0),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,0),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,0),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,0),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,0),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),MochigomaCollections::Empty,true),
+		(MochigomaCollections::Empty, MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,0),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,0),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,0),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,0),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,0),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,0),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,0),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,0),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),true),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})), MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),true),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})), MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),true),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})), MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Kei,4),
+			(MochigomaKind::Fu,9),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),true),
+		(MochigomaCollections::Pair(vec![
 			(MochigomaKind::Kaku,2),
 			(MochigomaKind::Hisha,2),
 			(MochigomaKind::Kin,2),
@@ -480,5 +621,177 @@ fn test_mochigoma_collections_eq() {
 
 	for (i,(l,r,a)) in input_and_expected.into_iter().enumerate() {
 		assert_eq!(l == r,a,"l = {:?}, r = {:?} index = {}",l,r,i);
+	}
+}
+#[test]
+fn test_mochigoma_collections_is_empty() {
+	let input_and_expected:Vec<(MochigomaCollections,bool)> = vec![
+		(MochigomaCollections::Empty,true),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,0),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,0),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,0),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,0),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,0),
+			(MochigomaKind::Kaku,0),
+			(MochigomaKind::Kin,0),
+			(MochigomaKind::Gin,0),
+			(MochigomaKind::Kei,0),
+			(MochigomaKind::Kyou,0),
+			(MochigomaKind::Fu,0),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),true),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Kaku,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Kin,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Gin,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Kei,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Kyou,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Hisha,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Kaku,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Kin,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Gin,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Kei,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Kyou,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),vec![
+			(MochigomaKind::Fu,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+	];
+
+	for (i,(mc,a)) in input_and_expected.into_iter().enumerate() {
+		assert_eq!(mc.is_empty(),a,"index = {}",i);
 	}
 }
