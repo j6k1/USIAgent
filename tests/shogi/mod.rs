@@ -441,6 +441,28 @@ fn test_mochigoma_collections_eq() {
 			acc.insert(k,n);
 			acc
 		}),HashMap::new()),false),
+		(MochigomaCollections::Pair(HashMap::new(),vec![
+			(MochigomaKind::Hisha,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),MochigomaCollections::Pair(HashMap::new(),vec![
+			(MochigomaKind::Hisha,2),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		})),false),
+		(MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,1),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),HashMap::new()),MochigomaCollections::Pair(vec![
+			(MochigomaKind::Hisha,2),
+		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			acc.insert(k,n);
+			acc
+		}),HashMap::new()),false),
 		(MochigomaCollections::Pair(vec![
 			(MochigomaKind::Hisha,1),
 			(MochigomaKind::Kaku,2),
