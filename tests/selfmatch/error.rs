@@ -162,7 +162,7 @@ fn test_error_take_ready_player1() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -328,7 +328,7 @@ fn test_error_take_ready_player2() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -489,7 +489,7 @@ fn test_error_newgame_player1() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -660,7 +660,7 @@ fn test_error_newgame_player2() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -808,7 +808,7 @@ fn test_error_set_position_player1() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -825,7 +825,7 @@ fn test_error_set_position_player1() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -979,7 +979,7 @@ fn test_error_set_position_player2() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1008,7 +1008,7 @@ fn test_error_set_position_player2() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -1159,7 +1159,7 @@ fn test_error_think_player1() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1180,7 +1180,7 @@ fn test_error_think_player1() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -1337,7 +1337,7 @@ fn test_error_set_think_player2() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1370,7 +1370,7 @@ fn test_error_set_think_player2() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -1533,7 +1533,7 @@ fn test_error_ponder_player1_set_position_recv_opponents_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1566,7 +1566,7 @@ fn test_error_ponder_player1_set_position_recv_opponents_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -1733,7 +1733,7 @@ fn test_error_ponder_player1_think_recv_opponents_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1766,7 +1766,7 @@ fn test_error_ponder_player1_think_recv_opponents_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -1929,7 +1929,7 @@ fn test_error_ponder_player1_set_position_recv_next_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1962,7 +1962,7 @@ fn test_error_ponder_player1_set_position_recv_next_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -2129,7 +2129,7 @@ fn test_error_ponder_player1_think_recv_next_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2162,7 +2162,7 @@ fn test_error_ponder_player1_think_recv_next_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -2333,7 +2333,7 @@ fn test_error_ponder_player2_set_position_recv_opponents_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2378,7 +2378,7 @@ fn test_error_ponder_player2_set_position_recv_opponents_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -2553,7 +2553,7 @@ fn test_error_ponder_player2_think_recv_opponents_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2598,7 +2598,7 @@ fn test_error_ponder_player2_think_recv_opponents_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -2769,7 +2769,7 @@ fn test_error_ponder_player2_set_position_recv_next_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2814,7 +2814,7 @@ fn test_error_ponder_player2_set_position_recv_next_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -2989,7 +2989,7 @@ fn test_error_ponder_player2_set_think_recv_next_turn() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -3034,7 +3034,7 @@ fn test_error_ponder_player2_set_think_recv_next_turn() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -3207,7 +3207,7 @@ fn test_error_gameover_player1() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -3232,7 +3232,7 @@ fn test_error_gameover_player1() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
@@ -3411,7 +3411,7 @@ fn test_error_gameover_player2() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -3448,7 +3448,7 @@ fn test_error_gameover_player2() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }

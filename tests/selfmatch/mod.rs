@@ -116,11 +116,11 @@ fn startup(pmr:&[Receiver<Result<ActionKind,String>>; 2]) {
 }
 fn gamestart_process(pmr:&[Receiver<Result<ActionKind,String>>; 2]) {
 	for i in 0..2 {
-		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::TakeReady timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::TakeReady timed out.");
 
 		assert_eq!(res,Ok(ActionKind::TakeReady));
 
-		let res = pmr[i].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::NewGame timed out.");
+		let res = pmr[i].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::NewGame timed out.");
 
 		assert_eq!(res,Ok(ActionKind::NewGame));
 	}
@@ -335,7 +335,7 @@ fn test_resign_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -387,11 +387,11 @@ fn test_resign_1times() {
 
 	assert_eq!(&*res,"startpos moves 1g1f 9c9d");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -586,7 +586,7 @@ fn test_invalidmove_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -642,11 +642,11 @@ fn test_invalidmove_1times() {
 
 	assert_eq!(&*res,"startpos moves 1g1f 9c9d 8h7h");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -841,7 +841,7 @@ fn test_invalidmove_by_from_blank_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -897,11 +897,11 @@ fn test_invalidmove_by_from_blank_1times() {
 
 	assert_eq!(&*res,"startpos moves 1g1f 9c9d 7h7g");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -1088,7 +1088,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1132,11 +1132,11 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 
 	assert_eq!(&*res,"startpos moves 7g7f 3c3d 8h3c 6a6b");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -1317,7 +1317,7 @@ fn test_invalidmove_by_suicide_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1349,11 +1349,11 @@ fn test_invalidmove_by_suicide_1times() {
 
 	assert_eq!(&*res,"startpos moves 5i5h 3c3d 7g7f 2b7g 5h5i");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -1537,7 +1537,7 @@ fn test_win_move_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1569,11 +1569,11 @@ fn test_win_move_1times() {
 
 	assert_eq!(&*res,"sfen lnsgkgsnl/1r2G2b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGK1SNL b - 1 moves 5b5a");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -1754,7 +1754,7 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -1786,11 +1786,11 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 
 	assert_eq!(&*res,"sfen 3nkn3/3s1s3/9/4L4/9/9/1PPPPPPPP/1B5R1/LNSGK1SNL b Prb2g2sl9p 1 moves P*5b");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -1971,7 +1971,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2003,11 +2003,11 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 
 	assert_eq!(&*res,"sfen 4k4/9/5R3/9/9/9/PPPPPPPPP/1B52/LNSGKGSNL b rb2g2s2n2l9p 1 moves 4c5c 5a4a 5c4c 4a5a 4c5c");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -2194,7 +2194,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2234,11 +2234,11 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 
 	assert_eq!(&*res,"sfen 4k4/9/5R3/9/9/9/PPPPPPPPP/1B52/LNSGKGSNL b rb2g2s2n2l9p 1 moves 4c5c 5a4a 5c6c 4a5a 6c5c");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -2419,7 +2419,7 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2451,11 +2451,11 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 
 	assert_eq!(&*res,"startpos moves 4i4h 6a6b 4h4i 6b6a 4i4h 6a6b 4h4i 6b6a 4i4h 6a6b 4h4i 6b6a 4i4h");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -2666,7 +2666,7 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -2746,11 +2746,11 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 
 	assert_eq!(&*res,"sfen 4k4/9/5R3/9/9/9/PPPPPPPPP/1B52/LNSGKGSNL b rb2g2s2n2l9p 1 moves 4c5c 5a4a 5c4c 4a5a 4c5c");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -3025,7 +3025,7 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -3201,11 +3201,11 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 
 	assert_eq!(&*res,"startpos moves 4i4h 6a6b 4h4i 6b6a 4i4h 6a6b 4h4i 6b6a 4i4h 6a6b 4h4i 6b6a 4i4h");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -3404,7 +3404,7 @@ fn test_game_time_limit_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -3460,11 +3460,11 @@ fn test_game_time_limit_1times() {
 
 	assert_eq!(&*res,"startpos moves 1g1f 9c9d");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -3659,7 +3659,7 @@ fn test_game_time_limit_less_uptime_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -3699,11 +3699,11 @@ fn test_game_time_limit_less_uptime_1times() {
 
 	assert_eq!(res,Ok(ActionKind::OnStop));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -3898,7 +3898,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -3938,11 +3938,11 @@ fn test_game_uptime_less_game_time_limit_1times() {
 
 	assert_eq!(res,Ok(ActionKind::OnStop));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -4139,7 +4139,7 @@ fn test_ponderhit_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -4187,11 +4187,11 @@ fn test_ponderhit_1times() {
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -4400,7 +4400,7 @@ fn test_ponderhit_thinking() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -4452,11 +4452,11 @@ fn test_ponderhit_thinking() {
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -4681,7 +4681,7 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -4753,11 +4753,11 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -4962,7 +4962,7 @@ fn test_ponderng_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -5018,11 +5018,11 @@ fn test_ponderng_1times() {
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -5241,7 +5241,7 @@ fn test_ponderng_thinking() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -5301,11 +5301,11 @@ fn test_ponderng_thinking() {
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -5538,7 +5538,7 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -5618,11 +5618,11 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -5785,7 +5785,7 @@ fn test_abort_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -5825,11 +5825,11 @@ fn test_abort_1times() {
 
 	assert_eq!(res,Ok(EventState::Abort));
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -6024,7 +6024,7 @@ fn test_nyugyoku_win_win_sente_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -6076,11 +6076,11 @@ fn test_nyugyoku_win_win_sente_1times() {
 
 	assert_eq!(&*res,"sfen ln5n+P/1+R+B1K3+P/+P+P+P+P+P2+P1/ln6P/9/pp5NL/2+p1+p+p+p+p+p/2+b1k3+p/+pN5NL b R2G2S2g2s 1 moves 1d1c+ 9f9g+");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -6283,7 +6283,7 @@ fn test_nyugyoku_win_win_gote_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -6347,11 +6347,11 @@ fn test_nyugyoku_win_win_gote_1times() {
 
 	assert_eq!(&*res,"sfen ln5n+P/2+B1K3+P/+P+P+P+P+P2+P1/ln6P/9/pp5NL/4+p+p+p+p+p/+p3k1+b+r1/+pN5NL b 2G2Sr2g2s 1 moves 1d1c+ 9f9g+ 1f1e");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -6546,7 +6546,7 @@ fn test_nyugyoku_win_lose_sente_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -6598,11 +6598,11 @@ fn test_nyugyoku_win_lose_sente_1times() {
 
 	assert_eq!(&*res,"sfen ln5n+P/1+R+B1K3+P/+P+P+P+P+P2+P1/ln6P/9/pp5NL/2+p1+p+p+p+p+p/2+b1k3+p/+pN5NL b R2G2S2g2s 1 moves 1f1e 9f9g+");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
@@ -6805,7 +6805,7 @@ fn test_nyugyoku_win_lose_gote_1times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 
@@ -6869,11 +6869,11 @@ fn test_nyugyoku_win_lose_gote_1times() {
 
 	assert_eq!(&*res,"sfen ln5n+P/2+B1K3+P/+P+P+P+P+P2+P1/ln6P/9/pp5NL/4+p+p+p+p+p/+p3k1+b+r1/+pN5NL b 2G2Sr2g2s 1 moves 1d1c+ 9d9e 1f1e");
 
-	let res = pmr[0].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[0].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 
-	let res = pmr[1].recv_timeout(Duration::from_millis(60)).expect("attempt to receive ActionKind::Quit timed out.");
+	let res = pmr[1].recv_timeout(Duration::from_millis(500)).expect("attempt to receive ActionKind::Quit timed out.");
 
 	assert_eq!(res,Ok(ActionKind::Quit));
 

@@ -51,8 +51,8 @@ pub enum UsiInfoSubCommand {
 	MultiPv(u32),
 	/// score
 	Score(UsiScore),
-	/// curmove
-	CurMove(Move),
+	/// currmove
+	CurrMove(Move),
 	/// hashfull
 	Hashfull(u64),
 	/// nps
@@ -77,7 +77,7 @@ pub enum UsiInfoSubCommandKind {
 	MultiPv,
 	/// score
 	Score,
-	/// curmove
+	/// currmove
 	CurMove,
 	/// hashfull
 	Hashfull,
@@ -194,7 +194,7 @@ impl Validate for UsiCommand {
 						ref c @ UsiInfoSubCommand::Pv(_) => {
 							return c.validate();
 						},
-						ref c @ UsiInfoSubCommand::CurMove(_) => {
+						ref c @ UsiInfoSubCommand::CurrMove(_) => {
 							c.validate();
 						}
 						_ => (),
@@ -232,7 +232,7 @@ impl UsiInfoSubCommand {
 			UsiInfoSubCommand::Pv(_) => UsiInfoSubCommandKind::Pv,
 			UsiInfoSubCommand::MultiPv(_) => UsiInfoSubCommandKind::MultiPv,
 			UsiInfoSubCommand::Score(_) => UsiInfoSubCommandKind::Score,
-			UsiInfoSubCommand::CurMove(_) => UsiInfoSubCommandKind::CurMove,
+			UsiInfoSubCommand::CurrMove(_) => UsiInfoSubCommandKind::CurMove,
 			UsiInfoSubCommand::Hashfull(_) => UsiInfoSubCommandKind::Hashfull,
 			UsiInfoSubCommand::Nps(_) => UsiInfoSubCommandKind::Nps,
 			UsiInfoSubCommand::Str(_) => UsiInfoSubCommandKind::Str,
@@ -254,7 +254,7 @@ impl Validate for UsiInfoSubCommand {
 				}
 				true
 			},
-			UsiInfoSubCommand::CurMove(ref m) if !m.validate() => false,
+			UsiInfoSubCommand::CurrMove(ref m) if !m.validate() => false,
 			_ => true,
 		}
 	}

@@ -5156,20 +5156,20 @@ fn test_info_send_commands_without_str() {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 
 											if let Err(_) = send_info_commands(vec![
-												UsiInfoSubCommand::Depth(1),
-												UsiInfoSubCommand::SelDepth(3),
-												UsiInfoSubCommand::Time(10000),
-												UsiInfoSubCommand::Nodes(1000000),
-												UsiInfoSubCommand::Pv(vec![
+                                                UsiInfoSubCommand::Depth(1),
+                                                UsiInfoSubCommand::SelDepth(3),
+                                                UsiInfoSubCommand::Time(10000),
+                                                UsiInfoSubCommand::Nodes(1000000),
+                                                UsiInfoSubCommand::Pv(vec![
 													Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 													Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
 													Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
 												]),
-												UsiInfoSubCommand::MultiPv(1),
-												UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
-												UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-												UsiInfoSubCommand::Hashfull(10000),
-												UsiInfoSubCommand::Nps(100)
+                                                UsiInfoSubCommand::MultiPv(1),
+                                                UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+                                                UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+                                                UsiInfoSubCommand::Hashfull(10000),
+                                                UsiInfoSubCommand::Nps(100)
 											]) {
 												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
 											} else {
@@ -5249,9 +5249,9 @@ fn test_info_send_commands_without_str() {
 
 	let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
 
-	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e' timed out.");
 
-	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e");
+	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e");
 
 	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
 
@@ -5318,22 +5318,23 @@ fn test_info_send_commands_without_str_and_multipv() {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 
 											if let Err(_) = send_info_commands(vec![
-												UsiInfoSubCommand::Depth(1),
-												UsiInfoSubCommand::SelDepth(3),
-												UsiInfoSubCommand::Time(10000),
-												UsiInfoSubCommand::Nodes(1000000),
-												UsiInfoSubCommand::Pv(vec![
+                                                UsiInfoSubCommand::Depth(1),
+                                                UsiInfoSubCommand::SelDepth(3),
+                                                UsiInfoSubCommand::Time(10000),
+                                                UsiInfoSubCommand::Nodes(1000000),
+                                                UsiInfoSubCommand::Pv(vec![
 													Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 													Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
 													Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
 												]),
-												UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
-												UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-												UsiInfoSubCommand::Hashfull(10000),
-												UsiInfoSubCommand::Nps(100)
+                                                UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+                                                UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+                                                UsiInfoSubCommand::Hashfull(10000),
+                                                UsiInfoSubCommand::Nps(100)
 											]) {
 												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
 											} else {
+												thread::sleep(Duration::from_millis(100));
 												Ok(BestMove::Resign)
 											}
 										})]),
@@ -5410,9 +5411,9 @@ fn test_info_send_commands_without_str_and_multipv() {
 
 	let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
 
-	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e' timed out.");
 
-	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e");
+	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e");
 
 	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
 
@@ -5479,15 +5480,15 @@ fn test_info_send_commands_without_pv_and_multipv() {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 
 											if let Err(_) = send_info_commands(vec![
-												UsiInfoSubCommand::Depth(1),
-												UsiInfoSubCommand::SelDepth(3),
-												UsiInfoSubCommand::Time(10000),
-												UsiInfoSubCommand::Nodes(1000000),
-												UsiInfoSubCommand::Str(String::from("hellow!")),
-												UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
-												UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-												UsiInfoSubCommand::Hashfull(10000),
-												UsiInfoSubCommand::Nps(100)
+                                                UsiInfoSubCommand::Depth(1),
+                                                UsiInfoSubCommand::SelDepth(3),
+                                                UsiInfoSubCommand::Time(10000),
+                                                UsiInfoSubCommand::Nodes(1000000),
+                                                UsiInfoSubCommand::Str(String::from("hellow!")),
+                                                UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+                                                UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+                                                UsiInfoSubCommand::Hashfull(10000),
+                                                UsiInfoSubCommand::Nps(100)
 											]) {
 												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
 											} else {
@@ -5567,9 +5568,9 @@ fn test_info_send_commands_without_pv_and_multipv() {
 
 	let _ = pnr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive info send notify timed out.");
 
-	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 curmove 1g1f hashfull 10000 nps 100' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 currmove 1g1f hashfull 10000 nps 100' timed out.");
 
-	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 curmove 1g1f hashfull 10000 nps 100");
+	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 currmove 1g1f hashfull 10000 nps 100");
 
 	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
 

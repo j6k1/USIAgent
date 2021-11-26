@@ -1116,9 +1116,9 @@ impl ToUsiCommand<String,UsiOutputCreateError> for Vec<UsiInfoSubCommand> {
 						"parameter of pv is invalid"
 					)));
 				},
-				c @ UsiInfoSubCommand::CurMove(_) if !c.validate() => {
+				c @ UsiInfoSubCommand::CurrMove(_) if !c.validate() => {
 					return Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
-						"parameter of curmove is invalid"
+						"parameter of currmove is invalid"
 					)));
 				}
 				_ => (),
@@ -1218,8 +1218,8 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 			UsiInfoSubCommand::Score(UsiScore::MateLower(n)) => {
 				format!("score mate {} lowerbound",n)
 			},
-			UsiInfoSubCommand::CurMove(ref m) => {
-				format!("curmove {}",m.to_sfen()?)
+			UsiInfoSubCommand::CurrMove(ref m) => {
+				format!("currmove {}",m.to_sfen()?)
 			},
 			UsiInfoSubCommand::Hashfull(v) => format!("hashfull {}", v),
 			UsiInfoSubCommand::Nps(v) => format!("nps {}",v),

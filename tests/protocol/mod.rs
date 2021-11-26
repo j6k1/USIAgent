@@ -1037,47 +1037,47 @@ fn test_bestmove_to_sfen() {
 fn test_usiinfo_subcommand_vec_to_usi_command() {
 	let input_and_expected:Vec<(Vec<UsiInfoSubCommand>,Result<String,UsiOutputCreateError>)> = vec![
 		(vec![
-			UsiInfoSubCommand::Depth(1),
-			UsiInfoSubCommand::SelDepth(3),
-			UsiInfoSubCommand::Time(10000),
-			UsiInfoSubCommand::Nodes(1000000),
-			UsiInfoSubCommand::Pv(vec![
+            UsiInfoSubCommand::Depth(1),
+            UsiInfoSubCommand::SelDepth(3),
+            UsiInfoSubCommand::Time(10000),
+            UsiInfoSubCommand::Nodes(1000000),
+            UsiInfoSubCommand::Pv(vec![
 				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
 				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
 			]),
-			UsiInfoSubCommand::MultiPv(1),
-			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
-			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-			UsiInfoSubCommand::Hashfull(10000),
-			UsiInfoSubCommand::Nps(100)
-		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e"))),
+            UsiInfoSubCommand::MultiPv(1),
+            UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+            UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+            UsiInfoSubCommand::Hashfull(10000),
+            UsiInfoSubCommand::Nps(100)
+		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e"))),
 		(vec![
-			UsiInfoSubCommand::Depth(1),
-			UsiInfoSubCommand::SelDepth(3),
-			UsiInfoSubCommand::Time(10000),
-			UsiInfoSubCommand::Nodes(1000000),
-			UsiInfoSubCommand::Pv(vec![
+            UsiInfoSubCommand::Depth(1),
+            UsiInfoSubCommand::SelDepth(3),
+            UsiInfoSubCommand::Time(10000),
+            UsiInfoSubCommand::Nodes(1000000),
+            UsiInfoSubCommand::Pv(vec![
 				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
 				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
 			]),
-			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
-			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-			UsiInfoSubCommand::Hashfull(10000),
-			UsiInfoSubCommand::Nps(100)
-		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e"))),
+            UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+            UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+            UsiInfoSubCommand::Hashfull(10000),
+            UsiInfoSubCommand::Nps(100)
+		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e"))),
 		(vec![
-			UsiInfoSubCommand::Depth(1),
-			UsiInfoSubCommand::SelDepth(3),
-			UsiInfoSubCommand::Time(10000),
-			UsiInfoSubCommand::Nodes(1000000),
-			UsiInfoSubCommand::Str(String::from("hellow!")),
-			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
-			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-			UsiInfoSubCommand::Hashfull(10000),
-			UsiInfoSubCommand::Nps(100)
-		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 curmove 1g1f hashfull 10000 nps 100"))),
+            UsiInfoSubCommand::Depth(1),
+            UsiInfoSubCommand::SelDepth(3),
+            UsiInfoSubCommand::Time(10000),
+            UsiInfoSubCommand::Nodes(1000000),
+            UsiInfoSubCommand::Str(String::from("hellow!")),
+            UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+            UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+            UsiInfoSubCommand::Hashfull(10000),
+            UsiInfoSubCommand::Nps(100)
+		],Ok(String::from("depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 currmove 1g1f hashfull 10000 nps 100"))),
 		(vec![
 			UsiInfoSubCommand::Pv(vec![
 				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
@@ -1128,9 +1128,9 @@ fn test_usiinfo_subcommand_vec_to_usi_command() {
 			]),
 		],Err(UsiOutputCreateError::InvalidStateError(String::from("pv")))),
 		(vec![
-			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(10,8,false)))
+			UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(10, 8, false)))
 		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
-			"parameter of curmove is invalid"
+			"parameter of currmove is invalid"
 		)))),
 		(vec![
 			UsiInfoSubCommand::Depth(1),
@@ -1165,8 +1165,8 @@ fn test_usiinfo_subcommand_vec_to_usi_command() {
 			"The same subcommand is specified more than once"
 		)))),
 		(vec![
-			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(9,7),KomaDstToPosition(9,6,false))),
+            UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+            UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(9, 7), KomaDstToPosition(9, 6, false))),
 		],Err(UsiOutputCreateError::InvalidInfoCommand(String::from(
 			"The same subcommand is specified more than once"
 		)))),
@@ -1246,8 +1246,8 @@ fn test_usiinfo_subcommand_to_usi_command() {
 		(UsiInfoSubCommand::Score(UsiScore::Mate(UsiScoreMate::Minus)),Ok(String::from("score mate -"))),
 		(UsiInfoSubCommand::Score(UsiScore::MateUpper(1000)),Ok(String::from("score mate 1000 upperbound"))),
 		(UsiInfoSubCommand::Score(UsiScore::MateLower(1000)),Ok(String::from("score mate 1000 lowerbound"))),
-		(UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)))
-		,Ok(String::from("curmove 7g7f"))),
+		(UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(7, 7), KomaDstToPosition(7, 6, false)))
+		,Ok(String::from("currmove 7g7f"))),
 		(UsiInfoSubCommand::Hashfull(10000),Ok(String::from("hashfull 10000"))),
 		(UsiInfoSubCommand::Nps(10000),Ok(String::from("nps 10000"))),
 		(UsiInfoSubCommand::Str(String::from("hellow world!")),Ok(String::from("string hellow world!"))),
@@ -1305,22 +1305,22 @@ fn test_usi_command_to_usi_command() {
 			String::from("bestmove 7g7f")
 		])),
 		(UsiCommand::UsiInfo(vec![
-			UsiInfoSubCommand::Depth(1),
-			UsiInfoSubCommand::SelDepth(3),
-			UsiInfoSubCommand::Time(10000),
-			UsiInfoSubCommand::Nodes(1000000),
-			UsiInfoSubCommand::Pv(vec![
+            UsiInfoSubCommand::Depth(1),
+            UsiInfoSubCommand::SelDepth(3),
+            UsiInfoSubCommand::Time(10000),
+            UsiInfoSubCommand::Nodes(1000000),
+            UsiInfoSubCommand::Pv(vec![
 				Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 				Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),
 				Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false))
 			]),
-			UsiInfoSubCommand::MultiPv(1),
-			UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
-			UsiInfoSubCommand::CurMove(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))),
-			UsiInfoSubCommand::Hashfull(10000),
-			UsiInfoSubCommand::Nps(100)
+            UsiInfoSubCommand::MultiPv(1),
+            UsiInfoSubCommand::Score(UsiScore::Cp(-100)),
+            UsiInfoSubCommand::CurrMove(Move::To(KomaSrcPosition(1, 7), KomaDstToPosition(1, 6, false))),
+            UsiInfoSubCommand::Hashfull(10000),
+            UsiInfoSubCommand::Nps(100)
 		]),Ok(vec![
-			String::from("info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 curmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e")
+			String::from("info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e")
 		])),
 		(UsiCommand::UsiOption(String::from("item"),UsiOptType::String(Some(String::from("aaa")))),Ok(vec![
 			String::from("option name item type string default aaa")
