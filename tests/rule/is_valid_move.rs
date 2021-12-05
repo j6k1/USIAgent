@@ -3271,6 +3271,75 @@ fn test_is_valid_move_put_invalid_sente() {
 	}
 }
 #[test]
+fn test_is_valid_move_put_invalid_mochigoma_empty_sente() {
+	let mut banmen = BANMEN_START_POS.clone();
+
+	let kinds:[MochigomaKind; 7] = [
+		MochigomaKind::Fu,
+		MochigomaKind::Kyou,
+		MochigomaKind::Kei,
+		MochigomaKind::Gin,
+		MochigomaKind::Kin,
+		MochigomaKind::Kaku,
+		MochigomaKind::Hisha
+	];
+
+	banmen.0[0][0] = Blank;
+	banmen.0[1][0] = GKyou;
+	banmen.0[0][1] = Blank;
+	banmen.0[2][2] = GKei;
+
+	for &kind in &kinds {
+		let state = State::new(banmen.clone());
+		let mc = MochigomaCollections::Empty;
+
+		let m = rule::AppliedMove::from(Move::Put(kind, KomaDstPutPosition(5, 5)));
+
+		assert!(!Rule::is_valid_move(&state,
+									 Teban::Sente,
+									 &mc,
+									 m
+		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind, m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_put_invalid_mochigoma_all_zero_sente() {
+	let mut banmen = BANMEN_START_POS.clone();
+
+	let kinds:[MochigomaKind; 7] = [
+		MochigomaKind::Fu,
+		MochigomaKind::Kyou,
+		MochigomaKind::Kei,
+		MochigomaKind::Gin,
+		MochigomaKind::Kin,
+		MochigomaKind::Kaku,
+		MochigomaKind::Hisha
+	];
+
+	banmen.0[0][0] = Blank;
+	banmen.0[1][0] = GKyou;
+	banmen.0[0][1] = Blank;
+	banmen.0[2][2] = GKei;
+
+	for &kind in &kinds {
+		let state = State::new(banmen.clone());
+		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		for &k in &MOCHIGOMA_KINDS {
+			ms.insert(k, 0);
+		}
+		let mc = MochigomaCollections::Pair(ms,HashMap::new());
+
+		let m = rule::AppliedMove::from(Move::Put(kind, KomaDstPutPosition(5, 5)));
+
+		assert!(!Rule::is_valid_move(&state,
+									 Teban::Sente,
+									 &mc,
+									 m
+		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind, m.to_move()));
+	}
+}
+#[test]
 fn test_is_valid_move_put_invalid_gote() {
 	let kinds:[MochigomaKind; 7] = [
 		MochigomaKind::Fu,
@@ -3323,6 +3392,77 @@ fn test_is_valid_move_put_invalid_gote() {
 				}
 			}
 		}
+	}
+}
+#[test]
+fn test_is_valid_move_put_invalid_mochigoma_empty_gote() {
+	let kinds:[MochigomaKind; 7] = [
+		MochigomaKind::Fu,
+		MochigomaKind::Kyou,
+		MochigomaKind::Kei,
+		MochigomaKind::Gin,
+		MochigomaKind::Kin,
+		MochigomaKind::Kaku,
+		MochigomaKind::Hisha
+	];
+
+	let mut banmen = BANMEN_START_POS.clone();
+
+	banmen.0[8-0][8-0] = Blank;
+	banmen.0[8-1][8-0] = SKyou;
+	banmen.0[8-0][8-1] = Blank;
+	banmen.0[8-2][8-2] = SKei;
+
+	let state = State::new(banmen.clone());
+
+	for &kind in &kinds {
+		let mc = MochigomaCollections::Empty;
+
+		let m = rule::AppliedMove::from(Move::Put(kind,KomaDstPutPosition(5,5)));
+
+		assert!(!Rule::is_valid_move(&state,
+									 Teban::Gote,
+									 &mc,
+									 m
+		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move()));
+	}
+}
+#[test]
+fn test_is_valid_move_put_invalid_mochigoma_all_zero_gote() {
+	let kinds:[MochigomaKind; 7] = [
+		MochigomaKind::Fu,
+		MochigomaKind::Kyou,
+		MochigomaKind::Kei,
+		MochigomaKind::Gin,
+		MochigomaKind::Kin,
+		MochigomaKind::Kaku,
+		MochigomaKind::Hisha
+	];
+
+	let mut banmen = BANMEN_START_POS.clone();
+
+	banmen.0[8-0][8-0] = Blank;
+	banmen.0[8-1][8-0] = SKyou;
+	banmen.0[8-0][8-1] = Blank;
+	banmen.0[8-2][8-2] = SKei;
+
+	let state = State::new(banmen.clone());
+
+	for &kind in &kinds {
+		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+
+		for &k in &MOCHIGOMA_KINDS {
+			mg.insert(k, 0);
+		}
+		let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+
+		let m = rule::AppliedMove::from(Move::Put(kind,KomaDstPutPosition(5,5)));
+
+		assert!(!Rule::is_valid_move(&state,
+									 Teban::Gote,
+									 &mc,
+									 m
+		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move()));
 	}
 }
 #[test]

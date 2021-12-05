@@ -485,3 +485,57 @@ impl From<(Teban,MochigomaKind)> for KomaKind {
 		}
 	}
 }
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_mochigoma_collections_clone_and_eq() {
+		let mc1 = MochigomaCollections::Empty;
+		let mc2 = mc1.clone();
+
+		assert_eq!(mc1,mc2);
+
+		for &kind in &MOCHIGOMA_KINDS {
+			let mut ms = HashMap::new();
+
+			ms.insert(kind,1);
+			let mc1 = MochigomaCollections::Pair(ms,HashMap::new());
+			let mc2 = mc1.clone();
+
+			assert_eq!(mc1, mc2);
+		}
+
+		let mut ms = HashMap::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			ms.insert(kind, 1);
+		}
+
+		let mc1 = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc2 = mc1.clone();
+
+		assert_eq!(mc1, mc2);
+
+		for &kind in &MOCHIGOMA_KINDS {
+			let mut mg = HashMap::new();
+
+			mg.insert(kind,1);
+			let mc1 = MochigomaCollections::Pair(HashMap::new(),mg);
+			let mc2 = mc1.clone();
+
+			assert_eq!(mc1, mc2);
+		}
+
+		let mut mg = HashMap::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			mg.insert(kind, 1);
+		}
+
+		let mc1 = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc2 = mc1.clone();
+
+		assert_eq!(mc1, mc2);
+	}
+}
