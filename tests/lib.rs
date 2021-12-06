@@ -9,3 +9,4 @@ mod selfmatch;
 mod protocol;
 mod event;
 mod player;
+mod hash;

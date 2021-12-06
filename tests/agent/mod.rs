@@ -1486,7 +1486,7 @@ fn test_check_kyokumen_nowait() {
 
 	assert_eq!(res,Ok(ActionKind::NewGame));
 
-	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
@@ -1564,7 +1564,7 @@ fn test_check_kyokumen_nowait() {
 
 	let _ = s.send(String::from("gameover lose"));
 
-	let res = pmr.recv_timeout(Duration::from_millis(150)).expect("attempt to receive ActionKind::GameOver timed out.");
+	let res = pmr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive ActionKind::GameOver timed out.");
 
 	assert_eq!(res,Ok(ActionKind::GameOver));
 

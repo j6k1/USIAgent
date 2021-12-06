@@ -554,7 +554,7 @@ fn test_kifuwrite_7times() {
 
 	gamestart_process(&pmr);
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameStart timed out.");
+	let res = er.recv_timeout(Duration::from_millis(300)).expect("attempt to receive EventState::GameStart timed out.");
 
 	assert_eq!(res,Ok(EventState::GameStart));
 

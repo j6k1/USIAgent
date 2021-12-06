@@ -276,12 +276,12 @@ impl<T> KyokumenHash<T>
 						let mut hash = h;
 						let k = kinds[sy][sx];
 
-						hash =  pull(hash,self.kyokumen_hash_seeds[k as usize][sy * 8 + sx]);
-						hash = add(hash,self.kyokumen_hash_seeds[KomaKind::Blank as usize][sy * 8 + sx]);
+						hash =  pull(hash,self.kyokumen_hash_seeds[k as usize][sy * 9 + sx]);
+						hash = add(hash,self.kyokumen_hash_seeds[KomaKind::Blank as usize][sy * 9 + sx]);
 
 						let dk = kinds[dy][dx] as usize;
 
-						hash =  pull(hash,self.kyokumen_hash_seeds[dk][dy * 8 + dx]);
+						hash =  pull(hash,self.kyokumen_hash_seeds[dk][dy * 9 + dx]);
 
 						let k = if n {
 							match k {
@@ -303,7 +303,7 @@ impl<T> KyokumenHash<T>
 							k
 						} as usize;
 
-						hash = add(hash,self.kyokumen_hash_seeds[k][dy * 8 + dx]);
+						hash = add(hash,self.kyokumen_hash_seeds[k][dy * 9 + dx]);
 
 						hash = match obtained  {
 								&None => hash,
@@ -403,11 +403,11 @@ impl<T> KyokumenHash<T>
 
 						let dk = kinds[dy][dx] as usize;
 
-						hash = pull(hash,self.kyokumen_hash_seeds[dk as usize][dy * 8 + dx]);
+						hash = pull(hash,self.kyokumen_hash_seeds[dk as usize][dy * 9 + dx]);
 
 						let k = KomaKind::from((t,mk)) as usize;
 
-						hash = add(hash,self.kyokumen_hash_seeds[k as usize][dy * 8 + dx]);
+						hash = add(hash,self.kyokumen_hash_seeds[k as usize][dy * 9 + dx]);
 						hash
 					}
 				}
@@ -465,8 +465,8 @@ impl<T> KyokumenHash<T>
 				for y in 0..9 {
 					for x in 0..9 {
 						let k = kinds[y][x] as usize;
-						mhash = mhash ^ self.kyokumen_hash_seeds[k][y * 8 + x];
-						shash = shash + Wrapping(self.kyokumen_hash_seeds[k][y * 8 + x]);
+						mhash = mhash ^ self.kyokumen_hash_seeds[k][y * 9 + x];
+						shash = shash + Wrapping(self.kyokumen_hash_seeds[k][y * 9 + x]);
 					}
 				}
 			}
