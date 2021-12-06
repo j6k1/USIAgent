@@ -328,7 +328,7 @@ fn test_error_take_ready_player2() {
 		assert_eq!(res,m);
 	}
 
-	let _ = tr.recv_timeout(Duration::from_millis(500)).expect("attempt to receive on quited timed out.");
+	let _ = tr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive on quited timed out.");
 
 	let _ = s.send(String::from(""));
 }
