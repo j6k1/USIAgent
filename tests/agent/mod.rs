@@ -52,7 +52,7 @@ fn startup(s:&Sender<String>,r:&Receiver<String>,pmr:&Receiver<Result<ActionKind
 
 	let _ = s.send(String::from("usi"));
 
-	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'id name mockplayer' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(350)).expect("attempt to receive 'id name mockplayer' timed out.");
 
 	assert_eq!(&*res,"id name mockplayer");
 
@@ -5416,7 +5416,7 @@ fn test_info_send_commands_without_str_and_multipv() {
 
 	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 pv 1g1f 9c9d 1f1e");
 
-	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(350)).expect("attempt to receive 'bestmove resign' timed out.");
 
 	assert_eq!(&*res,"bestmove resign");
 
@@ -5573,7 +5573,7 @@ fn test_info_send_commands_without_pv_and_multipv() {
 
 	assert_eq!(&*res,"info depth 1 seldepth 3 time 10000 nodes 1000000 string hellow! score cp -100 currmove 1g1f hashfull 10000 nps 100");
 
-	let res = r.recv_timeout(Duration::from_millis(150)).expect("attempt to receive 'bestmove resign' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(350)).expect("attempt to receive 'bestmove resign' timed out.");
 
 	assert_eq!(&*res,"bestmove resign");
 
