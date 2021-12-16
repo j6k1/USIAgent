@@ -388,7 +388,7 @@ fn test_is_valid_move_valid_to_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: kind = {:?}, move = {:?} is false.", k,m.to_move()));
+				), "is_valid_move: kind = {:?}, move = {:?} is false.", k,m.to_move());
 
 				let mut banmen = blank_banmen.clone();
 
@@ -401,7 +401,7 @@ fn test_is_valid_move_valid_to_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is false.", k,m.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is false.", k,m.to_move());
 			}
 		}
 	}
@@ -788,7 +788,7 @@ fn test_is_valid_move_valid_to_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: kind = {:?}, move = {:?} is false.", k,m.to_move()));
+				), "is_valid_move: kind = {:?}, move = {:?} is false.", k,m.to_move());
 
 				let mut banmen = blank_banmen.clone();
 
@@ -801,7 +801,7 @@ fn test_is_valid_move_valid_to_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is false.", k,m.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is false.", k,m.to_move());
 			}
 		}
 	}
@@ -828,7 +828,7 @@ fn test_is_valid_move_valid_with_kyou_opponent_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		), "is_valid_move: move = {:?} is false.", m.to_move());
 	}
 }
 #[test]
@@ -853,7 +853,7 @@ fn test_is_valid_move_valid_with_kyou_opponent_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		), "is_valid_move: move = {:?} is false.", m.to_move());
 	}
 }
 #[test]
@@ -878,7 +878,7 @@ fn test_is_valid_move_valid_with_kyou_self_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		), "is_valid_move: move = {:?} is false.", m.to_move());
 	}
 }
 #[test]
@@ -903,7 +903,7 @@ fn test_is_valid_move_valid_with_kyou_self_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+		), "is_valid_move: move = {:?} is false.", m.to_move());
 	}
 }
 #[test]
@@ -944,7 +944,7 @@ fn test_is_valid_move_valid_with_kaku_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -986,7 +986,7 @@ fn test_is_valid_move_valid_with_kaku_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -1028,7 +1028,7 @@ fn test_is_valid_move_valid_with_kaku_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -1070,7 +1070,7 @@ fn test_is_valid_move_valid_with_kaku_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -1112,7 +1112,7 @@ fn test_is_valid_move_valid_with_hisha_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -1154,7 +1154,7 @@ fn test_is_valid_move_valid_with_hisha_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -1196,7 +1196,7 @@ fn test_is_valid_move_valid_with_hisha_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -1238,7 +1238,7 @@ fn test_is_valid_move_valid_with_hisha_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -1264,7 +1264,7 @@ fn test_is_valid_move_invalid_with_kyou_opponent_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -1289,7 +1289,7 @@ fn test_is_valid_move_invalid_with_kyou_opponent_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -1314,7 +1314,7 @@ fn test_is_valid_move_invalid_with_kyou_self_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -1339,7 +1339,7 @@ fn test_is_valid_move_invalid_with_kyou_self_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -1380,7 +1380,7 @@ fn test_is_valid_move_invalid_with_kaku_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1410,7 +1410,6 @@ fn test_is_valid_move_invalid_with_kaku_opponent_occupied_gote() {
 	for (p,mvs) in POSITIONS.iter().zip(&mvs) {
 		for m in mvs {
 			let mut banmen = blank_banmen.clone();
-
 			banmen.0[8 - p.1 as usize][8 - p.0 as usize] = GKaku;
 			banmen.0[4][4] = SFu;
 
@@ -1422,7 +1421,7 @@ fn test_is_valid_move_invalid_with_kaku_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1464,7 +1463,7 @@ fn test_is_valid_move_invalid_with_kaku_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1506,7 +1505,7 @@ fn test_is_valid_move_invalid_with_kaku_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1548,7 +1547,7 @@ fn test_is_valid_move_invalid_with_hisha_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1590,7 +1589,7 @@ fn test_is_valid_move_invalid_with_hisha_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1632,7 +1631,7 @@ fn test_is_valid_move_invalid_with_hisha_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1674,7 +1673,7 @@ fn test_is_valid_move_invalid_with_hisha_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+			), "is_valid_move: move = {:?} is true.", m.to_move());
 		}
 	}
 }
@@ -1758,7 +1757,7 @@ fn test_is_valid_move_invalid_to_outside_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move()));
+				), "is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move());
 
 				let mv = rule::LegalMove::To(rule::LegalMoveTo::new(
 												((m.0).0 * 9 + (m.0).1) as u32,
@@ -1768,7 +1767,7 @@ fn test_is_valid_move_invalid_to_outside_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move()));
+				), "is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move());
 			}
 		}
 	}
@@ -1852,7 +1851,7 @@ fn test_is_valid_move_invalid_to_outside_gote() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move()));
+				), "is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move());
 
 				let mv = rule::LegalMove::To(rule::LegalMoveTo::new(
 												((m.0).0 * 9 + (m.0).1) as u32,
@@ -1862,7 +1861,7 @@ fn test_is_valid_move_invalid_to_outside_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move()));
+				), "is_valid_move: kind = {:?}, move = {:?} is true.", k, mv.to_move());
 			}
 		}
 	}
@@ -2248,7 +2247,7 @@ fn test_is_valid_move_invalid_to_self_occupied_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,m.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,m.to_move());
 			}
 		}
 	}
@@ -2634,7 +2633,7 @@ fn test_is_valid_move_invalid_to_self_occupied_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,m.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,m.to_move());
 			}
 		}
 	}
@@ -2861,7 +2860,7 @@ fn test_is_valid_move_invalid_to_invalid_direction_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move());
 
 				let mv = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-dx,dy+1,false)));
 
@@ -2869,7 +2868,7 @@ fn test_is_valid_move_invalid_to_invalid_direction_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move());
 			}
 		}
 	}
@@ -3096,7 +3095,7 @@ fn test_is_valid_move_invalid_to_invalid_direction_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move());
 
 				let mv = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-p.0),(8-p.1)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
 
@@ -3104,7 +3103,7 @@ fn test_is_valid_move_invalid_to_invalid_direction_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					mv
-				), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move()));
+				), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", k,mv.to_move());
 			}
 		}
 	}
@@ -3156,7 +3155,7 @@ fn test_is_valid_move_put_valid_sente() {
 						Teban::Sente,
 						&mc,
 						m
-					), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is false.", kind,m.to_move()));
+					), "is_valid_move to occupied: kind = {:?}, move = {:?} is false.", kind,m.to_move());
 				}
 			}
 		}
@@ -3211,7 +3210,7 @@ fn test_is_valid_move_put_valid_gote() {
 						Teban::Gote,
 						&mc,
 						m
-					), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is false.", kind,m.to_move()));
+					), "is_valid_move to occupied: kind = {:?}, move = {:?} is false.", kind,m.to_move());
 				}
 			}
 		}
@@ -3264,7 +3263,7 @@ fn test_is_valid_move_put_invalid_sente() {
 						Teban::Sente,
 						&mc,
 						m
-					), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move()));
+					), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move());
 				}
 			}
 		}
@@ -3299,7 +3298,7 @@ fn test_is_valid_move_put_invalid_mochigoma_empty_sente() {
 									 Teban::Sente,
 									 &mc,
 									 m
-		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind, m.to_move()));
+		), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind, m.to_move());
 	}
 }
 #[test]
@@ -3336,7 +3335,7 @@ fn test_is_valid_move_put_invalid_mochigoma_all_zero_sente() {
 									 Teban::Sente,
 									 &mc,
 									 m
-		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind, m.to_move()));
+		), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind, m.to_move());
 	}
 }
 #[test]
@@ -3388,7 +3387,7 @@ fn test_is_valid_move_put_invalid_gote() {
 						Teban::Gote,
 						&mc,
 						m
-					), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move()));
+					), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move());
 				}
 			}
 		}
@@ -3424,7 +3423,7 @@ fn test_is_valid_move_put_invalid_mochigoma_empty_gote() {
 									 Teban::Gote,
 									 &mc,
 									 m
-		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move()));
+		), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move());
 	}
 }
 #[test]
@@ -3462,7 +3461,7 @@ fn test_is_valid_move_put_invalid_mochigoma_all_zero_gote() {
 									 Teban::Gote,
 									 &mc,
 									 m
-		), format!("is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move()));
+		), "is_valid_move to occupied: kind = {:?}, move = {:?} is true.", kind,m.to_move());
 	}
 }
 #[test]
@@ -3503,7 +3502,7 @@ fn test_is_valid_move_valid_with_kaku_opponent_occupied_and_inverted_position_oc
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				), "is_valid_move: move = {:?} is false.", m.to_move());
 			}
 		}
 	}
@@ -3546,7 +3545,7 @@ fn test_is_valid_move_valid_with_hisha_opponent_occupied_and_inverted_position_o
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				), "is_valid_move: move = {:?} is false.", m.to_move());
 			}
 		}
 	}
@@ -3580,7 +3579,7 @@ fn test_is_valid_move_valid_nari_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -3613,7 +3612,7 @@ fn test_is_valid_move_valid_nari_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+			), "is_valid_move: move = {:?} is false.", m.to_move());
 		}
 	}
 }
@@ -3645,7 +3644,7 @@ fn test_is_valid_move_invalid_nari_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -3676,7 +3675,7 @@ fn test_is_valid_move_invalid_nari_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -3698,7 +3697,7 @@ fn test_is_valid_move_invalid_nari_to_nari_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -3720,7 +3719,7 @@ fn test_is_valid_move_invalid_nari_to_nari_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -3742,7 +3741,7 @@ fn test_is_valid_move_invalid_nari_kin_or_ou_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -3764,7 +3763,7 @@ fn test_is_valid_move_invalid_nari_kin_or_ou_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 	}
 }
 #[test]
@@ -3810,7 +3809,7 @@ fn test_is_valid_move_with_kaku_valid_ohter_direction_occupied_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				), "is_valid_move: move = {:?} is false.", m.to_move());
 			}
 		}
 	}
@@ -3858,7 +3857,7 @@ fn test_is_valid_move_with_kaku_valid_ohter_direction_occupied_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				), "is_valid_move: move = {:?} is false.", m.to_move());
 			}
 		}
 	}
@@ -3906,7 +3905,7 @@ fn test_is_valid_move_with_hisha_valid_ohter_direction_occupied_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				), "is_valid_move: move = {:?} is false.", m.to_move());
 			}
 		}
 	}
@@ -3954,7 +3953,7 @@ fn test_is_valid_move_with_hisha_valid_ohter_direction_occupied_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				), format!("is_valid_move: move = {:?} is false.", m.to_move()));
+				), "is_valid_move: move = {:?} is false.", m.to_move());
 			}
 		}
 	}
@@ -3975,7 +3974,7 @@ fn test_is_valid_move_invalid_from_blank_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 }
 #[test]
 fn test_is_valid_move_invalid_from_blank_gote() {
@@ -3993,7 +3992,7 @@ fn test_is_valid_move_invalid_from_blank_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = {:?} is true.", m.to_move()));
+		), "is_valid_move: move = {:?} is true.", m.to_move());
 }
 #[test]
 fn test_is_valid_move_invalid_from_opponent_sente() {
@@ -4045,7 +4044,7 @@ fn test_is_valid_move_invalid_from_opponent_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = kind = {:?} {:?} is true.", kind,m.to_move()));
+		), "is_valid_move: move = kind = {:?} {:?} is true.", kind,m.to_move());
 	}
 }
 #[test]
@@ -4098,6 +4097,6 @@ fn test_is_valid_move_invalid_from_opponent_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		), format!("is_valid_move: move = kind = {:?} {:?} is true.", kind,m.to_move()));
+		), "is_valid_move: move = kind = {:?} {:?} is true.", kind,m.to_move());
 	}
 }

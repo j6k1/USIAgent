@@ -1486,7 +1486,7 @@ fn test_check_kyokumen_nowait() {
 
 	assert_eq!(res,Ok(ActionKind::NewGame));
 
-	let res = pmr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
@@ -1502,7 +1502,7 @@ fn test_check_kyokumen_nowait() {
 
 	let _ = s.send(String::from("go"));
 
-	let res = pmr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
@@ -1518,7 +1518,7 @@ fn test_check_kyokumen_nowait() {
 
 	let _ = s.send(String::from("go"));
 
-	let res = pmr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
@@ -1534,7 +1534,7 @@ fn test_check_kyokumen_nowait() {
 
 	let _ = s.send(String::from("go"));
 
-	let res = pmr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
@@ -1550,7 +1550,7 @@ fn test_check_kyokumen_nowait() {
 
 	let _ = s.send(String::from("go"));
 
-	let res = pmr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive ActionKind::SetPosition timed out.");
+	let res = pmr.recv_timeout(Duration::from_millis(350)).expect("attempt to receive ActionKind::SetPosition timed out.");
 
 	assert_eq!(res,Ok(ActionKind::SetPosition));
 
@@ -1703,7 +1703,7 @@ fn test_ponderhit_move_already_been_decided() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept ponderhit.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -1863,7 +1863,7 @@ fn test_ponderhit_thinking() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept ponderhit.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -2037,7 +2037,7 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept ponderhit.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -2215,7 +2215,7 @@ fn test_ponderng_move_already_been_decided() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -2401,7 +2401,7 @@ fn test_ponderng_thinking() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -2611,7 +2611,7 @@ fn test_ponderng_thinking_after_go() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -2828,7 +2828,7 @@ fn test_ponderng_thinking_after_game() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -3041,7 +3041,7 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -3234,7 +3234,7 @@ fn test_stop_thinking() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -3424,7 +3424,7 @@ fn test_stop_thinking_after_go() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -3598,7 +3598,7 @@ fn test_quit_thinking() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept quit.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -3614,7 +3614,7 @@ fn test_quit_thinking() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 
@@ -3745,7 +3745,7 @@ fn test_go_infinite() {
 		if s.starts_with("bestmove ") {
 			assert!(false,"Move returned before accept stop.");
 		} else {
-			assert!(false,format!("An unexpected command '{}' was returned.",s));
+			assert!(false,"An unexpected command '{}' was returned.",s);
 		}
 	}
 

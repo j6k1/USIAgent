@@ -1022,7 +1022,7 @@ fn test_apply_valid_move_valid_to_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				).is_ok(), format!("apply_valid_move returned Err: kind = {:?}, move = {:?}.", k,m.to_move()));
+				).is_ok(), "apply_valid_move returned Err: kind = {:?}, move = {:?}.", k,m.to_move());
 
 				let mut banmen = blank_banmen.clone();
 
@@ -1035,7 +1035,7 @@ fn test_apply_valid_move_valid_to_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				).is_ok(), format!("apply_valid_move to returned Err: kind = {:?}, move = {:?}.", k,m.to_move()));
+				).is_ok(), "apply_valid_move to returned Err: kind = {:?}, move = {:?}.", k,m.to_move());
 			}
 		}
 	}
@@ -1422,7 +1422,7 @@ fn test_apply_valid_move_to_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				).is_ok(), format!("apply_valid_move returned Err: kind = {:?}, move = {:?}.", k,m.to_move()));
+				).is_ok(), "apply_valid_move returned Err: kind = {:?}, move = {:?}.", k,m.to_move());
 
 				let mut banmen = blank_banmen.clone();
 
@@ -1435,7 +1435,7 @@ fn test_apply_valid_move_to_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				).is_ok(), format!("apply_valid_move returned Err: kind = {:?}, move = {:?}.", k,m.to_move()));
+				).is_ok(), "apply_valid_move returned Err: kind = {:?}, move = {:?}.", k,m.to_move());
 			}
 		}
 	}
@@ -1462,7 +1462,7 @@ fn test_apply_valid_move_with_kyou_opponent_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+		).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -1487,7 +1487,7 @@ fn test_apply_valid_move_with_kyou_opponent_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		).is_ok(), format!("apply_valid_move returned Err move = {:?}.", m.to_move()));
+		).is_ok(), "apply_valid_move returned Err move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -1512,7 +1512,7 @@ fn test_apply_valid_move_valid_with_kyou_self_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+		).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -1537,7 +1537,7 @@ fn test_apply_valid_move_valid_with_kyou_self_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+		).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -1578,7 +1578,7 @@ fn test_apply_valid_move_valid_with_kaku_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1620,7 +1620,7 @@ fn test_apply_valid_move_valid_with_kaku_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1662,7 +1662,7 @@ fn test_apply_valid_move_valid_with_kaku_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1704,7 +1704,7 @@ fn test_apply_valid_move_valid_with_kaku_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1746,7 +1746,7 @@ fn test_apply_valid_move_valid_with_hisha_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1788,7 +1788,7 @@ fn test_apply_valid_move_valid_with_hisha_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1830,7 +1830,7 @@ fn test_apply_valid_move_valid_with_hisha_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1872,7 +1872,7 @@ fn test_apply_valid_move_valid_with_hisha_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_ok(), format!("apply_valid_move returned Err: move = {:?}.", m.to_move()));
+			).is_ok(), "apply_valid_move returned Err: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -1898,7 +1898,7 @@ fn test_apply_valid_move_invalid_with_kyou_opponent_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+		).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -1923,7 +1923,7 @@ fn test_apply_valid_move_invalid_with_kyou_opponent_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+		).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -1948,7 +1948,7 @@ fn test_apply_valid_move_invalid_with_kyou_self_occupied_sente() {
 			Teban::Sente,
 			&MochigomaCollections::Empty,
 			m
-		).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+		).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -1973,7 +1973,7 @@ fn test_apply_valid_move_invalid_with_kyou_self_occupied_gote() {
 			Teban::Gote,
 			&MochigomaCollections::Empty,
 			m
-		).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+		).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 	}
 }
 #[test]
@@ -2014,7 +2014,7 @@ fn test_apply_valid_move_invalid_with_kaku_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2056,7 +2056,7 @@ fn test_apply_valid_move_invalid_with_kaku_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2098,7 +2098,7 @@ fn test_apply_valid_move_invalid_with_kaku_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2140,7 +2140,7 @@ fn test_apply_valid_move_invalid_with_kaku_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2182,7 +2182,7 @@ fn test_apply_valid_move_invalid_with_hisha_opponent_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2224,7 +2224,7 @@ fn test_apply_valid_move_invalid_with_hisha_opponent_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2266,7 +2266,7 @@ fn test_apply_valid_move_invalid_with_hisha_self_occupied_sente() {
 				Teban::Sente,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2308,7 +2308,7 @@ fn test_apply_valid_move_invalid_with_hisha_self_occupied_gote() {
 				Teban::Gote,
 				&MochigomaCollections::Empty,
 				m
-			).is_err(), format!("apply_valid_move returned Ok: move = {:?}.", m.to_move()));
+			).is_err(), "apply_valid_move returned Ok: move = {:?}.", m.to_move());
 		}
 	}
 }
@@ -2392,7 +2392,7 @@ fn test_apply_valid_move_invalid_to_outside_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move());
 
 				let mv = rule::LegalMove::To(rule::LegalMoveTo::new(
 												((m.0).0 * 9 + (m.0).1) as u32,
@@ -2402,7 +2402,7 @@ fn test_apply_valid_move_invalid_to_outside_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move());
 			}
 		}
 	}
@@ -2486,7 +2486,7 @@ fn test_apply_valid_move_invalid_to_outside_gote() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move());
 
 				let mv = rule::LegalMove::To(rule::LegalMoveTo::new(
 												((m.0).0 * 9 + (m.0).1) as u32,
@@ -2496,7 +2496,7 @@ fn test_apply_valid_move_invalid_to_outside_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k, mv.to_move());
 			}
 		}
 	}
@@ -2882,7 +2882,7 @@ fn test_apply_valid_move_invalid_to_self_occupied_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					m
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,m.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,m.to_move());
 			}
 		}
 	}
@@ -3268,7 +3268,7 @@ fn test_apply_valid_move_invalid_to_self_occupied_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					m
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,m.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,m.to_move());
 			}
 		}
 	}
@@ -3495,7 +3495,7 @@ fn test_apply_valid_move_invalid_to_invalid_direction_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move());
 
 				let mv = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-p.0,p.1+1),KomaDstToPosition(9-dx,dy+1,false)));
 
@@ -3503,7 +3503,7 @@ fn test_apply_valid_move_invalid_to_invalid_direction_sente() {
 					Teban::Sente,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move());
 			}
 		}
 	}
@@ -3730,7 +3730,7 @@ fn test_apply_valid_move_invalid_to_invalid_direction_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move());
 
 				let mv = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-p.0),(8-p.1)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
 
@@ -3738,7 +3738,7 @@ fn test_apply_valid_move_invalid_to_invalid_direction_gote() {
 					Teban::Gote,
 					&MochigomaCollections::Empty,
 					mv
-				).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move()));
+				).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", k,mv.to_move());
 			}
 		}
 	}
@@ -3790,7 +3790,7 @@ fn test_apply_valid_move_put_valid_sente() {
 						Teban::Sente,
 						&mc,
 						m
-					).is_ok(), format!("apply_valid_move returned Err: kind = {:?}, move = {:?}.", kind,m.to_move()));
+					).is_ok(), "apply_valid_move returned Err: kind = {:?}, move = {:?}.", kind,m.to_move());
 				}
 			}
 		}
@@ -3845,7 +3845,7 @@ fn test_apply_valid_move_put_valid_gote() {
 						Teban::Gote,
 						&mc,
 						m
-					).is_ok(), format!("apply_valid_move returned Err: kind = {:?}, move = {:?}.", kind,m.to_move()));
+					).is_ok(), "apply_valid_move returned Err: kind = {:?}, move = {:?}.", kind,m.to_move());
 				}
 			}
 		}
@@ -3898,7 +3898,7 @@ fn test_apply_valid_move_put_invalid_sente() {
 						Teban::Sente,
 						&mc,
 						m
-					).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", kind,m.to_move()));
+					).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", kind,m.to_move());
 				}
 			}
 		}
@@ -3953,7 +3953,7 @@ fn test_apply_valid_move_put_invalid_gote() {
 						Teban::Gote,
 						&mc,
 						m
-					).is_err(), format!("apply_valid_move returned Ok: kind = {:?}, move = {:?}.", kind,m.to_move()));
+					).is_err(), "apply_valid_move returned Ok: kind = {:?}, move = {:?}.", kind,m.to_move());
 				}
 			}
 		}
