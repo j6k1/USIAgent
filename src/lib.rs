@@ -33,7 +33,7 @@ use std::marker::Send;
 use std::marker::PhantomData;
 use std::collections::HashMap;
 
-use crossbeam_channel::unbounded;
+use std::sync::mpsc;
 use queuingtask::ThreadQueue;
 
 use command::*;
@@ -589,7 +589,7 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let (sender,receiver) = unbounded();
+							let (sender,receiver) = mpsc::channel();
 
 							let info_sender = USIInfoSender::new(sender.clone());
 
@@ -697,7 +697,7 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let (sender,receiver) = unbounded();
+							let (sender,receiver) = mpsc::channel();
 
 							let info_sender = USIInfoSender::new(sender.clone());
 
@@ -780,7 +780,7 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let (sender,receiver) = unbounded();
+							let (sender,receiver) = mpsc::channel();
 
 							let info_sender = USIInfoSender::new(sender.clone());
 

@@ -10,8 +10,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 use std::error::Error;
 
-use crossbeam_channel::Sender;
-use crossbeam_channel::Receiver;
+use std::sync::mpsc::{Sender,Receiver};
 
 use command::*;
 use error::*;
