@@ -12,8 +12,8 @@ use std::iter::Iterator;
 use std::ops::Add;
 use std::time::Instant;
 
-use crossbeam_channel::Sender;
-use crossbeam_channel::Receiver;
+use std::sync::mpsc::Sender;
+use std::sync::mpsc::Receiver;
 
 use usiagent::event::SystemEventKind;
 use usiagent::event::UserEventKind;

@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::unbounded;
+use std::sync::mpsc;
 use usiagent::selfmatch::*;
 use usiagent::shogi::*;
 use usiagent::command::*;
@@ -12,26 +12,26 @@ use super::*;
 
 #[test]
 fn test_error_take_ready_player1() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,_) = unbounded();
+	let (es,_) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -66,7 +66,7 @@ fn test_error_take_ready_player1() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -168,26 +168,26 @@ fn test_error_take_ready_player1() {
 }
 #[test]
 fn test_error_take_ready_player2() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,_) = unbounded();
+	let (es,_) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -228,7 +228,7 @@ fn test_error_take_ready_player2() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -334,26 +334,26 @@ fn test_error_take_ready_player2() {
 }
 #[test]
 fn test_error_newgame_player1() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,_) = unbounded();
+	let (es,_) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -389,7 +389,7 @@ fn test_error_newgame_player1() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -495,26 +495,26 @@ fn test_error_newgame_player1() {
 }
 #[test]
 fn test_error_newgame_player2() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,_) = unbounded();
+	let (es,_) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -556,7 +556,7 @@ fn test_error_newgame_player2() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -666,26 +666,26 @@ fn test_error_newgame_player2() {
 }
 #[test]
 fn test_error_set_position_player1() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -723,7 +723,7 @@ fn test_error_set_position_player1() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -831,26 +831,26 @@ fn test_error_set_position_player1() {
 }
 #[test]
 fn test_error_set_position_player2() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -894,7 +894,7 @@ fn test_error_set_position_player2() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1014,26 +1014,26 @@ fn test_error_set_position_player2() {
 }
 #[test]
 fn test_error_think_player1() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1074,7 +1074,7 @@ fn test_error_think_player1() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1186,26 +1186,26 @@ fn test_error_think_player1() {
 }
 #[test]
 fn test_error_set_think_player2() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1252,7 +1252,7 @@ fn test_error_set_think_player2() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1376,26 +1376,26 @@ fn test_error_set_think_player2() {
 }
 #[test]
 fn test_error_ponder_player1_set_position_recv_opponents_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1448,7 +1448,7 @@ fn test_error_ponder_player1_set_position_recv_opponents_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1572,26 +1572,26 @@ fn test_error_ponder_player1_set_position_recv_opponents_turn() {
 }
 #[test]
 fn test_error_ponder_player1_think_recv_opponents_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1648,7 +1648,7 @@ fn test_error_ponder_player1_think_recv_opponents_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1772,26 +1772,26 @@ fn test_error_ponder_player1_think_recv_opponents_turn() {
 }
 #[test]
 fn test_error_ponder_player1_set_position_recv_next_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1844,7 +1844,7 @@ fn test_error_ponder_player1_set_position_recv_next_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1968,26 +1968,26 @@ fn test_error_ponder_player1_set_position_recv_next_turn() {
 }
 #[test]
 fn test_error_ponder_player1_think_recv_next_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2044,7 +2044,7 @@ fn test_error_ponder_player1_think_recv_next_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2168,26 +2168,26 @@ fn test_error_ponder_player1_think_recv_next_turn() {
 }
 #[test]
 fn test_error_ponder_player2_set_position_recv_opponents_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2248,7 +2248,7 @@ fn test_error_ponder_player2_set_position_recv_opponents_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2384,26 +2384,26 @@ fn test_error_ponder_player2_set_position_recv_opponents_turn() {
 }
 #[test]
 fn test_error_ponder_player2_think_recv_opponents_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2468,7 +2468,7 @@ fn test_error_ponder_player2_think_recv_opponents_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2604,26 +2604,26 @@ fn test_error_ponder_player2_think_recv_opponents_turn() {
 }
 #[test]
 fn test_error_ponder_player2_set_position_recv_next_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2684,7 +2684,7 @@ fn test_error_ponder_player2_set_position_recv_next_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2820,26 +2820,26 @@ fn test_error_ponder_player2_set_position_recv_next_turn() {
 }
 #[test]
 fn test_error_ponder_player2_set_think_recv_next_turn() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2904,7 +2904,7 @@ fn test_error_ponder_player2_set_think_recv_next_turn() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3040,26 +3040,26 @@ fn test_error_ponder_player2_set_think_recv_next_turn() {
 }
 #[test]
 fn test_error_gameover_player1() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3122,7 +3122,7 @@ fn test_error_gameover_player1() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3238,26 +3238,26 @@ fn test_error_gameover_player1() {
 }
 #[test]
 fn test_error_gameover_player2() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
-	let (ls,lr) = unbounded();
+	let (ls,lr) = mpsc::channel();
 
 	let logger = MockLogger::new(ls);
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3326,7 +3326,7 @@ fn test_error_gameover_player2() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 

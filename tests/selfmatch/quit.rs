@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::unbounded;
+use std::sync::mpsc;
 use usiagent::selfmatch::*;
 use usiagent::shogi::*;
 use usiagent::command::*;
@@ -12,24 +12,24 @@ use super::*;
 
 #[test]
 fn test_resign_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -105,7 +105,7 @@ fn test_resign_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -254,24 +254,24 @@ fn test_resign_and_quit_winner() {
 }
 #[test]
 fn test_resign_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -347,7 +347,7 @@ fn test_resign_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -500,24 +500,24 @@ fn test_resign_and_quit_loser() {
 }
 #[test]
 fn test_invalidmove_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -593,7 +593,7 @@ fn test_invalidmove_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -746,24 +746,24 @@ fn test_invalidmove_and_quit_winner() {
 }
 #[test]
 fn test_invalidmove_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -839,7 +839,7 @@ fn test_invalidmove_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -996,24 +996,24 @@ fn test_invalidmove_and_quit_loser() {
 }
 #[test]
 fn test_invalidmove_by_no_responded_oute_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1081,7 +1081,7 @@ fn test_invalidmove_by_no_responded_oute_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1222,24 +1222,24 @@ fn test_invalidmove_by_no_responded_oute_and_quit_winner() {
 }
 #[test]
 fn test_invalidmove_by_no_responded_oute_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1307,7 +1307,7 @@ fn test_invalidmove_by_no_responded_oute_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1452,24 +1452,24 @@ fn test_invalidmove_by_no_responded_oute_and_quit_loser() {
 }
 #[test]
 fn test_invalidmove_by_suicide_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1531,7 +1531,7 @@ fn test_invalidmove_by_suicide_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1660,24 +1660,24 @@ fn test_invalidmove_by_suicide_and_quit_winner() {
 }
 #[test]
 fn test_invalidmove_by_suicide_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1739,7 +1739,7 @@ fn test_invalidmove_by_suicide_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1872,24 +1872,24 @@ fn test_invalidmove_by_suicide_and_quit_loser() {
 }
 #[test]
 fn test_win_move_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -1954,7 +1954,7 @@ fn test_win_move_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2083,24 +2083,24 @@ fn test_win_move_and_quit_winner() {
 }
 #[test]
 fn test_win_move_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2165,7 +2165,7 @@ fn test_win_move_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2298,24 +2298,24 @@ fn test_win_move_and_quit_loser() {
 }
 #[test]
 fn test_win_invalidmove_put_fu_and_mate_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2377,7 +2377,7 @@ fn test_win_invalidmove_put_fu_and_mate_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2506,24 +2506,24 @@ fn test_win_invalidmove_put_fu_and_mate_and_quit_winner() {
 }
 #[test]
 fn test_win_invalidmove_put_fu_and_mate_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2585,7 +2585,7 @@ fn test_win_invalidmove_put_fu_and_mate_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2718,24 +2718,24 @@ fn test_win_invalidmove_put_fu_and_mate_and_quit_loser() {
 }
 #[test]
 fn test_win_invalidmove_sennichite_by_oute_once_move_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -2797,7 +2797,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2926,24 +2926,24 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_and_quit_winner() {
 }
 #[test]
 fn test_win_invalidmove_sennichite_by_oute_once_move_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3005,7 +3005,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3138,24 +3138,24 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_and_quit_loser() {
 }
 #[test]
 fn test_nyugyoku_win_win_sente_and_quit_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3231,7 +3231,7 @@ fn test_nyugyoku_win_win_sente_and_quit_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3381,24 +3381,24 @@ fn test_nyugyoku_win_win_sente_and_quit_winner() {
 }
 #[test]
 fn test_nyugyoku_win_win_sente_and_quit_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3474,7 +3474,7 @@ fn test_nyugyoku_win_win_sente_and_quit_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3628,24 +3628,24 @@ fn test_nyugyoku_win_win_sente_and_quit_loser() {
 }
 #[test]
 fn test_nyugyoku_win_lose_sente_and_winner() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3721,7 +3721,7 @@ fn test_nyugyoku_win_lose_sente_and_winner() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3871,24 +3871,24 @@ fn test_nyugyoku_win_lose_sente_and_winner() {
 }
 #[test]
 fn test_nyugyoku_win_lose_sente_and_loser() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3964,7 +3964,7 @@ fn test_nyugyoku_win_lose_sente_and_loser() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -4118,24 +4118,24 @@ fn test_nyugyoku_win_lose_sente_and_loser() {
 }
 #[test]
 fn test_quit_thiking() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -4211,7 +4211,7 @@ fn test_quit_thiking() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -4353,24 +4353,24 @@ fn test_quit_thiking() {
 }
 #[test]
 fn test_resign_and_quit_after_dummy_command() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -4475,7 +4475,7 @@ fn test_resign_and_quit_after_dummy_command() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 

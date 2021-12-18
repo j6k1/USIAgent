@@ -9,8 +9,8 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::{Instant,Duration};
 
-use crossbeam_channel::Receiver;
-use crossbeam_channel::unbounded;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc;
 use usiagent::selfmatch::*;
 use usiagent::shogi::*;
 use usiagent::command::*;
@@ -150,25 +150,25 @@ fn create_input_read_handler(system_event_queue:&Arc<Mutex<SystemEventQueue>>)
 }
 #[test]
 fn test_resign_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -245,7 +245,7 @@ fn test_resign_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -401,25 +401,25 @@ fn test_resign_1times() {
 }
 #[test]
 fn test_invalidmove_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -496,7 +496,7 @@ fn test_invalidmove_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -656,25 +656,25 @@ fn test_invalidmove_1times() {
 }
 #[test]
 fn test_invalidmove_by_from_blank_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -751,7 +751,7 @@ fn test_invalidmove_by_from_blank_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -911,25 +911,25 @@ fn test_invalidmove_by_from_blank_1times() {
 }
 #[test]
 fn test_invalidmove_by_no_responded_oute_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -998,7 +998,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1146,25 +1146,25 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 }
 #[test]
 fn test_invalidmove_by_suicide_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -1227,7 +1227,7 @@ fn test_invalidmove_by_suicide_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1363,25 +1363,25 @@ fn test_invalidmove_by_suicide_1times() {
 }
 #[test]
 fn test_win_move_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -1447,7 +1447,7 @@ fn test_win_move_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1583,25 +1583,25 @@ fn test_win_move_1times() {
 }
 #[test]
 fn test_win_invalidmove_put_fu_and_mate_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -1664,7 +1664,7 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -1800,25 +1800,25 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 }
 #[test]
 fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -1881,7 +1881,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2017,25 +2017,25 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 }
 #[test]
 fn test_win_validmove_not_sennichite_by_oute_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -2104,7 +2104,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2248,25 +2248,25 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 }
 #[test]
 fn test_win_invalid_move_sennichite_once_move_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -2329,7 +2329,7 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2465,25 +2465,25 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 }
 #[test]
 fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen_map() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -2576,7 +2576,7 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -2760,25 +2760,25 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 }
 #[test]
 fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -2935,7 +2935,7 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3215,25 +3215,25 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 }
 #[test]
 fn test_game_time_limit_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -3314,7 +3314,7 @@ fn test_game_time_limit_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3474,24 +3474,24 @@ fn test_game_time_limit_1times() {
 }
 #[test]
 fn test_game_time_limit_less_uptime_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3570,7 +3570,7 @@ fn test_game_time_limit_less_uptime_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3713,24 +3713,24 @@ fn test_game_time_limit_less_uptime_1times() {
 }
 #[test]
 fn test_game_uptime_less_game_time_limit_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -3809,7 +3809,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -3952,24 +3952,24 @@ fn test_game_uptime_less_game_time_limit_1times() {
 }
 #[test]
 fn test_ponderhit_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -4050,7 +4050,7 @@ fn test_ponderhit_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -4201,24 +4201,24 @@ fn test_ponderhit_1times() {
 }
 #[test]
 fn test_ponderhit_thinking() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -4311,7 +4311,7 @@ fn test_ponderhit_thinking() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -4466,24 +4466,24 @@ fn test_ponderhit_thinking() {
 }
 #[test]
 fn test_ponderhit_thinking_check_next_turn_eventqueue() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -4592,7 +4592,7 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -4767,24 +4767,24 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 }
 #[test]
 fn test_ponderng_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -4873,7 +4873,7 @@ fn test_ponderng_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -5032,24 +5032,24 @@ fn test_ponderng_1times() {
 }
 #[test]
 fn test_ponderng_thinking() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -5152,7 +5152,7 @@ fn test_ponderng_thinking() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -5315,24 +5315,24 @@ fn test_ponderng_thinking() {
 }
 #[test]
 fn test_ponderng_thinking_check_next_turn_eventqueue() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -5449,7 +5449,7 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -5632,24 +5632,24 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 }
 #[test]
 fn test_abort_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
+	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
@@ -5702,7 +5702,7 @@ fn test_abort_1times() {
 										ConsumedIterator::new(vec![])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -5839,25 +5839,25 @@ fn test_abort_1times() {
 }
 #[test]
 fn test_nyugyoku_win_win_sente_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -5934,7 +5934,7 @@ fn test_nyugyoku_win_win_sente_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -6090,25 +6090,25 @@ fn test_nyugyoku_win_win_sente_1times() {
 }
 #[test]
 fn test_nyugyoku_win_win_gote_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -6193,7 +6193,7 @@ fn test_nyugyoku_win_win_gote_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -6361,25 +6361,25 @@ fn test_nyugyoku_win_win_gote_1times() {
 }
 #[test]
 fn test_nyugyoku_win_lose_sente_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -6456,7 +6456,7 @@ fn test_nyugyoku_win_lose_sente_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 
@@ -6612,25 +6612,25 @@ fn test_nyugyoku_win_lose_sente_1times() {
 }
 #[test]
 fn test_nyugyoku_win_lose_gote_1times() {
-	let (pms1,pmr1) = unbounded();
-	let (pns1,_) = unbounded();
-	let (ts,tr) = unbounded();
+	let (pms1,pmr1) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
+	let (ts,tr) = mpsc::channel();
 
-	let (pms2,pmr2) = unbounded();
-	let (pns2,_) = unbounded();
+	let (pms2,pmr2) = mpsc::channel();
+	let (pns2,_) = mpsc::channel();
 
 	let pmr = [pmr1,pmr2];
 
 	let logger = StdErrorLogger::new();
 	let (input_reader,s) = {
-		let (s,r) = unbounded();
+		let (s,r) = mpsc::channel();
 
 		let input_reader = MockInputReader::new(r);
 		(input_reader,s)
 	};
 
-	let (es,er) = unbounded();
-	let (ks,kr) = unbounded();
+	let (es,er) = mpsc::channel();
+	let (ks,kr) = mpsc::channel();
 
 	let mut kifuwriter = MockSfenKifuWriter::new(ks);
 
@@ -6715,7 +6715,7 @@ fn test_nyugyoku_win_lose_gote_1times() {
 										})])
 		);
 
-		let (is,_) = unbounded();
+		let (is,_) = mpsc::channel();
 
 		let info_sender = MockInfoSender::new(is);
 

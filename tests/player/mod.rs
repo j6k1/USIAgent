@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crossbeam_channel::unbounded;
+use std::sync::mpsc;
 
 use usiagent::player::*;
 use usiagent::shogi::*;
@@ -44,8 +44,8 @@ use common::*;
 
 #[test]
 fn test_apply_moves() {
-	let (pms1,_) = unbounded();
-	let (pns1,_) = unbounded();
+	let (pms1,_) = mpsc::channel();
+	let (pns1,_) = mpsc::channel();
 
 	let player = MockPlayer::new(pms1,pns1,
 		ConsumedIterator::new(vec![]),
