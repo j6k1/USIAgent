@@ -341,7 +341,7 @@ impl<W,L> OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger 
 		}
 	}
 
-	pub fn send(&mut self) {
+	pub fn send(&self) {
 		match self.writer.lock() {
 			Err(ref e) => {
 				let _ = self.on_error_handler.lock().map(|h| h.call(e));
@@ -354,7 +354,7 @@ impl<W,L> OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger 
 		};
 	}
 
-	pub fn auto(&mut self,sec:u64) -> AutoKeepAlive {
+	pub fn auto(&self,sec:u64) -> AutoKeepAlive {
 		AutoKeepAlive::new(sec,self.clone())
 	}
 }
@@ -373,7 +373,6 @@ impl AutoKeepAlive {
 	fn new<W,L>(sec:u64,on_keep_alive:OnKeepAlive<W,L>)
 		-> AutoKeepAlive where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
 		let(s,r) = unbounded();
-		let mut on_keep_alive = on_keep_alive;
 
 		std::thread::spawn(move || {
 			let mut timeout = after(time::Duration::from_secs(sec));
