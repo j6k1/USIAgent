@@ -22,6 +22,7 @@ use output::*;
 use Logger;
 use OnErrorHandler;
 use TryFrom;
+use crossbeam_channel::{unbounded, after};
 
 /// プレイヤー（AI本体）の実装
 pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
@@ -326,5 +327,77 @@ impl InfoSender for ConsoleInfoSender {
 impl Clone for ConsoleInfoSender {
 	fn clone(&self) -> ConsoleInfoSender {
 		ConsoleInfoSender::new(self.silent)
+	}
+}
+pub struct OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	writer:Arc<Mutex<W>>,
+	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>
+}
+impl<W,L> OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	pub fn new(writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> OnKeepAlive<W,L> {
+		OnKeepAlive {
+			writer:writer,
+			on_error_handler:on_error_handler
+		}
+	}
+
+	pub fn send(&mut self) {
+		match self.writer.lock() {
+			Err(ref e) => {
+				let _ = self.on_error_handler.lock().map(|h| h.call(e));
+			},
+			Ok(ref writer) => {
+				if let Err(ref e) = writer.write(&vec![String::from("\n")]) {
+					let _ = self.on_error_handler.lock().map(|h| h.call(e));
+				}
+			}
+		};
+	}
+
+	pub fn auto(&mut self,sec:u64) -> AutoKeepAlive {
+		AutoKeepAlive::new(sec,self.clone())
+	}
+}
+impl<W,L> Clone for OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	fn clone(&self) -> OnKeepAlive<W,L> {
+		OnKeepAlive {
+			writer:self.writer.clone(),
+			on_error_handler:self.on_error_handler.clone()
+		}
+	}
+}
+pub struct AutoKeepAlive {
+	stop_sender:crossbeam_channel::Sender<()>
+}
+impl AutoKeepAlive {
+	fn new<W,L>(sec:u64,on_keep_alive:OnKeepAlive<W,L>)
+		-> AutoKeepAlive where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+		let(s,r) = unbounded();
+		let mut on_keep_alive = on_keep_alive;
+
+		std::thread::spawn(move || {
+			let mut timeout = after(time::Duration::from_secs(sec));
+
+			loop {
+				select! {
+					recv(r) -> _ => {
+						return;
+					},
+					recv(timeout) -> _ => {
+						on_keep_alive.send();
+						timeout = after(time::Duration::from_secs(sec));
+					}
+				}
+			}
+		});
+
+		AutoKeepAlive {
+			stop_sender:s
+		}
+	}
+}
+impl Drop for AutoKeepAlive {
+	fn drop(&mut self) {
+		let _ = self.stop_sender.send(());
 	}
 }
