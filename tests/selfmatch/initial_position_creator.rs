@@ -34,15 +34,15 @@ fn test_initial_position_creator_3times() {
 
 	let _ = thread::spawn(move || {
 		let player1 = MockPlayer::new(pms1,pns1,
-										ConsumedIterator::new(vec![Box::new(|player| {
+										ConsumedIterator::new(vec![Box::new(|player,_| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										}),
-										Box::new(|player| {
+										Box::new(|player,_| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										}),
-										Box::new(|player| {
+										Box::new(|player,_| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),
@@ -271,15 +271,15 @@ fn test_initial_position_creator_3times() {
 		);
 
 		let player2 = MockPlayer::new(pms2,pns2,
-										ConsumedIterator::new(vec![Box::new(|player| {
+										ConsumedIterator::new(vec![Box::new(|player,_| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										}),
-										Box::new(|player| {
+										Box::new(|player,_| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										}),
-										Box::new(|player| {
+										Box::new(|player,_| {
 											let _ = player.sender.send(Ok(ActionKind::TakeReady));
 											Ok(())
 										})]),

@@ -35,7 +35,8 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// サポートしているオプションに関する設定情報（maxとminの値など）をオプション名をキーとしたマップで返す
 	fn get_options(&mut self) -> Result<BTreeMap<String,UsiOptType>,E>;
 	/// プレイヤーの機能で必要な時間のかかる前処理などをここで行う
-	fn take_ready(&mut self) -> Result<(),E>;
+	fn take_ready<W,L>(&mut self, on_keep_alive:OnKeepAlive<W,L>)
+		-> Result<(),E> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static;
 	/// オプションを設定する
 	/// # Arguments
 	/// * `name` - オプションの名前
@@ -329,6 +330,10 @@ impl Clone for ConsoleInfoSender {
 		ConsoleInfoSender::new(self.silent)
 	}
 }
+pub trait KeepAliveSender {
+	fn send(&self);
+	fn auto(&self,sec:u64) -> AutoKeepAlive;
+}
 pub struct OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
 	writer:Arc<Mutex<W>>,
 	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>
@@ -340,8 +345,9 @@ impl<W,L> OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger 
 			on_error_handler:on_error_handler
 		}
 	}
-
-	pub fn send(&self) {
+}
+impl<W,L> KeepAliveSender for OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	fn send(&self) {
 		match self.writer.lock() {
 			Err(ref e) => {
 				let _ = self.on_error_handler.lock().map(|h| h.call(e));
@@ -354,7 +360,7 @@ impl<W,L> OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger 
 		};
 	}
 
-	pub fn auto(&self,sec:u64) -> AutoKeepAlive {
+	fn auto(&self,sec:u64) -> AutoKeepAlive {
 		AutoKeepAlive::new(sec,self.clone())
 	}
 }
@@ -370,7 +376,7 @@ pub struct AutoKeepAlive {
 	stop_sender:crossbeam_channel::Sender<()>
 }
 impl AutoKeepAlive {
-	fn new<W,L>(sec:u64,on_keep_alive:OnKeepAlive<W,L>)
+	fn new<W,L>(sec:u64,on_keep_alive: OnKeepAlive<W,L>)
 		-> AutoKeepAlive where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
 		let(s,r) = unbounded();
 

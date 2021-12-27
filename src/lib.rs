@@ -343,6 +343,7 @@ impl<T,E> UsiAgent<T,E>
 
 		let on_error_handler = on_error_handler_arc.clone();
 		let thread_queue = thread_queue_arc.clone();
+		let writer = writer_arc.clone();
 
 		system_event_dispatcher.add_handler(SystemEventKind::IsReady, move |ctx,e| {
 			match e {
@@ -351,12 +352,14 @@ impl<T,E> UsiAgent<T,E>
 					let on_error_handler_inner = on_error_handler.clone();
 					let player = ctx.player.clone();
 
+					let writer_inner = writer.clone();
+
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
 							thread_queue.submit(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										match player.take_ready() {
+										match player.take_ready(OnKeepAlive::new(writer_inner,on_error_handler_inner.clone())) {
 											Ok(_) => (),
 											Err(ref e) => {
 												let _ = on_error_handler_inner.lock().map(|h| h.call(e));

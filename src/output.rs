@@ -29,6 +29,13 @@ impl USIOutputWriter for USIStdOutputWriter {
 		writer.write(lines.join("\n").add("\n").as_bytes())
 	}
 }
+/// 出力を捨てる`USIOutputWriter`の実装
+pub struct VoidOutPutWriter;
+impl USIOutputWriter for VoidOutPutWriter {
+	fn write(&self,_:&Vec<String>) -> Result<usize> {
+		Ok(0)
+	}
+}
 /// 標準エラー出力へ出力を書き込むためのオブジェクト
 pub struct USIStdErrorWriter {
 }

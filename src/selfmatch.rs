@@ -340,7 +340,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
-				L: Logger + fmt::Debug,
+				L: Logger + fmt::Debug + Send + 'static,
 				Arc<Mutex<L>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
 					&SelfMatchRunningError<E>) {
@@ -389,7 +389,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
-				L: Logger + fmt::Debug,
+				L: Logger + fmt::Debug + Send + 'static,
 				Arc<Mutex<L>>: Send + 'static {
 		let start_time = Instant::now();
 		let start_dt = Local::now();
@@ -1099,7 +1099,9 @@ impl<E> SelfMatchEngine<E>
 				loop {
 					match cr.recv()? {
 						SelfMatchMessage::GameStart => {
-							player.take_ready()?;
+							let writer = Arc::new(Mutex::new(VoidOutPutWriter));
+
+							player.take_ready(OnKeepAlive::new(writer,on_error_handler.clone()))?;
 							player.newgame()?;
 
 							loop {

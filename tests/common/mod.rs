@@ -30,7 +30,7 @@ use usiagent::event::*;
 use usiagent::command::*;
 use usiagent::rule::*;
 use usiagent::logger::Logger;
-use usiagent::player::USIPlayer;
+use usiagent::player::{USIPlayer, KeepAliveSender, OnKeepAlive};
 use usiagent::player::InfoSender;
 use usiagent::player::UsiInfoMessage;
 use usiagent::OnErrorHandler;
@@ -255,7 +255,7 @@ impl<T> Iterator for ConsumedIterator<T> where T: Send + 'static {
 	}
 }
 pub struct MockPlayer {
-	pub on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
+	pub on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer, Box<dyn KeepAliveSender>) -> Result<(),CommonError> + Send + 'static)>>,
 	pub on_newgame: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
 	pub on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
 												HashMap<MochigomaKind,u32>,
@@ -290,7 +290,7 @@ pub struct MockPlayer {
 impl MockPlayer {
 	pub fn new(sender:Sender<Result<ActionKind,String>>,
 				info_send_notifier:Sender<()>,
-				on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
+				on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer, Box<dyn KeepAliveSender>) -> Result<(),CommonError> + Send + 'static)>>,
 				on_newgame: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
 				on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
 															HashMap<MochigomaKind,u32>,
@@ -417,8 +417,9 @@ impl USIPlayer<CommonError> for MockPlayer {
 		Ok(options)
 	}
 
-	fn take_ready(&mut self) -> Result<(),CommonError> {
-		(self.on_isready.next().expect("Iterator of on take_ready callback is empty."))(self)
+	fn take_ready<W,L>(&mut self,on_keep_alive:OnKeepAlive<W,L>)
+		-> Result<(),CommonError> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+		(self.on_isready.next().expect("Iterator of on take_ready callback is empty."))(self,Box::new(on_keep_alive))
 	}
 
 	fn set_option(&mut self,name:String,value:SysEventOption) -> Result<(),CommonError> {
