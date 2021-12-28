@@ -550,7 +550,9 @@ fn test_auto_keep_alive() {
 
 	let res = r.recv_timeout(Duration::from_millis(1100)).expect("attempt to receive keepalive('\n') timed out.");
 
-	assert_ne!(r.recv_timeout(Duration::from_millis(1100)),Ok(String::from("\n")));
+	if let Ok(_) = r.recv_timeout(Duration::from_millis(1100)) {
+		assert!(false,"It didn't time out where it was expected to time out.");
+	}
 
 	assert_eq!(&*res,"readyok");
 
