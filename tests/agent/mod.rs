@@ -548,13 +548,13 @@ fn test_auto_keep_alive() {
 
 	assert_eq!(res,Ok(ActionKind::TakeReady));
 
-	let res = r.recv_timeout(Duration::from_millis(1100)).expect("attempt to receive keepalive('\n') timed out.");
-
-	if let Ok(_) = r.recv_timeout(Duration::from_millis(1100)) {
-		assert!(false,"It didn't time out where it was expected to time out.");
-	}
+	let res = r.recv_timeout(Duration::from_millis(1100)).expect("attempt to receive 'readyok' timed out.");
 
 	assert_eq!(&*res,"readyok");
+
+	if let Ok(_) = r.recv_timeout(Duration::from_millis(2200)) {
+		assert!(false,"It didn't time out where it was expected to time out.");
+	}
 
 	let _ = s.send(String::from("usinewgame"));
 
