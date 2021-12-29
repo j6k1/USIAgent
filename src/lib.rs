@@ -597,7 +597,6 @@ impl<T,E> UsiAgent<T,E>
 							let info_sender = USIInfoSender::new(sender.clone());
 							let pinfo_sender = USIPeriodicallyInfoSender::new(
 																		writer.clone(),
-																			on_error_handler_inner.clone(),
 																		false);
 							info_sender.start_worker_thread(
 								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
@@ -711,7 +710,6 @@ impl<T,E> UsiAgent<T,E>
 							let info_sender = USIInfoSender::new(sender.clone());
 							let pinfo_sender = USIPeriodicallyInfoSender::new(
 																		writer.clone(),
-																		on_error_handler_inner.clone(),
 																		false);
 
 							info_sender.start_worker_thread(
@@ -798,10 +796,7 @@ impl<T,E> UsiAgent<T,E>
 							let (sender,receiver) = mpsc::channel();
 
 							let info_sender = USIInfoSender::new(sender.clone());
-							let pinfo_sender = USIPeriodicallyInfoSender::new(
-													writer.clone(),
-													on_error_handler_inner.clone(),
-													false);
+							let pinfo_sender = USIPeriodicallyInfoSender::new(writer.clone(),false);
 
 							info_sender.start_worker_thread(
 								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
