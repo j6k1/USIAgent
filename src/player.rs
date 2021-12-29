@@ -373,7 +373,7 @@ impl<W,L> KeepAliveSender for OnKeepAlive<W,L> where W: USIOutputWriter + Send +
 				let _ = self.on_error_handler.lock().map(|h| h.call(e));
 			},
 			Ok(ref writer) => {
-				if let Err(ref e) = writer.write(&vec![String::from("\n")]) {
+				if let Err(ref e) = writer.write(&vec![String::from("")]) {
 					let _ = self.on_error_handler.lock().map(|h| h.call(e));
 				}
 			}

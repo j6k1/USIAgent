@@ -391,11 +391,11 @@ fn test_on_keep_alive() {
 
 	let res = r.recv_timeout(Duration::from_millis(100)).expect("attempt to receive keepalive('\n') timed out.");
 
-	assert_eq!(&*res,"\n");
+	assert_eq!(&*res,"");
 
 	let res = r.recv_timeout(Duration::from_millis(100)).expect("attempt to receive keepalive('\n') timed out.");
 
-	assert_eq!(&*res,"\n");
+	assert_eq!(&*res,"");
 
 	let res = pmr.recv_timeout(Duration::from_millis(300)).expect("attempt to receive ActionKind::TakeReady timed out.");
 
@@ -538,11 +538,11 @@ fn test_auto_keep_alive() {
 
 	let res = r.recv_timeout(Duration::from_millis(2200)).expect("attempt to receive keepalive('\n') timed out.");
 
-	assert_eq!(&*res,"\n");
+	assert_eq!(&*res,"");
 
 	let res = r.recv_timeout(Duration::from_millis(2200)).expect("attempt to receive keepalive('\n') timed out.");
 
-	assert_eq!(&*res,"\n");
+	assert_eq!(&*res,"");
 
 	let res = pmr.recv_timeout(Duration::from_millis(1100)).expect("attempt to receive ActionKind::TakeReady timed out.");
 
