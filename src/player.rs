@@ -64,8 +64,9 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think<L,S,P>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,E> where L: Logger, S: InfoSender, P: PeriodicallyInfoSender,
-										Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+			-> Result<BestMove,E> where L: Logger + Send + 'static,
+										S: InfoSender,
+										P: PeriodicallyInfoSender,;
 	/// 思考開始。この関数の戻り値が指し手となる。AIの実装の核となる部分
 	/// # Arguments
 	/// * `limit` - 持ち時間
@@ -75,8 +76,9 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_ponder<L,S,P>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,E> where L: Logger, S: InfoSender, P: PeriodicallyInfoSender,
-										Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+			-> Result<BestMove,E> where L: Logger + Send + 'static,
+										S: InfoSender + Send + 'static,
+										P: PeriodicallyInfoSender;
 	/// 詰め将棋回答時に呼ばれる関数
 	/// # Arguments
 	/// * `limit` - 持ち時間
@@ -86,8 +88,9 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_mate<L,S,P>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<CheckMate,E> where L: Logger, S: InfoSender, P: PeriodicallyInfoSender,
-										 Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+			-> Result<CheckMate,E> where L: Logger + Send + 'static,
+										 S: InfoSender,
+										 P: PeriodicallyInfoSender;
 	/// `UserEvent::Stop`イベントがキューに追加されている状態で`dispatch_events`でイベントを処理すると呼ばれる。
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	/// `UserEvent::PonderHit`イベントがキューに追加されている状態で`dispatch_events`でイベントを処理すると呼ばれる。
@@ -442,13 +445,13 @@ pub trait PeriodicallyInfoSender: Clone + Send + 'static {
 	/// * `info_generator` - `UsiInfoSubCommand`のリストを返すジェネレータ。定期的に呼びdされ返されたコマンドを僧院する。
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-		where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
+		-> Result<(),InvalidStateError> where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 			  L: Logger + Send + 'static;
 }
 pub struct USIPeriodicallyInfoSender<W> where W: USIOutputWriter + Send + 'static {
 	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
 	writer:Arc<Mutex<W>>,
-	/// Drop時に送信スレッドに停止メッセージを送るためのSender
+	/// * `stop_sender` Drop時に送信スレッドに停止メッセージを送るためのSender
 	stop_sender:Option<crossbeam_channel::Sender<()>>,
 	/// * `silent` - infoコマンドを出力するか否かのフラグ。`true`の場合、出力しない
 	silent:bool
@@ -467,17 +470,19 @@ impl<W> USIPeriodicallyInfoSender<W>
 			silent:silent
 		}
 	}
-
-	pub fn with_silent(silent:bool) -> USIPeriodicallyInfoSender<USIStdOutputWriter> {
-		USIPeriodicallyInfoSender::new(Arc::new(Mutex::new(USIStdOutputWriter::new())),silent)
-	}
 }
 impl<W> PeriodicallyInfoSender for USIPeriodicallyInfoSender<W>
 	where W: USIOutputWriter + Send + 'static {
 
 	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-		where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
+		-> Result<(),InvalidStateError> where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 			  L: Logger + Send + 'static {
+
+		if self.stop_sender.is_some() {
+			return Err(InvalidStateError(String::from(
+				"periodic info command send process has already been started."
+			)));
+		}
 
 		let (s,r) = unbounded();
 
@@ -519,6 +524,8 @@ impl<W> PeriodicallyInfoSender for USIPeriodicallyInfoSender<W>
 				}
 			}
 		});
+
+		Ok(())
 	}
 }
 impl<W> Drop for USIPeriodicallyInfoSender<W> where W: USIOutputWriter + Send + 'static {
@@ -534,6 +541,37 @@ impl<W> Clone for USIPeriodicallyInfoSender<W> where W: USIOutputWriter + Send +
 			writer:self.writer.clone(),
 			stop_sender:None,
 			silent:self.silent
+		}
+	}
+}
+pub struct ConsolePeriodicallyInfoSender {
+	inner:USIPeriodicallyInfoSender<USIStdOutputWriter>
+}
+impl ConsolePeriodicallyInfoSender {
+	/// `ConsolePeriodicallyInfoSender`の生成
+	///
+	/// # Arguments
+	/// * `silent` - infoコマンドを出力するか否かのフラグ。`true`の場合、出力しない
+	pub fn new(silent:bool) -> ConsolePeriodicallyInfoSender {
+		ConsolePeriodicallyInfoSender {
+			inner:USIPeriodicallyInfoSender::new(
+				Arc::new(Mutex::new(USIStdOutputWriter::new())),
+					  silent
+			)
+		}
+	}
+}
+impl PeriodicallyInfoSender for ConsolePeriodicallyInfoSender {
+	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+		-> Result<(),InvalidStateError> where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
+											  L: Logger + Send + 'static {
+		self.inner.start(interval,info_generator,on_error_handler)
+	}
+}
+impl Clone for ConsolePeriodicallyInfoSender {
+	fn clone(&self) -> ConsolePeriodicallyInfoSender {
+		ConsolePeriodicallyInfoSender {
+			inner:self.inner.clone()
 		}
 	}
 }
