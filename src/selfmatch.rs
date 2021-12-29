@@ -195,7 +195,7 @@ impl<E> SelfMatchEngine<E>
 	/// * `player1_options` - player1に渡されるオプション
 	/// * `player2_options` - player2に渡されるオプション
 	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
-	/// * `pnfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
+	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `game_time_limit` - 対局毎の制限時間
 	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
 	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
@@ -253,7 +253,7 @@ impl<E> SelfMatchEngine<E>
 	/// * `player1_options` - player1に渡されるオプション
 	/// * `player2_options` - player2に渡されるオプション
 	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
-	/// * `pnfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
+	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `game_time_limit` - 対局毎の制限時間
 	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
 	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
@@ -322,7 +322,7 @@ impl<E> SelfMatchEngine<E>
 	/// * `player1_options` - player1に渡されるオプション
 	/// * `player2_options` - player2に渡されるオプション
 	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
-	/// * `pnfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
+	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `game_time_limit` - 対局毎の制限時間
 	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
 	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する

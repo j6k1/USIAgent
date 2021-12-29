@@ -60,6 +60,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `limit` - 持ち時間
 	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
 	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
+	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think<L,S,P>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
@@ -70,6 +71,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `limit` - 持ち時間
 	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
 	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
+	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_ponder<L,S,P>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
@@ -80,6 +82,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `limit` - 持ち時間
 	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
 	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
+	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_mate<L,S,P>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
