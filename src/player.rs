@@ -330,15 +330,29 @@ impl Clone for ConsoleInfoSender {
 		ConsoleInfoSender::new(self.silent)
 	}
 }
+/// 初期化処理時にKeepAliveとして空行を送信する
 pub trait KeepAliveSender {
+	/// 空行を送信する
 	fn send(&self);
+	/// Dropされる前の間指定された間隔（単位は秒）で空行を送信するオブジェクトを生成する
+	///
+	/// # Arguments
+	/// * `sec` - 空行を送信する間隔
 	fn auto(&self,sec:u64) -> AutoKeepAlive;
 }
+/// `KeepAliveSender`の実装
 pub struct OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
 	writer:Arc<Mutex<W>>,
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>
 }
 impl<W,L> OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	/// `OnKeepAlive`の生成
+	///
+	/// # Arguments
+	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	pub fn new(writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>) -> OnKeepAlive<W,L> {
 		OnKeepAlive {
 			writer:writer,
@@ -372,10 +386,17 @@ impl<W,L> Clone for OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, 
 		}
 	}
 }
+/// KeepAliveの送信を指定された間隔で定期的に行う
 pub struct AutoKeepAlive {
+	/// Drop時に送信スレッドに停止メッセージを送るためのSender
 	stop_sender:crossbeam_channel::Sender<()>
 }
 impl AutoKeepAlive {
+	/// `AutoKeepAlive`の生成
+	///
+	/// # Arguments
+	/// * `sec` - KeepAlive送信の間隔（単位は秒単位）
+	/// * `on_keep_alive` - KeepAlive送信用オブジェクト
 	fn new<W,L>(sec:u64,on_keep_alive: OnKeepAlive<W,L>)
 		-> AutoKeepAlive where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
 		let(s,r) = unbounded();
@@ -404,5 +425,106 @@ impl AutoKeepAlive {
 impl Drop for AutoKeepAlive {
 	fn drop(&mut self) {
 		let _ = self.stop_sender.send(());
+	}
+}
+/// 一定時間ごとに定期的に送信するinfoコマンドの送信用
+pub trait PeriodicallyInfoSender {
+	/// 送信するコマンドの生成用コールバックの登録と共に送信開始
+	///
+	/// # Arguments
+	/// * `interval` - infoコマンド送信の間隔（単位はミリ秒））
+	/// * `info_generator` - `UsiInfoSubCommand`のリストを返すジェネレータ。定期的に呼びdされ返されたコマンドを僧院する。
+	fn start<F>(&mut self,interval:u64,info_generator:F) where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static;
+}
+pub struct USIPeriodicallyInfoSender<W,L>
+	where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
+	writer:Arc<Mutex<W>>,
+	/// Drop時に送信スレッドに停止メッセージを送るためのSender
+	stop_sender:Option<crossbeam_channel::Sender<()>>,
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
+	on_error_handler:Arc<Mutex<OnErrorHandler<L>>>,
+	/// * `silent` - infoコマンドを出力するか否かのフラグ。`true`の場合、出力しない
+	silent:bool
+}
+impl<W,L> USIPeriodicallyInfoSender<W,L>
+	where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	/// `USIPeriodicallyInfoSender`の生成
+	///
+	/// # Arguments
+	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
+	pub fn new(writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>,silent:bool) -> USIPeriodicallyInfoSender<W,L> {
+		USIPeriodicallyInfoSender {
+			writer:writer,
+			stop_sender:None,
+			on_error_handler:on_error_handler,
+			silent:silent
+		}
+	}
+}
+impl<W,L> PeriodicallyInfoSender for USIPeriodicallyInfoSender<W,L>
+	where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	fn start<F>(&mut self,interval:u64,info_generator:F) where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static {
+		let (s,r) = unbounded();
+
+		self.stop_sender = Some(s);
+		let writer = self.writer.clone();
+		let on_error_handler = self.on_error_handler.clone();
+		let mut info_generator = info_generator;
+		let silent = self.silent;
+
+		std::thread::spawn(move || {
+			let mut timeout = after(time::Duration::from_millis(interval));
+
+			loop {
+				select! {
+					recv(r) -> _ => {
+						return;
+					},
+					recv(timeout) -> _ => {
+						match UsiOutput::try_from(&UsiCommand::UsiInfo(info_generator())) {
+							Ok(UsiOutput::Command(ref s)) => {
+								match writer.lock() {
+									Err(ref e) => {
+										let _ = on_error_handler.lock().map(|h| h.call(e));
+										break;
+									},
+									Ok(ref writer) => {
+										if !silent {
+											let _ = writer.write(s).map_err(|e| on_error_handler.lock().map(|h| h.call(&e)));
+										}
+									}
+								};
+							},
+							Err(ref e) => {
+								let _ = on_error_handler.lock().map(|h| h.call(e));
+								break;
+							}
+						}
+						timeout = after(time::Duration::from_millis(interval));
+					}
+				}
+			}
+		});
+	}
+}
+impl<W,L> Drop for USIPeriodicallyInfoSender<W,L>
+	where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	fn drop(&mut self) {
+		if let Some(stop_sender) = self.stop_sender.as_ref() {
+			let _ = stop_sender.send(());
+		}
+	}
+}
+impl<W,L> Clone for USIPeriodicallyInfoSender<W,L>
+	where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static {
+	fn clone(&self) -> USIPeriodicallyInfoSender<W,L> {
+		USIPeriodicallyInfoSender {
+			writer:self.writer.clone(),
+			stop_sender:None,
+			on_error_handler:self.on_error_handler.clone(),
+			silent:self.silent
+		}
 	}
 }
