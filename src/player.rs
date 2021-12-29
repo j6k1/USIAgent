@@ -61,27 +61,30 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
 	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
-	fn think<L,S>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	fn think<L,S,P>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,E> where L: Logger, S: InfoSender, P: PeriodicallyInfoSender,
+										Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	/// 思考開始。この関数の戻り値が指し手となる。AIの実装の核となる部分
 	/// # Arguments
 	/// * `limit` - 持ち時間
 	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
 	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
-	fn think_ponder<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	fn think_ponder<L,S,P>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,E> where L: Logger, S: InfoSender, P: PeriodicallyInfoSender,
+										Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	/// 詰め将棋回答時に呼ばれる関数
 	/// # Arguments
 	/// * `limit` - 持ち時間
 	/// * `event_queue` - ユーザーイベントが格納されているキュー。stopコマンドを受信した時やgo ponderの指し手が当たった時,エンジンの終了時などに送られてくる。
 	/// * `info_sender` - infoコマンドを送信するためのオブジェクト。
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
-	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<CheckMate,E> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
+	fn think_mate<L,S,P>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<CheckMate,E> where L: Logger, S: InfoSender, P: PeriodicallyInfoSender,
+										 Arc<Mutex<OnErrorHandler<L>>>: Send + 'static;
 	/// `UserEvent::Stop`イベントがキューに追加されている状態で`dispatch_events`でイベントを処理すると呼ばれる。
 	fn on_stop(&mut self,e:&UserEvent) -> Result<(), E> where E: PlayerError;
 	/// `UserEvent::PonderHit`イベントがキューに追加されている状態で`dispatch_events`でイベントを処理すると呼ばれる。
@@ -428,7 +431,7 @@ impl Drop for AutoKeepAlive {
 	}
 }
 /// 一定時間ごとに定期的に送信するinfoコマンドの送信用
-pub trait PeriodicallyInfoSender {
+pub trait PeriodicallyInfoSender: Clone + Send + 'static {
 	/// 送信するコマンドの生成用コールバックの登録と共に送信開始
 	///
 	/// # Arguments

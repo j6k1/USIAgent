@@ -595,7 +595,10 @@ impl<T,E> UsiAgent<T,E>
 							let (sender,receiver) = mpsc::channel();
 
 							let info_sender = USIInfoSender::new(sender.clone());
-
+							let pinfo_sender = USIPeriodicallyInfoSender::new(
+																		writer.clone(),
+																			on_error_handler_inner.clone(),
+																		false);
 							info_sender.start_worker_thread(
 								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
 							);
@@ -608,7 +611,8 @@ impl<T,E> UsiAgent<T,E>
 										let bm = if is_ponder {
 											match player.think_ponder(&*opt,
 													user_event_queue_inner.clone(),
-													info_sender,on_error_handler_inner.clone()) {
+													info_sender,
+													pinfo_sender,on_error_handler_inner.clone()) {
 												Ok(bm) => bm,
 												Err(ref e) => {
 													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -619,7 +623,9 @@ impl<T,E> UsiAgent<T,E>
 											match player.think(Instant::now(),
 													&*opt,
 													user_event_queue_inner.clone(),
-													info_sender,on_error_handler_inner.clone()) {
+													info_sender,
+													pinfo_sender,
+													on_error_handler_inner.clone()) {
 												Ok(bm) => bm,
 												Err(ref e) => {
 													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -703,6 +709,10 @@ impl<T,E> UsiAgent<T,E>
 							let (sender,receiver) = mpsc::channel();
 
 							let info_sender = USIInfoSender::new(sender.clone());
+							let pinfo_sender = USIPeriodicallyInfoSender::new(
+																		writer.clone(),
+																		on_error_handler_inner.clone(),
+																		false);
 
 							info_sender.start_worker_thread(
 								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
@@ -716,7 +726,9 @@ impl<T,E> UsiAgent<T,E>
 										let m = match player.think(think_start_time,
 														&*opt,
 														user_event_queue_inner.clone(),
-														info_sender,on_error_handler_inner.clone()) {
+														info_sender,
+														   pinfo_sender,
+														   on_error_handler_inner.clone()) {
 															Ok(m) => m,
 															Err(ref e) => {
 																let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -786,6 +798,10 @@ impl<T,E> UsiAgent<T,E>
 							let (sender,receiver) = mpsc::channel();
 
 							let info_sender = USIInfoSender::new(sender.clone());
+							let pinfo_sender = USIPeriodicallyInfoSender::new(
+													writer.clone(),
+													on_error_handler_inner.clone(),
+													false);
 
 							info_sender.start_worker_thread(
 								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
@@ -798,7 +814,9 @@ impl<T,E> UsiAgent<T,E>
 									Ok(mut player) => {
 										let m = match player.think_mate(&*opt,
 														user_event_queue_inner.clone(),
-														info_sender,on_error_handler_inner.clone()) {
+														info_sender,
+														pinfo_sender,
+														on_error_handler_inner.clone()) {
 															Ok(m) => m,
 															Err(ref e) => {
 																let _ = on_error_handler_inner.lock().map(|h| h.call(e));

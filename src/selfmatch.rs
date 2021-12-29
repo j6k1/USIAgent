@@ -195,11 +195,12 @@ impl<E> SelfMatchEngine<E>
 	/// * `player1_options` - player1に渡されるオプション
 	/// * `player2_options` - player2に渡されるオプション
 	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
+	/// * `pnfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `game_time_limit` - 対局毎の制限時間
 	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
 	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
 	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
-	pub fn start_default<T,S,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start_default<T,S,P,I,F,RH,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<dyn FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
@@ -209,6 +210,7 @@ impl<E> SelfMatchEngine<E>
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						info_sender:S,
+						pinfo_sender:P,
 						game_time_limit:UsiGoTimeLimit,
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
@@ -218,6 +220,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,FileLogger>),
 				S: InfoSender,
+				P: PeriodicallyInfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&SelfMatchRunningError<E>) {
@@ -229,6 +232,7 @@ impl<E> SelfMatchEngine<E>
 								player1,player2,
 								player1_options, player2_options,
 								info_sender,
+								pinfo_sender,
 								game_time_limit,
 								uptime,
 								number_of_games,
@@ -249,11 +253,12 @@ impl<E> SelfMatchEngine<E>
 	/// * `player1_options` - player1に渡されるオプション
 	/// * `player2_options` - player2に渡されるオプション
 	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
+	/// * `pnfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `game_time_limit` - 対局毎の制限時間
 	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
 	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
 	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
-	pub fn start_with_log_path<T,S,I,F,RH,EH>(&mut self,path:String,
+	pub fn start_with_log_path<T,S,P,I,F,RH,EH>(&mut self,path:String,
 						on_init_event_dispatcher:I,
 						flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
@@ -264,6 +269,7 @@ impl<E> SelfMatchEngine<E>
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						info_sender:S,
+						pinfo_sender:P,
 						game_time_limit:UsiGoTimeLimit,
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
@@ -273,6 +279,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,FileLogger>),
 				S: InfoSender,
+				P: PeriodicallyInfoSender,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&SelfMatchRunningError<E>) {
@@ -294,6 +301,7 @@ impl<E> SelfMatchEngine<E>
 					player1,player2,
 					player1_options, player2_options,
 					info_sender,
+					pinfo_sender,
 					game_time_limit,
 					uptime,
 					number_of_games,
@@ -314,12 +322,13 @@ impl<E> SelfMatchEngine<E>
 	/// * `player1_options` - player1に渡されるオプション
 	/// * `player2_options` - player2に渡されるオプション
 	/// * `info_sender` - infoコマンドを送信するための機能を持つオブジェクト
+	/// * `pnfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `game_time_limit` - 対局毎の制限時間
 	/// * `uptime` - 自己対局機能全体の実行時間制限。この時間に達すると自己対局は終了する（現在の対局だけではない）
 	/// * `number_of_games` - 自己対局機能で行われる対局の回数。この回数を終えると自己対局は終了する
 	/// * `logger` - ログを書き込むためのオブジェクト。実装によってファイル以外に書き込むものを指定することも可能。
 	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
-	pub fn start<T,S,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
+	pub fn start<T,S,P,I,F,R,RH,L,EH>(&mut self, on_init_event_dispatcher:I,
 						flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<dyn FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError>  +Send + 'static>>,
@@ -330,6 +339,7 @@ impl<E> SelfMatchEngine<E>
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						info_sender:S,
+						pinfo_sender:P,
 						game_time_limit:UsiGoTimeLimit,
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
@@ -340,6 +350,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
+				P: PeriodicallyInfoSender,
 				L: Logger + fmt::Debug + Send + 'static,
 				Arc<Mutex<L>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
@@ -355,6 +366,7 @@ impl<E> SelfMatchEngine<E>
 							player1,player2,
 							player1_options, player2_options,
 							info_sender,
+							pinfo_sender,
 							game_time_limit,
 							uptime,
 							number_of_games,
@@ -367,7 +379,7 @@ impl<E> SelfMatchEngine<E>
 		r
 	}
 
-	fn run<T,S,I,F,R,RH,L>(&mut self, mut on_init_event_dispatcher:I,
+	fn run<T,S,P,I,F,R,RH,L>(&mut self, mut on_init_event_dispatcher:I,
 						mut flip_players:F,
 						initial_position_creator:Option<Box<dyn FnMut() -> String + Send + 'static>>,
 						kifu_writer:Option<Box<dyn FnMut(&String,&Vec<Move>) -> Result<(),KifuWriteError> + Send + 'static>>,
@@ -378,6 +390,7 @@ impl<E> SelfMatchEngine<E>
 						player1_options:Vec<(String,SysEventOption)>,
 						player2_options:Vec<(String,SysEventOption)>,
 						info_sender:S,
+						pinfo_sender:P,
 						game_time_limit:UsiGoTimeLimit,
 						uptime:Option<Duration>,
 						number_of_games:Option<u32>,
@@ -389,6 +402,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
+				P: PeriodicallyInfoSender,
 				L: Logger + fmt::Debug + Send + 'static,
 				Arc<Mutex<L>>: Send + 'static {
 		let start_time = Instant::now();
@@ -1089,6 +1103,7 @@ impl<E> SelfMatchEngine<E>
 			let user_event_queue = [user_event_queue_arc[0].clone(),user_event_queue_arc[1].clone()];
 			let quit_ready = quit_ready_arc.clone();
 			let info_sender = info_sender.clone();
+			let pinfo_sender = pinfo_sender.clone();
 			let limit = game_time_limit;
 
 			let ss = ss.clone();
@@ -1122,7 +1137,9 @@ impl<E> SelfMatchEngine<E>
 
 										let m = player.think(s,&limit,
 															user_event_queue[player_i].clone(),
-															info_sender.clone(),on_error_handler.clone())?;
+															info_sender.clone(),
+															 pinfo_sender.clone(),
+															 on_error_handler.clone())?;
 
 										if !quit_ready.load(Ordering::Acquire) {
 											ss.send(SelfMatchMessage::NotifyMove(m))?;
@@ -1144,7 +1161,9 @@ impl<E> SelfMatchEngine<E>
 
 										let m = player.think_ponder(&limit,
 																user_event_queue[player_i].clone(),
-																info_sender.clone(),on_error_handler.clone())?;
+																info_sender.clone(),
+																	pinfo_sender.clone(),
+																	on_error_handler.clone())?;
 
 										match cr.recv()? {
 											SelfMatchMessage::PonderHit => {
