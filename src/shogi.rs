@@ -280,8 +280,8 @@ impl MochigomaCollections {
 	/// MochigomaCollectionsを生成
 	///
 	/// # Arguments
-	/// * 'ms' - 先手の持ち駒のハッシュマップ
-	/// * 'mg' - 後手の持ち駒のハッシュマップ
+	/// * `ms` - 先手の持ち駒のハッシュマップ
+	/// * `mg` - 後手の持ち駒のハッシュマップ
 	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
 		if ms.len() == 0 && mg.len() == 0 {
 			MochigomaCollections::Empty
@@ -488,11 +488,13 @@ impl From<(Teban,MochigomaKind)> for KomaKind {
 		}
 	}
 }
+/// 持ち駒を固定長配列で管理するための構造体
 pub struct Mochigoma {
 	values:[usize; MOCHIGOMA_KIND_MAX + 1],
 	sum:usize
 }
 impl Mochigoma {
+	/// Mochigomaを生成
 	pub fn new() -> Mochigoma {
 		Mochigoma {
 			values:[0; MOCHIGOMA_KIND_MAX + 1],
@@ -500,6 +502,11 @@ impl Mochigoma {
 		}
 	}
 
+	/// 持ち駒の種類と枚数を設定
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
+	/// * `count` - `kind`で指定した持ち駒の枚数
 	pub fn insert(&mut self,kind:MochigomaKind,count:usize) {
 		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
 		let c = *p;
@@ -510,14 +517,20 @@ impl Mochigoma {
 		*p = count;
 	}
 
+	/// 指定した持ち駒の枚数を取得
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
 	pub fn get(&self,kind:MochigomaKind) -> usize {
 		unsafe { *self.values.get_unchecked(kind as usize) }
 	}
 
+	/// 全ての持ち駒が空か？
 	pub fn is_empty(&self) -> bool {
 		self.sum == 0
 	}
 
+	/// 持ち駒の種類と個数のタプルを要素に持つイテレータを返す
 	pub fn iter<'a>(&'a mut self) -> impl Iterator<Item=(MochigomaKind,usize)> + 'a {
 		const MAP:[MochigomaKind; MOCHIGOMA_KIND_MAX+1] = [
 			MochigomaKind::Fu,
@@ -534,11 +547,19 @@ impl Mochigoma {
 		})
 	}
 
+	/// 指定した持ち駒を一枚追加
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
 	pub fn put(&mut self,kind:MochigomaKind) {
 		unsafe { *self.values.get_unchecked_mut(kind as usize) += 1 };
 		self.sum += 1;
 	}
 
+	/// 指定した持ち駒を一枚取り出す
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
 	pub fn pull(&mut self,kind:MochigomaKind) -> Result<usize,InvalidStateError> {
 		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
 
