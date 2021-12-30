@@ -352,13 +352,12 @@ impl MockPlayer {
 
 	fn think_inner<L,S,P>(&mut self,think_start_time:Option<Instant>,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,
-			pinfo_sender:P,
+			periodically_info:P,
 			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,CommonError> where L: Logger + Send + 'static,
 												  S: InfoSender + Send + 'static,
 												  P: PeriodicallyInfo {
 		let mut info_sender = info_sender.clone();
-		let mut pinfo_sender = pinfo_sender;
 		let info_send_notifier = self.info_send_notifier.clone();
 		let event_queue = event_queue.clone();
 		let on_error_handler = on_error_handler.clone();
@@ -374,7 +373,7 @@ impl MockPlayer {
 				r
 			}),
 			Box::new(move |interval,callback| {
-				pinfo_sender.start(interval,callback,&on_error_handler_inner)
+				periodically_info.start(interval,callback,&on_error_handler_inner)
 			}),
 			Box::new(move |player| {
 				player.handle_events(&*event_queue,&*on_error_handler)
@@ -474,12 +473,12 @@ impl USIPlayer<CommonError> for MockPlayer {
 
 	fn think_ponder<L,S,P>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
 			info_sender:S,
-			pinfo_sender:P,
+			periodically_info:P,
 			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,CommonError> where L: Logger + Send + 'static,
 												  S: InfoSender + Send + 'static,
 												  P: PeriodicallyInfo {
-		self.think_inner(None, limit, event_queue, info_sender, pinfo_sender, on_error_handler)
+		self.think_inner(None, limit, event_queue, info_sender, periodically_info, on_error_handler)
 	}
 
 	fn think_mate<L,S,P>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
@@ -494,7 +493,6 @@ impl USIPlayer<CommonError> for MockPlayer {
 		let event_queue = event_queue.clone();
 		let on_error_handler = on_error_handler.clone();
 		let on_error_handler_inner = on_error_handler.clone();
-		let mut pinfo_sender = pinfo_sender;
 
 		(self.on_think_mate.next().expect("Iterator of on think_mate callback is empty."))(
 			self,limit,event_queue.clone(),Box::new(move |commands| {

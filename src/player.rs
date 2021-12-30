@@ -487,7 +487,7 @@ pub trait PeriodicallyInfo: Send + 'static {
 	///       定期的伊送信するinfoコマンドの送信が必要なくなるタイミングまで保持してください。
 	///       このオブジェクトがスコープを抜けてdropされた時点で定期的に送信するinfoコマンド送信スレッドには停止要求が投げられ、
 	///       その後送信処理は終了します。
-	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
+	fn start<F,L>(self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Sized + Send + 'static,
 			  L: Logger + Send + 'static;
 }
@@ -515,7 +515,7 @@ impl<W> PeriodicallyInfo for USIPeriodicallyInfo<W>
 	where W: USIOutputWriter + Send + 'static {
 
 	#[must_use]
-	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
+	fn start<F,L>(self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 			  L: Logger + Send + 'static {
 		let (s,r) = unbounded();
@@ -589,7 +589,7 @@ impl ConsolePeriodicallyInfo {
 }
 impl PeriodicallyInfo for ConsolePeriodicallyInfo {
 	#[must_use]
-	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
+	fn start<F,L>(self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 											  L: Logger + Send + 'static {
 		self.inner.start(interval,info_generator,on_error_handler)
