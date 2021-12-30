@@ -557,7 +557,7 @@ impl From<&MochigomaCollections> for super::rule::MochigomaCollections {
 		match source {
 			&MochigomaCollections::Empty => super::rule::MochigomaCollections::Empty,
 			&MochigomaCollections::Pair(ref ms,ref mg) => {
-				MochigomaCollections::Pair(ms.into(),mg.into())
+				super::rule::MochigomaCollections::Pair(ms.into(),mg.into())
 			}
 		}
 	}

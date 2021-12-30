@@ -1188,20 +1188,20 @@ fn test_check_kyokumen_with_sfen_sente() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(&MochigomaKind::Fu).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kyou).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Gin).unwrap_or(&0) != &1 ||
-												ms.get(&MochigomaKind::Kin).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Fu).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kyou).unwrap_or(&0) != &1 ||
-												mg.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Gin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != &2 ||
+												ms.get(MochigomaKind::Kyou) != &0 ||
+												ms.get(MochigomaKind::Kei) != &0 ||
+												ms.get(MochigomaKind::Gin) != &1 ||
+												ms.get(MochigomaKind::Kin) != &2 ||
+												ms.get(MochigomaKind::Kaku) != &0 ||
+												ms.get(MochigomaKind::Hisha) != &0 ||
+												mg.get(MochigomaKind::Fu) != &0 ||
+												mg.get(MochigomaKind::Kyou) != &1 ||
+												mg.get(MochigomaKind::Kei) != &0 ||
+												mg.get(MochigomaKind::Gin) != &0 ||
+												mg.get(MochigomaKind::Kin) != &0 ||
+												mg.get(MochigomaKind::Kaku) != &0 ||
+												mg.get(MochigomaKind::Hisha) != &0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![] {
@@ -1226,20 +1226,20 @@ fn test_check_kyokumen_with_sfen_sente() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(&MochigomaKind::Fu).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kyou).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Gin).unwrap_or(&0) != &1 ||
-												ms.get(&MochigomaKind::Kin).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Fu).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kyou).unwrap_or(&0) != &1 ||
-												mg.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Gin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != &2 ||
+												ms.get(MochigomaKind::Kyou) != &0 ||
+												ms.get(MochigomaKind::Kei) != &0 ||
+												ms.get(MochigomaKind::Gin) != &1 ||
+												ms.get(MochigomaKind::Kin) != &2 ||
+												ms.get(MochigomaKind::Kaku) != &0 ||
+												ms.get(MochigomaKind::Hisha) != &0 ||
+												mg.get(MochigomaKind::Fu) != &0 ||
+												mg.get(MochigomaKind::Kyou) != &1 ||
+												mg.get(MochigomaKind::Kei) != &0 ||
+												mg.get(MochigomaKind::Gin) != &0 ||
+												mg.get(MochigomaKind::Kin) != &0 ||
+												mg.get(MochigomaKind::Kaku) != &0 ||
+												mg.get(MochigomaKind::Hisha) != &0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![
@@ -1396,20 +1396,20 @@ fn test_check_kyokumen_with_sfen_gote() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(&MochigomaKind::Fu).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kyou).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Gin).unwrap_or(&0) != &1 ||
-												ms.get(&MochigomaKind::Kin).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Fu).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kyou).unwrap_or(&0) != &1 ||
-												mg.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Gin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != &2 ||
+												ms.get(MochigomaKind::Kyou) != &0 ||
+												ms.get(MochigomaKind::Kei) != &0 ||
+												ms.get(MochigomaKind::Gin) != &1 ||
+												ms.get(MochigomaKind::Kin) != &2 ||
+												ms.get(MochigomaKind::Kaku) != &0 ||
+												ms.get(MochigomaKind::Hisha) != &0 ||
+												mg.get(MochigomaKind::Fu) != &0 ||
+												mg.get(MochigomaKind::Kyou) != &1 ||
+												mg.get(MochigomaKind::Kei) != &0 ||
+												mg.get(MochigomaKind::Gin) != &0 ||
+												mg.get(MochigomaKind::Kin) != &0 ||
+												mg.get(MochigomaKind::Kaku) != &0 ||
+												mg.get(MochigomaKind::Hisha) != &0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![] {
@@ -1434,20 +1434,20 @@ fn test_check_kyokumen_with_sfen_gote() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(&MochigomaKind::Fu).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kyou).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Gin).unwrap_or(&0) != &1 ||
-												ms.get(&MochigomaKind::Kin).unwrap_or(&0) != &2 ||
-												ms.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												ms.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Fu).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kyou).unwrap_or(&0) != &1 ||
-												mg.get(&MochigomaKind::Kei).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Gin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kin).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Kaku).unwrap_or(&0) != &0 ||
-												mg.get(&MochigomaKind::Hisha).unwrap_or(&0) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != &2 ||
+												ms.get(MochigomaKind::Kyou) != &0 ||
+												ms.get(MochigomaKind::Kei) != &0 ||
+												ms.get(MochigomaKind::Gin) != &1 ||
+												ms.get(MochigomaKind::Kin) != &2 ||
+												ms.get(MochigomaKind::Kaku) != &0 ||
+												ms.get(MochigomaKind::Hisha) != &0 ||
+												mg.get(MochigomaKind::Fu) != &0 ||
+												mg.get(MochigomaKind::Kyou) != &1 ||
+												mg.get(MochigomaKind::Kei) != &0 ||
+												mg.get(MochigomaKind::Gin) != &0 ||
+												mg.get(MochigomaKind::Kin) != &0 ||
+												mg.get(MochigomaKind::Kaku) != &0 ||
+												mg.get(MochigomaKind::Hisha) != &0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![
@@ -1861,20 +1861,20 @@ fn test_check_kyokumen_nowait() {
 														[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 														[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou]
 													])) && kyokumen.teban == Teban::Sente &&
-														ms.get(&MochigomaKind::Fu).unwrap_or(&0) ==&1 &&
-														ms.get(&MochigomaKind::Kyou).unwrap_or(&0) ==&0 &&
-														ms.get(&MochigomaKind::Kei).unwrap_or(&0) ==&0 &&
-														ms.get(&MochigomaKind::Gin).unwrap_or(&0) ==&0 &&
-														ms.get(&MochigomaKind::Kin).unwrap_or(&0) ==&0 &&
-														ms.get(&MochigomaKind::Kaku).unwrap_or(&0) ==&0 &&
-														ms.get(&MochigomaKind::Hisha).unwrap_or(&0) ==&0 &&
-														mg.get(&MochigomaKind::Fu).unwrap_or(&0) ==&1 &&
-														mg.get(&MochigomaKind::Kyou).unwrap_or(&0) ==&0 &&
-														mg.get(&MochigomaKind::Kei).unwrap_or(&0) ==&0 &&
-														mg.get(&MochigomaKind::Gin).unwrap_or(&0) ==&0 &&
-														mg.get(&MochigomaKind::Kin).unwrap_or(&0) ==&0 &&
-														mg.get(&MochigomaKind::Kaku).unwrap_or(&0) ==&0 &&
-														mg.get(&MochigomaKind::Hisha).unwrap_or(&0) ==&0 {
+														ms.get(MochigomaKind::Fu) ==&1 &&
+														ms.get(MochigomaKind::Kyou) == 0 &&
+														ms.get(MochigomaKind::Kei) == 0 &&
+														ms.get(MochigomaKind::Gin) == 0 &&
+														ms.get(MochigomaKind::Kin) == 0 &&
+														ms.get(MochigomaKind::Kaku) == 0 &&
+														ms.get(MochigomaKind::Hisha) == 0 &&
+														mg.get(MochigomaKind::Fu) ==&1 &&
+														mg.get(MochigomaKind::Kyou) == 0 &&
+														mg.get(MochigomaKind::Kei) == 0 &&
+														mg.get(MochigomaKind::Gin) == 0 &&
+														mg.get(MochigomaKind::Kin) == 0 &&
+														mg.get(MochigomaKind::Kaku) == 0 &&
+														mg.get(MochigomaKind::Hisha) == 0 {
 
 														let _ = player.sender.send(Ok(ActionKind::Think));
 													} else {
