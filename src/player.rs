@@ -395,6 +395,7 @@ impl<W,L> Clone for OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, 
 		}
 	}
 }
+#[must_use]
 /// KeepAliveの送信を指定された間隔で定期的に行う
 pub struct AutoKeepAlive {
 	/// Drop時に送信スレッドに停止メッセージを送るためのSender
@@ -450,6 +451,7 @@ impl PeriodicallyInfoSender {
 		}
 	}
 }
+#[must_use]
 impl Drop for PeriodicallyInfoSender {
 	fn drop(&mut self) {
 		let _ = self.stop_sender.send(());
