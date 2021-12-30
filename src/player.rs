@@ -348,6 +348,11 @@ pub trait KeepAliveSender {
 	///
 	/// # Arguments
 	/// * `sec` - 空行を送信する間隔
+	///
+	/// note: このメソッドから返された値を_から始まる任意の名前の変数に格納して、
+	/// 　　　　KeepAliveの送信が必要なくなるタイミングまで保持してください。
+	///       このオブジェクトがスコープを抜けてdropされた時点でKeepAlive送信スレッドには停止要求が投げられ、
+	///       その後KeepAlive送信処理は終了します。
 	fn auto(&self,sec:u64) -> AutoKeepAlive;
 }
 /// `KeepAliveSender`の実装
@@ -398,6 +403,10 @@ impl<W,L> Clone for OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, 
 	}
 }
 /// KeepAliveの送信を指定された間隔で定期的に行う
+/// note: このオブジェクトは`KeepAliveSender`を実装した型の`auto`メソッドから返されますが、
+///       必ず返された値を_から始まる任意の名前の変数に格納して、KeepAliveの送信が必要なくなるタイミングまで保持してください。
+///       このオブジェクトがスコープを抜けてdropされた時点でKeepAlive送信スレッドには停止要求が投げられ、
+///       その後KeepAlive送信処理は終了します。
 pub struct AutoKeepAlive {
 	/// Drop時に送信スレッドに停止メッセージを送るためのSender
 	stop_sender:crossbeam_channel::Sender<()>
@@ -440,6 +449,12 @@ impl Drop for AutoKeepAlive {
 }
 /// 一定時間ごとに定期的に送信するinfoコマンドの送信用
 /// これ自体はコマンドの送信を行わない。dropされたタイミングで送信用スレッドを止める役割を担う
+///
+/// note: このオブジェクトは`PeriodicallyInfo`を実装した型の`start`メソッドから返されますが、
+///       必ず返された値を_から始まる任意の名前の変数に格納して、
+///       定期的伊送信するinfoコマンドの送信が必要なくなるタイミングまで保持してください。
+///       このオブジェクトがスコープを抜けてdropされた時点で定期的に送信するinfoコマンド送信スレッドには停止要求が投げられ、
+///       その後送信処理は終了します。
 pub struct PeriodicallyInfoSender {
 	/// * `stop_sender` Drop時に送信スレッドに停止メッセージを送るためのSender
 	stop_sender:crossbeam_channel::Sender<()>,
@@ -467,6 +482,11 @@ pub trait PeriodicallyInfo: Send + 'static {
 	/// * `interval` - infoコマンド送信の間隔（単位はミリ秒））
 	/// * `info_generator` - `UsiInfoSubCommand`のリストを返すジェネレータ。定期的に呼びdされ返されたコマンドを僧院する。
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
+	///
+	/// note: このメソッドから返された値を_から始まる任意の名前の変数に格納して、
+	///       定期的伊送信するinfoコマンドの送信が必要なくなるタイミングまで保持してください。
+	///       このオブジェクトがスコープを抜けてdropされた時点で定期的に送信するinfoコマンド送信スレッドには停止要求が投げられ、
+	///       その後送信処理は終了します。
 	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Sized + Send + 'static,
 			  L: Logger + Send + 'static;
