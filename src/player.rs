@@ -63,7 +63,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think<L,S,P>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			info_sender:S,periodically_info:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,E> where L: Logger + Send + 'static,
 										S: InfoSender,
 										P: PeriodicallyInfo,;
@@ -75,7 +75,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_ponder<L,S,P>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			info_sender:S,periodically_info:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<BestMove,E> where L: Logger + Send + 'static,
 										S: InfoSender + Send + 'static,
 										P: PeriodicallyInfo;
@@ -87,7 +87,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `pinfo_sender` - あらかじめスケジュールされた一定の間隔でinfoコマンドを送信するための機能を持つオブジェクト
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	fn think_mate<L,S,P>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,pinfo_sender:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			info_sender:S,periodically_info:P,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 			-> Result<CheckMate,E> where L: Logger + Send + 'static,
 										 S: InfoSender,
 										 P: PeriodicallyInfo;
