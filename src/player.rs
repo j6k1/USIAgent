@@ -343,6 +343,7 @@ impl Clone for ConsoleInfoSender {
 pub trait KeepAliveSender {
 	/// 空行を送信する
 	fn send(&self);
+	#[must_use]
 	/// Dropされる前の間指定された間隔（単位は秒）で空行を送信するオブジェクトを生成する
 	///
 	/// # Arguments
@@ -383,6 +384,7 @@ impl<W,L> KeepAliveSender for OnKeepAlive<W,L> where W: USIOutputWriter + Send +
 		};
 	}
 
+	#[must_use]
 	fn auto(&self,sec:u64) -> AutoKeepAlive {
 		AutoKeepAlive::new(sec,self.clone())
 	}
@@ -395,7 +397,6 @@ impl<W,L> Clone for OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, 
 		}
 	}
 }
-#[must_use]
 /// KeepAliveの送信を指定された間隔で定期的に行う
 pub struct AutoKeepAlive {
 	/// Drop時に送信スレッドに停止メッセージを送るためのSender
@@ -459,6 +460,7 @@ impl Drop for PeriodicallyInfoSender {
 }
 /// 一定時間ごとに定期的に送信するinfoコマンドの送信用
 pub trait PeriodicallyInfo: Send + 'static {
+	#[must_use]
 	/// 送信するコマンドの生成用コールバックの登録と共に送信開始
 	///
 	/// # Arguments
@@ -492,6 +494,7 @@ impl<W> USIPeriodicallyInfo<W>
 impl<W> PeriodicallyInfo for USIPeriodicallyInfo<W>
 	where W: USIOutputWriter + Send + 'static {
 
+	#[must_use]
 	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 			  L: Logger + Send + 'static {
@@ -565,6 +568,7 @@ impl ConsolePeriodicallyInfo {
 	}
 }
 impl PeriodicallyInfo for ConsolePeriodicallyInfo {
+	#[must_use]
 	fn start<F,L>(&mut self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 											  L: Logger + Send + 'static {
