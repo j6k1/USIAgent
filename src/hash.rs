@@ -307,15 +307,12 @@ impl<T> KyokumenHash<T>
 
 						hash = match obtained  {
 								&None => hash,
-								&Some(ref obtained) => {
+								&Some(obtained) => {
 									let c =  match t {
 										Teban::Sente => {
 											match mc {
 												&MochigomaCollections::Pair(ref mc,_) => {
-													match mc.get(obtained) {
-														Some(c) => *c as usize,
-														None => 0,
-													}
+													mc.get(obtained)
 												},
 												&MochigomaCollections::Empty => 0,
 											}
@@ -323,17 +320,14 @@ impl<T> KyokumenHash<T>
 										Teban::Gote => {
 											match mc {
 												&MochigomaCollections::Pair(_,ref mc) => {
-													match mc.get(obtained) {
-														Some(c) => *c as usize,
-														None => 0,
-													}
+													mc.get(obtained)
 												},
 												&MochigomaCollections::Empty => 0,
 											}
 										}
 									};
 
-									let k = *obtained as usize;
+									let k = obtained as usize;
 
 									match t {
 										Teban::Sente => {
@@ -361,11 +355,11 @@ impl<T> KyokumenHash<T>
 							Teban::Sente => {
 								match mc {
 									&MochigomaCollections::Pair(ref mc,_) => {
-										match mc.get(&mk) {
-											None | Some(&0) => {
+										match mc.get(mk) {
+											0 => {
 												return hash;
 											}
-											Some(c) => *c as usize,
+											c => c,
 										}
 									},
 									&MochigomaCollections::Empty => {
@@ -376,11 +370,11 @@ impl<T> KyokumenHash<T>
 							Teban::Gote => {
 								match mc {
 									&MochigomaCollections::Pair(_,ref mc) => {
-										match mc.get(&mk) {
-											None | Some(&0) => {
+										match mc.get(mk) {
+											0 => {
 												return hash;
 											}
-											Some(c) => *c as usize,
+											c => c,
 										}
 									},
 									&MochigomaCollections::Empty => {
@@ -455,8 +449,7 @@ impl<T> KyokumenHash<T>
 	/// * `b` - 盤面
 	/// * `ms` - 先手の持ち駒
 	/// * `mg` - 後手の持ち駒
-	pub fn calc_initial_hash(&self,b:&Banmen,
-		ms:&HashMap<MochigomaKind,u32>,mg:&HashMap<MochigomaKind,u32>) -> (T,T) {
+	pub fn calc_initial_hash(&self,b:&Banmen,ms:&Mochigoma,mg:&Mochigoma) -> (T,T) {
 		let mut mhash:T = T::INITIAL_HASH;
 		let mut shash:Wrapping<T> = Wrapping(T::INITIAL_HASH);
 
@@ -471,24 +464,15 @@ impl<T> KyokumenHash<T>
 				}
 			}
 		}
-		for k in &MOCHIGOMA_KINDS {
-			match ms.get(&k) {
-				Some(c) => {
-					for i in 0..(*c as usize) {
-						mhash = mhash ^ self.mochigoma_hash_seeds[0][i][*k as usize];
-						shash = shash + Wrapping(self.mochigoma_hash_seeds[0][i][*k as usize]);
-					}
-				},
-				None => (),
+		for &k in &MOCHIGOMA_KINDS {
+			for i in 0..(ms.get(k)) {
+				mhash = mhash ^ self.mochigoma_hash_seeds[0][i][k as usize];
+				shash = shash + Wrapping(self.mochigoma_hash_seeds[0][i][k as usize]);
 			}
-			match mg.get(&k) {
-				Some(c) => {
-					for i in 0..(*c as usize) {
-						mhash = mhash ^ self.mochigoma_hash_seeds[1][i][*k as usize];
-						shash = shash + Wrapping(self.mochigoma_hash_seeds[1][i][*k as usize]);
-					}
-				},
-				None => (),
+
+			for i in 0..(mg.get(k)) {
+				mhash = mhash ^ self.mochigoma_hash_seeds[1][i][k as usize];
+				shash = shash + Wrapping(self.mochigoma_hash_seeds[1][i][k as usize]);
 			}
 		}
 

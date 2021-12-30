@@ -1,7 +1,6 @@
 //! 将棋の盤面や持ち駒等の定義
 use std::fmt;
 use std::fmt::Formatter;
-use std::collections::HashMap;
 
 use TryFrom;
 use rule::AppliedMove;
@@ -230,7 +229,7 @@ pub enum MochigomaCollections {
 	/// 持ち駒が先手後手とも無し
 	Empty,
 	/// 先手後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で表現
-	Pair(HashMap<MochigomaKind,u32>,HashMap<MochigomaKind,u32>),
+	Pair(Mochigoma,Mochigoma),
 }
 impl Clone for MochigomaCollections {
 	fn clone(&self) -> MochigomaCollections {
@@ -251,25 +250,17 @@ impl PartialEq for MochigomaCollections {
 						true
 					}
 					&MochigomaCollections::Pair(ref ms,ref mg) => {
-						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
-						(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
+						ms.is_empty() && mg.is_empty()
 					}
 				}
 			},
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
 				match other {
 					&MochigomaCollections::Empty => {
-						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
-						(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
+						ms.is_empty() && mg.is_empty()
 					}
 					&MochigomaCollections::Pair(ref oms,ref omg) => {
-						MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
-							acc = acc && ms.get(k).map(|&c| c).unwrap_or(0) == oms.get(k).map(|&c| c).unwrap_or(0);
-							acc
-						}) && MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
-							acc = acc && mg.get(k).map(|&c| c).unwrap_or(0) == omg.get(k).map(|&c| c).unwrap_or(0);
-							acc
-						})
+						ms == oms && mg == omg
 					}
 				}
 			}
@@ -282,8 +273,8 @@ impl MochigomaCollections {
 	/// # Arguments
 	/// * `ms` - 先手の持ち駒のハッシュマップ
 	/// * `mg` - 後手の持ち駒のハッシュマップ
-	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
-		if ms.len() == 0 && mg.len() == 0 {
+	pub fn new(ms:Mochigoma,mg:Mochigoma) -> MochigomaCollections {
+		if ms.is_empty() && mg.is_empty() {
 			MochigomaCollections::Empty
 		} else {
 			MochigomaCollections::Pair(ms,mg)
@@ -295,8 +286,7 @@ impl MochigomaCollections {
 		match self {
 			&MochigomaCollections::Empty => true,
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
-				(ms.is_empty() && mg.is_empty()) ||
-				(ms.values().fold(0,|acc,&c| acc + c) == 0 && mg.values().fold(0,|acc,&c| acc + c) == 0)
+				ms.is_empty() && mg.is_empty()
 			}
 		}
 	}
@@ -489,6 +479,7 @@ impl From<(Teban,MochigomaKind)> for KomaKind {
 	}
 }
 /// 持ち駒を固定長配列で管理するための構造体
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Mochigoma {
 	values:[usize; MOCHIGOMA_KIND_MAX + 1],
 	sum:usize
@@ -531,7 +522,7 @@ impl Mochigoma {
 	}
 
 	/// 持ち駒の種類と個数のタプルを要素に持つイテレータを返す
-	pub fn iter<'a>(&'a mut self) -> impl Iterator<Item=(MochigomaKind,usize)> + 'a {
+	pub fn iter<'a>(&'a self) -> impl Iterator<Item=(MochigomaKind,usize)> + 'a {
 		const MAP:[MochigomaKind; MOCHIGOMA_KIND_MAX+1] = [
 			MochigomaKind::Fu,
 			MochigomaKind::Kyou,
@@ -584,43 +575,43 @@ mod tests {
 		assert_eq!(mc1,mc2);
 
 		for &kind in &MOCHIGOMA_KINDS {
-			let mut ms = HashMap::new();
+			let mut ms = Mochigoma::new();
 
 			ms.insert(kind,1);
-			let mc1 = MochigomaCollections::Pair(ms,HashMap::new());
+			let mc1 = MochigomaCollections::Pair(ms,Mochigoma::new());
 			let mc2 = mc1.clone();
 
 			assert_eq!(mc1, mc2);
 		}
 
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		for &kind in &MOCHIGOMA_KINDS {
 			ms.insert(kind, 1);
 		}
 
-		let mc1 = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc1 = MochigomaCollections::Pair(ms,Mochigoma::new());
 		let mc2 = mc1.clone();
 
 		assert_eq!(mc1, mc2);
 
 		for &kind in &MOCHIGOMA_KINDS {
-			let mut mg = HashMap::new();
+			let mut mg = Mochigoma::new();
 
 			mg.insert(kind,1);
-			let mc1 = MochigomaCollections::Pair(HashMap::new(),mg);
+			let mc1 = MochigomaCollections::Pair(Mochigoma::new(),mg);
 			let mc2 = mc1.clone();
 
 			assert_eq!(mc1, mc2);
 		}
 
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		for &kind in &MOCHIGOMA_KINDS {
 			mg.insert(kind, 1);
 		}
 
-		let mc1 = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc1 = MochigomaCollections::Pair(Mochigoma::new(),mg);
 		let mc2 = mc1.clone();
 
 		assert_eq!(mc1, mc2);

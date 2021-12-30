@@ -11,7 +11,6 @@ use std::thread::JoinHandle;
 use std::marker::Send;
 use std::marker::PhantomData;
 use std::time::{Instant,Duration};
-use std::collections::HashMap;
 use std::io::Write;
 use std::io::BufWriter;
 use std::fs;
@@ -625,7 +624,7 @@ impl<E> SelfMatchEngine<E>
 						}
 					},
 					MochigomaCollections::Empty => {
-						(HashMap::new(),HashMap::new())
+						(Mochigoma::new(),Mochigoma::new())
 					},
 				};
 
@@ -1127,7 +1126,7 @@ impl<E> SelfMatchEngine<E>
 												(ms.clone(),mg.clone())
 											},
 											MochigomaCollections::Empty => {
-												(HashMap::new(),HashMap::new())
+												(Mochigoma::new(),Mochigoma::new())
 											}
 										};
 
@@ -1151,7 +1150,7 @@ impl<E> SelfMatchEngine<E>
 												(ms.clone(),mg.clone())
 											},
 											MochigomaCollections::Empty => {
-												(HashMap::new(),HashMap::new())
+												(Mochigoma::new(),Mochigoma::new())
 											}
 										};
 

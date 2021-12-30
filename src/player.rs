@@ -5,7 +5,6 @@ use std::sync::Mutex;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
-use std::collections::HashMap;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::error::Error;
@@ -52,7 +51,7 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// * `mg` - 後手の持ち駒
 	/// * `n` - 次の手が何手目か。（USIプロトコルのSFENの原案にあるために存在するが、現在固定で1が送られてくるため無視してかまわない）
 	/// * `m` - 指し手のリスト
-	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
+	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:Mochigoma,mg:Mochigoma,n:u32,m:Vec<Move>)
 		-> Result<(),E>;
 	/// 思考開始。この関数の戻り値が指し手となる。AIの実装の核となる部分
 	/// # Arguments

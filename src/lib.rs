@@ -31,7 +31,6 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::marker::Send;
 use std::marker::PhantomData;
-use std::collections::HashMap;
 
 use std::sync::mpsc;
 use queuingtask::ThreadQueue;
@@ -461,19 +460,19 @@ impl<T,E> UsiAgent<T,E>
 				&SystemEvent::Position(ref t, ref p, ref n, ref v) => {
 					let(b,m) = match p {
 						&UsiInitialPosition::Startpos => {
-							(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+							(rule::BANMEN_START_POS.clone(), MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()))
 						},
 						&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Pair(ref ms,ref mg)) => {
 							(b.clone(),MochigomaCollections::Pair(ms.clone(),mg.clone()))
 						},
 						&UsiInitialPosition::Sfen(ref b,MochigomaCollections::Empty) => {
-							(b.clone(),MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+							(b.clone(),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()))
 						}
 					};
 
 					let (ms,mg) = match m {
 						MochigomaCollections::Pair(ms, mg) => (ms, mg),
-						_ => (HashMap::new(),HashMap::new())
+						_ => (Mochigoma::new(),Mochigoma::new())
 					};
 
 					let on_error_handler_inner = on_error_handler.clone();
