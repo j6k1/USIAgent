@@ -8,6 +8,8 @@ use error::*;
 
 use Find;
 use MaxIndex;
+use std::collections::HashMap;
+
 /// 盤面上の駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaKind {
@@ -561,6 +563,14 @@ impl Mochigoma {
 			self.sum -= 1;
 			Ok(*p)
 		}
+	}
+}
+impl From<&Mochigoma> for HashMap<MochigomaKind,u32> {
+	fn from(source:&Mochigoma) -> HashMap<MochigomaKind,u32> {
+		source.iter().fold(HashMap::new(),|mut acc,(k,c)| {
+			acc.insert(k,c as u32);
+			acc
+		})
 	}
 }
 #[cfg(test)]

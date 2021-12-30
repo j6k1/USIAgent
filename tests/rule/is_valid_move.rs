@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
@@ -3140,11 +3138,11 @@ fn test_is_valid_move_put_valid_sente() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
 
 		ms.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3193,11 +3191,11 @@ fn test_is_valid_move_put_valid_gote() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3248,11 +3246,11 @@ fn test_is_valid_move_put_invalid_sente() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
 
 		ms.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3322,12 +3320,12 @@ fn test_is_valid_move_put_invalid_mochigoma_all_zero_sente() {
 
 	for &kind in &kinds {
 		let state = State::new(banmen.clone());
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
 
 		for &k in &MOCHIGOMA_KINDS {
 			ms.insert(k, 0);
 		}
-		let mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		let m = rule::AppliedMove::from(Move::Put(kind, KomaDstPutPosition(5, 5)));
 
@@ -3370,11 +3368,11 @@ fn test_is_valid_move_put_invalid_gote() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3448,12 +3446,12 @@ fn test_is_valid_move_put_invalid_mochigoma_all_zero_gote() {
 	let state = State::new(banmen.clone());
 
 	for &kind in &kinds {
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		for &k in &MOCHIGOMA_KINDS {
 			mg.insert(k, 0);
 		}
-		let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		let m = rule::AppliedMove::from(Move::Put(kind,KomaDstPutPosition(5,5)));
 

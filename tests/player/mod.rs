@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::mpsc;
 
 use usiagent::player::*;
@@ -82,7 +81,7 @@ fn test_apply_moves() {
 
 	let hasher = KyokumenHash::new();
 
-	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
+	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&Mochigoma::new(),&Mochigoma::new());
 
 	let mvs = mvs.into_iter().map(|m| {
 		rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,(m.1).2)))
@@ -111,7 +110,7 @@ fn test_apply_moves() {
 		 });
 
 	let (mhash,shash) = r;
-	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&HashMap::new(),&HashMap::new());
+	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&Mochigoma::new(),&Mochigoma::new());
 
 	assert_eq!(amhash,mhash);
 	assert_eq!(ashash,shash);

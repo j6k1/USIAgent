@@ -6,7 +6,6 @@ use std::io::Write;
 use std::convert::From;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::collections::HashMap;
 use std::collections::BTreeMap;
 use std::iter::Iterator;
 use std::ops::Add;
@@ -295,8 +294,8 @@ impl MockPlayer {
 				on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer, Box<dyn KeepAliveSender>) -> Result<(),CommonError> + Send + 'static)>>,
 				on_newgame: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
 				on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
-															HashMap<MochigomaKind,u32>,
-															HashMap<MochigomaKind,u32>,u32,Vec<Move>
+															Mochigoma,
+															Mochigoma,u32,Vec<Move>
 				) -> Result<(),CommonError> + Send + 'static)>>,
 
 				on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,
@@ -453,7 +452,7 @@ impl USIPlayer<CommonError> for MockPlayer {
 		(self.on_newgame.next().expect("Iterator of on newgame callback is empty."))(self)
 	}
 
-	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>,n:u32,m:Vec<Move>)
+	fn set_position(&mut self,teban:Teban,ban:Banmen,ms:Mochigoma,mg:Mochigoma,n:u32,m:Vec<Move>)
 		-> Result<(),CommonError> {
 		self.stop = false;
 		(self.on_position.next().expect("Iterator of on set_position callback is empty."))(
@@ -551,5 +550,15 @@ impl USIPlayer<CommonError> for MockPlayer {
 		self.quited = true;
 		self.started = false;
 		Ok(())
+	}
+}
+impl From<&MochigomaCollections> for super::rule::MochigomaCollections {
+	fn from(source:&MochigomaCollections) -> super::rule::MochigomaCollections {
+		match source {
+			&MochigomaCollections::Empty => super::rule::MochigomaCollections::Empty,
+			&MochigomaCollections::Pair(ref ms,ref mg) => {
+				MochigomaCollections::Pair(ms.into(),mg.into())
+			}
+		}
 	}
 }

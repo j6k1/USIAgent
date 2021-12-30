@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
@@ -119,8 +117,8 @@ fn test_apply_move_none_check_mochigoma_not_empty_sente() {
 
 	let mut teban = Teban::Sente;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
-	let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
+	let mg:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Fu, 1);
 
@@ -262,8 +260,8 @@ fn test_apply_move_none_check_mochigoma_not_empty_gote() {
 	let mut state = State::new(banmen.clone());
 	let mut teban = Teban::Gote;
 
-	let ms:HashMap<MochigomaKind,u32> = HashMap::new();
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let ms:Mochigoma = Mochigoma::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Fu, 1);
 
@@ -411,8 +409,8 @@ fn test_apply_move_none_check_put_move_sente() {
 		let mut state = State::new(banmen.clone());
 
 		let teban = Teban::Sente;
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
+		let mg:Mochigoma = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Fu, 2);
 		ms.insert(MochigomaKind::Kyou,1);
@@ -427,8 +425,8 @@ fn test_apply_move_none_check_put_move_sente() {
 		}
 
 		let teban = Teban::Sente;
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
+		let mg:Mochigoma = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Fu, 2);
 		ms.insert(MochigomaKind::Kyou,1);
@@ -477,8 +475,8 @@ fn test_apply_move_none_check_put_move_gote() {
 		let mut state = State::new(banmen.clone());
 
 		let teban = Teban::Gote;
-		let ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let ms:Mochigoma = Mochigoma::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Fu, 2);
 		mg.insert(MochigomaKind::Kyou,1);
@@ -493,8 +491,8 @@ fn test_apply_move_none_check_put_move_gote() {
 		}
 
 		let teban = Teban::Gote;
-		let ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let ms:Mochigoma = Mochigoma::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Fu, 2);
 		mg.insert(MochigomaKind::Kyou,1);
@@ -3775,11 +3773,11 @@ fn test_apply_valid_move_put_valid_sente() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
 
 		ms.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3828,11 +3826,11 @@ fn test_apply_valid_move_put_valid_gote() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3883,11 +3881,11 @@ fn test_apply_valid_move_put_invalid_sente() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
 
 		ms.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3936,11 +3934,11 @@ fn test_apply_valid_move_put_invalid_gote() {
 	let state = State::new(banmen.clone());
 
 	for (kind,deny_line) in kinds.iter().zip(&deny_line) {
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(*kind, 1);
 
-		let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		for y in 0..9 {
 			for x in 0..9 {
@@ -3990,7 +3988,7 @@ fn test_apply_moves() {
 	let oute_kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 	let hasher = KyokumenHash::new();
 
-	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
+	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&Mochigoma::new(),&Mochigoma::new());
 
 	let mvs = mvs.into_iter().map(|m| {
 		rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,(m.1).2)))
@@ -4008,7 +4006,7 @@ fn test_apply_moves() {
 		 _,
 		 _) = Rule::apply_moves(state,teban,mc,&mvs,imhash,ishash,kyokumen_map,oute_kyokumen_map,&hasher);
 
-	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&HashMap::new(),&HashMap::new());
+	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&Mochigoma::new(),&Mochigoma::new());
 
 	assert_eq!(amhash,mhash);
 	assert_eq!(ashash,shash);
@@ -4045,7 +4043,7 @@ fn test_apply_moves_with_callback() {
 
 	let hasher = KyokumenHash::new();
 
-	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
+	let (imhash, ishash) = hasher.calc_initial_hash(&BANMEN_START_POS,&Mochigoma::new(),&Mochigoma::new());
 
 	let mvs = mvs.into_iter().map(|m| {
 		rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(m.0).0,(m.0).1+1),KomaDstToPosition(9-(m.1).0,(m.1).1+1,(m.1).2)))
@@ -4074,7 +4072,7 @@ fn test_apply_moves_with_callback() {
 		 });
 
 	let (mhash,shash) = r;
-	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&HashMap::new(),&HashMap::new());
+	let (amhash, ashash) = hasher.calc_initial_hash(&after_banmen,&Mochigoma::new(),&Mochigoma::new());
 
 	assert_eq!(amhash,mhash);
 	assert_eq!(ashash,shash);
