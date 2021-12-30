@@ -3583,7 +3583,7 @@ fn test_game_time_limit_1times() {
 
 	assert_eq!(res,Ok(ActionKind::GameOver));
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameEnd timed out.");
+	let res = er.recv_timeout(Duration::from_millis(350)).expect("attempt to receive EventState::GameEnd timed out.");
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
@@ -5793,7 +5793,7 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 
 	assert_eq!(res,Ok(ActionKind::Think));
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::Moved timed out.");
+	let res = er.recv_timeout(Duration::from_millis(180)).expect("attempt to receive EventState::Moved timed out.");
 
 	assert_eq!(res,Ok(EventState::Moved));
 
@@ -5825,7 +5825,7 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 
 	assert_eq!(res,Ok(ActionKind::GameOver));
 
-	let res = er.recv_timeout(Duration::from_millis(60)).expect("attempt to receive EventState::GameEnd timed out.");
+	let res = er.recv_timeout(Duration::from_millis(180)).expect("attempt to receive EventState::GameEnd timed out.");
 
 	assert_eq!(res,Ok(EventState::GameEnd));
 
