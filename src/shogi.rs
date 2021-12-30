@@ -573,6 +573,15 @@ impl From<&Mochigoma> for HashMap<MochigomaKind,u32> {
 		})
 	}
 }
+impl From<&HashMap<MochigomaKind,u32>> for Mochigoma {
+	fn from(source:&HashMap<MochigomaKind,u32>) -> Mochigoma {
+		MOCHIGOMA_KINDS.iter().fold(Mochigoma::new(),| mut acc,k | {
+			let count = source.get(k).map(|&c| c).unwrap_or(0);
+			acc.insert(*k,count as usize);
+			acc
+		})
+	}
+}
 #[cfg(test)]
 mod tests {
 	use super::*;

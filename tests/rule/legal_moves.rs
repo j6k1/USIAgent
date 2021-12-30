@@ -7448,7 +7448,7 @@ fn test_legal_moves_from_mochigoma_with_fu_sente() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,Mochigoma::new());
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7468,7 +7468,7 @@ fn test_legal_moves_from_mochigoma_with_fu_gote() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7608,7 +7608,7 @@ fn test_legal_moves_from_mochigoma_with_kyou_sente() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,Mochigoma::new());
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7626,7 +7626,7 @@ fn test_legal_moves_from_mochigoma_with_kyou_gote() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7646,7 +7646,7 @@ fn test_legal_moves_from_mochigoma_with_kei_sente() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,Mochigoma::new());
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7666,7 +7666,7 @@ fn test_legal_moves_from_mochigoma_with_kei_gote() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7684,7 +7684,7 @@ fn test_legal_moves_from_mochigoma_with_gin_sente() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,Mochigoma::new());
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7702,7 +7702,7 @@ fn test_legal_moves_from_mochigoma_with_gin_gote() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7720,7 +7720,7 @@ fn test_legal_moves_from_mochigoma_with_kin_sente() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,Mochigoma::new());
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7738,7 +7738,7 @@ fn test_legal_moves_from_mochigoma_with_kin_gote() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7756,7 +7756,7 @@ fn test_legal_moves_from_mochigoma_with_hisha_sente() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,Mochigoma::new());
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7774,7 +7774,7 @@ fn test_legal_moves_from_mochigoma_with_hisha_gote() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7792,7 +7792,7 @@ fn test_legal_moves_from_mochigoma_with_kaku_sente() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(ms,Mochigoma::new());
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Sente,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Sente,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7810,7 +7810,7 @@ fn test_legal_moves_from_mochigoma_with_kaku_gote() {
 
 	let mc:MochigomaCollections = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
-	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc,&banmen),
+	assert_eq!(legal_moves_from_mochigoma(&Teban::Gote,&mc.clone().into(),&banmen),
 		Rule::legal_moves_from_mochigoma(Teban::Gote,&mc,&State::new(banmen.clone())).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7826,7 +7826,7 @@ fn test_legal_moves_all_sente() {
 		position => position.extract()
 	};
 
-	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
+	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc.clone().into()),
 		Rule::legal_moves_all(Teban::Sente,&State::new(banmen.clone()),&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -7842,7 +7842,7 @@ fn test_legal_moves_all_gote() {
 		position => position.extract()
 	};
 
-	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),
+	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc.clone().into()),
 		Rule::legal_moves_all(Teban::Gote,&State::new(banmen.clone()),&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()

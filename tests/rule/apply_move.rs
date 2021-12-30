@@ -58,7 +58,7 @@ fn test_apply_move_none_check_sente() {
 	let mut state = State::new(banmen.clone());
 
 	let mut teban = Teban::Sente;
-	let mut omc = MochigomaCollections::Empty;
+	let mut omc = MochigomaCollections::Empty.into();
 
 	for m in &mvs {
 		for m in m {
@@ -122,7 +122,7 @@ fn test_apply_move_none_check_mochigoma_not_empty_sente() {
 
 	ms.insert(MochigomaKind::Fu, 1);
 
-	let mut omc = MochigomaCollections::Pair(ms,mg);
+	let mut omc = MochigomaCollections::Pair(ms,mg).into();
 
 	for m in &mvs {
 		for m in m {
@@ -190,7 +190,7 @@ fn test_apply_move_none_check_gote() {
 	let mut banmen = BANMEN_START_POS.clone();
 	let mut state = State::new(banmen.clone());
 	let mut teban = Teban::Gote;
-	let mut omc = MochigomaCollections::Empty;
+	let mut omc = MochigomaCollections::Empty.into();
 
 	for m in &mvs {
 		for m in m {
@@ -265,7 +265,7 @@ fn test_apply_move_none_check_mochigoma_not_empty_gote() {
 
 	mg.insert(MochigomaKind::Fu, 1);
 
-	let mut omc = MochigomaCollections::Pair(ms,mg);
+	let mut omc = MochigomaCollections::Pair(ms,mg).into();
 
 	for m in &mvs {
 		for m in m {
@@ -312,7 +312,7 @@ fn test_apply_move_none_check_nari_move_sente() {
 	let mut banmen = BANMEN_START_POS.clone();
 	let mut state = State::new(banmen.clone());
 	let teban = Teban::Sente;
-	let mut mc = MochigomaCollections::Empty;
+	let mut mc = MochigomaCollections::Empty.into();
 
 	for m in &mvs {
 		match apply_move_none_check(&banmen,&teban,&mc,m) {
@@ -334,7 +334,7 @@ fn test_apply_move_none_check_nari_move_sente() {
 		}
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc),
+	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc.clone().into()),
 		Rule::legal_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -364,7 +364,7 @@ fn test_apply_move_none_check_nari_move_gote() {
 	let mut banmen = BANMEN_START_POS.clone();
 	let mut state = State::new(banmen.clone());
 	let teban = Teban::Gote;
-	let mut mc = MochigomaCollections::Empty;
+	let mut mc = MochigomaCollections::Empty.into();
 
 	for m in &mvs {
 		match apply_move_none_check(&banmen,&teban,&mc,m) {
@@ -386,7 +386,7 @@ fn test_apply_move_none_check_nari_move_gote() {
 		}
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc),
+	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc.clone().into()),
 		Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -415,7 +415,7 @@ fn test_apply_move_none_check_put_move_sente() {
 		ms.insert(MochigomaKind::Fu, 2);
 		ms.insert(MochigomaKind::Kyou,1);
 
-		let mut omc = MochigomaCollections::Pair(ms,mg);
+		let mut omc = MochigomaCollections::Pair(ms,mg).into();
 
 		match apply_move_none_check(&banmen,&teban,&omc,m) {
 			(next,nmc,_) => {
@@ -481,7 +481,7 @@ fn test_apply_move_none_check_put_move_gote() {
 		mg.insert(MochigomaKind::Fu, 2);
 		mg.insert(MochigomaKind::Kyou,1);
 
-		let mut omc = MochigomaCollections::Pair(ms,mg);
+		let mut omc = MochigomaCollections::Pair(ms,mg).into();
 
 		match apply_move_none_check(&banmen,&teban,&omc,m) {
 			(next,nmc,_) => {
@@ -534,7 +534,7 @@ fn test_apply_move_to_partial_state_none_check_sente() {
 	let mut state = State::new(banmen.clone());
 
 	let mut teban = Teban::Sente;
-	let mut omc = MochigomaCollections::Empty;
+	let mut omc = MochigomaCollections::Empty.into();
 
 	for m in &mvs {
 		for m in m {
@@ -603,7 +603,7 @@ fn test_apply_move_to_partial_state_none_check_gote() {
 	let mut banmen = BANMEN_START_POS.clone();
 	let mut state = State::new(banmen.clone());
 	let mut teban = Teban::Gote;
-	let mut omc = MochigomaCollections::Empty;
+	let mut omc = MochigomaCollections::Empty.into();
 
 	for m in &mvs {
 		for m in m {

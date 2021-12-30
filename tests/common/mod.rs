@@ -381,7 +381,6 @@ impl MockPlayer {
 	}
 }
 impl fmt::Debug for MockPlayer {
-
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		write!(f, "MockPlayer")
 	}
@@ -552,12 +551,22 @@ impl USIPlayer<CommonError> for MockPlayer {
 		Ok(())
 	}
 }
-impl From<&MochigomaCollections> for super::rule::MochigomaCollections {
-	fn from(source:&MochigomaCollections) -> super::rule::MochigomaCollections {
+impl From<MochigomaCollections> for super::rule::MochigomaCollections {
+	fn from(source:MochigomaCollections) -> super::rule::MochigomaCollections {
 		match source {
-			&MochigomaCollections::Empty => super::rule::MochigomaCollections::Empty,
-			&MochigomaCollections::Pair(ref ms,ref mg) => {
+			MochigomaCollections::Empty => super::rule::MochigomaCollections::Empty,
+			MochigomaCollections::Pair(ref ms,ref mg) => {
 				super::rule::MochigomaCollections::Pair(ms.into(),mg.into())
+			}
+		}
+	}
+}
+impl From<super::rule::MochigomaCollections> for MochigomaCollections {
+	fn from(source:super::rule::MochigomaCollections) -> MochigomaCollections {
+		match source {
+			super::rule::MochigomaCollections::Empty => MochigomaCollections::Empty,
+			super::rule::MochigomaCollections::Pair(ref ms,ref mg) => {
+				MochigomaCollections::Pair(ms.into(),mg.into())
 			}
 		}
 	}

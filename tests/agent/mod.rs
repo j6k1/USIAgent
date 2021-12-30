@@ -1188,20 +1188,20 @@ fn test_check_kyokumen_with_sfen_sente() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(MochigomaKind::Fu) != &2 ||
-												ms.get(MochigomaKind::Kyou) != &0 ||
-												ms.get(MochigomaKind::Kei) != &0 ||
-												ms.get(MochigomaKind::Gin) != &1 ||
-												ms.get(MochigomaKind::Kin) != &2 ||
-												ms.get(MochigomaKind::Kaku) != &0 ||
-												ms.get(MochigomaKind::Hisha) != &0 ||
-												mg.get(MochigomaKind::Fu) != &0 ||
-												mg.get(MochigomaKind::Kyou) != &1 ||
-												mg.get(MochigomaKind::Kei) != &0 ||
-												mg.get(MochigomaKind::Gin) != &0 ||
-												mg.get(MochigomaKind::Kin) != &0 ||
-												mg.get(MochigomaKind::Kaku) != &0 ||
-												mg.get(MochigomaKind::Hisha) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != 2 ||
+												ms.get(MochigomaKind::Kyou) != 0 ||
+												ms.get(MochigomaKind::Kei) != 0 ||
+												ms.get(MochigomaKind::Gin) != 1 ||
+												ms.get(MochigomaKind::Kin) != 2 ||
+												ms.get(MochigomaKind::Kaku) != 0 ||
+												ms.get(MochigomaKind::Hisha) != 0 ||
+												mg.get(MochigomaKind::Fu) != 0 ||
+												mg.get(MochigomaKind::Kyou) != 1 ||
+												mg.get(MochigomaKind::Kei) != 0 ||
+												mg.get(MochigomaKind::Gin) != 0 ||
+												mg.get(MochigomaKind::Kin) != 0 ||
+												mg.get(MochigomaKind::Kaku) != 0 ||
+												mg.get(MochigomaKind::Hisha) != 0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![] {
@@ -1226,20 +1226,20 @@ fn test_check_kyokumen_with_sfen_sente() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(MochigomaKind::Fu) != &2 ||
-												ms.get(MochigomaKind::Kyou) != &0 ||
-												ms.get(MochigomaKind::Kei) != &0 ||
-												ms.get(MochigomaKind::Gin) != &1 ||
-												ms.get(MochigomaKind::Kin) != &2 ||
-												ms.get(MochigomaKind::Kaku) != &0 ||
-												ms.get(MochigomaKind::Hisha) != &0 ||
-												mg.get(MochigomaKind::Fu) != &0 ||
-												mg.get(MochigomaKind::Kyou) != &1 ||
-												mg.get(MochigomaKind::Kei) != &0 ||
-												mg.get(MochigomaKind::Gin) != &0 ||
-												mg.get(MochigomaKind::Kin) != &0 ||
-												mg.get(MochigomaKind::Kaku) != &0 ||
-												mg.get(MochigomaKind::Hisha) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != 2 ||
+												ms.get(MochigomaKind::Kyou) != 0 ||
+												ms.get(MochigomaKind::Kei) != 0 ||
+												ms.get(MochigomaKind::Gin) != 1 ||
+												ms.get(MochigomaKind::Kin) != 2 ||
+												ms.get(MochigomaKind::Kaku) != 0 ||
+												ms.get(MochigomaKind::Hisha) != 0 ||
+												mg.get(MochigomaKind::Fu) != 0 ||
+												mg.get(MochigomaKind::Kyou) != 1 ||
+												mg.get(MochigomaKind::Kei) != 0 ||
+												mg.get(MochigomaKind::Gin) != 0 ||
+												mg.get(MochigomaKind::Kin) != 0 ||
+												mg.get(MochigomaKind::Kaku) != 0 ||
+												mg.get(MochigomaKind::Hisha) != 0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![
@@ -1396,20 +1396,20 @@ fn test_check_kyokumen_with_sfen_gote() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(MochigomaKind::Fu) != &2 ||
-												ms.get(MochigomaKind::Kyou) != &0 ||
-												ms.get(MochigomaKind::Kei) != &0 ||
-												ms.get(MochigomaKind::Gin) != &1 ||
-												ms.get(MochigomaKind::Kin) != &2 ||
-												ms.get(MochigomaKind::Kaku) != &0 ||
-												ms.get(MochigomaKind::Hisha) != &0 ||
-												mg.get(MochigomaKind::Fu) != &0 ||
-												mg.get(MochigomaKind::Kyou) != &1 ||
-												mg.get(MochigomaKind::Kei) != &0 ||
-												mg.get(MochigomaKind::Gin) != &0 ||
-												mg.get(MochigomaKind::Kin) != &0 ||
-												mg.get(MochigomaKind::Kaku) != &0 ||
-												mg.get(MochigomaKind::Hisha) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != 2 ||
+												ms.get(MochigomaKind::Kyou) != 0 ||
+												ms.get(MochigomaKind::Kei) != 0 ||
+												ms.get(MochigomaKind::Gin) != 1 ||
+												ms.get(MochigomaKind::Kin) != 2 ||
+												ms.get(MochigomaKind::Kaku) != 0 ||
+												ms.get(MochigomaKind::Hisha) != 0 ||
+												mg.get(MochigomaKind::Fu) != 0 ||
+												mg.get(MochigomaKind::Kyou) != 1 ||
+												mg.get(MochigomaKind::Kei) != 0 ||
+												mg.get(MochigomaKind::Gin) != 0 ||
+												mg.get(MochigomaKind::Kin) != 0 ||
+												mg.get(MochigomaKind::Kaku) != 0 ||
+												mg.get(MochigomaKind::Hisha) != 0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![] {
@@ -1434,20 +1434,20 @@ fn test_check_kyokumen_with_sfen_gote() {
 												[SKyou, SKei,Blank, SKin, SOu, SKin,Blank, SKei, SKyou]
 											]) {
 												let _ = player.sender.send(Err(String::from("Banmen is invalid.")));
-											} else if ms.get(MochigomaKind::Fu) != &2 ||
-												ms.get(MochigomaKind::Kyou) != &0 ||
-												ms.get(MochigomaKind::Kei) != &0 ||
-												ms.get(MochigomaKind::Gin) != &1 ||
-												ms.get(MochigomaKind::Kin) != &2 ||
-												ms.get(MochigomaKind::Kaku) != &0 ||
-												ms.get(MochigomaKind::Hisha) != &0 ||
-												mg.get(MochigomaKind::Fu) != &0 ||
-												mg.get(MochigomaKind::Kyou) != &1 ||
-												mg.get(MochigomaKind::Kei) != &0 ||
-												mg.get(MochigomaKind::Gin) != &0 ||
-												mg.get(MochigomaKind::Kin) != &0 ||
-												mg.get(MochigomaKind::Kaku) != &0 ||
-												mg.get(MochigomaKind::Hisha) != &0 {
+											} else if ms.get(MochigomaKind::Fu) != 2 ||
+												ms.get(MochigomaKind::Kyou) != 0 ||
+												ms.get(MochigomaKind::Kei) != 0 ||
+												ms.get(MochigomaKind::Gin) != 1 ||
+												ms.get(MochigomaKind::Kin) != 2 ||
+												ms.get(MochigomaKind::Kaku) != 0 ||
+												ms.get(MochigomaKind::Hisha) != 0 ||
+												mg.get(MochigomaKind::Fu) != 0 ||
+												mg.get(MochigomaKind::Kyou) != 1 ||
+												mg.get(MochigomaKind::Kei) != 0 ||
+												mg.get(MochigomaKind::Gin) != 0 ||
+												mg.get(MochigomaKind::Kin) != 0 ||
+												mg.get(MochigomaKind::Kaku) != 0 ||
+												mg.get(MochigomaKind::Hisha) != 0 {
 
 												let _ = player.sender.send(Err(String::from("mochigoma is invalid.")));
 											} else if m != vec![
@@ -1861,14 +1861,14 @@ fn test_check_kyokumen_nowait() {
 														[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 														[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou]
 													])) && kyokumen.teban == Teban::Sente &&
-														ms.get(MochigomaKind::Fu) ==&1 &&
+														ms.get(MochigomaKind::Fu) == 1 &&
 														ms.get(MochigomaKind::Kyou) == 0 &&
 														ms.get(MochigomaKind::Kei) == 0 &&
 														ms.get(MochigomaKind::Gin) == 0 &&
 														ms.get(MochigomaKind::Kin) == 0 &&
 														ms.get(MochigomaKind::Kaku) == 0 &&
 														ms.get(MochigomaKind::Hisha) == 0 &&
-														mg.get(MochigomaKind::Fu) ==&1 &&
+														mg.get(MochigomaKind::Fu) == 1 &&
 														mg.get(MochigomaKind::Kyou) == 0 &&
 														mg.get(MochigomaKind::Kei) == 0 &&
 														mg.get(MochigomaKind::Gin) == 0 &&
@@ -6323,11 +6323,11 @@ fn test_periodically_info_send() {
 
 	assert_eq!(res,Ok(ActionKind::Think));
 
-	let res = r.recv_timeout(Duration::from_millis(220)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(250)).expect("attempt to receive 'info nps 10 nodes 100' timed out.");
 
 	assert_eq!(&*res,"info nps 10 nodes 100");
 
-	let res = r.recv_timeout(Duration::from_millis(220)).expect("attempt to receive 'info depth 1 seldepth 3 time 10000 nodes 1000000 score cp -100 currmove 1g1f hashfull 10000 nps 100 multipv 1 pv 1g1f 9c9d 1f1e' timed out.");
+	let res = r.recv_timeout(Duration::from_millis(250)).expect("attempt to receive 'info nps 10 nodes 100' timed out.");
 
 	assert_eq!(&*res,"info nps 10 nodes 100");
 
