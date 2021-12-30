@@ -30,7 +30,7 @@ use usiagent::event::*;
 use usiagent::command::*;
 use usiagent::rule::*;
 use usiagent::logger::Logger;
-use usiagent::player::{USIPlayer, KeepAliveSender, OnKeepAlive};
+use usiagent::player::{USIPlayer, KeepAliveSender, OnKeepAlive, PeriodicallyInfo, PeriodicallyInfoSender};
 use usiagent::player::InfoSender;
 use usiagent::player::UsiInfoMessage;
 use usiagent::OnErrorHandler;
@@ -265,12 +265,14 @@ pub struct MockPlayer {
 												&UsiGoTimeLimit,
 												Arc<Mutex<UserEventQueue>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+												Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
 												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 	) -> Result<BestMove,CommonError> + Send + 'static)>>,
 
 	pub on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 												Arc<Mutex<UserEventQueue>>,
 												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+												Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
 												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 	) -> Result<CheckMate,CommonError> + Send + 'static)>>,
 
@@ -302,12 +304,14 @@ impl MockPlayer {
 															&UsiGoTimeLimit,
 															Arc<Mutex<UserEventQueue>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+															Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
 															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 				) -> Result<BestMove,CommonError> + Send + 'static)>>,
 
 				on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 															Arc<Mutex<UserEventQueue>>,
 															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
+															Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
 															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
 				) -> Result<CheckMate,CommonError> + Send + 'static)>>,
 
@@ -346,13 +350,19 @@ impl MockPlayer {
 		}
 	}
 
-	fn think_inner<L,S>(&mut self,think_start_time:Option<Instant>,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
+	fn think_inner<L,S,P>(&mut self,think_start_time:Option<Instant>,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,
+			pinfo_sender:P,
+			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,CommonError> where L: Logger + Send + 'static,
+												  S: InfoSender + Send + 'static,
+												  P: PeriodicallyInfo {
 		let mut info_sender = info_sender.clone();
+		let mut pinfo_sender = pinfo_sender;
 		let info_send_notifier = self.info_send_notifier.clone();
 		let event_queue = event_queue.clone();
 		let on_error_handler = on_error_handler.clone();
+		let on_error_handler_inner = on_error_handler.clone();
 
 		(self.on_think.next().expect("Iterator of on think callback is empty."))(
 			self,think_start_time,limit,event_queue.clone(),Box::new(move |commands| {
@@ -362,7 +372,11 @@ impl MockPlayer {
 					let _ = info_send_notifier.send(());
 				}
 				r
-			}),Box::new(move |player| {
+			}),
+			Box::new(move |interval,callback| {
+				pinfo_sender.start(interval,callback,&on_error_handler_inner)
+			}),
+			Box::new(move |player| {
 				player.handle_events(&*event_queue,&*on_error_handler)
 			})
 		)
@@ -448,25 +462,39 @@ impl USIPlayer<CommonError> for MockPlayer {
 		)
 	}
 
-	fn think<L,S>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
-		self.think_inner(Some(think_start_time), limit, event_queue, info_sender, on_error_handler)
+	fn think<L,S,P>(&mut self,think_start_time:Instant,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,
+			pinfo_sender:P,
+			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,CommonError> where L: Logger + Send + 'static,
+												  S: InfoSender + Send + 'static,
+												  P: PeriodicallyInfo {
+		self.think_inner(Some(think_start_time), limit, event_queue, info_sender, pinfo_sender, on_error_handler)
 	}
 
-	fn think_ponder<L,S>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<BestMove,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
-		self.think_inner(None, limit, event_queue, info_sender, on_error_handler)
+	fn think_ponder<L,S,P>(&mut self,limit:&UsiGoTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,
+			pinfo_sender:P,
+			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<BestMove,CommonError> where L: Logger + Send + 'static,
+												  S: InfoSender + Send + 'static,
+												  P: PeriodicallyInfo {
+		self.think_inner(None, limit, event_queue, info_sender, pinfo_sender, on_error_handler)
 	}
 
-	fn think_mate<L,S>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
-			info_sender:S,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-			-> Result<CheckMate,CommonError> where L: Logger, S: InfoSender, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
+	fn think_mate<L,S,P>(&mut self,limit:&UsiGoMateTimeLimit,event_queue:Arc<Mutex<UserEventQueue>>,
+			info_sender:S,
+			pinfo_sender:P,
+			on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+			-> Result<CheckMate,CommonError> where L: Logger + Send + 'static,
+												   S: InfoSender + Send + 'static,
+												   P: PeriodicallyInfo {
 		let mut info_sender = info_sender.clone();
 		let info_send_notifier = self.info_send_notifier.clone();
 		let event_queue = event_queue.clone();
 		let on_error_handler = on_error_handler.clone();
+		let on_error_handler_inner = on_error_handler.clone();
+		let mut pinfo_sender = pinfo_sender;
 
 		(self.on_think_mate.next().expect("Iterator of on think_mate callback is empty."))(
 			self,limit,event_queue.clone(),Box::new(move |commands| {
@@ -476,7 +504,11 @@ impl USIPlayer<CommonError> for MockPlayer {
 					let _ = info_send_notifier.send(());
 				}
 				r
-			}),Box::new(move |player| {
+			}),
+			Box::new(move |interval,callback| {
+				pinfo_sender.start(interval,callback,&on_error_handler_inner)
+			}),
+			Box::new(move |player| {
 				player.handle_events(&*event_queue,&*on_error_handler)
 			})
 		)

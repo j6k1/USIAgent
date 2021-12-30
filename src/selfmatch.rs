@@ -220,7 +220,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,FileLogger>),
 				S: InfoSender,
-				P: PeriodicallyInfoSender,
+				P: PeriodicallyInfo + Clone + Send + 'static,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&SelfMatchRunningError<E>) {
@@ -279,7 +279,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,FileLogger>),
 				S: InfoSender,
-				P: PeriodicallyInfoSender,
+				P: PeriodicallyInfo + Clone + Send + 'static,
 				Arc<Mutex<FileLogger>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&SelfMatchRunningError<E>) {
@@ -350,7 +350,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
-				P: PeriodicallyInfoSender,
+				P: PeriodicallyInfo + Clone + Send + 'static,
 				L: Logger + fmt::Debug + Send + 'static,
 				Arc<Mutex<L>>: Send + 'static,
 				EH: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
@@ -402,7 +402,7 @@ impl<E> SelfMatchEngine<E>
 				RH: FnMut(String) -> Result<bool,SelfMatchRunningError<E>> + Send + 'static,
 				I: FnMut(&mut SelfMatchEventDispatcher<E,L>),
 				S: InfoSender,
-				P: PeriodicallyInfoSender,
+				P: PeriodicallyInfo + Clone + Send + 'static,
 				L: Logger + fmt::Debug + Send + 'static,
 				Arc<Mutex<L>>: Send + 'static {
 		let start_time = Instant::now();

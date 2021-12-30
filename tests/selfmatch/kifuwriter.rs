@@ -29,6 +29,15 @@ fn test_kifuwrite_7times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -140,47 +149,47 @@ fn test_kifuwrite_7times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,5),KomaDstToPosition(1,4,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -352,27 +361,27 @@ fn test_kifuwrite_7times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(9,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,1),KomaDstToPosition(9,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,5),KomaDstToPosition(9,6,false)),None))
 										})]),
@@ -538,6 +547,7 @@ fn test_kifuwrite_7times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(7),
 			logger, |h,e| {

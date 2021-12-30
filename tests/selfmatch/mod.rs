@@ -51,6 +51,7 @@ use usiagent::shogi::KomaKind::{
 };
 
 use common::*;
+use usiagent::player::USIPeriodicallyInfo;
 
 fn create_options() -> Vec<(String,SysEventOption)> {
 	vec![
@@ -167,6 +168,15 @@ fn test_resign_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -190,11 +200,11 @@ fn test_resign_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -226,7 +236,7 @@ fn test_resign_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -319,6 +329,7 @@ fn test_resign_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+	USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -418,6 +429,15 @@ fn test_invalidmove_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -441,11 +461,11 @@ fn test_invalidmove_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(8,8),KomaDstToPosition(7,8,false)),None))
 										})]),
@@ -477,7 +497,7 @@ fn test_invalidmove_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -570,6 +590,7 @@ fn test_invalidmove_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -673,6 +694,15 @@ fn test_invalidmove_by_from_blank_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -696,11 +726,11 @@ fn test_invalidmove_by_from_blank_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(7,8),KomaDstToPosition(7,7,false)),None))
 										})]),
@@ -732,7 +762,7 @@ fn test_invalidmove_by_from_blank_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -825,6 +855,7 @@ fn test_invalidmove_by_from_blank_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -928,6 +959,15 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -947,7 +987,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,false)),None))
 										})]),
@@ -979,7 +1019,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										})]),
@@ -1072,6 +1112,7 @@ fn test_invalidmove_by_no_responded_oute_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -1163,6 +1204,15 @@ fn test_invalidmove_by_suicide_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -1182,7 +1232,7 @@ fn test_invalidmove_by_suicide_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,8),KomaDstToPosition(5,9,false)),None))
 										})]),
@@ -1301,6 +1351,7 @@ fn test_invalidmove_by_suicide_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -1380,6 +1431,15 @@ fn test_win_move_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -1399,7 +1459,7 @@ fn test_win_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,2),KomaDstToPosition(5,1,false)),None))
 										})]),
@@ -1521,6 +1581,7 @@ fn test_win_move_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -1600,6 +1661,15 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -1619,7 +1689,7 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::Put(MochigomaKind::Fu,KomaDstPutPosition(5,2)),None))
 										})]),
@@ -1738,6 +1808,7 @@ fn test_win_invalidmove_put_fu_and_mate_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -1817,6 +1888,15 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -1836,7 +1916,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,3),KomaDstToPosition(5,3,false)),None))
 										})]),
@@ -1955,6 +2035,7 @@ fn test_win_invalidmove_sennichite_by_oute_once_move_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -2034,6 +2115,15 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -2053,7 +2143,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,3),KomaDstToPosition(5,3,false)),None))
 										})]),
@@ -2085,7 +2175,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -2178,6 +2268,7 @@ fn test_win_validmove_not_sennichite_by_oute_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -2265,6 +2356,15 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -2284,7 +2384,7 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										})]),
@@ -2403,6 +2503,7 @@ fn test_win_invalid_move_sennichite_once_move_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -2482,6 +2583,15 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -2509,15 +2619,15 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,3),KomaDstToPosition(5,3,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,3),KomaDstToPosition(4,3,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,3),KomaDstToPosition(5,3,false)),None))
 										})]),
@@ -2553,11 +2663,11 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(5,1),KomaDstToPosition(4,1,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,1),KomaDstToPosition(5,1,false)),None))
 										})]),
@@ -2650,6 +2760,7 @@ fn test_win_invalid_move_sennichite_by_oute_once_move_1times_with_empty_kyokumen
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -2777,6 +2888,15 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -2820,31 +2940,31 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,8),KomaDstToPosition(4,9,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,8),KomaDstToPosition(4,9,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,8),KomaDstToPosition(4,9,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(4,9),KomaDstToPosition(4,8,false)),None))
 										})]),
@@ -2896,27 +3016,27 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,2),KomaDstToPosition(6,1,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,2),KomaDstToPosition(6,1,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,1),KomaDstToPosition(6,2,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(6,2),KomaDstToPosition(6,1,false)),None))
 										})]),
@@ -3009,6 +3129,7 @@ fn test_win_invalid_move_sennichite_1times_with_empty_kyokumen_map() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -3232,6 +3353,15 @@ fn test_game_time_limit_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -3255,11 +3385,11 @@ fn test_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											while !player.stop {
 												thread::sleep(Duration::from_millis(10));
@@ -3295,7 +3425,7 @@ fn test_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -3388,6 +3518,7 @@ fn test_game_time_limit_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::Limit(Some((1000,1000)),None),
 			None,Some(1),
 			logger, |h,e| {
@@ -3491,6 +3622,15 @@ fn test_game_time_limit_less_uptime_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -3511,11 +3651,11 @@ fn test_game_time_limit_less_uptime_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											while !player.stop {
 												thread::sleep(Duration::from_millis(10));
@@ -3551,7 +3691,7 @@ fn test_game_time_limit_less_uptime_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -3643,6 +3783,7 @@ fn test_game_time_limit_less_uptime_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::Limit(Some((10000,10000)),None),
 			Some(Duration::from_millis(1000)),None,
 			logger, |h,e| {
@@ -3730,6 +3871,15 @@ fn test_game_uptime_less_game_time_limit_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -3750,11 +3900,11 @@ fn test_game_uptime_less_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											while !player.stop {
 												thread::sleep(Duration::from_millis(10));
@@ -3790,7 +3940,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -3882,6 +4032,7 @@ fn test_game_uptime_less_game_time_limit_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::Limit(Some((3000,3000)),None),
 			Some(Duration::from_millis(1200)),None,
 			logger, |h,e| {
@@ -3969,6 +4120,15 @@ fn test_ponderhit_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -3994,12 +4154,12 @@ fn test_ponderhit_1times() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -4031,7 +4191,7 @@ fn test_ponderhit_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -4123,6 +4283,7 @@ fn test_ponderhit_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -4218,6 +4379,15 @@ fn test_ponderhit_thinking() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -4243,12 +4413,12 @@ fn test_ponderhit_thinking() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 
 											thread::sleep(Duration::from_millis(400));
@@ -4292,7 +4462,7 @@ fn test_ponderhit_thinking() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -4384,6 +4554,7 @@ fn test_ponderhit_thinking() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -4483,6 +4654,15 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -4512,19 +4692,19 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 
 											thread::sleep(Duration::from_millis(400));
 
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,_,mut handle_events| {
 											handle_events(player)?;
 
 											if player.ponderhit_time.is_none() {
@@ -4569,11 +4749,11 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false)),None))
 										})]),
@@ -4665,6 +4845,7 @@ fn test_ponderhit_thinking_check_next_turn_eventqueue() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -4784,6 +4965,15 @@ fn test_ponderng_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -4813,16 +5003,16 @@ fn test_ponderng_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -4854,7 +5044,7 @@ fn test_ponderng_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),None))
 										})]),
@@ -4946,6 +5136,7 @@ fn test_ponderng_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -5049,6 +5240,15 @@ fn test_ponderng_thinking() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -5078,12 +5278,12 @@ fn test_ponderng_thinking() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,_,mut handle_events| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											while !player.stop {
 												handle_events(player)?;
@@ -5092,7 +5292,7 @@ fn test_ponderng_thinking() {
 											thread::sleep(Duration::from_millis(100));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,think_start_time,_,_,_,_| {
+										Box::new(|player,think_start_time,_,_,_,_,_| {
 											let now = Instant::now();
 
 											if think_start_time.map(|t| now - t >= Duration::from_millis(100)).unwrap_or(false) {
@@ -5133,7 +5333,7 @@ fn test_ponderng_thinking() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),None))
 										})]),
@@ -5225,6 +5425,7 @@ fn test_ponderng_thinking() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -5332,6 +5533,15 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -5365,21 +5575,21 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),
 																Some(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)))))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											thread::sleep(Duration::from_millis(400));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,mut handle_events| {
+										Box::new(|player,_,_,_,_,_,mut handle_events| {
 											handle_events(player)?;
 
 											if !player.stop {
@@ -5426,11 +5636,11 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(3,4),KomaDstToPosition(3,5,false)),None))
 										})]),
@@ -5522,6 +5732,7 @@ fn test_ponderng_thinking_check_next_turn_eventqueue() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -5649,6 +5860,15 @@ fn test_abort_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -5669,11 +5889,11 @@ fn test_abort_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Abort)
 										})]),
@@ -5694,7 +5914,7 @@ fn test_abort_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,3),KomaDstToPosition(9,4,false)),None))
 										})]),
@@ -5769,6 +5989,7 @@ fn test_abort_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -5856,6 +6077,15 @@ fn test_nyugyoku_win_win_sente_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -5879,11 +6109,11 @@ fn test_nyugyoku_win_win_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),
@@ -5915,7 +6145,7 @@ fn test_nyugyoku_win_win_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,6),KomaDstToPosition(9,7,true)),None))
 										})]),
@@ -6008,6 +6238,7 @@ fn test_nyugyoku_win_win_sente_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -6107,6 +6338,15 @@ fn test_nyugyoku_win_win_gote_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -6130,11 +6370,11 @@ fn test_nyugyoku_win_win_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										})]),
@@ -6170,11 +6410,11 @@ fn test_nyugyoku_win_win_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,6),KomaDstToPosition(9,7,true)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),
@@ -6267,6 +6507,7 @@ fn test_nyugyoku_win_win_gote_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -6378,6 +6619,15 @@ fn test_nyugyoku_win_lose_sente_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -6401,11 +6651,11 @@ fn test_nyugyoku_win_lose_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),
@@ -6437,7 +6687,7 @@ fn test_nyugyoku_win_lose_sente_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,6),KomaDstToPosition(9,7,true)),None))
 										})]),
@@ -6530,6 +6780,7 @@ fn test_nyugyoku_win_lose_sente_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {
@@ -6629,6 +6880,15 @@ fn test_nyugyoku_win_lose_gote_1times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 	let (ks,kr) = mpsc::channel();
 
@@ -6652,11 +6912,11 @@ fn test_nyugyoku_win_lose_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,4),KomaDstToPosition(1,3,true)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(1,6),KomaDstToPosition(1,5,false)),None))
 										})]),
@@ -6692,11 +6952,11 @@ fn test_nyugyoku_win_lose_gote_1times() {
 											let _ = player.sender.send(Ok(ActionKind::SetPosition));
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Move(Move::To(KomaSrcPosition(9,4),KomaDstToPosition(9,5,false)),None))
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Win)
 										})]),
@@ -6789,6 +7049,7 @@ fn test_nyugyoku_win_lose_gote_1times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(1),
 			logger, |h,e| {

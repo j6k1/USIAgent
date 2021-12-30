@@ -30,6 +30,15 @@ fn test_kifuwrite_7times() {
 		(input_reader,s)
 	};
 
+	let (output_writer,_) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let output_writer =  Arc::new(Mutex::new(output_writer));
+
 	let (es,er) = mpsc::channel();
 
 	let _ = thread::spawn(move || {
@@ -179,15 +188,15 @@ fn test_kifuwrite_7times() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -389,15 +398,15 @@ fn test_kifuwrite_7times() {
 											}
 											Ok(())
 										})]),
-										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_| {
+										ConsumedIterator::new(vec![Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										}),
-										Box::new(|player,_,_,_,_,_| {
+										Box::new(|player,_,_,_,_,_,_| {
 											let _ = player.sender.send(Ok(ActionKind::Think));
 											Ok(BestMove::Resign)
 										})]),
@@ -551,6 +560,7 @@ fn test_kifuwrite_7times() {
 			player1,player2,
 			create_options(), create_options(),
 			info_sender,
+			USIPeriodicallyInfo::new(output_writer,false),
 			UsiGoTimeLimit::None,
 			None,Some(6),
 			logger, |h,e| {
