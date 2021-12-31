@@ -3932,10 +3932,10 @@ impl Rule {
 						match mc {
 							MochigomaCollections::Pair(ref mut mc,_) => {
 								let c = match mc.get(&k) {
+									None | Some(0) => 0,
 									Some(c) => {
 										c-1
-									},
-									None => 0,
+									}
 								};
 								mc.insert(k,c);
 							},
@@ -3946,10 +3946,10 @@ impl Rule {
 						match mc {
 							MochigomaCollections::Pair(_,ref mut mc) => {
 								let c = match mc.get(&k) {
+									None | Some(0) => 0,
 									Some(c) => {
 										c-1
-									},
-									None => 0
+									}
 								};
 								mc.insert(k,c);
 							},
