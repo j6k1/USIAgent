@@ -500,6 +500,7 @@ impl Mochigoma {
 	/// # Arguments
 	/// * `kind` - 持ち駒の種類
 	/// * `count` - `kind`で指定した持ち駒の枚数
+	#[inline]
 	pub fn insert(&mut self,kind:MochigomaKind,count:usize) {
 		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
 		let c = *p;
@@ -514,16 +515,19 @@ impl Mochigoma {
 	///
 	/// # Arguments
 	/// * `kind` - 持ち駒の種類
+	#[inline]
 	pub fn get(&self,kind:MochigomaKind) -> usize {
 		unsafe { *self.values.get_unchecked(kind as usize) }
 	}
 
 	/// 全ての持ち駒が空か？
+	#[inline]
 	pub fn is_empty(&self) -> bool {
 		self.sum == 0
 	}
 
 	/// 持ち駒の種類と個数のタプルを要素に持つイテレータを返す
+	#[inline]
 	pub fn iter<'a>(&'a self) -> impl Iterator<Item=(MochigomaKind,usize)> + 'a {
 		const MAP:[MochigomaKind; MOCHIGOMA_KIND_MAX+1] = [
 			MochigomaKind::Fu,
@@ -544,6 +548,7 @@ impl Mochigoma {
 	///
 	/// # Arguments
 	/// * `kind` - 持ち駒の種類
+	#[inline]
 	pub fn put(&mut self,kind:MochigomaKind) {
 		unsafe { *self.values.get_unchecked_mut(kind as usize) += 1 };
 		self.sum += 1;
@@ -553,6 +558,7 @@ impl Mochigoma {
 	///
 	/// # Arguments
 	/// * `kind` - 持ち駒の種類
+	#[inline]
 	pub fn pull(&mut self,kind:MochigomaKind) -> Result<usize,InvalidStateError> {
 		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
 
@@ -566,6 +572,7 @@ impl Mochigoma {
 	}
 
 	/// 持ち駒の状態を平手初期局面の時の駒を全部持ち駒にした状態で返す。
+	#[inline]
 	pub fn filled() -> Mochigoma {
 		let mut m:Mochigoma = Mochigoma::new();
 
