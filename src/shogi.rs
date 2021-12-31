@@ -564,6 +564,21 @@ impl Mochigoma {
 			Ok(*p)
 		}
 	}
+
+	/// 持ち駒の状態を平手初期局面の時の駒を全部持ち駒にした状態で返す。
+	pub fn filled() -> Mochigoma {
+		let mut m:Mochigoma = Mochigoma::new();
+
+		m.insert(MochigomaKind::Fu, 9);
+		m.insert(MochigomaKind::Kyou, 2);
+		m.insert(MochigomaKind::Kei, 2);
+		m.insert(MochigomaKind::Gin, 2);
+		m.insert(MochigomaKind::Kin, 2);
+		m.insert(MochigomaKind::Kaku, 1);
+		m.insert(MochigomaKind::Hisha, 1);
+
+		m
+	}
 }
 impl From<&Mochigoma> for HashMap<MochigomaKind,u32> {
 	fn from(source:&Mochigoma) -> HashMap<MochigomaKind,u32> {
