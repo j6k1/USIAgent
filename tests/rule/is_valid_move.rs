@@ -3,6 +3,7 @@ use usiagent::rule::Rule;
 use usiagent::rule::State;
 
 use super::*;
+use std::collections::HashSet;
 
 #[test]
 fn test_is_valid_move_valid_to_sente() {
@@ -4096,5 +4097,972 @@ fn test_is_valid_move_invalid_from_opponent_gote() {
 			&MochigomaCollections::Empty,
 			m
 		), "is_valid_move: move = kind = {:?} {:?} is true.", kind,m.to_move());
+	}
+}
+#[test]
+fn test_apply_valid_move_kaku_all_position_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut s = HashSet::new();
+
+			let offsets:[(i32,i32);4] = [(-1,-1),(-1,1),(1,-1),(1,1)];
+
+			for &(dx,dy) in &offsets {
+				let mut x = x + dx;
+				let mut y = y + dy;
+
+				while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+					s.insert((x as usize, y as usize));
+					x += dx;
+					y += dy;
+				}
+			}
+
+			let x = x as u32;
+			let y = y as u32;
+
+			for dx in 0..9 {
+				for dy in 0..9 {
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[y as usize][x as usize] = SKaku;
+
+					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,false)));
+
+					let state = State::new(banmen);
+
+					assert_eq!(Rule::is_valid_move(&state,
+												 Teban::Sente,
+												 &MochigomaCollections::Empty,
+												 m
+					),s.contains(&(dx as usize,dy as usize)),
+					"is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+					m.to_move(), x,y,dx,dy,state.get_banmen());
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kaku_all_position_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut s = HashSet::new();
+
+			let offsets:[(i32,i32);4] = [(-1,-1),(-1,1),(1,-1),(1,1)];
+
+			for &(dx,dy) in &offsets {
+				let mut x = x + dx;
+				let mut y = y + dy;
+
+				while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+					s.insert((8 - x as usize, 8 - y as usize));
+					x += dx;
+					y += dy;
+				}
+			}
+
+			let x = x as u32;
+			let y = y as u32;
+
+			for dx in 0..9 {
+				for dy in 0..9 {
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8 - y as usize][8 - x as usize] = GKaku;
+
+					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
+
+					let state = State::new(banmen);
+
+					assert_eq!(Rule::is_valid_move(&state,
+												   Teban::Gote,
+												   &MochigomaCollections::Empty,
+												   m
+					),s.contains(&(8 - dx as usize,8 - dy as usize)),
+							   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+							   m.to_move(), x,y,dx,dy,state.get_banmen());
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kaku_all_position_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,-1),(-1,1),(1,-1),(1,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							if ox == x && oy == y {
+								break;
+							}
+							s.insert((x as usize, y as usize));
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[y as usize][x as usize] = SKaku;
+							banmen.0[oy as usize][ox as usize] = SFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Sente,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(dx as usize,dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kaku_all_position_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,-1),(-1,1),(1,-1),(1,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							if ox == x && oy == y {
+								break;
+							}
+							s.insert((8 - x as usize, 8 - y as usize));
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[8 - y as usize][8 - x as usize] = GKaku;
+							banmen.0[8 - oy as usize][8 - ox as usize] = GFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Gote,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(8 - dx as usize,8 - dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kaku_all_position_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,-1),(-1,1),(1,-1),(1,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							s.insert((x as usize, y as usize));
+
+							if ox == x && oy == y {
+								break;
+							}
+
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[y as usize][x as usize] = SKaku;
+							banmen.0[oy as usize][ox as usize] = GFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Sente,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(dx as usize,dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kaku_all_position_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,-1),(-1,1),(1,-1),(1,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							s.insert((8 - x as usize, 8 - y as usize));
+
+							if ox == x && oy == y {
+								break;
+							}
+
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[8 - y as usize][8 - x as usize] = GKaku;
+							banmen.0[8 - oy as usize][8 - ox as usize] = SFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Gote,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(8 - dx as usize,8 - dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_hisha_all_position_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut s = HashSet::new();
+
+			let offsets:[(i32,i32);4] = [(-1,0),(1,0),(0,-1),(0,1)];
+
+			for &(dx,dy) in &offsets {
+				let mut x = x + dx;
+				let mut y = y + dy;
+
+				while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+					s.insert((x as usize, y as usize));
+					x += dx;
+					y += dy;
+				}
+			}
+
+			let x = x as u32;
+			let y = y as u32;
+
+			for dx in 0..9 {
+				for dy in 0..9 {
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[y as usize][x as usize] = SHisha;
+
+					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,false)));
+
+					let state = State::new(banmen);
+
+					assert_eq!(Rule::is_valid_move(&state,
+												   Teban::Sente,
+												   &MochigomaCollections::Empty,
+												   m
+					),s.contains(&(dx as usize,dy as usize)),
+							   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+							   m.to_move(), x,y,dx,dy,state.get_banmen());
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_hisha_all_position_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut s = HashSet::new();
+
+			let offsets:[(i32,i32);4] = [(-1,0),(1,0),(0,-1),(0,1)];
+
+			for &(dx,dy) in &offsets {
+				let mut x = x + dx;
+				let mut y = y + dy;
+
+				while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+					s.insert((8 - x as usize, 8 - y as usize));
+					x += dx;
+					y += dy;
+				}
+			}
+
+			let x = x as u32;
+			let y = y as u32;
+
+			for dx in 0..9 {
+				for dy in 0..9 {
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8 - y as usize][8 - x as usize] = GHisha;
+
+					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
+
+					let state = State::new(banmen);
+
+					assert_eq!(Rule::is_valid_move(&state,
+												   Teban::Gote,
+												   &MochigomaCollections::Empty,
+												   m
+					),s.contains(&(8 - dx as usize,8 - dy as usize)),
+							   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+							   m.to_move(), x,y,dx,dy,state.get_banmen());
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_hisha_all_position_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,0),(1,0),(0,-1),(0,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							if ox == x && oy == y {
+								break;
+							}
+							s.insert((x as usize, y as usize));
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[y as usize][x as usize] = SHisha;
+							banmen.0[oy as usize][ox as usize] = SFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Sente,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(dx as usize,dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_hisha_all_position_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,0),(1,0),(0,-1),(0,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							if ox == x && oy == y {
+								break;
+							}
+							s.insert((8 - x as usize, 8 - y as usize));
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[8 - y as usize][8 - x as usize] = GHisha;
+							banmen.0[8 - oy as usize][8 - ox as usize] = GFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Gote,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(8 - dx as usize,8 - dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_hisha_all_position_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,0),(1,0),(0,-1),(0,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							s.insert((x as usize, y as usize));
+
+							if ox == x && oy == y {
+								break;
+							}
+
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[y as usize][x as usize] = SHisha;
+							banmen.0[oy as usize][ox as usize] = GFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Sente,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(dx as usize,dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_hisha_all_position_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					let offsets:[(i32,i32);4] = [(-1,0),(1,0),(0,-1),(0,1)];
+
+					for &(dx,dy) in &offsets {
+						let mut x = x + dx;
+						let mut y = y + dy;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							s.insert((8 - x as usize, 8 - y as usize));
+
+							if ox == x && oy == y {
+								break;
+							}
+
+							x += dx;
+							y += dy;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[8 - y as usize][8 - x as usize] = GHisha;
+							banmen.0[8 - oy as usize][8 - ox as usize] = SFu;
+
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,false)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Gote,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(8 - dx as usize,8 - dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kyou_all_vertical_position_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			let mut s = HashSet::new();
+
+			{
+				let mut y = y - 1;
+
+				while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+					s.insert((x as usize, y as usize));
+					y -= 1;
+				}
+			}
+
+			let x = x as u32;
+			let y = y as u32;
+
+			for dx in 0..9 {
+				for dy in 0..9 {
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[y as usize][x as usize] = SKyou;
+
+					let nari = dy < 3;
+
+					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,nari)));
+
+					let state = State::new(banmen);
+
+					assert_eq!(Rule::is_valid_move(&state,
+												   Teban::Sente,
+												   &MochigomaCollections::Empty,
+												   m
+					),s.contains(&(dx as usize,dy as usize)),
+							   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+							   m.to_move(), x,y,dx,dy,state.get_banmen());
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kyou_all_vertical_position_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			let mut s = HashSet::new();
+
+			{
+				let mut y = y - 1;
+
+				while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+					s.insert((8 - x as usize, 8 - y as usize));
+					y -= 1;
+				}
+			}
+
+			let x = x as u32;
+			let y = y as u32;
+
+			for dx in 0..9 {
+				for dy in 0..9 {
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8 - y as usize][8 - x as usize] = GKyou;
+
+					let nari = dy < 3;
+					let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,nari)));
+
+					let state = State::new(banmen);
+
+					assert_eq!(Rule::is_valid_move(&state,
+												   Teban::Gote,
+												   &MochigomaCollections::Empty,
+												   m
+					),s.contains(&(8 - dx as usize,8 - dy as usize)),
+							   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+							   m.to_move(), x,y,dx,dy,state.get_banmen());
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kyou_all_vertical_position_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					{
+						let mut y = y - 1;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							if ox == x && oy == y {
+								break;
+							}
+							s.insert((x as usize, y as usize));
+							y -= 1;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[y as usize][x as usize] = SKyou;
+							banmen.0[oy as usize][ox as usize] = SFu;
+
+							let nari = dy < 3;
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,nari)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Sente,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(dx as usize,dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kyou_all_vertical_position_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					{
+						let mut y = y - 1;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							if ox == x && oy == y {
+								break;
+							}
+							s.insert((8 - x as usize, 8 - y as usize));
+							y -= 1;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[8 - y as usize][8 - x as usize] = GKyou;
+							banmen.0[8 - oy as usize][8 - ox as usize] = GFu;
+
+							let nari = dy < 3;
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,nari)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Gote,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(8 - dx as usize,8 - dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kyou_all_vertical_position_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					{
+						let mut y = y - 1;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							s.insert((x as usize, y as usize));
+
+							if ox == x && oy == y {
+								break;
+							}
+
+							y -= 1;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[y as usize][x as usize] = SKyou;
+							banmen.0[oy as usize][ox as usize] = GFu;
+
+							let nari = dy < 3;
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-x,y+1),KomaDstToPosition(9-dx,dy+1,nari)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Sente,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(dx as usize,dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_apply_valid_move_kyou_all_vertical_position_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+
+					let mut s = HashSet::new();
+
+					{
+						let mut y = y - 1;
+
+						while x >= 0 && x <= 8 && y >= 0 && y <= 8 {
+							s.insert((8 - x as usize, 8 - y as usize));
+
+							if ox == x && oy == y {
+								break;
+							}
+
+							y -= 1;
+						}
+					}
+
+					let x = x as u32;
+					let y = y as u32;
+
+					for dx in 0..9 {
+						for dy in 0..9 {
+							let mut banmen = blank_banmen.clone();
+
+							banmen.0[8 - y as usize][8 - x as usize] = GKyou;
+							banmen.0[8 - oy as usize][8 - ox as usize] = SFu;
+
+							let nari = dy < 3;
+							let m = rule::AppliedMove::from(Move::To(KomaSrcPosition(9-(8-x),(8-y)+1),KomaDstToPosition(9-(8-dx),(8-dy)+1,nari)));
+
+							let state = State::new(banmen);
+
+							assert_eq!(Rule::is_valid_move(&state,
+														   Teban::Gote,
+														   &MochigomaCollections::Empty,
+														   m
+							),s.contains(&(8 - dx as usize,8 - dy as usize)),
+									   "is_valid_move: move = {:?} from = {},{}, to = {},{} banmen = {:?}",
+									   m.to_move(), x,y,dx,dy,state.get_banmen());
+						}
+					}
+				}
+			}
+		}
 	}
 }
