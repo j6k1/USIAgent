@@ -999,6 +999,108 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_inside_gote() {
 	}
 }
 #[test]
+fn test_legal_moves_banmen_with_kaku_all_position_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+					banmen.0[y][x] = SKaku;
+					banmen.0[ox][oy] = SFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kaku_all_position_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8-y][8-x] = GKaku;
+					banmen.0[8-ox][8-oy] = GFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kaku_all_position_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+					banmen.0[y][x] = SKaku;
+					banmen.0[ox][oy] = GFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kaku_all_position_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8-y][8-x] = GKaku;
+					banmen.0[8-ox][8-oy] = SFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
 fn test_legal_moves_banmen_with_kaku_nari_border_sente() {
 	let blank_banmen = Banmen([[Blank; 9]; 9]);
 
@@ -2519,6 +2621,143 @@ fn test_legal_moves_banmen_with_kaku_nari_8_squares_and_contiguous_gote() {
 	}
 }
 #[test]
+fn test_legal_moves_banmen_with_hisha_all_position_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut banmen = blank_banmen.clone();
+			banmen.0[y][x] = SHisha;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+					   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+						   LegalMove::from(m)
+					   }).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_all_position_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8-y][8-x] = GHisha;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+					   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+						   LegalMove::from(m)
+					   }).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_all_position_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+					banmen.0[y][x] = SHisha;
+					banmen.0[ox][oy] = SFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_all_position_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8-y][8-x] = GHisha;
+					banmen.0[8-ox][8-oy] = GFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_all_position_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+					banmen.0[y][x] = SHisha;
+					banmen.0[ox][oy] = GFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_hisha_all_position_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in 0..9 {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8-y][8-x] = GHisha;
+					banmen.0[8-ox][8-oy] = SFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
 fn test_legal_moves_banmen_with_hisha_corner_sente() {
 	const POSITIONS:[(usize,usize); 16] = [
 		(0,0),(0,1),(1,0),(1,1),
@@ -2997,6 +3236,143 @@ fn test_legal_moves_banmen_with_hisha_nari_8_squares_and_contiguous_gote() {
 					LegalMove::from(m)
 				}).collect::<Vec<LegalMove>>()
 			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_all_vertical_position_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			let mut banmen = blank_banmen.clone();
+			banmen.0[y][x] = SKyou;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+					   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+						   LegalMove::from(m)
+					   }).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_all_vertical_position_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			let mut banmen = blank_banmen.clone();
+
+			banmen.0[8-y][8-x] = GKyou;
+
+			assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+					   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+						   LegalMove::from(m)
+					   }).collect::<Vec<LegalMove>>()
+			);
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_all_vertical_position_occupied_self_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+					banmen.0[y][x] = SKyou;
+					banmen.0[ox][oy] = SFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_all_vertical_position_occupied_self_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8-y][8-x] = GKyou;
+					banmen.0[8-ox][8-oy] = GFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_all_vertical_position_occupied_opponent_sente() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+					banmen.0[y][x] = SKyou;
+					banmen.0[ox][oy] = GFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
+		}
+	}
+}
+#[test]
+fn test_legal_moves_banmen_with_kyou_all_vertical_position_occupied_opponent_gote() {
+	let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+	for x in [0,6,7] {
+		for y in 0..9 {
+			for ox in 0..9 {
+				for oy in 0..9 {
+					if ox == x && oy == y {
+						continue;
+					}
+					let mut banmen = blank_banmen.clone();
+
+					banmen.0[8-y][8-x] = GKyou;
+					banmen.0[8-ox][8-oy] = SFu;
+
+					assert_eq!(legal_moves_from_banmen(&Teban::Gote,&banmen),
+							   Rule::legal_moves_from_banmen(Teban::Gote,&State::new(banmen.clone())).into_iter().map(|m| {
+								   LegalMove::from(m)
+							   }).collect::<Vec<LegalMove>>()
+					);
+				}
+			}
 		}
 	}
 }
