@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::TryFrom;
 use usiagent::shogi::*;
 use usiagent::protocol::*;
@@ -254,7 +252,7 @@ fn test_banmen_try_from() {
 #[test]
 fn test_mochigomacollections_try_from() {
 	let input_and_expected:Vec<(&'static str,Result<MochigomaCollections, TypeConvertError<String>>)> = vec![
-		("-",Ok(MochigomaCollections::Pair(HashMap::new(),HashMap::new()))),
+		("-",Ok(MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()))),
 		("2R2B2G2S2N2L9P2r2b2g2s2n2l9p",Ok(MochigomaCollections::Pair(vec![
 			(MochigomaKind::Hisha,2),
 			(MochigomaKind::Kaku,2),
@@ -263,7 +261,7 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,2),
 			(MochigomaKind::Kyou,2),
 			(MochigomaKind::Fu,9),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		}),vec![
@@ -274,7 +272,7 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,2),
 			(MochigomaKind::Kyou,2),
 			(MochigomaKind::Fu,9),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})))),
@@ -286,11 +284,11 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,4),
 			(MochigomaKind::Kyou,4),
 			(MochigomaKind::Fu,18),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
-		}),HashMap::new()))),
-		("4r4b4g4s4n4l18p",Ok(MochigomaCollections::Pair(HashMap::new(), vec![
+		}),Mochigoma::new()))),
+		("4r4b4g4s4n4l18p",Ok(MochigomaCollections::Pair(Mochigoma::new(), vec![
 			(MochigomaKind::Hisha,4),
 			(MochigomaKind::Kaku,4),
 			(MochigomaKind::Kin,4),
@@ -298,7 +296,7 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,4),
 			(MochigomaKind::Kyou,4),
 			(MochigomaKind::Fu,18),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})))),
@@ -310,7 +308,7 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		}),vec![
@@ -321,7 +319,7 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})))),
@@ -333,11 +331,11 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
-		}),HashMap::new()))),
-		("rbgsnlp",Ok(MochigomaCollections::Pair(HashMap::new(), vec![
+		}),Mochigoma::new()))),
+		("rbgsnlp",Ok(MochigomaCollections::Pair(Mochigoma::new(), vec![
 			(MochigomaKind::Hisha,1),
 			(MochigomaKind::Kaku,1),
 			(MochigomaKind::Kin,1),
@@ -345,7 +343,7 @@ fn test_mochigomacollections_try_from() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})))),
@@ -754,7 +752,7 @@ fn test_teban_to_sfen() {
 #[test]
 fn test_mochigomacollections_to_sfen() {
 	let input_and_expected:Vec<(MochigomaCollections,Result<String, TypeConvertError<String>>)> = vec![
-		(MochigomaCollections::Pair(HashMap::new(),HashMap::new()),Ok(String::from("-"))),
+		(MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),Ok(String::from("-"))),
 		(MochigomaCollections::Empty,Ok(String::from("-"))),
 		(MochigomaCollections::Pair(vec![
 			(MochigomaKind::Hisha,2),
@@ -764,7 +762,7 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,2),
 			(MochigomaKind::Kyou,2),
 			(MochigomaKind::Fu,9),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		}),vec![
@@ -775,7 +773,7 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,2),
 			(MochigomaKind::Kyou,2),
 			(MochigomaKind::Fu,9),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})),Ok(String::from("2R2B2G2S2N2L9P2r2b2g2s2n2l9p"))),
@@ -787,11 +785,11 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,4),
 			(MochigomaKind::Kyou,4),
 			(MochigomaKind::Fu,18),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
-		}),HashMap::new()),Ok(String::from("4R4B4G4S4N4L18P"))),
-		(MochigomaCollections::Pair(HashMap::new(), vec![
+		}),Mochigoma::new()),Ok(String::from("4R4B4G4S4N4L18P"))),
+		(MochigomaCollections::Pair(Mochigoma::new(), vec![
 			(MochigomaKind::Hisha,4),
 			(MochigomaKind::Kaku,4),
 			(MochigomaKind::Kin,4),
@@ -799,7 +797,7 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,4),
 			(MochigomaKind::Kyou,4),
 			(MochigomaKind::Fu,18),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})),Ok(String::from("4r4b4g4s4n4l18p"))),
@@ -811,7 +809,7 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		}),vec![
@@ -822,7 +820,7 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})),Ok(String::from("RBGSNLPrbgsnlp"))),
@@ -834,11 +832,11 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
-		}),HashMap::new()),Ok(String::from("RBGSNLP"))),
-		(MochigomaCollections::Pair(HashMap::new(), vec![
+		}),Mochigoma::new()),Ok(String::from("RBGSNLP"))),
+		(MochigomaCollections::Pair(Mochigoma::new(), vec![
 			(MochigomaKind::Hisha,1),
 			(MochigomaKind::Kaku,1),
 			(MochigomaKind::Kin,1),
@@ -846,7 +844,7 @@ fn test_mochigomacollections_to_sfen() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})),Ok(String::from("rbgsnlp"))),
@@ -882,7 +880,7 @@ fn test_teban_banmen_mc_moves_to_sfen() {
 			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![]),Ok(String::from("startpos"))),
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),vec![]),Ok(String::from("startpos"))),
 		((Teban::Gote,Banmen([
 			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
 			[Blank,GHisha,Blank,Blank,Blank,Blank,Blank,GKaku,Blank],
@@ -893,7 +891,7 @@ fn test_teban_banmen_mc_moves_to_sfen() {
 			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![]),
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),vec![]),
 		Ok(String::from("sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1"))),
 		((Teban::Sente,Banmen([
 			[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
@@ -918,7 +916,7 @@ fn test_teban_banmen_mc_moves_to_sfen() {
 			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),vec![
 			Move::To(KomaSrcPosition(1,7),KomaDstToPosition(1,6,false))
 		]),Ok(String::from("startpos moves 1g1f"))),
 		((Teban::Sente,Banmen([
@@ -946,7 +944,7 @@ fn test_teban_banmen_mc_moves_to_sfen() {
 			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),vec![
 			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
 			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
 			Move::To(KomaSrcPosition(8,8),KomaDstToPosition(3,3,true)),
@@ -961,7 +959,7 @@ fn test_teban_banmen_mc_moves_to_sfen() {
 			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),vec![
 			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false))
 		]),
 		Ok(String::from("sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1 moves 3c3d"))),
@@ -975,7 +973,7 @@ fn test_teban_banmen_mc_moves_to_sfen() {
 			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),vec![
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),vec![
 			Move::To(KomaSrcPosition(3,3),KomaDstToPosition(3,4,false)),
 			Move::To(KomaSrcPosition(7,7),KomaDstToPosition(7,6,false)),
 			Move::To(KomaSrcPosition(2,2),KomaDstToPosition(7,7,true))
@@ -1352,7 +1350,7 @@ fn test_position_parse_result_extract() {
 			[SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),1,vec![])),
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),1,vec![])),
 		(PositionParseResult(
 			Teban::Gote,UsiInitialPosition::Sfen(Banmen([
 				[Blank,Blank,Blank,Blank,GOu,GKin,GGin,GKei,GKyou],
@@ -1372,7 +1370,7 @@ fn test_position_parse_result_extract() {
 				(MochigomaKind::Kei,1),
 				(MochigomaKind::Kyou,1),
 				(MochigomaKind::Fu,1),
-			].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 				acc.insert(k,n);
 				acc
 			}),vec![
@@ -1383,7 +1381,7 @@ fn test_position_parse_result_extract() {
 				(MochigomaKind::Kei,1),
 				(MochigomaKind::Kyou,1),
 				(MochigomaKind::Fu,1),
-			].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+			].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 				acc.insert(k,n);
 				acc
 			}))),1,vec![
@@ -1409,7 +1407,7 @@ fn test_position_parse_result_extract() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		}),vec![
@@ -1420,7 +1418,7 @@ fn test_position_parse_result_extract() {
 			(MochigomaKind::Kei,1),
 			(MochigomaKind::Kyou,1),
 			(MochigomaKind::Fu,1),
-		].into_iter().fold(HashMap::new(), |mut acc,(k,n)| {
+		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
 		})),1,vec![
@@ -1450,7 +1448,7 @@ fn test_position_parse_result_extract() {
 			[SFu,Blank,SFu,SFu,SFu,SFu,SFu,SFu,SFu],
 			[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 			[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
-		]),MochigomaCollections::Pair(HashMap::new(),HashMap::new()),1,vec![])),
+		]),MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),1,vec![])),
 	];
 
 	for (i,r) in input_and_expected.into_iter() {

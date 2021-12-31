@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
@@ -15,7 +13,7 @@ fn test_is_sennichite_sente() {
 	let mut kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 	let hasher = KyokumenHash::new();
 
-	let (mut mhash, mut shash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
+	let (mut mhash, mut shash) = hasher.calc_initial_hash(&BANMEN_START_POS,&Mochigoma::new(),&Mochigoma::new());
 
 	let mut state = State::new(BANMEN_START_POS.clone());
 
@@ -67,7 +65,7 @@ fn test_is_sennichite_gote() {
 	let mut kyokumen_map:KyokumenMap<u64,u32> = KyokumenMap::new();
 	let hasher = KyokumenHash::new();
 
-	let (mut mhash, mut shash) = hasher.calc_initial_hash(&BANMEN_START_POS,&HashMap::new(),&HashMap::new());
+	let (mut mhash, mut shash) = hasher.calc_initial_hash(&BANMEN_START_POS,&Mochigoma::new(),&Mochigoma::new());
 
 	let mut state = State::new(BANMEN_START_POS.clone());
 
@@ -122,7 +120,7 @@ fn test_is_sennichite_by_oute_sente() {
 	banmen.0[8][4] = GOu;
 	banmen.0[0][8] = SHisha;
 
-	let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+	let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
 	let mut state = State::new(banmen);
 	let mut teban = Teban::Sente;
@@ -196,7 +194,7 @@ fn test_is_sennichite_by_oute_gote() {
 	banmen.0[8-8][8-4] = SOu;
 	banmen.0[8-0][8-8] = GHisha;
 
-	let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+	let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
 	let mut state = State::new(banmen);
 	let mut teban = Teban::Gote;

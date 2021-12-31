@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::{AppliedMove, LegalMove, LegalMoveTo, LegalMovePut};
 use usiagent::rule::BANMEN_START_POS;
@@ -59,7 +57,7 @@ fn test_moveto_kinds_sente() {
         banmen.0[6][2] = Blank;
         banmen.0[5][3] = SKaku;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let kind = banmen.0[sy as usize][sx as usize];
@@ -69,7 +67,7 @@ fn test_moveto_kinds_sente() {
             banmen.0[sy as usize][sx as usize] = Blank;
             banmen.0[dy as usize][dx as usize] = kind;
 
-            hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new())
+            hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new())
         };
 
         let teban = Teban::Sente;
@@ -106,7 +104,7 @@ fn test_moveto_nari_kinds_sente() {
         banmen.0[7][1] = SKakuN;
         banmen.0[7][7] = SHishaN;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let kind = banmen.0[sy as usize][sx as usize];
@@ -116,7 +114,7 @@ fn test_moveto_nari_kinds_sente() {
             banmen.0[sy as usize][sx as usize] = Blank;
             banmen.0[dy as usize][dx as usize] = kind;
 
-            hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new())
+            hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new())
         };
 
         let teban = Teban::Sente;
@@ -150,7 +148,7 @@ fn test_moveto_kinds_to_nari_sente() {
         banmen.0[ry as usize][rx as usize] = Blank;
         banmen.0[sy as usize][sx as usize] = kind;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let mut banmen = banmen.clone();
@@ -158,7 +156,7 @@ fn test_moveto_kinds_to_nari_sente() {
             banmen.0[sy as usize][sx as usize] = Blank;
             banmen.0[dy as usize][dx as usize] = kind.to_nari();
 
-            hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new())
+            hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new())
         };
 
         let teban = Teban::Sente;
@@ -199,8 +197,8 @@ fn test_moveto_kinds_obtained_sente() {
         banmen.0[2][4] = kind;
         banmen.0[3][4] = SFu;
 
-        let ms = HashMap::new();
-        let mut mg = HashMap::new();
+        let ms = Mochigoma::new();
+        let mut mg = Mochigoma::new();
 
         mg.insert(MochigomaKind::Fu,1);
 
@@ -212,9 +210,9 @@ fn test_moveto_kinds_obtained_sente() {
             banmen.0[3][4] = Blank;
             banmen.0[2][4] = SFu;
 
-            let mut ms = HashMap::new();
+            let mut ms = Mochigoma::new();
             ms.insert(MochigomaKind::try_from(kind).unwrap(),1);
-            let mut mg = HashMap::new();
+            let mut mg = Mochigoma::new();
             mg.insert(MochigomaKind::Fu,1);
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
@@ -264,7 +262,7 @@ fn test_moveto_kinds_mochigoma_empty_obtained_sente() {
         banmen.0[3][4] = SFu;
         banmen.0[4][4] = GFu;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let mut banmen = banmen.clone();
@@ -272,9 +270,9 @@ fn test_moveto_kinds_mochigoma_empty_obtained_sente() {
             banmen.0[3][4] = Blank;
             banmen.0[2][4] = SFu;
 
-            let mut ms = HashMap::new();
+            let mut ms = Mochigoma::new();
             ms.insert(MochigomaKind::try_from(kind).unwrap(),1);
-            let mg = HashMap::new();
+            let mg = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
@@ -322,13 +320,13 @@ fn test_moveto_kinds_obtained_2nd_sente() {
         banmen.0[2][4] = kind;
         banmen.0[3][4] = SFu;
 
-        let mut ms = HashMap::new();
+        let mut ms = Mochigoma::new();
 
         for &kind in &MOCHIGOMA_KINDS {
             ms.insert(kind,1);
         }
 
-        let mut mg = HashMap::new();
+        let mut mg = Mochigoma::new();
 
         mg.insert(MochigomaKind::Fu,1);
 
@@ -340,14 +338,14 @@ fn test_moveto_kinds_obtained_2nd_sente() {
             banmen.0[3][4] = Blank;
             banmen.0[2][4] = SFu;
 
-            let mut ms = HashMap::new();
+            let mut ms = Mochigoma::new();
 
             for &kind in &MOCHIGOMA_KINDS {
                 ms.insert(kind,1);
             }
             ms.insert(MochigomaKind::try_from(kind).unwrap(),2);
 
-            let mut mg = HashMap::new();
+            let mut mg = Mochigoma::new();
             mg.insert(MochigomaKind::Fu,1);
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
@@ -382,10 +380,10 @@ fn test_moveto_kinds_obtained_mochigoma_limit_sente() {
         banmen.0[6][x] = Blank;
     }
 
-    let mut ms = HashMap::new();
+    let mut ms = Mochigoma::new();
     ms.insert(MochigomaKind::Fu,17);
 
-    let mg = HashMap::new();
+    let mg = Mochigoma::new();
 
     let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&ms,&mg);
 
@@ -395,10 +393,10 @@ fn test_moveto_kinds_obtained_mochigoma_limit_sente() {
         banmen.0[3][4] = Blank;
         banmen.0[2][4] = SKyou;
 
-        let mut ms = HashMap::new();
+        let mut ms = Mochigoma::new();
         ms.insert(MochigomaKind::Fu,18);
 
-        let mg = HashMap::new();
+        let mg = Mochigoma::new();
 
         hasher.calc_initial_hash(&banmen,&ms,&mg)
     };
@@ -431,13 +429,13 @@ fn test_put_sente() {
         banmen.0[7][1] = Blank;
         banmen.0[7][7] = Blank;
 
-        let mut ms = HashMap::new();
+        let mut ms = Mochigoma::new();
 
         for &kind in &MOCHIGOMA_KINDS {
             ms.insert(kind,1);
         }
 
-        let mg = HashMap::new();
+        let mg = Mochigoma::new();
 
         let (mhash, shash) = hasher.calc_initial_hash(&banmen,&ms,&mg);
 
@@ -446,14 +444,14 @@ fn test_put_sente() {
 
             banmen.0[3][4] = KomaKind::from((Teban::Sente,kind));
 
-            let mut ms = HashMap::new();
+            let mut ms = Mochigoma::new();
 
             for &kind in &MOCHIGOMA_KINDS {
                 ms.insert(kind,1);
             }
             ms.insert(kind,0);
 
-            let mg = HashMap::new();
+            let mg = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
@@ -476,13 +474,13 @@ fn test_put_mochigomacollection_empty_sente() {
     for &kind in &MOCHIGOMA_KINDS {
         let banmen = BANMEN_START_POS.clone();
 
-        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let banmen = banmen.clone();
 
-            let ms = HashMap::new();
-            let mg = HashMap::new();
+            let ms = Mochigoma::new();
+            let mg = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
@@ -505,19 +503,19 @@ fn test_put_mochigomacollection_all_zero_sente() {
     for &kind in &MOCHIGOMA_KINDS {
         let banmen = BANMEN_START_POS.clone();
 
-        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let banmen = banmen.clone();
 
-            let ms = HashMap::new();
-            let mg = HashMap::new();
+            let ms = Mochigoma::new();
+            let mg = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
 
         let teban = Teban::Sente;
-        let mc = MochigomaCollections::Pair(HashMap::new(),HashMap::new());
+        let mc = MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new());
 
         let m = AppliedMove::from(LegalMove::Put(LegalMovePut::new(kind,9*4+3)));
 
@@ -548,7 +546,7 @@ fn test_moveto_kinds_gote() {
         banmen.0[2][6] = Blank;
         banmen.0[3][5] = SKaku;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let kind = banmen.0[8 - sy as usize][8 - sx as usize];
@@ -558,7 +556,7 @@ fn test_moveto_kinds_gote() {
             banmen.0[8 - sy as usize][8 - sx as usize] = Blank;
             banmen.0[8 - dy as usize][8 - dx as usize] = kind;
 
-            hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new())
+            hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new())
         };
 
         let teban = Teban::Gote;
@@ -595,7 +593,7 @@ fn test_moveto_nari_kinds_gote() {
         banmen.0[1][7] = SKakuN;
         banmen.0[1][1] = SHishaN;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let kind = banmen.0[8 - sy as usize][8 - sx as usize];
@@ -605,7 +603,7 @@ fn test_moveto_nari_kinds_gote() {
             banmen.0[8 - sy as usize][8 - sx as usize] = Blank;
             banmen.0[8 - dy as usize][8 - dx as usize] = kind;
 
-            hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new())
+            hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new())
         };
 
         let teban = Teban::Gote;
@@ -639,7 +637,7 @@ fn test_moveto_kinds_to_nari_gote() {
         banmen.0[8 - ry as usize][8 - rx as usize] = Blank;
         banmen.0[8 - sy as usize][8 - sx as usize] = kind;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let mut banmen = banmen.clone();
@@ -647,7 +645,7 @@ fn test_moveto_kinds_to_nari_gote() {
             banmen.0[8 - sy as usize][8 - sx as usize] = Blank;
             banmen.0[8 - dy as usize][8 - dx as usize] = kind.to_nari();
 
-            hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new())
+            hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new())
         };
 
         let teban = Teban::Gote;
@@ -688,8 +686,8 @@ fn test_moveto_kinds_obtained_gote() {
         banmen.0[6][4] = kind;
         banmen.0[5][4] = GFu;
 
-        let mg = HashMap::new();
-        let mut ms = HashMap::new();
+        let mg = Mochigoma::new();
+        let mut ms = Mochigoma::new();
 
         ms.insert(MochigomaKind::Fu,1);
 
@@ -701,9 +699,9 @@ fn test_moveto_kinds_obtained_gote() {
             banmen.0[5][4] = Blank;
             banmen.0[6][4] = GFu;
 
-            let mut mg = HashMap::new();
+            let mut mg = Mochigoma::new();
             mg.insert(MochigomaKind::try_from(kind).unwrap(),1);
-            let mut ms = HashMap::new();
+            let mut ms = Mochigoma::new();
             ms.insert(MochigomaKind::Fu,1);
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
@@ -753,7 +751,7 @@ fn test_moveto_kinds_mochigoma_empty_obtained_gote() {
         banmen.0[5][4] = GFu;
         banmen.0[4][4] = SFu;
 
-        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let mut banmen = banmen.clone();
@@ -761,9 +759,9 @@ fn test_moveto_kinds_mochigoma_empty_obtained_gote() {
             banmen.0[5][4] = Blank;
             banmen.0[6][4] = GFu;
 
-            let mut mg = HashMap::new();
+            let mut mg = Mochigoma::new();
             mg.insert(MochigomaKind::try_from(kind).unwrap(),1);
-            let ms = HashMap::new();
+            let ms = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
@@ -811,13 +809,13 @@ fn test_moveto_kinds_obtained_2nd_gote() {
         banmen.0[6][4] = kind;
         banmen.0[5][4] = GFu;
 
-        let mut mg = HashMap::new();
+        let mut mg = Mochigoma::new();
 
         for &kind in &MOCHIGOMA_KINDS {
             mg.insert(kind,1);
         }
 
-        let mut ms = HashMap::new();
+        let mut ms = Mochigoma::new();
 
         ms.insert(MochigomaKind::Fu,1);
 
@@ -829,14 +827,14 @@ fn test_moveto_kinds_obtained_2nd_gote() {
             banmen.0[5][4] = Blank;
             banmen.0[6][4] = GFu;
 
-            let mut mg = HashMap::new();
+            let mut mg = Mochigoma::new();
 
             for &kind in &MOCHIGOMA_KINDS {
                 mg.insert(kind,1);
             }
             mg.insert(MochigomaKind::try_from(kind).unwrap(),2);
 
-            let mut ms = HashMap::new();
+            let mut ms = Mochigoma::new();
             ms.insert(MochigomaKind::Fu,1);
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
@@ -871,10 +869,10 @@ fn test_moveto_kinds_obtained_mochigoma_limit_gote() {
         banmen.0[2][8 - x] = Blank;
     }
 
-    let mut mg = HashMap::new();
+    let mut mg = Mochigoma::new();
     mg.insert(MochigomaKind::Fu,17);
 
-    let ms = HashMap::new();
+    let ms = Mochigoma::new();
 
     let (mut mhash, mut shash) = hasher.calc_initial_hash(&banmen,&ms,&mg);
 
@@ -884,10 +882,10 @@ fn test_moveto_kinds_obtained_mochigoma_limit_gote() {
         banmen.0[5][4] = Blank;
         banmen.0[6][4] = GKyou;
 
-        let mut mg = HashMap::new();
+        let mut mg = Mochigoma::new();
         mg.insert(MochigomaKind::Fu,18);
 
-        let ms = HashMap::new();
+        let ms = Mochigoma::new();
 
         hasher.calc_initial_hash(&banmen,&ms,&mg)
     };
@@ -920,13 +918,13 @@ fn test_put_gote() {
         banmen.0[1][7] = Blank;
         banmen.0[1][1] = Blank;
 
-        let mut mg = HashMap::new();
+        let mut mg = Mochigoma::new();
 
         for &kind in &MOCHIGOMA_KINDS {
             mg.insert(kind,1);
         }
 
-        let ms = HashMap::new();
+        let ms = Mochigoma::new();
 
         let (mhash, shash) = hasher.calc_initial_hash(&banmen,&ms,&mg);
 
@@ -935,14 +933,14 @@ fn test_put_gote() {
 
             banmen.0[5][4] = KomaKind::from((Teban::Gote,kind));
 
-            let mut mg = HashMap::new();
+            let mut mg = Mochigoma::new();
 
             for &kind in &MOCHIGOMA_KINDS {
                 mg.insert(kind,1);
             }
             mg.insert(kind,0);
 
-            let ms = HashMap::new();
+            let ms = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
@@ -965,13 +963,13 @@ fn test_put_mochigomacollection_empty_gote() {
     for &kind in &MOCHIGOMA_KINDS {
         let banmen = BANMEN_START_POS.clone();
 
-        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let banmen = banmen.clone();
 
-            let mg = HashMap::new();
-            let ms = HashMap::new();
+            let mg = Mochigoma::new();
+            let ms = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
@@ -994,19 +992,19 @@ fn test_put_mochigomacollection_all_zero_gote() {
     for &kind in &MOCHIGOMA_KINDS {
         let banmen = BANMEN_START_POS.clone();
 
-        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&HashMap::new(),&HashMap::new());
+        let (mhash, shash) = hasher.calc_initial_hash(&banmen,&Mochigoma::new(),&Mochigoma::new());
 
         let expected = {
             let banmen = banmen.clone();
 
-            let mg = HashMap::new();
-            let ms = HashMap::new();
+            let mg = Mochigoma::new();
+            let ms = Mochigoma::new();
 
             hasher.calc_initial_hash(&banmen,&ms,&mg)
         };
 
         let teban = Teban::Gote;
-        let mc = MochigomaCollections::Pair(HashMap::new(),HashMap::new());
+        let mc = MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new());
 
         let m = AppliedMove::from(LegalMove::Put(LegalMovePut::new(kind,80-(9*4+3))));
 

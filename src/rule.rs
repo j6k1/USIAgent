@@ -2329,17 +2329,14 @@ impl Rule {
 			}
 		};
 
-		for m in &MOCHIGOMA_KINDS {
-			match mc.get(&m) {
-				None | Some(&0) => {
-					continue;
-				},
-				Some(_) => (),
+		for (m,count) in mc.iter() {
+			if count == 0 {
+				continue;
 			}
 
 			let (deny_move_bitboard,candidate_bitboard,fu_bitboard) = match t {
 				Teban::Sente => {
-					let deny_move_bitboard = match *m {
+					let deny_move_bitboard = match m {
 						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
 						MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK,
 						_ => 0
@@ -2356,7 +2353,7 @@ impl Rule {
 					(deny_move_bitboard,candidate_bitboard,sente_fu_bitboard)
 				},
 				Teban::Gote => {
-					let deny_move_bitboard = match *m {
+					let deny_move_bitboard = match m {
 						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
 						MochigomaKind::Kei => DENY_MOVE_GOTE_KEI_MASK,
 						_ => 0
@@ -2395,14 +2392,14 @@ impl Rule {
 					continue;
 				}
 
-				if *m == MochigomaKind::Fu && fu_bitboard & 0b111111111 << x * 9 != 0 {
+				if m == MochigomaKind::Fu && fu_bitboard & 0b111111111 << x * 9 != 0 {
 					continue;
 				}
 
 				if t == Teban::Sente {
-					mvs.push(LegalMove::Put(LegalMovePut::new(*m,p as u32)));
+					mvs.push(LegalMove::Put(LegalMovePut::new(m,p as u32)));
 				} else {
-					mvs.push(LegalMove::Put(LegalMovePut::new(*m,80 - p as u32)));
+					mvs.push(LegalMove::Put(LegalMovePut::new(m,80 - p as u32)));
 				}
 			}
 		}
@@ -3868,24 +3865,14 @@ impl Rule {
 											Teban::Sente => {
 												let mut ms = ms.clone();
 
-												let count = match ms.get(&obtained) {
-													Some(count) => count+1,
-													None => 1,
-												};
-
-												ms.insert(obtained,count);
+												ms.put(obtained);
 
 												(MochigomaCollections::Pair(ms,mg.clone()),Some(obtained))
 											},
 											Teban::Gote => {
 												let mut mg = mg.clone();
 
-												let count = match mg.get(&obtained) {
-													Some(count) => count+1,
-													None => 1,
-												};
-
-												mg.insert(obtained,count);
+												mg.put(obtained);
 
 												(MochigomaCollections::Pair(ms.clone(),mg),Some(obtained))
 											}
@@ -3894,15 +3881,16 @@ impl Rule {
 									&MochigomaCollections::Empty => {
 										match t {
 											Teban::Sente => {
-												let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+												let mut ms:Mochigoma = Mochigoma::new();
 
 												ms.insert(obtained,1);
-												(MochigomaCollections::Pair(ms,HashMap::new()),Some(obtained))
+												(MochigomaCollections::Pair(ms,Mochigoma::new()),Some(obtained))
 											},
 											Teban::Gote => {
-												let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+												let mut mg:Mochigoma = Mochigoma::new();
+
 												mg.insert(obtained,1);
-												(MochigomaCollections::Pair(HashMap::new(),mg),Some(obtained))
+												(MochigomaCollections::Pair(Mochigoma::new(),mg),Some(obtained))
 											}
 										}
 									}
@@ -3931,11 +3919,11 @@ impl Rule {
 					Teban::Sente => {
 						match mc {
 							MochigomaCollections::Pair(ref mut mc,_) => {
-								let c = match mc.get(&k) {
-									None | Some(0) => 0,
-									Some(c) => {
-										c-1
-									}
+								let c = match mc.get(k) {
+									0 => {
+										0
+									},
+									c => c - 1,
 								};
 								mc.insert(k,c);
 							},
@@ -3945,11 +3933,11 @@ impl Rule {
 					Teban::Gote => {
 						match mc {
 							MochigomaCollections::Pair(_,ref mut mc) => {
-								let c = match mc.get(&k) {
-									None | Some(0) => 0,
-									Some(c) => {
-										c-1
-									}
+								let c = match mc.get(k) {
+									0 => {
+										0
+									},
+									c => c - 1
 								};
 								mc.insert(k,c);
 							},
@@ -4399,7 +4387,7 @@ impl Rule {
 					return false;
 				}
 
-				let mc = match t{
+				let mc = match t {
 					Teban::Sente => {
 						match mc {
 							&MochigomaCollections::Empty => {
@@ -4424,8 +4412,8 @@ impl Rule {
 
 				let kind = m.kind();
 
-				match mc.get(&kind) {
-					Some(0) | None => {
+				match mc.get(kind) {
+					0 => {
 						return false;
 					},
 					_ => ()
@@ -4682,13 +4670,13 @@ impl Rule {
 
 				point += match mc {
 					&MochigomaCollections::Pair(ref mc, _) => {
-						(&MOCHIGOMA_KINDS).iter().map(|k| {
+						mc.iter().map(|(k,count)| {
 							match k {
-								&MochigomaKind::Hisha | &MochigomaKind::Kaku => {
-									mc.get(k).map_or(0, |n| *n * 5)
+								MochigomaKind::Hisha | MochigomaKind::Kaku => {
+									count * 5
 								},
 								_ => {
-									mc.get(k).map_or(0, |n| *n)
+									count
 								}
 							}
 						}).fold(0, |sum,s| sum + s)
@@ -4755,13 +4743,13 @@ impl Rule {
 
 				point += match mc {
 					&MochigomaCollections::Pair(_, ref mc) => {
-						(&MOCHIGOMA_KINDS).iter().map(|k| {
+						mc.iter().map(|(k,count)| {
 							match k {
-								&MochigomaKind::Hisha | &MochigomaKind::Kaku => {
-									mc.get(k).map_or(0, |n| *n * 5)
+								MochigomaKind::Hisha | MochigomaKind::Kaku => {
+									count * 5
 								},
 								_ => {
-									mc.get(k).map_or(0, |n| *n)
+									count
 								}
 							}
 						}).fold(0, |sum,s| sum + s)

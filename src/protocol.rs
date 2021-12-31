@@ -1,7 +1,6 @@
 //! USIプロトコル文字列のパース、組み立て機能
 use std::fmt;
 use std::error::Error;
-use std::collections::HashMap;
 use std::collections::HashSet;
 
 use event::*;
@@ -402,12 +401,12 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Teban {
 impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 	fn try_from(s: &'a str) -> Result<MochigomaCollections, TypeConvertError<String>> {
 		Ok(match &*s {
-			"-" => MochigomaCollections::Pair(HashMap::new(),HashMap::new()),
+			"-" => MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),
 			_ => {
 				let mut chars = s.chars();
 
-				let mut sente:HashMap<MochigomaKind,u32> = HashMap::new();
-				let mut gote:HashMap<MochigomaKind,u32> = HashMap::new();
+				let mut sente:Mochigoma = Mochigoma::new();
+				let mut gote:Mochigoma = Mochigoma::new();
 
 				let mut cur = chars.next();
 
@@ -474,18 +473,12 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 					if n > 1 {
 						match t {
 							Teban::Sente => {
-								let n = match sente.get(&k) {
-									Some(count) => count+n,
-									None => n,
-								};
+								let n = sente.get(k) + n as usize;
 
 								sente.insert(k,n);
 							},
 							Teban::Gote => {
-								let n = match gote.get(&k) {
-									Some(count) => count+n,
-									None => n,
-								};
+								let n = gote.get(k) + n as usize;
 
 								gote.insert(k,n);
 							},
@@ -493,20 +486,10 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
 					} else {
 						match t {
 							Teban::Sente => {
-								let n = match sente.get(&k) {
-									Some(count) => count+1,
-									None => 1,
-								};
-
-								sente.insert(k,n);
+								sente.put(k);
 							},
 							Teban::Gote => {
-								let n = match gote.get(&k) {
-									Some(count) => count+1,
-									None => 1,
-								};
-
-								gote.insert(k,n);
+								gote.put(k);
 							},
 						}
 					}
@@ -529,13 +512,13 @@ impl PositionParseResult {
 			PositionParseResult(teban, p, n, m) => {
 				let (banmen,mc) = match p {
 					UsiInitialPosition::Startpos => {
-						(BANMEN_START_POS, MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+						(BANMEN_START_POS, MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()))
 					},
 					UsiInitialPosition::Sfen(b,MochigomaCollections::Pair(ms,mg)) => {
 						(b,MochigomaCollections::Pair(ms,mg))
 					},
 					UsiInitialPosition::Sfen(b,MochigomaCollections::Empty) => {
-						(b,MochigomaCollections::Pair(HashMap::new(),HashMap::new()))
+						(b,MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()))
 					}
 				};
 
@@ -957,13 +940,13 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 				];
 
 				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_SENTE {
-					if let Some(n) = ms.get(&k) {
-						if *n > 1 {
-							sfen.push_str(&n.to_string());
-							sfen.push(c);
-						} else if *n == 1 {
-							sfen.push(c);
-						}
+					let n = ms.get(k);
+
+					if n > 1 {
+						sfen.push_str(&n.to_string());
+						sfen.push(c);
+					} else if n == 1 {
+						sfen.push(c);
 					}
 				}
 
@@ -978,13 +961,13 @@ impl ToSfen<TypeConvertError<String>> for MochigomaCollections {
 				];
 
 				for &(c,k) in &SFEN_MOCHIGOMA_KINDS_GOTE {
-					if let Some(n) = mg.get(&k) {
-						if *n > 1 {
-							sfen.push_str(&n.to_string());
-							sfen.push(c);
-						} else if *n == 1 {
-							sfen.push(c);
-						}
+					let n = mg.get(k);
+
+					if n > 1 {
+						sfen.push_str(&n.to_string());
+						sfen.push(c);
+					} else if n == 1 {
+						sfen.push(c);
 					}
 				}
 

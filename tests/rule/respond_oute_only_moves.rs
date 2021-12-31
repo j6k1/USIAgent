@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
@@ -91,11 +89,11 @@ fn test_respond_oute_only_moves_all_sente() {
 
 		banmen.0[o.2 as usize][o.1 as usize] = o.0;
 
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Fu,1);
 
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Fu,1);
 
@@ -134,7 +132,7 @@ fn test_respond_oute_only_moves_all_win_move_sente() {
 	banmen.0[0][4] = GOu;
 	banmen.0[1][4] = SKin;
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),HashMap::new());
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new());
 
 	let state = State::new(banmen);
 
@@ -164,9 +162,9 @@ fn test_respond_oute_only_moves_all_no_move_sente() {
 		[SKyou,SKei,Blank,Blank,Blank,Blank,Blank,Blank,Blank]
 	]);
 
-	let ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let ms:Mochigoma = Mochigoma::new();
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Kin,1);
 
@@ -243,11 +241,11 @@ fn test_respond_oute_only_moves_all_gote() {
 
 		banmen.0[o.2 as usize][o.1 as usize] = o.0;
 
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Fu,1);
 
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Fu,1);
 
@@ -340,7 +338,7 @@ fn test_respond_oute_only_moves_all_win_move_gote() {
 	banmen.0[8-0][8-4] = SOu;
 	banmen.0[8-1][8-4] = GKin;
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),HashMap::new());
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new());
 
 	let state = State::new(banmen);
 
@@ -370,11 +368,11 @@ fn test_respond_oute_only_moves_all_no_move_gote() {
 		[Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank,Blank]
 	]);
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Kin,1);
 
-	let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mg:Mochigoma = Mochigoma::new();
 	let mut mc = MochigomaCollections::Pair(ms,mg);
 
 	let mut state = State::new(banmen.clone());

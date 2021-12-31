@@ -14,6 +14,7 @@ mod validate;
 
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
+use std::convert::From;
 
 use usiagent::TryFrom;
 use usiagent::Find;
@@ -158,6 +159,82 @@ fn find_from_move_put(mvs:&Vec<LegalMove>,query:&(MochigomaKind,KomaDstPutPositi
 	}
 
 	None
+}
+#[derive(Debug,Eq)]
+pub enum MochigomaCollections {
+	/// 持ち駒が先手後手とも無し
+	Empty,
+	/// 先手後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で表現
+	Pair(HashMap<MochigomaKind,u32>,HashMap<MochigomaKind,u32>),
+}
+impl Clone for MochigomaCollections {
+	fn clone(&self) -> MochigomaCollections {
+		match *self {
+			MochigomaCollections::Empty => MochigomaCollections::Empty,
+			MochigomaCollections::Pair(ref ms, ref mg) => {
+				MochigomaCollections::Pair(ms.clone(),mg.clone())
+			}
+		}
+	}
+}
+impl PartialEq for MochigomaCollections {
+	fn eq(&self, other: &Self) -> bool {
+		match self {
+			&MochigomaCollections::Empty => {
+				match other {
+					&MochigomaCollections::Empty => {
+						true
+					}
+					&MochigomaCollections::Pair(ref ms,ref mg) => {
+						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
+							(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
+					}
+				}
+			},
+			&MochigomaCollections::Pair(ref ms, ref mg) => {
+				match other {
+					&MochigomaCollections::Empty => {
+						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
+							(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
+					}
+					&MochigomaCollections::Pair(ref oms,ref omg) => {
+						MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
+							acc = acc && ms.get(k).map(|&c| c).unwrap_or(0) == oms.get(k).map(|&c| c).unwrap_or(0);
+							acc
+						}) && MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
+							acc = acc && mg.get(k).map(|&c| c).unwrap_or(0) == omg.get(k).map(|&c| c).unwrap_or(0);
+							acc
+						})
+					}
+				}
+			}
+		}
+	}
+}
+impl MochigomaCollections {
+	/// MochigomaCollectionsを生成
+	///
+	/// # Arguments
+	/// * `ms` - 先手の持ち駒のハッシュマップ
+	/// * `mg` - 後手の持ち駒のハッシュマップ
+	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
+		if ms.len() == 0 && mg.len() == 0 {
+			MochigomaCollections::Empty
+		} else {
+			MochigomaCollections::Pair(ms,mg)
+		}
+	}
+
+	/// 持ち駒は先手後手とも空か？
+	pub fn is_empty(&self) -> bool {
+		match self {
+			&MochigomaCollections::Empty => true,
+			&MochigomaCollections::Pair(ref ms, ref mg) => {
+				(ms.is_empty() && mg.is_empty()) ||
+					(ms.values().fold(0,|acc,&c| acc + c) == 0 && mg.values().fold(0,|acc,&c| acc + c) == 0)
+			}
+		}
+	}
 }
 enum NextMove {
 	Once(i32,i32),
@@ -608,13 +685,13 @@ fn legal_moves_from_banmen(t:&Teban,banmen:&Banmen)
 	mvs
 }
 #[allow(dead_code)]
-fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
+fn legal_moves_from_mochigoma(t:&Teban,mc:&self::MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
 	let mut mvs:Vec<LegalMove> = Vec::new();
 
 	match *t {
 		Teban::Sente => {
 			match *mc {
-				MochigomaCollections::Pair(ref ms, _) => {
+				self::MochigomaCollections::Pair(ref ms, _) => {
 					for m in &MOCHIGOMA_KINDS {
 						match ms.get(&m) {
 							None | Some(&0) => {
@@ -674,12 +751,12 @@ fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Ve
 						}
 					}
 				},
-				MochigomaCollections::Empty => (),
+				self::MochigomaCollections::Empty => (),
 			}
 		},
 		Teban::Gote => {
 			match *mc {
-				MochigomaCollections::Pair(_, ref mg) => {
+				self::MochigomaCollections::Pair(_, ref mg) => {
 					for m in &MOCHIGOMA_KINDS {
 						match mg.get(&m) {
 							None | Some(&0) => {
@@ -740,14 +817,14 @@ fn legal_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Ve
 						}
 					}
 				},
-				MochigomaCollections::Empty => (),
+				self::MochigomaCollections::Empty => (),
 			}
 		}
 	}
 	mvs
 }
 #[allow(dead_code)]
-fn legal_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
+fn legal_moves_all(t:&Teban,banmen:&Banmen,mc:&self::MochigomaCollections)
 	-> Vec<LegalMove> {
 	let mut mvs:Vec<LegalMove> = Vec::new();
 
@@ -1573,7 +1650,7 @@ fn win_only_moves(t:&Teban,banmen:&Banmen)
 	mvs
 }
 #[allow(dead_code)]
-fn oute_only_moves_with_point(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections,x:u32,y:u32)
+fn oute_only_moves_with_point(t:&Teban,banmen:&Banmen,mc:&self::MochigomaCollections,x:u32,y:u32)
 	-> Vec<LegalMove> {
 	legal_moves_with_point(t, banmen, x, y)
 		.into_iter().filter(|m| {
@@ -1589,7 +1666,7 @@ fn oute_only_moves_with_point(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections,x
 		}).collect::<Vec<LegalMove>>()
 }
 #[allow(dead_code)]
-fn oute_only_moves_from_banmen(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
+fn oute_only_moves_from_banmen(t:&Teban,banmen:&Banmen,mc:&self::MochigomaCollections)
 	-> Vec<LegalMove> {
 	let mut mvs:Vec<LegalMove> = Vec::new();
 
@@ -1609,7 +1686,7 @@ fn oute_only_moves_from_banmen(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 	mvs
 }
 #[allow(dead_code)]
-fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
+fn oute_only_moves_from_mochigoma(t:&Teban,mc:&self::MochigomaCollections,b:&Banmen) -> Vec<LegalMove> {
 	legal_moves_from_mochigoma(t, mc, b)
 		.into_iter().filter(|m| {
 			match m {
@@ -1621,7 +1698,7 @@ fn oute_only_moves_from_mochigoma(t:&Teban,mc:&MochigomaCollections,b:&Banmen) -
 		}).collect::<Vec<LegalMove>>()
 }
 #[allow(dead_code)]
-fn oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
+fn oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&self::MochigomaCollections)
 	-> Vec<LegalMove> {
 	let mut mvs:Vec<LegalMove> = Vec::new();
 
@@ -1642,7 +1719,7 @@ fn oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 	mvs
 }
 #[allow(dead_code)]
-fn respond_oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
+fn respond_oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&self::MochigomaCollections)
 	-> Vec<LegalMove> {
 	legal_moves_all(t, banmen, mc)
 		.into_iter().filter(|m| {
@@ -1658,8 +1735,8 @@ fn respond_oute_only_moves_all(t:&Teban,banmen:&Banmen,mc:&MochigomaCollections)
 		}).collect::<Vec<LegalMove>>()
 }
 #[allow(dead_code)]
-fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move)
-	-> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
+fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&self::MochigomaCollections,m:&Move)
+	-> (Banmen,self::MochigomaCollections,Option<MochigomaKind>) {
 
 	let mut kinds = match banmen {
 		&Banmen(ref kinds) => kinds.clone(),
@@ -1730,7 +1807,7 @@ fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Mov
 					match obtained {
 						Some(obtained) => {
 							match mc {
-								&MochigomaCollections::Pair(ref ms, ref mg) => {
+								&self::MochigomaCollections::Pair(ref ms, ref mg) => {
 									match *t {
 										Teban::Sente => {
 											let mut ms = ms.clone();
@@ -1742,7 +1819,7 @@ fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Mov
 
 											ms.insert(obtained,count);
 
-											(MochigomaCollections::Pair(ms,mg.clone()),Some(obtained))
+											(self::MochigomaCollections::Pair(ms,mg.clone()),Some(obtained))
 										},
 										Teban::Gote => {
 											let mut mg = mg.clone();
@@ -1754,22 +1831,22 @@ fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Mov
 
 											mg.insert(obtained,count);
 
-											(MochigomaCollections::Pair(ms.clone(),mg),Some(obtained))
+											(self::MochigomaCollections::Pair(ms.clone(),mg),Some(obtained))
 										}
 									}
 								},
-								&MochigomaCollections::Empty => {
+								&self::MochigomaCollections::Empty => {
 									match *t {
 										Teban::Sente => {
 											let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
 
 											ms.insert(obtained,1);
-											(MochigomaCollections::Pair(ms,HashMap::new()),Some(obtained))
+											(self::MochigomaCollections::Pair(ms,HashMap::new()),Some(obtained))
 										},
 										Teban::Gote => {
 											let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
 											mg.insert(obtained,1);
-											(MochigomaCollections::Pair(HashMap::new(),mg),Some(obtained))
+											(self::MochigomaCollections::Pair(HashMap::new(),mg),Some(obtained))
 										}
 									}
 								}
@@ -1790,7 +1867,7 @@ fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Mov
 			match t {
 				&Teban::Sente => {
 					match mc {
-						MochigomaCollections::Pair(ref mut mc,_) => {
+						self::MochigomaCollections::Pair(ref mut mc,_) => {
 							let c = match mc.get(&k) {
 								Some(c) => {
 									c-1
@@ -1804,7 +1881,7 @@ fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Mov
 				},
 				&Teban::Gote => {
 					match mc {
-						MochigomaCollections::Pair(_,ref mut mc) => {
+						self::MochigomaCollections::Pair(_,ref mut mc) => {
 							let c = match mc.get(&k) {
 								Some(c) => {
 									c-1
@@ -1825,8 +1902,8 @@ fn apply_move_none_check(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Mov
 	(Banmen(kinds),nmc,obtained)
 }
 #[allow(dead_code)]
-fn apply_valid_move(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move)
-	-> Result<(Banmen,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
+fn apply_valid_move(banmen:&Banmen,t:&Teban,mc:&self::MochigomaCollections,m:&Move)
+	-> Result<(Banmen,self::MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
 	match m {
 		&Move::To(s,d) => {
@@ -1861,11 +1938,11 @@ fn apply_valid_move(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move)
 }
 #[allow(dead_code)]
 fn apply_moves(banmen:&Banmen,mut teban:Teban,
-					mut mc:MochigomaCollections,
+					mut mc:self::MochigomaCollections,
 					m:&Vec<Move>,mut mhash:u64,mut shash:u64,
 					mut kyokumen_hash_map:TwoKeyHashMap<u64,u32>,
 					hasher:&KyokumenHash<u64>)
-	-> (Teban,Banmen,MochigomaCollections,u64,u64,TwoKeyHashMap<u64,u32>) {
+	-> (Teban,Banmen,self::MochigomaCollections,u64,u64,TwoKeyHashMap<u64,u32>) {
 
 	let mut banmen = banmen.clone();
 
@@ -1873,8 +1950,12 @@ fn apply_moves(banmen:&Banmen,mut teban:Teban,
 		match apply_move_none_check(&banmen,&teban,&mc,&m) {
 			(next,nmc,o) => {
 				let m = m.to_applied_move();
-				mhash = hasher.calc_main_hash(mhash,teban,&banmen,&mc,m,&o);
-				shash = hasher.calc_sub_hash(shash,teban,&banmen,&mc,m,&o);
+				{
+					let mc = mc.clone().into();
+
+					mhash = hasher.calc_main_hash(mhash, teban, &banmen, &mc, m, &o);
+					shash = hasher.calc_sub_hash(shash, teban, &banmen, &mc, m, &o);
+				}
 
 				mc = nmc;
 				teban = teban.opposite();
@@ -1898,11 +1979,11 @@ fn apply_moves(banmen:&Banmen,mut teban:Teban,
 fn apply_moves_with_callback<T,F>(
 					banmen:&Banmen,
 					mut teban:Teban,
-					mut mc:MochigomaCollections,
+					mut mc:self::MochigomaCollections,
 					m:&Vec<Move>,mut r:T,mut f:F)
-	-> (Teban,Banmen,MochigomaCollections,T)
+	-> (Teban,Banmen,self::MochigomaCollections,T)
 	where F: FnMut(&Banmen,&Teban,
-					&MochigomaCollections,&Option<Move>,
+					&self::MochigomaCollections,&Option<Move>,
 					&Option<MochigomaKind>,T) -> T {
 
 	let mut banmen = banmen.clone();
@@ -1923,7 +2004,7 @@ fn apply_moves_with_callback<T,F>(
 	(teban,banmen,mc,r)
 }
 #[allow(dead_code)]
-fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
+fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&self::MochigomaCollections,limit:&Option<Instant>) -> bool {
 	if win_only_moves(&t.opposite(),banmen).len() > 0 {
 		return false
 	}
@@ -1957,7 +2038,7 @@ fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Optio
 			match *t {
 				Teban::Sente => {
 					match mc {
-						&MochigomaCollections::Pair(ref mc, _) => {
+						&self::MochigomaCollections::Pair(ref mc, _) => {
 							oy <= 2 && kinds.iter().enumerate().map(|(y,row)| {
 								if y <  3 {
 									row.iter().map(|k| {
@@ -2003,7 +2084,7 @@ fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Optio
 								}
 							}).fold(0, |sum,s| sum + s) >= 10
 						},
-						&MochigomaCollections::Empty => {
+						&self::MochigomaCollections::Empty => {
 							oy <= 2 && kinds.iter().enumerate().map(|(y,row)| {
 								if y < 3 {
 									row.iter().map(|k| {
@@ -2044,7 +2125,7 @@ fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Optio
 				},
 				Teban::Gote => {
 					match mc {
-						&MochigomaCollections::Pair(_, ref mc) => {
+						&self::MochigomaCollections::Pair(_, ref mc) => {
 							oy >= 6 && kinds.iter().enumerate().map(|(y,row)| {
 								if y >= 6 {
 									row.iter().map(|k| {
@@ -2090,7 +2171,7 @@ fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Optio
 								}
 							}).fold(0, |sum,s| sum + s) >= 10
 						},
-						&MochigomaCollections::Empty => {
+						&self::MochigomaCollections::Empty => {
 							oy >= 6 && kinds.iter().enumerate().map(|(y,row)| {
 								if y >= 6 {
 									row.iter().map(|k| {
@@ -2134,7 +2215,7 @@ fn is_nyugyoku_win(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,limit:&Optio
 	}
 }
 #[allow(dead_code)]
-fn responded_oute(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&Move)
+fn responded_oute(banmen:&Banmen,t:&Teban,mc:&self::MochigomaCollections,m:&Move,nm:&Move)
 	-> Result<bool,InvalidStateError> {
 
 	let o = t.opposite();
@@ -2319,7 +2400,7 @@ fn responded_oute(banmen:&Banmen,t:&Teban,mc:&MochigomaCollections,m:&Move,nm:&M
 	})
 }
 #[allow(dead_code)]
-fn is_put_fu_and_mate(banmen:&Banmen,teban:&Teban,mc:&MochigomaCollections,m:&Move) -> bool {
+fn is_put_fu_and_mate(banmen:&Banmen,teban:&Teban,mc:&self::MochigomaCollections,m:&Move) -> bool {
 	match *m {
 		Move::Put(MochigomaKind::Fu,KomaDstPutPosition(dx,dy)) => {
 			let dx = 9 - dx;

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
@@ -2247,8 +2245,8 @@ fn test_is_mate_with_partial_state_and_old_banmen_and_opponent_move_sente() {
 	for ((m,answer),mm) in mvs.iter().zip(&answer).zip(&mate_mvs) {
 		let mut state = State::new(banmen.clone());
 
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
+		let mg:Mochigoma = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Fu, 1);
 
@@ -2300,8 +2298,8 @@ fn test_is_mate_with_partial_state_and_old_banmen_and_opponent_move_gote() {
 	for ((m,answer),mm) in mvs.iter().zip(&answer).zip(&mate_mvs) {
 		let mut state = State::new(banmen.clone());
 
-		let ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let ms:Mochigoma = Mochigoma::new();
+		let mut mg:Mochigoma = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Fu, 1);
 

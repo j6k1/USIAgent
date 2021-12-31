@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
@@ -57,8 +55,8 @@ fn test_responded_oute_sente() {
 
 		let state = State::new(banmen);
 
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
+		let mg:Mochigoma = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Fu,1);
 
@@ -95,8 +93,8 @@ fn test_responded_oute_error_sente() {
 
 		let state = State::new(banmen);
 
-		let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
-		let mg:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut ms:Mochigoma = Mochigoma::new();
+		let mg:Mochigoma = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Fu,1);
 
@@ -161,8 +159,8 @@ fn test_responded_oute_gote() {
 
 		let state = State::new(banmen);
 
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
-		let ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
+		let ms:Mochigoma = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Fu,1);
 
@@ -199,8 +197,8 @@ fn test_responded_oute_error_gote() {
 
 		let state = State::new(banmen);
 
-		let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
-		let ms:HashMap<MochigomaKind,u32> = HashMap::new();
+		let mut mg:Mochigoma = Mochigoma::new();
+		let ms:Mochigoma = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Fu,1);
 

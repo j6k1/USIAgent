@@ -1,7 +1,6 @@
 //! 将棋の盤面や持ち駒等の定義
 use std::fmt;
 use std::fmt::Formatter;
-use std::collections::HashMap;
 
 use TryFrom;
 use rule::AppliedMove;
@@ -9,6 +8,8 @@ use error::*;
 
 use Find;
 use MaxIndex;
+use std::collections::HashMap;
+
 /// 盤面上の駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
 pub enum KomaKind {
@@ -230,7 +231,7 @@ pub enum MochigomaCollections {
 	/// 持ち駒が先手後手とも無し
 	Empty,
 	/// 先手後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で表現
-	Pair(HashMap<MochigomaKind,u32>,HashMap<MochigomaKind,u32>),
+	Pair(Mochigoma,Mochigoma),
 }
 impl Clone for MochigomaCollections {
 	fn clone(&self) -> MochigomaCollections {
@@ -251,25 +252,17 @@ impl PartialEq for MochigomaCollections {
 						true
 					}
 					&MochigomaCollections::Pair(ref ms,ref mg) => {
-						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
-						(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
+						ms.is_empty() && mg.is_empty()
 					}
 				}
 			},
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
 				match other {
 					&MochigomaCollections::Empty => {
-						(ms.is_empty() || ms.values().fold(0,|acc,&c| acc + c) == 0) &&
-						(mg.is_empty() || mg.values().fold(0,|acc,&c| acc + c) == 0)
+						ms.is_empty() && mg.is_empty()
 					}
 					&MochigomaCollections::Pair(ref oms,ref omg) => {
-						MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
-							acc = acc && ms.get(k).map(|&c| c).unwrap_or(0) == oms.get(k).map(|&c| c).unwrap_or(0);
-							acc
-						}) && MOCHIGOMA_KINDS.iter().fold(true, |mut acc,k| {
-							acc = acc && mg.get(k).map(|&c| c).unwrap_or(0) == omg.get(k).map(|&c| c).unwrap_or(0);
-							acc
-						})
+						ms == oms && mg == omg
 					}
 				}
 			}
@@ -280,10 +273,10 @@ impl MochigomaCollections {
 	/// MochigomaCollectionsを生成
 	///
 	/// # Arguments
-	/// * 'ms' - 先手の持ち駒のハッシュマップ
-	/// * 'mg' - 後手の持ち駒のハッシュマップ
-	pub fn new(ms:HashMap<MochigomaKind,u32>,mg:HashMap<MochigomaKind,u32>) -> MochigomaCollections {
-		if ms.len() == 0 && mg.len() == 0 {
+	/// * `ms` - 先手の持ち駒のハッシュマップ
+	/// * `mg` - 後手の持ち駒のハッシュマップ
+	pub fn new(ms:Mochigoma,mg:Mochigoma) -> MochigomaCollections {
+		if ms.is_empty() && mg.is_empty() {
 			MochigomaCollections::Empty
 		} else {
 			MochigomaCollections::Pair(ms,mg)
@@ -295,8 +288,7 @@ impl MochigomaCollections {
 		match self {
 			&MochigomaCollections::Empty => true,
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
-				(ms.is_empty() && mg.is_empty()) ||
-				(ms.values().fold(0,|acc,&c| acc + c) == 0 && mg.values().fold(0,|acc,&c| acc + c) == 0)
+				ms.is_empty() && mg.is_empty()
 			}
 		}
 	}
@@ -457,6 +449,9 @@ pub const MOCHIGOMA_KINDS:[MochigomaKind; 7] = [
 	MochigomaKind::Kaku,
 	MochigomaKind::Hisha,
 ];
+/// 持ち駒の種類の値の最大値
+pub const MOCHIGOMA_KIND_MAX:usize = MochigomaKind::Hisha as usize;
+
 impl From<(Teban,MochigomaKind)> for KomaKind {
 	fn from(tk:(Teban,MochigomaKind)) -> KomaKind {
 		match tk {
@@ -485,6 +480,123 @@ impl From<(Teban,MochigomaKind)> for KomaKind {
 		}
 	}
 }
+/// 持ち駒を固定長配列で管理するための構造体
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct Mochigoma {
+	values:[usize; MOCHIGOMA_KIND_MAX + 1],
+	sum:usize
+}
+impl Mochigoma {
+	/// Mochigomaを生成
+	pub fn new() -> Mochigoma {
+		Mochigoma {
+			values:[0; MOCHIGOMA_KIND_MAX + 1],
+			sum:0
+		}
+	}
+
+	/// 持ち駒の種類と枚数を設定
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
+	/// * `count` - `kind`で指定した持ち駒の枚数
+	pub fn insert(&mut self,kind:MochigomaKind,count:usize) {
+		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
+		let c = *p;
+
+		self.sum -= c;
+		self.sum += count;
+
+		*p = count;
+	}
+
+	/// 指定した持ち駒の枚数を取得
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
+	pub fn get(&self,kind:MochigomaKind) -> usize {
+		unsafe { *self.values.get_unchecked(kind as usize) }
+	}
+
+	/// 全ての持ち駒が空か？
+	pub fn is_empty(&self) -> bool {
+		self.sum == 0
+	}
+
+	/// 持ち駒の種類と個数のタプルを要素に持つイテレータを返す
+	pub fn iter<'a>(&'a self) -> impl Iterator<Item=(MochigomaKind,usize)> + 'a {
+		const MAP:[MochigomaKind; MOCHIGOMA_KIND_MAX+1] = [
+			MochigomaKind::Fu,
+			MochigomaKind::Kyou,
+			MochigomaKind::Kei,
+			MochigomaKind::Gin,
+			MochigomaKind::Kin,
+			MochigomaKind::Kaku,
+			MochigomaKind::Hisha
+		];
+
+		self.values.iter().enumerate().map(|(i,&c)| {
+			(unsafe { *MAP.get_unchecked(i) },c)
+		})
+	}
+
+	/// 指定した持ち駒を一枚追加
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
+	pub fn put(&mut self,kind:MochigomaKind) {
+		unsafe { *self.values.get_unchecked_mut(kind as usize) += 1 };
+		self.sum += 1;
+	}
+
+	/// 指定した持ち駒を一枚取り出す
+	///
+	/// # Arguments
+	/// * `kind` - 持ち駒の種類
+	pub fn pull(&mut self,kind:MochigomaKind) -> Result<usize,InvalidStateError> {
+		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
+
+		if *p == 0 {
+			Err(InvalidStateError(String::from("I don't have any pieces.")))
+		} else {
+			*p -= 1;
+			self.sum -= 1;
+			Ok(*p)
+		}
+	}
+
+	/// 持ち駒の状態を平手初期局面の時の駒を全部持ち駒にした状態で返す。
+	pub fn filled() -> Mochigoma {
+		let mut m:Mochigoma = Mochigoma::new();
+
+		m.insert(MochigomaKind::Fu, 9);
+		m.insert(MochigomaKind::Kyou, 2);
+		m.insert(MochigomaKind::Kei, 2);
+		m.insert(MochigomaKind::Gin, 2);
+		m.insert(MochigomaKind::Kin, 2);
+		m.insert(MochigomaKind::Kaku, 1);
+		m.insert(MochigomaKind::Hisha, 1);
+
+		m
+	}
+}
+impl From<&Mochigoma> for HashMap<MochigomaKind,u32> {
+	fn from(source:&Mochigoma) -> HashMap<MochigomaKind,u32> {
+		source.iter().fold(HashMap::new(),|mut acc,(k,c)| {
+			acc.insert(k,c as u32);
+			acc
+		})
+	}
+}
+impl From<&HashMap<MochigomaKind,u32>> for Mochigoma {
+	fn from(source:&HashMap<MochigomaKind,u32>) -> Mochigoma {
+		MOCHIGOMA_KINDS.iter().fold(Mochigoma::new(),| mut acc,k | {
+			let count = source.get(k).map(|&c| c).unwrap_or(0);
+			acc.insert(*k,count as usize);
+			acc
+		})
+	}
+}
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -497,45 +609,201 @@ mod tests {
 		assert_eq!(mc1,mc2);
 
 		for &kind in &MOCHIGOMA_KINDS {
-			let mut ms = HashMap::new();
+			let mut ms = Mochigoma::new();
 
 			ms.insert(kind,1);
-			let mc1 = MochigomaCollections::Pair(ms,HashMap::new());
+			let mc1 = MochigomaCollections::Pair(ms,Mochigoma::new());
 			let mc2 = mc1.clone();
 
 			assert_eq!(mc1, mc2);
 		}
 
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		for &kind in &MOCHIGOMA_KINDS {
 			ms.insert(kind, 1);
 		}
 
-		let mc1 = MochigomaCollections::Pair(ms,HashMap::new());
+		let mc1 = MochigomaCollections::Pair(ms,Mochigoma::new());
 		let mc2 = mc1.clone();
 
 		assert_eq!(mc1, mc2);
 
 		for &kind in &MOCHIGOMA_KINDS {
-			let mut mg = HashMap::new();
+			let mut mg = Mochigoma::new();
 
 			mg.insert(kind,1);
-			let mc1 = MochigomaCollections::Pair(HashMap::new(),mg);
+			let mc1 = MochigomaCollections::Pair(Mochigoma::new(),mg);
 			let mc2 = mc1.clone();
 
 			assert_eq!(mc1, mc2);
 		}
 
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		for &kind in &MOCHIGOMA_KINDS {
 			mg.insert(kind, 1);
 		}
 
-		let mc1 = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mc1 = MochigomaCollections::Pair(Mochigoma::new(),mg);
 		let mc2 = mc1.clone();
 
 		assert_eq!(mc1, mc2);
+	}
+
+	#[test]
+	fn test_mochigoma_insert_and_get() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,2);
+		}
+
+		for &kind in &MOCHIGOMA_KINDS {
+			assert_eq!(2,m.get(kind))
+		}
+	}
+
+	#[test]
+	fn test_mochigoma_insert_and_is_empty() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,2);
+		}
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,0);
+		}
+
+		assert_eq!(true,m.is_empty())
+	}
+
+	#[test]
+	fn test_mochigoma_insert_and_is_empty_not() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,2);
+		}
+
+		assert_eq!(false,m.is_empty());
+	}
+
+	#[test]
+	fn test_mochigoma_iter() {
+		let mut m = Mochigoma::new();
+
+		let mut c = 1;
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,c);
+			c += 1;
+		}
+
+		assert_eq!(vec![
+			(MochigomaKind::Fu,1),
+			(MochigomaKind::Kyou,2),
+			(MochigomaKind::Kei,3),
+			(MochigomaKind::Gin,4),
+			(MochigomaKind::Kin,5),
+			(MochigomaKind::Kaku,6),
+			(MochigomaKind::Hisha,7),
+		],m.iter().collect::<Vec<(MochigomaKind,usize)>>());
+	}
+
+	#[test]
+	fn test_mochigoma_put() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.put(kind);
+		}
+
+		for &kind in &MOCHIGOMA_KINDS {
+			assert_eq!(1,m.get(kind));
+		}
+	}
+
+	#[test]
+	fn test_mochigoma_put_and_is_empty_not() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.put(kind);
+		}
+
+		assert_eq!(false,m.is_empty());
+	}
+
+	#[test]
+	fn test_mochigoma_pull() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,2);
+			m.pull(kind).unwrap();
+		}
+
+		for &kind in &MOCHIGOMA_KINDS {
+			assert_eq!(1,m.get(kind));
+		}
+	}
+
+	#[test]
+	fn test_mochigoma_pull_and_is_empty() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.put(kind);
+			m.pull(kind).unwrap();
+		}
+
+		for &kind in &MOCHIGOMA_KINDS {
+			assert_eq!(0,m.get(kind));
+		}
+
+		assert_eq!(true,m.is_empty());
+	}
+
+	#[test]
+	fn test_mochigoma_insert_and_pull_and_is_empty() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,2);
+			m.pull(kind).unwrap();
+			m.pull(kind).unwrap();
+		}
+
+		for &kind in &MOCHIGOMA_KINDS {
+			assert_eq!(0,m.get(kind));
+		}
+
+		assert_eq!(true,m.is_empty());
+	}
+
+	#[test]
+	fn test_mochigoma_pull_error() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			assert!(m.pull(kind).is_err())
+		}
+	}
+
+	#[test]
+	fn test_mochigoma_pull_error_after_insert() {
+		let mut m = Mochigoma::new();
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.insert(kind,2);
+		}
+
+		for &kind in &MOCHIGOMA_KINDS {
+			m.pull(kind).unwrap();
+			m.pull(kind).unwrap();
+			assert!(m.pull(kind).is_err())
+		}
 	}
 }

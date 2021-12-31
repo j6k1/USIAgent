@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use usiagent::shogi::*;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
@@ -2380,11 +2378,11 @@ fn test_oute_only_moves_with_kyou_open_path_put_and_to_sente() {
 		banmen.0[o.1][o.0] = SKin;
 
 		let mut state = State::new(banmen.clone());
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Kyou, 1);
 
-		let mut mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mut mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m.to_applied_move()) {
 			(next,nmc,_) => {
@@ -2402,11 +2400,11 @@ fn test_oute_only_moves_with_kyou_open_path_put_and_to_sente() {
 		);
 
 		let mut state = State::new(banmen.clone());
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Kyou, 1);
 
-		let mut mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mut mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 
 		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m.to_applied_move()) {
@@ -2454,11 +2452,11 @@ fn test_oute_only_moves_with_kyou_open_path_put_and_to_gote() {
 		banmen.0[8-o.1][8-o.0] = GKin;
 
 		let mut state = State::new(banmen.clone());
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Kyou, 1);
 
-		let mut mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mut mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m.to_applied_move()) {
 			(next,nmc,_) => {
@@ -2480,11 +2478,11 @@ fn test_oute_only_moves_with_kyou_open_path_put_and_to_gote() {
 		);
 
 		let mut state = State::new(banmen.clone());
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Kyou, 1);
 
-		let mut mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mut mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 
 		match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m.to_applied_move()) {
@@ -3055,11 +3053,11 @@ fn test_oute_only_moves_with_kaku_open_path_put_and_to_sente() {
 		banmen.0[o.1][o.0] = SFu;
 
 		let mut state = State::new(banmen.clone());
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Kaku, 1);
 
-		let mut mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mut mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m.to_applied_move()) {
 			(next,nmc,_) => {
@@ -3077,11 +3075,11 @@ fn test_oute_only_moves_with_kaku_open_path_put_and_to_sente() {
 		);
 
 		let mut state = State::new(banmen.clone());
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Kaku, 1);
 
-		let mut mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mut mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 
 		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m.to_applied_move()) {
@@ -3133,11 +3131,11 @@ fn test_oute_only_moves_with_kaku_open_path_put_and_to_gote() {
 		banmen.0[8-o.1][8-o.0] = GFu;
 
 		let mut state = State::new(banmen.clone());
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Kaku, 1);
 
-		let mut mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mut mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m.to_applied_move()) {
 			(next,nmc,_) => {
@@ -3159,11 +3157,11 @@ fn test_oute_only_moves_with_kaku_open_path_put_and_to_gote() {
 		);
 
 		let mut state = State::new(banmen.clone());
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Kaku, 1);
 
-		let mut mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mut mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 
 		match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m.to_applied_move()) {
@@ -4265,11 +4263,11 @@ fn test_oute_only_moves_with_hisha_open_path_put_and_to_sente() {
 		banmen.0[o.1][o.0] = SKin;
 
 		let mut state = State::new(banmen.clone());
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Hisha, 1);
 
-		let mut mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mut mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m.to_applied_move()) {
 			(next,nmc,_) => {
@@ -4287,11 +4285,11 @@ fn test_oute_only_moves_with_hisha_open_path_put_and_to_sente() {
 		);
 
 		let mut state = State::new(banmen.clone());
-		let mut ms = HashMap::new();
+		let mut ms = Mochigoma::new();
 
 		ms.insert(MochigomaKind::Hisha, 1);
 
-		let mut mc = MochigomaCollections::Pair(ms,HashMap::new());
+		let mut mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 
 		match Rule::apply_move_none_check(&state,Teban::Sente,&mc,m.to_applied_move()) {
@@ -4343,11 +4341,11 @@ fn test_oute_only_moves_with_hisha_open_path_put_and_to_gote() {
 		banmen.0[8-o.1][8-o.0] = GKin;
 
 		let mut state = State::new(banmen.clone());
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Hisha, 1);
 
-		let mut mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mut mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 		match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m.to_applied_move()) {
 			(next,nmc,_) => {
@@ -4369,11 +4367,11 @@ fn test_oute_only_moves_with_hisha_open_path_put_and_to_gote() {
 		);
 
 		let mut state = State::new(banmen.clone());
-		let mut mg = HashMap::new();
+		let mut mg = Mochigoma::new();
 
 		mg.insert(MochigomaKind::Hisha, 1);
 
-		let mut mc = MochigomaCollections::Pair(HashMap::new(),mg);
+		let mut mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 
 		match Rule::apply_move_none_check(&state,Teban::Gote,&mc,m.to_applied_move()) {
@@ -5452,11 +5450,11 @@ fn test_oute_only_moves_from_mochigoma_none_moves_sente_impl(kind:MochigomaKind)
 	banmen.0[3][4] = SGin;
 	banmen.0[3][5] = SKei;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(kind,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
@@ -5483,11 +5481,11 @@ fn test_oute_only_moves_from_mochigoma_none_moves_gote_impl(kind:MochigomaKind) 
 	banmen.0[8-3][8-4] = GGin;
 	banmen.0[8-3][8-5] = GKei;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(kind,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
@@ -5566,11 +5564,11 @@ fn test_oute_only_moves_from_mochigoma_none_moves_sente_kei() {
 	banmen.0[3][4] = SGin;
 	banmen.0[3][5] = SKei;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Kei,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
@@ -5602,11 +5600,11 @@ fn test_oute_only_moves_from_mochigoma_none_moves_gote_kei() {
 	banmen.0[8-3][8-4] = GGin;
 	banmen.0[8-3][8-5] = GKei;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Kei,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<((u32,u32),(u32,u32,bool),Option<ObtainKind>)> = vec![];
 
@@ -5626,11 +5624,11 @@ fn test_oute_only_moves_from_mochigoma_fu_sente() {
 
 	banmen.0[4][4] = GOu;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Fu,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Fu,(4,5))
@@ -5652,11 +5650,11 @@ fn test_oute_only_moves_from_mochigoma_fu_gote() {
 
 	banmen.0[4][4] = SOu;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Fu,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Fu,(4,5))
@@ -5682,11 +5680,11 @@ fn test_oute_only_moves_from_mochigoma_kyou_sente() {
 
 	banmen.0[4][4] = GOu;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Kyou,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kyou,(4,5)),
@@ -5711,11 +5709,11 @@ fn test_oute_only_moves_from_mochigoma_kyou_gote() {
 
 	banmen.0[4][4] = SOu;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Kyou,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kyou,(4,5)),
@@ -5744,11 +5742,11 @@ fn test_oute_only_moves_from_mochigoma_kei_sente() {
 
 	banmen.0[4][4] = GOu;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Kei,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kei,(3,6)),
@@ -5771,11 +5769,11 @@ fn test_oute_only_moves_from_mochigoma_kei_gote() {
 
 	banmen.0[4][4] = SOu;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Kei,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kei,(3,6)),
@@ -5802,11 +5800,11 @@ fn test_oute_only_moves_from_mochigoma_gin_sente() {
 
 	banmen.0[4][4] = GOu;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Gin,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Gin,(3,3)),
@@ -5832,11 +5830,11 @@ fn test_oute_only_moves_from_mochigoma_gin_gote() {
 
 	banmen.0[4][4] = SOu;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Gin,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Gin,(3,3)),
@@ -5866,11 +5864,11 @@ fn test_oute_only_moves_from_mochigoma_kin_sente() {
 
 	banmen.0[4][4] = GOu;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Kin,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kin,(3,4)),
@@ -5897,11 +5895,11 @@ fn test_oute_only_moves_from_mochigoma_kin_gote() {
 
 	banmen.0[4][4] = SOu;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Kin,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kin,(3,4)),
@@ -5932,11 +5930,11 @@ fn test_oute_only_moves_from_mochigoma_kaku_sente() {
 
 	banmen.0[4][4] = GOu;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Kaku,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kaku,(0,0)),
@@ -5973,11 +5971,11 @@ fn test_oute_only_moves_from_mochigoma_kaku_gote() {
 
 	banmen.0[4][4] = SOu;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Kaku,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Kaku,(0,0)),
@@ -6018,11 +6016,11 @@ fn test_oute_only_moves_from_mochigoma_hisha_sente() {
 
 	banmen.0[4][4] = GOu;
 
-	let mut ms:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut ms:Mochigoma = Mochigoma::new();
 
 	ms.insert(MochigomaKind::Hisha,1);
 
-	let mc = MochigomaCollections::Pair(ms,HashMap::new());
+	let mc = MochigomaCollections::Pair(ms,Mochigoma::new());
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Hisha,(0,4)),
@@ -6059,11 +6057,11 @@ fn test_oute_only_moves_from_mochigoma_hisha_gote() {
 
 	banmen.0[4][4] = SOu;
 
-	let mut mg:HashMap<MochigomaKind,u32> = HashMap::new();
+	let mut mg:Mochigoma = Mochigoma::new();
 
 	mg.insert(MochigomaKind::Hisha,1);
 
-	let mc = MochigomaCollections::Pair(HashMap::new(),mg);
+	let mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
 
 	let answer:Vec<(MochigomaKind,(u32,u32))> = vec![
 		(MochigomaKind::Hisha,(0,4)),
