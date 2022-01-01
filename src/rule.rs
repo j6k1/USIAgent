@@ -1262,12 +1262,12 @@ impl Rule {
 	) -> BitBoard {
 		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
 
-		let mask = KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize];
+		let mask = KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize] << 1;
 
 		occ = occ & mask;
 
-		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
-		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
 
 		BitBoard {
 			merged_bitboard: candidate
@@ -1290,12 +1290,12 @@ impl Rule {
 	) -> BitBoard {
 		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
 
-		let mask = KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize];
+		let mask = KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize] << 1;
 
 		occ = occ & mask;
 
-		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
-		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
 
 		BitBoard {
 			merged_bitboard: candidate
@@ -1491,10 +1491,10 @@ impl Rule {
 
 		let x = from / 9;
 
-		let mask = V_MASK << (x * 9);
+		let mask = V_MASK << (x * 9 + 1);
 
-		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
-		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { flip_self_occupied.merged_bitboard };
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { flip_self_occupied.merged_bitboard };
 
 		BitBoard {
 			merged_bitboard: candidate
@@ -1519,12 +1519,12 @@ impl Rule {
 
 		let x = from / 9;
 
-		let mask = H_MASK << (from - 9 * x);
+		let mask = H_MASK << (from - 9 * x + 1);
 
 		occ = occ & mask;
 
-		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
-		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
 
 		BitBoard {
 			merged_bitboard: candidate
