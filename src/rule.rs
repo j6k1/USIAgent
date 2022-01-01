@@ -520,8 +520,6 @@ impl State {
 		let mut sente_opponent_board:u128 = 0;
 		let mut gote_self_board:u128 = 0;
 		let mut gote_opponent_board:u128 = 0;
-		let mut diag_board:u128 = 0;
-		let mut rotate_board:u128 = 0;
 		let mut sente_hisha_board:u128 = 0;
 		let mut gote_hisha_board:u128 = 0;
 		let mut sente_kaku_board:u128 = 0;
@@ -559,37 +557,6 @@ impl State {
 							gote_self_board ^= 1 << ((8 - x) * 9 + (8 - y) + 1);
 							sente_opponent_board ^= 1 << (x * 9 + y + 1);
 						}
-
-						match kind {
-							Blank => (),
-							_ => {
-								let i = x * 9 + y;
-
-								let li = DIAG_LEFT_ROTATE_MAP[i];
-
-								let lmask = if li == -1 {
-									0
-								} else {
-									1 << li
-								};
-
-								let ri = DIAG_RIGHT_ROTATE_MAP[i];
-
-								let rmask = if ri == -1 {
-									0
-								} else {
-									1 << ri + 64
-								};
-
-								diag_board ^= lmask | rmask;
-
-								let (x,y) = {
-									(y,x)
-								};
-
-								rotate_board ^= 1 << (x * 9 + y + 1);
-							}
-						}
 					}
 				}
 			}
@@ -602,8 +569,6 @@ impl State {
 				sente_opponent_board:BitBoard{ merged_bitboard: sente_opponent_board },
 				gote_self_board:BitBoard{ merged_bitboard: gote_self_board },
 				gote_opponent_board:BitBoard{ merged_bitboard: gote_opponent_board },
-				diag_board:BitBoard{ merged_bitboard: diag_board },
-				rotate_board:BitBoard{ merged_bitboard: rotate_board },
 				sente_hisha_board:BitBoard{ merged_bitboard: sente_hisha_board },
 				gote_hisha_board:BitBoard{ merged_bitboard: gote_hisha_board },
 				sente_kaku_board:BitBoard{ merged_bitboard: sente_kaku_board },
@@ -652,10 +617,6 @@ pub struct PartialState {
 	pub gote_self_board:BitBoard,
 	/// 後手視点の先手側の駒のビットボード
 	pub gote_opponent_board:BitBoard,
-	/// 角の合法手列挙のためのビットボード
-	pub diag_board:BitBoard,
-	/// 飛車の合法手列挙のためのビットボード
-	pub rotate_board:BitBoard,
 	/// 先手の飛車の位置のビットボード
 	pub sente_hisha_board:BitBoard,
 	/// 後手の飛車の位置のビットボード
@@ -953,72 +914,6 @@ const H_MASK: u128 = 0b000000001_000000001_000000001_000000001_000000001_0000000
 const TOP_MASK: u128 = 0b111111100_111111100_111111100;
 const BOTTOM_MASK: u128 = 0b000000111_000000111_000000111;
 const RIGHT_MASK: u128 = 0b000000000_111111111_111111111;
-const DIAG_LEFT_ROTATE_MAP:[i32; 81] = [
-	-1,-1,-1,-1,-1,-1,-1,-1,-1,
-	-1,21,28,34,39,43,46,48,-1,
-	-1,15,22,29,35,40,44,47,-1,
-	-1,10,16,23,30,36,41,45,-1,
-	-1, 6,11,17,24,31,37,42,-1,
-	-1, 3, 7,12,18,25,32,38,-1,
-	-1, 1, 4, 8,13,19,26,33,-1,
-	-1, 0, 2, 5, 9,14,20,27,-1,
-	-1,-1,-1,-1,-1,-1,-1,-1,-1
-];
-const DIAG_RIGHT_ROTATE_MAP:[i32; 81] = [
-	-1,-1,-1,-1,-1,-1,-1,-1,-1,
-	-1, 0, 1, 3, 6,10,15,21,-1,
-	-1, 2, 4, 7,11,16,22,28,-1,
-	-1, 5, 8,12,17,23,29,34,-1,
-	-1, 9,13,18,24,30,35,39,-1,
-	-1,14,19,25,31,36,40,43,-1,
-	-1,20,26,32,37,41,44,46,-1,
-	-1,27,33,38,42,45,47,48,-1,
-	-1,-1,-1,-1,-1,-1,-1,-1,-1
-];
-const DIAG_LEFT_BITBOARD_SLIDE_INFO: [(i32,u32,u32); 81] = [
-	(21, 0, 9),(28, 0, 8),(34, 0, 7),(39, 0, 6),(43, 0, 5),(46, 0, 4),(48, 0, 3),(-1, 0, 2),(-1, 0, 1),
-	(15, 0, 8),(21, 1, 9),(28, 1, 8),(34, 1, 7),(39, 1, 6),(43, 1, 5),(46, 1, 4),(48, 1, 3),(-1, 1, 2),
-	(10, 0, 7),(15, 1, 8),(21, 2, 9),(28, 2, 8),(34, 2, 7),(39, 2, 6),(43, 2, 5),(46, 2, 4),(48, 2, 3),
-	( 6, 0, 6),(10, 1, 7),(15, 2, 8),(21, 3, 9),(28, 3, 8),(34, 3, 7),(39, 3, 6),(43, 3, 5),(46, 3, 4),
-	( 3, 0, 5),( 6, 1, 6),(10, 2, 7),(15, 3, 8),(21, 4, 9),(28, 4, 8),(34, 4, 7),(39, 4, 6),(43, 4, 5),
-	( 1, 0, 4),( 3, 1, 5),( 6, 2, 6),(10, 3, 7),(15, 4, 8),(21, 5, 9),(28, 5, 8),(34, 5, 7),(39, 5, 6),
-	( 0, 0, 3),( 1, 1, 4),( 3, 2, 5),( 6, 3, 6),(10, 4, 7),(15, 5, 8),(21, 6, 9),(28, 6, 8),(34, 6, 7),
-	(-1, 0, 2),( 0, 1, 3),( 1, 2, 4),( 3, 3, 5),( 6, 4, 6),(10, 5, 7),(15, 6, 8),(21, 7, 9),(28, 7, 8),
-	(-1, 0, 1),(-1, 1, 2),( 0, 2, 3),( 1, 3, 4),( 3, 4, 5),( 6, 5, 6),(10, 6, 7),(15, 7, 8),(21, 8, 9),
-];
-const DIAG_RIGHT_BITBOARD_SLIDE_INFO: [(i32,u32,u32); 81] = [
-	(-1, 0, 1),(-1, 0, 2),( 0, 0, 3),( 1, 0, 4),( 3, 0, 5),( 6, 0, 6),(10, 0, 7),(15, 0, 8),(21, 0, 9),
-	(-1, 1, 2),( 0, 1, 3),( 1, 1, 4),( 3, 1, 5),( 6, 1, 6),(10, 1, 7),(15, 1, 8),(21, 1, 9),(28, 0, 8),
-	( 0, 2, 3),( 1, 2, 4),( 3, 2, 5),( 6, 2, 6),(10, 2, 7),(15, 2, 8),(21, 2, 9),(28, 1, 8),(34, 0, 7),
-	( 1, 3, 4),( 3, 3, 5),( 6, 3, 6),(10, 3, 7),(15, 3, 8),(21, 3, 9),(28, 2, 8),(34, 1, 7),(39, 0, 6),
-	( 3, 4, 5),( 6, 4, 6),(10, 4, 7),(15, 4, 8),(21, 4, 9),(28, 3, 8),(34, 2, 7),(39, 1, 6),(43, 0, 5),
-	( 6, 5, 6),(10, 5, 7),(15, 5, 8),(21, 5, 9),(28, 4, 8),(34, 3, 7),(39, 2, 6),(43, 1, 5),(46, 0, 4),
-	(10, 6, 7),(15, 6, 8),(21, 6, 9),(28, 5, 8),(34, 4, 7),(39, 3, 6),(43, 2, 5),(46, 1, 4),(48, 0, 3),
-	(15, 7, 8),(21, 7, 9),(28, 6, 8),(34, 5, 7),(39, 4, 6),(43, 3, 5),(46, 2, 4),(48, 1, 3),(-1, 0, 2),
-	(21, 8, 9),(28, 7, 8),(34, 6, 7),(39, 5, 6),(43, 4, 5),(46, 3, 4),(48, 2, 3),(-1, 1, 2),(-1, 0, 1)
-];
-const DIAG_LEFT_BITBOARD_MASK: [u64; 81] = [
-	0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,0b0,0b0,
-	0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,0b0,
-	0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,
-	0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,
-	0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,
-	0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,
-	0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,
-	0b0,0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b11111111,
-	0b0,0b0,0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111
-];
-const DIAG_RIGHT_BITBOARD_MASK: [u64; 81] = [
-	0b0,0b0,0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,
-	0b0,0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,
-	0b1,0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,
-	0b11,0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,
-	0b111,0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,
-	0b1111,0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,
-	0b11111,0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,
-	0b111111,0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,0b0,
-	0b1111111,0b111111,0b11111,0b1111,0b111,0b11,0b1,0b0,0b0
-];
 const SENTE_NARI_MASK: u128 = 0b000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111;
 const GOTE_NARI_MASK: u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
 const DENY_MOVE_SENTE_FU_AND_KYOU_MASK: u128 = 0b000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
@@ -1125,6 +1020,12 @@ impl Validate for Moved {
 		}
 	}
 }
+/*
+enum Inverse {
+	True = 0,
+	False = 1
+}
+*/
 /// 合法手の列挙等を行う将棋のルールを管理
 pub struct Rule {
 
@@ -1139,6 +1040,7 @@ impl Rule {
 	/// * `kind` - 移動する駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn gen_candidate_bits(
 		teban:Teban,self_occupied:BitBoard,from:u32,kind:KomaKind
 	) -> BitBoard {
@@ -1344,12 +1246,69 @@ impl Rule {
 		mvs
 	}
 
+	/// 盤面上の駒を移動する合法手のうち、角の右上に移動する手をビットボードに列挙
+	///
+	/// # Arguments
+	/// * `self_occupied` - 手番側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 相手側の駒の配置を表すビットボード。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合も逆さまにならない）
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn gen_candidate_bits_by_kaku_to_right_top(
+		self_occupied:BitBoard,
+		oppnent_occupied:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
+
+		let mask = KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize];
+
+		occ = occ & mask;
+
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
+		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
+
+		BitBoard {
+			merged_bitboard: candidate
+		}
+	}
+
+	/// 盤面上の駒を移動する合法手のうち、角の右下に移動する手をビットボードに列挙
+	///
+	/// # Arguments
+	/// * `self_occupied` - 手番側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 相手側の駒の配置を表すビットボード。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合も逆さまにならない）
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn gen_candidate_bits_by_kaku_to_right_bottom(
+		self_occupied:BitBoard,
+		oppnent_occupied:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
+
+		let mask = KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize];
+
+		occ = occ & mask;
+
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
+		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
+
+		BitBoard {
+			merged_bitboard: candidate
+		}
+	}
+
 	/// 先手の角の合法手を列挙してバッファに追加
 	///
 	/// # Arguments
-	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `self_occupied_for_repeat_move` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `sente_oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
@@ -1360,126 +1319,63 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
-		self_occupied_for_repeat_move:BitBoard,
-		diag_bitboard:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 10;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to -= 10;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,from);
 
-		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 8;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to += 8;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -=8;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to -= 8;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,from);
 
-		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 10;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to += 10;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
@@ -1494,9 +1390,10 @@ impl Rule {
 	/// 後手の角の合法手を列挙してバッファに追加
 	///
 	/// # Arguments
-	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。(先手と上下逆さになっている)
-	/// * `self_occupied_for_repeat_move` - 先手側から見た後手側の駒の配置を表すビットボード。
-	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
@@ -1507,126 +1404,63 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
-		self_occupied_for_repeat_move:BitBoard,
-		diag_bitboard:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,from);
 
-		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 10;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to += 10;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,80 - from);
 
-		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 8;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to -= 8;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,from);
 
-		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 8;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to += 8;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
+		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,80 - from);
 
-		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 10;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			to -= 10;
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
@@ -1638,94 +1472,72 @@ impl Rule {
 		}
 	}
 
-	fn calc_bitboard_forward_move_count_of_kaku(diag_bitboard:u64,_:u32,slide_info:(i32,u32,u32),mask:u64) -> u32 {
-		let (row_offset,offset,row_width) = slide_info;
+	/// 盤面上の駒を移動する合法手のうち、飛車と香車の上に移動する手をビットボードに列挙
+	/// 反転したビットボードを渡す仕様のため返されたビットボードから列挙される手は盤面をひっくり返した時の形になっていることに注意。
+	///
+	/// # Arguments
+	/// * `flip_self_occupied` - 手番側の駒の配置を表すビットボード。逆さになっているものを渡す
+	/// * `flip_opponent_occupied` - 相手番側の駒の配置を表すビットボード。逆さになっているものを渡す
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合も逆さまにならない）
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn gen_candidate_bits_by_hisha_or_kyou_to_top(
+		flip_self_occupied:BitBoard,
+		flip_oppnent_occupied:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let occ = unsafe { flip_self_occupied.merged_bitboard | flip_oppnent_occupied.merged_bitboard };
 
-		if offset == row_width - 1 {
-			0
-		} else if row_offset == -1 {
-			row_width - 1
-		} else {
-			let row = (diag_bitboard >> row_offset) & mask;
+		let x = from / 9;
 
-			let row = row >> offset;
+		let mask = V_MASK << (x * 9);
 
-			if row == 0 {
-				row_width - 1 - offset
-			} else {
-				row.trailing_zeros() + 1
-			}
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
+		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { flip_self_occupied.merged_bitboard };
+
+		BitBoard {
+			merged_bitboard: candidate
 		}
 	}
 
+	/// 盤面上の駒を移動する合法手のうち、飛車と香車の右に移動する手をビットボードに列挙
+	///
+	/// # Arguments
+	/// * `self_occupied` - 手番側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 相手側の駒の配置を表すビットボード。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合も逆さまにならない）
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	fn calc_to_left_bottom_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
-		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
-		let bitboard_mask = DIAG_RIGHT_BITBOARD_MASK[from as usize];
+	pub fn gen_candidate_bits_by_hisha_to_right(
+		self_occupied:BitBoard,
+		oppnent_occupied:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
 
-		Rule::calc_bitboard_back_move_count_of_kaku(r_diag_bitboard,from,slide_info,bitboard_mask)
-	}
+		let x = from / 9;
 
-	#[inline]
-	fn calc_to_right_bottom_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
-		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
-		let bitboard_mask = DIAG_LEFT_BITBOARD_MASK[from as usize];
+		let mask = H_MASK << (from - 9 * x);
 
-		Rule::calc_bitboard_forward_move_count_of_kaku(l_diag_bitboard,from,slide_info,bitboard_mask)
-	}
+		occ = occ & mask;
 
-	fn calc_bitboard_back_move_count_of_kaku(diag_bitboard:u64,_:u32,slide_info:(i32,u32,u32),mask:u64) -> u32 {
-		let (row_width,row_offset,offset,mask) = match slide_info {
-			(row_offset,offset,row_width) => {
-				if offset == 0 {
-					return 0;
-				} else if row_offset == -1 {
-					return row_width - 1
-				}
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を求めたいので4をビットシフトする
+		let candidate = (((occ - (4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
 
-				(
-					row_width,
-					63 - row_offset - (row_width as i32 - 2 - 1),
-					offset,
-					mask << (63 - (row_width as i32 - 2 - 1)),
-				)
-			}
-		};
-
-		let row = (diag_bitboard << row_offset) & mask;
-
-		let row = row << (row_width - 1 - offset);
-
-		if row == 0 {
-			offset
-		} else {
-			row.leading_zeros() + 1
+		BitBoard {
+			merged_bitboard: candidate
 		}
-	}
-
-	#[inline]
-	fn calc_to_right_top_move_count_of_kaku(r_diag_bitboard:u64,from:u32) -> u32 {
-		let slide_info = DIAG_RIGHT_BITBOARD_SLIDE_INFO[from as usize];
-		let bitboard_mask = DIAG_RIGHT_BITBOARD_MASK[from as usize];
-
-		Rule::calc_bitboard_forward_move_count_of_kaku(r_diag_bitboard,from,slide_info,bitboard_mask)
-	}
-
-	#[inline]
-	fn calc_to_left_top_move_count_of_kaku(l_diag_bitboard:u64,from:u32) -> u32 {
-		let slide_info = DIAG_LEFT_BITBOARD_SLIDE_INFO[from as usize];
-		let bitboard_mask = DIAG_LEFT_BITBOARD_MASK[from as usize];
-
-		Rule::calc_bitboard_back_move_count_of_kaku(l_diag_bitboard,from,slide_info,bitboard_mask)
 	}
 
 	/// 先手の飛車の合法手を列挙してバッファに追加
 	///
 	/// # Arguments
 	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `self_occupied_for_repeat_move` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
-	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
@@ -1736,114 +1548,63 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
-		self_occupied_for_repeat_move:BitBoard,
-		bitboard:BitBoard,
-		rotate_bitboard:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		let x = from / 9;
-		let y = from - x * 9;
+		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
 
-		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 1;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to -= 1;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
 
-		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
+		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, from);
 
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 1;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to += 1;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
 
-		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,x,y);
+		let mut board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,from);
 
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 9;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to -= 9;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
 
-		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,x,y);
+		let mut board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 9;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to += 9;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
@@ -1859,9 +1620,9 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
-	/// * `self_occupied_for_repeat_move` - 先手側から見た後手側の駒の配置を表すビットボード。
-	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
-	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
@@ -1872,114 +1633,63 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
-		self_occupied_for_repeat_move:BitBoard,
-		bitboard:BitBoard,
-		rotate_bitboard:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		let x = from / 9;
-		let y = from - x * 9;
+		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, 80 - from);
 
-		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 1;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to += 1;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
 
-		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
+		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
 
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 1;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to -= 1;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
 
-		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,x,y);
+		let mut board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,from);
 
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 9;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to += 9;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
 		}
 
-		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,x,y);
+		let mut board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,80 - from);
 
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 9;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to -= 9;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
@@ -1991,31 +1701,11 @@ impl Rule {
 		}
 	}
 
-	#[inline]
-	fn calc_to_bottom_move_count_of_hisha(bitboard:BitBoard,x:u32,y:u32) -> u32 {
-		Rule::calc_back_move_repeat_count(bitboard,x,y)
-	}
-
-	#[inline]
-	fn calc_to_top_move_count_of_hisha(bitboard:BitBoard,x:u32,y:u32) -> u32 {
-		Rule::calc_forward_move_repeat_count(bitboard,x,y)
-	}
-
-	#[inline]
-	fn calc_to_left_move_count_of_hisha(bitboard:BitBoard,x:u32,y:u32) -> u32 {
-		Rule::calc_forward_move_repeat_count(bitboard,y,x)
-	}
-
-	#[inline]
-	fn calc_to_right_move_count_of_hisha(bitboard:BitBoard,x:u32,y:u32) -> u32 {
-		Rule::calc_back_move_repeat_count(bitboard,y,x)
-	}
-
 	/// 先手の香車の合法手を列挙してバッファに追加
 	///
 	/// # Arguments
-	/// * `self_occupied_for_repeat_move` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
@@ -2024,37 +1714,23 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
-		self_occupied_for_repeat_move:BitBoard,
-		bitboard:BitBoard,from:u32,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
+		from:u32,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		let x = from / 9;
-		let y = from - x * 9;
+		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
 
-		let count = Rule::calc_forward_move_repeat_count(bitboard,x,y);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to -= 1;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,SKyou,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to -= 1;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,SKyou,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,SKyou,nari_mask,deny_move_mask,true,move_builder,mvs
 				);
 			}
 		}
@@ -2063,8 +1739,8 @@ impl Rule {
 	/// 後手の香車の合法手を列挙してバッファに追加
 	///
 	/// # Arguments
-	/// * `self_occupied_for_repeat_move` - 先手側から見た後手側の駒の配置を表すビットボード。
-	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
@@ -2073,83 +1749,25 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
-		self_occupied_for_repeat_move:BitBoard,
-		bitboard:BitBoard,from:u32,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
+		from:u32,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
 		mvs:&mut Vec<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		let x = from / 9;
-		let y = from - x * 9;
+		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
 
-		let count = Rule::calc_back_move_repeat_count(bitboard,x,y);
-
-		if count > 0 {
-			let mut c = 1;
-			let mut to = from;
-
-			while c < count {
-				to += 1;
+		loop {
+			let p = Rule::pop_lsb(&mut board);
+			if p == -1 {
+				break;
+			} else {
 				Rule::append_legal_moves_from_banmen(
-					to as Square,from,GKyou,nari_mask,deny_move_mask,false,move_builder,mvs
-				);
-				c += 1;
-			}
-
-			to += 1;
-
-			let self_occupied_for_repeat_move = unsafe { self_occupied_for_repeat_move.merged_bitboard };
-
-			if self_occupied_for_repeat_move & 1 << (to + 1) == 0 {
-				Rule::append_legal_moves_from_banmen(
-					to as Square,from,GKyou,nari_mask,deny_move_mask,false,move_builder,mvs
+					p,from,GKyou,nari_mask,deny_move_mask,false,move_builder,mvs
 				);
 			}
-		}
-	}
-
-	fn calc_back_move_repeat_count(bitboard:BitBoard,board_x:u32,board_y:u32) -> u32 {
-		if board_y == 8 {
-			return 0;
-		}
-
-		let board = unsafe {
-			BitBoard {
-				merged_bitboard: ((bitboard.merged_bitboard >> (board_x * 9 + 1))) & 0b111111111
-			}
-		};
-
-		let board = unsafe { *board.bitboard.get_unchecked(0) };
-		let board = board >> (board_y + 1);
-
-		if board == 0 {
-			8 - board_y
-		} else {
-			board.trailing_zeros() + 1
-		}
-	}
-
-	fn calc_forward_move_repeat_count(bitboard:BitBoard,board_x:u32,board_y:u32) -> u32 {
-		if board_y == 0 {
-			return 0;
-		}
-
-		let board = unsafe {
-			BitBoard {
-				merged_bitboard: (
-					(bitboard.merged_bitboard << (127 - 8 - board_x * 9 - 1))
-				) & (0b111111111 << 119)
-			}
-		};
-
-		let board = unsafe { *board.bitboard.get_unchecked(1) };
-		let board = board << (8 - board_y + 1);
-
-		if board == 0 {
-			board_y
-		} else {
-			board.leading_zeros() + 1
 		}
 	}
 
@@ -2265,14 +1883,12 @@ impl Rule {
 			}
 		};
 
-		let (self_bitboard,self_bitboard_for_repeat_move,opponent_bitboard) = if kind < GFu {
+		let (self_bitboard,opponent_bitboard) = if kind < GFu {
 			(state.part.sente_self_board,
-				state.part.sente_self_board,
 				unsafe { state.part.sente_opponent_board.merged_bitboard }
 			)
 		} else if kind < Blank {
 			(state.part.gote_self_board,
-				state.part.sente_opponent_board,
 				unsafe { state.part.sente_self_board.merged_bitboard }
 			)
 		} else {
@@ -2301,11 +1917,10 @@ impl Rule {
 				);
 			},
 			SKyou if t == Teban::Sente => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard_for_repeat_move,
-					bitboard,from,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					from,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2313,30 +1928,33 @@ impl Rule {
 			}
 			SKaku | SKakuN if t == Teban::Sente => {
 				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, self_bitboard_for_repeat_move,
-					state.part.diag_board,from,kind,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
 				);
 			},
 			SHisha | SHishaN if t == Teban::Sente => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, self_bitboard_for_repeat_move,
-					bitboard, state.part.rotate_board,from,kind,
+				state.part.sente_self_board,
+				state.part.sente_opponent_board,
+				state.part.gote_self_board,
+				state.part.gote_opponent_board,
+				from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
 				);
 			},
 			GKyou if t == Teban::Gote => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard_for_repeat_move,
-					bitboard,from,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					from,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2344,19 +1962,23 @@ impl Rule {
 			},
 			GKaku | GKakuN if t == Teban::Gote => {
 				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, self_bitboard_for_repeat_move,
-					state.part.diag_board,from,kind,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
 				);
 			},
 			GHisha | GHishaN if t == Teban::Gote => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
-					self_bitboard, self_bitboard_for_repeat_move,
-					bitboard, state.part.rotate_board,from,kind,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					from,kind,
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2684,80 +2306,76 @@ impl Rule {
 	/// 先手の角を動かす手で王を取れる手を返す
 	///
 	/// # Arguments
-	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
-	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `sente_oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
-		diag_bitboard:BitBoard,
+		self_occupied:BitBoard,
+		oppnent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_oppnent_occupied:BitBoard,
 		from:u32,kind:KomaKind
 	) -> Option<Square> {
-		let opponent_ou_bitboard_raw = unsafe {
-			opponent_ou_bitboard.merged_bitboard
-		};
+		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
+		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let p = from - 10 * count;
-
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		if o == -1 {
+			return None;
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let opponent_ou_bitboard = 2 << o;
 
-		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+			self_occupied,
+			oppnent_occupied,
+			from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			self_occupied,
+			oppnent_occupied,
+			from
+		);
 
-		if count > 0 {
-			let p = from + 8 * count;
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
+
+			return Some(p  as Square)
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let opponent_ou_bitboard = 2 << (80 - o);
 
-		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+			flip_oppnent_occupied,
+			flip_self_occupied,
+			80 - from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			flip_oppnent_occupied,
+			flip_self_occupied,
+			80 - from
+		);
 
-		if count > 0 {
-			let p = from - 8 * count;
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
-		}
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
-
-		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let p = from + 10 * count;
-
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
+			return Some((80 - p)  as Square)
 		}
 
 		if kind == SKakuN {
+			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Sente,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2769,80 +2387,76 @@ impl Rule {
 	/// 後手の角を動かす手で王を取れる手を返す
 	///
 	/// # Arguments
-	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。(先手と上下逆さになっている)
 	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
-	/// * `diag_bitboard` - 角の合法手を列挙するためのrotate bitboard
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
-		diag_bitboard:BitBoard,
+		self_occupied:BitBoard,
+		oppnent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_oppnent_occupied:BitBoard,
 		from:u32,kind:KomaKind
 	) -> Option<Square> {
-		let opponent_ou_bitboard_raw = unsafe {
-			opponent_ou_bitboard.merged_bitboard
-		};
+		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
+		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let p = from + 10 * count;
-
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		if o == -1 {
+			return None;
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let opponent_ou_bitboard = 2 << o;
 
-		let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+			flip_self_occupied,
+			flip_oppnent_occupied,
+			from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			flip_self_occupied,
+			flip_oppnent_occupied,
+			from
+		);
 
-		if count > 0 {
-			let p = from - 8 * count;
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
+
+			return Some(p  as Square)
 		}
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(1)
-		};
+		let opponent_ou_bitboard = 2 << (80 - o);
 
-		let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+			oppnent_occupied,
+			self_occupied,
+			80 - from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			oppnent_occupied,
+			self_occupied,
+			80 - from
+		);
 
-		if count > 0 {
-			let p = from + 8 * count;
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
-		}
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
 
-		let board = unsafe {
-			*diag_bitboard.bitboard.get_unchecked(0)
-		};
-
-		let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
-
-		if count > 0 {
-			let p = from - 10 * count;
-
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
+			return Some((80 - p)  as Square)
 		}
 
 		if kind == GKakuN {
+			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Gote,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2854,68 +2468,76 @@ impl Rule {
 	/// 先手の飛車を動かす手で王を取れる手を返す
 	///
 	/// # Arguments
-	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
-	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
-	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `sente_oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
-		bitboard:BitBoard,
-		rotate_bitboard:BitBoard,
+		self_occupied:BitBoard,
+		oppnent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_oppnent_occupied:BitBoard,
 		from:u32,kind:KomaKind
 	) -> Option<Square> {
-		let opponent_ou_bitboard_raw = unsafe {
-			opponent_ou_bitboard.merged_bitboard
-		};
+		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
-		let (x,y) = from.square_to_point();
+		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
-
-		if count > 0 {
-			let p = from - count;
-
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		if o == -1 {
+			return None;
 		}
 
-		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
+		let opponent_ou_bitboard = 2 << (80 - o);
 
-		if count > 0 {
-			let p = from + count;
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+			flip_oppnent_occupied,
+			flip_self_occupied,
+			80 - from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			flip_oppnent_occupied,
+			flip_self_occupied,
+			80 - from
+		);
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
+
+			return Some((80 - p)  as Square)
 		}
 
-		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,x,y);
+		let opponent_ou_bitboard = 2 << o;
 
-		if count > 0 {
-			let p = from - 9 * count;
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+			self_occupied,
+			oppnent_occupied,
+			from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			self_occupied,
+			oppnent_occupied,
+			from
+		);
 
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
-		}
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,x,y);
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
 
-		if count > 0 {
-			let p = from + 9 * count;
-
-			if opponent_ou_bitboard_raw & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
+			return Some(p  as Square)
 		}
 
 		if kind == SHishaN {
+			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Sente,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2927,68 +2549,76 @@ impl Rule {
 	/// 後手の飛車を動かす手で王を取れる手を返す
 	///
 	/// # Arguments
-	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
-	/// * `bitboard` - 縦移動の合法手を列挙するために用いるビットボード。先手視点になっている。
-	/// * `rotate_bitboard` - 横移動の合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
-		self_occupied:BitBoard,
 		opponent_ou_bitboard:BitBoard,
-		bitboard:BitBoard,
-		rotate_bitboard:BitBoard,
+		self_occupied:BitBoard,
+		oppnent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_oppnent_occupied:BitBoard,
 		from:u32,kind:KomaKind
 	) -> Option<Square> {
-		let opponent_ou_bitboard_raw = unsafe {
-			opponent_ou_bitboard.merged_bitboard
-		};
+		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
-		let (x,y) = from.square_to_point();
+		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,x,y);
-
-		if count > 0 {
-			let p = from + count;
-
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		if o == -1 {
+			return None;
 		}
 
-		let count = Rule::calc_to_top_move_count_of_hisha(bitboard,x,y);
+		let opponent_ou_bitboard = 2 << o;
 
-		if count > 0 {
-			let p = from - count;
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+			flip_oppnent_occupied,
+			flip_self_occupied,
+			from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			flip_oppnent_occupied,
+			flip_self_occupied,
+			from
+		);
 
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
+
+			return Some(p  as Square)
 		}
 
-		let count = Rule::calc_to_right_move_count_of_hisha(rotate_bitboard,x,y);
+		let opponent_ou_bitboard = 2 << (80 - o);
 
-		if count > 0 {
-			let p = from + 9 * count;
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+			self_occupied,
+			oppnent_occupied,
+			80 - from
+		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+			self_occupied,
+			oppnent_occupied,
+			80 - from
+		);
 
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
-		}
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let count = Rule::calc_to_left_move_count_of_hisha(rotate_bitboard,x,y);
+		if b != 0 {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
 
-		if count > 0 {
-			let p = from - 9 * count;
-
-			if opponent_ou_bitboard_raw & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
+			return Some((80 - p)  as Square)
 		}
 
 		if kind == GHishaN {
+			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Gote,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -3001,60 +2631,78 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
-	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `flip_self_occupied` - 手番側の駒の配置を表すビットボード。逆さになっているものを渡す
+	/// * `flip_opponent_occupied` - 相手番側の駒の配置を表すビットボード。逆さになっているものを渡す
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
-		_:BitBoard,opponent_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
+		opponent_ou_bitboard:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_oppnent_occupied:BitBoard,
+		from:u32
 	) -> Option<Square> {
-		let opponent_ou_bitboard = unsafe {
-			opponent_ou_bitboard.merged_bitboard
-		};
+		let opponent_ou_bitboard = unsafe { opponent_ou_bitboard.merged_bitboard };
 
-		let (x,y) = from.square_to_point();
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+			flip_self_occupied,
+			flip_oppnent_occupied,
+			80 - from
+		);
 
-		let count = Rule::calc_forward_move_repeat_count(bitboard,x,y);
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		if count > 0 {
-			let p = from - count;
+		if b == 0 {
+			None
+		} else {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
 
-			if opponent_ou_bitboard & (1 << (p + 1)) != 0 {
-				return Some(p as Square);
-			}
+			Some(p  as Square)
 		}
-
-		None
 	}
 
 	/// 後手の香車を動かす手で王を取れる手を返す
 	///
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
-	/// * `bitboard` - 合法手を列挙するために用いるビットボード。先手視点になっている。
+	/// * `flip_self_occupied` - 手番側の駒の配置を表すビットボード。逆さになっているものを渡す
+	/// * `flip_opponent_occupied` - 相手番側の駒の配置を表すビットボード。逆さになっているものを渡す
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
-		_:BitBoard,opponent_ou_bitboard:BitBoard,bitboard:BitBoard,from:u32
+		opponent_ou_bitboard:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_oppnent_occupied:BitBoard,
+		from:u32
 	) -> Option<Square> {
-		let opponent_ou_bitboard = unsafe {
-			opponent_ou_bitboard.merged_bitboard
-		};
+		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
-		let (x,y) = from.square_to_point();
+		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let count = Rule::calc_back_move_repeat_count(bitboard,x,y);
-
-		if count > 0 {
-			let p = from + count;
-
-			if opponent_ou_bitboard & (1 << (80 - p + 1)) != 0 {
-				return Some(p as Square);
-			}
+		if o == -1 {
+			return None;
 		}
 
-		None
+		let opponent_ou_bitboard = 2 << (80 - o);
+
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+			flip_self_occupied,
+			flip_oppnent_occupied,
+			from
+		);
+
+		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+
+		if b == 0 {
+			None
+		} else {
+			let mut b = BitBoard { merged_bitboard:b };
+			let p = Rule::pop_lsb(&mut b);
+
+			Some(p as Square)
+		}
 	}
 
 	/// 王を取れる手のうち一マスだけ駒を動かす合法手を列挙して返す
@@ -3145,48 +2793,58 @@ impl Rule {
 			}
 			SKaku | SKakuN if t == Teban::Sente => {
 				if let Some(p) = Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
-					self_bitboard, ou_position_board,
-					state.part.diag_board, from, kind
+					ou_position_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					from, kind
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			SHisha | SHishaN if t == Teban::Sente => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				if let Some(p) = Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
-					self_bitboard,
 					ou_position_board,
-					bitboard, state.part.rotate_board, from, kind
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					from, kind
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			GKyou if t == Teban::Gote => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				if let Some(p) = Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
-					self_bitboard, ou_position_board, bitboard, from
+					ou_position_board,
+									state.part.sente_opponent_board,
+												state.part.sente_self_board,
+					from
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			GKaku | GKakuN if t == Teban::Gote => {
 				if let Some(p) = Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
-					self_bitboard,
-					ou_position_board,
-					state.part.diag_board, from, kind
+	ou_position_board,
+					state.part.gote_self_board,
+		state.part.gote_opponent_board,
+		state.part.sente_self_board,
+	state.part.gote_opponent_board,
+					from, kind
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
 			},
 			GHisha | GHishaN if t == Teban::Gote => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				if let Some(p) = Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
-					self_bitboard,
 					ou_position_board,
-					bitboard, state.part.rotate_board, from, kind
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					from, kind
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
@@ -3783,58 +3441,6 @@ impl Rule {
 								};
 							}
 						}
-
-						let (dx,dy) = to.square_to_point();
-
-						let from_mask = 1 << (sy * 9 + sx + 1);
-
-						let to_mask = 1 << (dy * 9 + dx + 1);
-
-						ps.rotate_board = unsafe {
-							BitBoard {
-								merged_bitboard: (ps.rotate_board.merged_bitboard ^ from_mask) | to_mask
-							}
-						};
-
-						let from_l = DIAG_LEFT_ROTATE_MAP[from as usize];
-
-						let from_mask_l = if from_l < 0 {
-							0
-						} else {
-							1 << from_l
-						};
-
-						let to_l = DIAG_LEFT_ROTATE_MAP[to as usize];
-
-						let to_mask_l = if to_l < 0 {
-							0
-						} else {
-							1 << to_l
-						};
-
-						let from_r = DIAG_RIGHT_ROTATE_MAP[from as usize];
-
-						let from_mask_r = if from_r < 0 {
-							0
-						} else {
-							1 << (from_r + 64)
-						};
-
-						let to_r = DIAG_RIGHT_ROTATE_MAP[to as usize];
-
-						let to_mask_r = if to_r < 0 {
-							0
-						} else {
-							1 << (to_r + 64)
-						};
-
-						ps.diag_board = unsafe {
-							BitBoard {
-								merged_bitboard: ps.diag_board.merged_bitboard ^ (
-									from_mask_l |from_mask_r
-								) | (to_mask_l | to_mask_r)
-							}
-						};
 					},
 					AppliedMove::Put(m) => {
 						let to = m.dst();
@@ -3931,40 +3537,6 @@ impl Rule {
 								}
 							}
 						}
-
-						let (dx,dy) = to.square_to_point();
-
-						let to_mask = 1 << (dy * 9 + dx + 1);
-
-						ps.rotate_board = unsafe {
-							BitBoard {
-								merged_bitboard: ps.rotate_board.merged_bitboard ^ to_mask
-							}
-						};
-
-						let to_l = DIAG_LEFT_ROTATE_MAP[to as usize];
-
-						let to_mask_l = if to_l < 0 {
-							0
-						} else {
-							1 << to_l
-						};
-
-						let to_r = DIAG_RIGHT_ROTATE_MAP[to as usize];
-
-						let to_mask_r = if to_r < 0 {
-							0
-						} else {
-							1 << (to_r + 64)
-						};
-
-						ps.diag_board = unsafe {
-							BitBoard {
-								merged_bitboard: ps.diag_board.merged_bitboard ^ (
-									to_mask_l | to_mask_r
-								)
-							}
-						};
 					}
 				}
 			}
@@ -4251,340 +3823,137 @@ impl Rule {
 					SKyou | SHisha | SKaku | GKyou | GHisha | GKaku | Blank => (),
 				}
 
-				let self_occupied = unsafe { self_occupied.merged_bitboard };
-
 				match kind {
-					SKyou | GKyou => {
-						let to = m.dst() as i32;
-
-						let (x,y) = from.square_to_point();
-
-						let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
-						let count = if kind == SKyou {
-							Rule::calc_forward_move_repeat_count(bitboard,x,y)
-						} else {
-							Rule::calc_back_move_repeat_count(bitboard,x,y)
-						};
-
-						if count > 0 {
-							let offset = if kind == SKyou {
-								-1 as i32
-							} else {
-								1 as i32
-							};
-
-							let mut p = from as i32;
-
-							if kind == SKyou {
-								for _ in 0..(count - 1) {
-									p += offset;
-
-									if p == to {
-										return true;
-									} else if p < to {
-										return false;
-									}
-								}
-							} else {
-								for _ in 0..(count - 1) {
-									p += offset;
-
-									if p == to {
-										return true;
-									} else if p > to {
-										return false;
-									}
-								}
-							}
-
-							p += offset;
-
-							if kind == SKyou && self_occupied & (1 << (p + 1)) != 0 {
-								return false;
-							} else if kind == GKyou && self_occupied & (1 << (80 - p + 1)) != 0 {
-								return false;
-							} else {
-								if p == to {
-									return true;
-								}
-							}
+					SKyou => {
+						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+														state.part.gote_self_board,
+													state.part.gote_opponent_board,80 - from);
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
+							return true;
 						}
 					},
-					SKaku | SKakuN | GKaku | GKakuN => {
-						let to = m.dst();
-
-						let (sx,sy) = from.square_to_point();
-						let (dx,dy) = to.square_to_point();
-
-						if sx > dx && sy > dy {
-							let board = unsafe {
-								*state.part.diag_board.bitboard.get_unchecked(0)
-							};
-
-							let count = Rule::calc_to_left_top_move_count_of_kaku(board, from);
-
-							if count > 0 {
-								let mut p = from;
-
-								for _ in 0..(count - 1) {
-									p -= 10;
-
-									if p == to {
-										return true;
-									} else if p < to {
-										break;
-									}
-								}
-
-								p -= 10;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
-						} else if sx > dx && sy < dy {
-							let board = unsafe {
-								*state.part.diag_board.bitboard.get_unchecked(1)
-							};
-
-							let count = Rule::calc_to_left_bottom_move_count_of_kaku(board, from);
-
-							if count > 0 {
-
-								let mut p = from;
-
-								for _ in 0..(count - 1) {
-									p -= 8;
-
-									if p == to {
-										return true;
-									} else if p < to {
-										break;
-									}
-								}
-
-								p -= 8;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
-						} else if dy > sy {
-							let board = unsafe {
-								*state.part.diag_board.bitboard.get_unchecked(0)
-							};
-
-							let count = Rule::calc_to_right_bottom_move_count_of_kaku(board, from);
-
-							if count > 0 {
-								let mut p = from;
-
-								for _ in 0..(count - 1) {
-									p += 10;
-
-									if p == to {
-										return true;
-									} else if p > to {
-										break;
-									}
-								}
-
-								p += 10;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
-						} else {
-							let board = unsafe {
-								*state.part.diag_board.bitboard.get_unchecked(1)
-							};
-
-							let count = Rule::calc_to_right_top_move_count_of_kaku(board, from);
-
-							if count > 0 {
-								let mut p = from;
-
-								for _ in 0..(count - 1) {
-									p += 8;
-
-									if p == to {
-										return true;
-									} else if p > to {
-										break;
-									}
-								}
-
-								p += 8;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
+					GKyou => {
+						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+							state.part.sente_self_board,
+							state.part.sente_opponent_board,from);
+						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+							return true;
 						}
 					},
-					SHisha | SHishaN | GHisha | GHishaN => {
-						let to = m.dst();
+					SKaku | SKakuN => {
+						let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+							state.part.sente_self_board,
+							state.part.sente_opponent_board,
+							from
+						) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+							state.part.sente_self_board,
+							state.part.sente_opponent_board,
+							from
+						);
 
-						let (sx,sy) = from.square_to_point();
-						let (dx,dy) = to.square_to_point();
+						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+							return true;
+						}
 
-						let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
+						let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+							state.part.gote_opponent_board,
+							state.part.gote_self_board,
+							80 - from
+						) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+							state.part.gote_opponent_board,
+							state.part.gote_self_board,
+							80 - from
+						);
 
-						if sx == dx && sy > dy {
-							let count = Rule::calc_to_top_move_count_of_hisha(bitboard,sx,sy);
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
+							return true;
+						}
+					},
+					GKaku | GKakuN => {
+						let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+							state.part.gote_self_board,
+							state.part.gote_opponent_board,
+							80 - from
+						) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+							state.part.gote_self_board,
+							state.part.gote_opponent_board,
+							80 - from
+						);
 
-							if count > 0 {
-								let mut p = from;
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
+							return true;
+						}
 
-								for _ in 0..(count - 1) {
-									p -= 1;
+						let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+							state.part.sente_opponent_board,
+							state.part.sente_self_board,
+							from
+						) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+							state.part.sente_opponent_board,
+							state.part.sente_self_board,
+							from
+						);
 
-									if p == to {
-										return true;
-									} else if p < to {
-										break;
-									}
-								}
+						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+							return true;
+						}
+					},
+					SHisha | SHishaN => {
+						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+							state.part.gote_opponent_board,
+							state.part.gote_self_board,
+							80 - from
+						) | Rule::gen_candidate_bits_by_hisha_to_right(
+							state.part.gote_opponent_board,
+							state.part.gote_self_board,
+							80 - from
+						);
 
-								p -= 1;
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
+							return true;
+						}
 
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
+						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+							state.part.sente_self_board,
+							state.part.sente_opponent_board,
+							from
+						) | Rule::gen_candidate_bits_by_hisha_to_right(
+							state.part.sente_self_board,
+							state.part.sente_opponent_board,
+							from
+						);
 
-									if p == to {
-										return true;
-									}
-								}
-							}
-						} else if sx == dx {
-							let count = Rule::calc_to_bottom_move_count_of_hisha(bitboard,sx,sy);
+						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+							return true;
+						}
+					},
+					GHisha | GHishaN => {
+						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+							state.part.sente_self_board,
+							state.part.sente_opponent_board,
+							from
+						) | Rule::gen_candidate_bits_by_hisha_to_right(
+							state.part.sente_self_board,
+							state.part.sente_opponent_board,
+							from
+						);
 
-							if count > 0 {
-								let mut p = from;
+						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+							return true;
+						}
 
-								for _ in 0..(count - 1) {
-									p += 1;
+						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+							state.part.gote_opponent_board,
+							state.part.gote_self_board,
+							80 - from
+						) | Rule::gen_candidate_bits_by_hisha_to_right(
+							state.part.gote_opponent_board,
+							state.part.gote_self_board,
+							80 - from
+						);
 
-									if p == to {
-										return true;
-									} else if p > to {
-										break;
-									}
-								}
-
-								p += 1;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
-						} else if sy == dy && sx > dx {
-							let count = Rule::calc_to_left_move_count_of_hisha(state.part.rotate_board,sx,sy);
-
-							if count > 0 {
-								let mut p = from;
-
-								for _ in 0..(count - 1) {
-									p -= 9;
-
-									if p == to {
-										return true;
-									} else if p < to {
-										break;
-									}
-								}
-
-								p -= 9;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
-						} else {
-							let count = Rule::calc_to_right_move_count_of_hisha(state.part.rotate_board,sx,sy);
-
-							if count > 0 {
-								let mut p = from;
-
-								for _ in 0..(count - 1) {
-									p += 9;
-
-									if p == to {
-										return true;
-									} else if p > to {
-										break;
-									}
-								}
-
-								p += 9;
-
-								if kind < GFu && self_occupied & (1 << (p + 1)) != 0 {
-									return false;
-								} else if kind >= GFu && kind < Blank && self_occupied & (1 << (80 - p + 1)) != 0 {
-									return false;
-								} else if kind == Blank {
-									return false;
-								} else {
-									if p == to {
-										return true;
-									}
-								}
-							}
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
+							return true;
 						}
 					},
 					_ => (),
@@ -5155,22 +4524,31 @@ impl Rule {
 				)
 			},
 			SKyou if t == Teban::Sente => {
-				let bitboard = state.sente_self_board | state.sente_opponent_board;
-
 				Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
-					state.sente_self_board, state.sente_opponent_ou_position_board, bitboard, from
+					state.sente_opponent_ou_position_board,
+					state.gote_opponent_board,
+					state.gote_self_board,
+					from
 				)
 			}
 			SKaku | SKakuN if t == Teban::Sente => {
 				Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
-					state.sente_self_board, state.sente_opponent_ou_position_board, state.diag_board, from, kind
+					state.sente_opponent_ou_position_board,
+					state.sente_self_board,
+					state.sente_opponent_board,
+					state.gote_self_board,
+					state.gote_opponent_board,
+					from, kind
 				)
 			},
 			SHisha | SHishaN if t == Teban::Sente => {
-				let bitboard = state.sente_self_board | state.sente_opponent_board;
-
 				Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
-					state.sente_self_board, state.sente_opponent_ou_position_board, bitboard, state.rotate_board, from, kind
+					state.sente_opponent_ou_position_board,
+					state.sente_self_board,
+					state.sente_opponent_board,
+					state.gote_self_board,
+					state.gote_opponent_board,
+					from, kind
 				)
 			},
 			GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN if t == Teban::Gote => {
@@ -5179,22 +4557,31 @@ impl Rule {
 				)
 			},
 			GKyou if t == Teban::Gote => {
-				let bitboard = state.sente_self_board | state.sente_opponent_board;
-
 				Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
-					state.gote_self_board, state.gote_opponent_ou_position_board, bitboard, from
+					state.gote_opponent_ou_position_board,
+					state.sente_opponent_board,
+					state.sente_self_board,
+					from
 				)
 			},
 			GKaku | GKakuN if t == Teban::Gote => {
 				Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
-					state.gote_self_board, state.gote_opponent_ou_position_board, state.diag_board, from, kind
+					state.gote_opponent_ou_position_board,
+					state.gote_self_board,
+					state.sente_opponent_board,
+					state.sente_self_board,
+					state.sente_opponent_board,
+					from, kind
 				)
 			},
 			GHisha | GHishaN if t == Teban::Gote => {
-				let bitboard = state.sente_self_board | state.sente_opponent_board;
-
 				Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
-					state.gote_self_board, state.gote_opponent_ou_position_board, bitboard, state.rotate_board, from, kind
+					state.gote_opponent_ou_position_board,
+					state.gote_self_board,
+					state.gote_opponent_board,
+					state.sente_self_board,
+					state.sente_opponent_board,
+					from, kind
 				)
 			},
 			_ => None,
