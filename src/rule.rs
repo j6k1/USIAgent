@@ -1257,10 +1257,10 @@ impl Rule {
 	#[inline]
 	pub fn gen_candidate_bits_by_kaku_to_right_top(
 		self_occupied:BitBoard,
-		oppnent_occupied:BitBoard,
+		opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
-		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
+		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
 
 		let mask = KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize] << 1;
 
@@ -1268,13 +1268,6 @@ impl Rule {
 
 		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
 		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
-
-		if (candidate & (2 << 3) != 0) || (candidate & (2 << (80 - 3)) != 0) {
-			println!("{:b}",unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard });
-			println!("{:b}",occ);
-			println!("{:b}",mask);
-			dbg!(from);
-		}
 
 		BitBoard {
 			merged_bitboard: candidate
@@ -1292,10 +1285,10 @@ impl Rule {
 	#[inline]
 	pub fn gen_candidate_bits_by_kaku_to_right_bottom(
 		self_occupied:BitBoard,
-		oppnent_occupied:BitBoard,
+		opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
-		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
+		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
 
 		let mask = KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize] << 1;
 
@@ -1303,13 +1296,6 @@ impl Rule {
 
 		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
 		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
-
-		if (candidate & (2 << 3) != 0) || (candidate & (2 << (80 - 3)) != 0) {
-			println!("{:b}",unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard });
-			println!("{:b}",occ);
-			println!("{:b}",mask);
-			dbg!(from);
-		}
 
 		BitBoard {
 			merged_bitboard: candidate
@@ -1320,7 +1306,7 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `sente_oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -1405,7 +1391,7 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
-	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -1498,10 +1484,10 @@ impl Rule {
 	#[inline]
 	pub fn gen_candidate_bits_by_hisha_or_kyou_to_top(
 		flip_self_occupied:BitBoard,
-		flip_oppnent_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
-		let occ = unsafe { flip_self_occupied.merged_bitboard | flip_oppnent_occupied.merged_bitboard };
+		let occ = unsafe { flip_self_occupied.merged_bitboard | flip_opponent_occupied.merged_bitboard };
 
 		let x = from / 9;
 
@@ -1526,10 +1512,10 @@ impl Rule {
 	#[inline]
 	pub fn gen_candidate_bits_by_hisha_to_right(
 		self_occupied:BitBoard,
-		oppnent_occupied:BitBoard,
+		opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
-		let mut occ = unsafe { self_occupied.merged_bitboard | oppnent_occupied.merged_bitboard };
+		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
 
 		let x = from / 9;
 
@@ -1549,7 +1535,7 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -1634,7 +1620,7 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
-	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -2322,7 +2308,7 @@ impl Rule {
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
 	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `sente_oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -2332,10 +2318,10 @@ impl Rule {
 	pub fn win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
-		oppnent_occupied:BitBoard,
+		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
-		flip_oppnent_occupied:BitBoard,
-		from:u32,kind:KomaKind
+		flip_opponent_occupied:BitBoard,
+		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
@@ -2349,11 +2335,11 @@ impl Rule {
 
 		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 			self_occupied,
-			oppnent_occupied,
+			opponent_occupied,
 			from
 		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
 			self_occupied,
-			oppnent_occupied,
+			opponent_occupied,
 			from
 		);
 
@@ -2369,11 +2355,11 @@ impl Rule {
 		let opponent_ou_bitboard = 2 << (80 - o);
 
 		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-			flip_oppnent_occupied,
+			flip_opponent_occupied,
 			flip_self_occupied,
 			80 - from
 		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-			flip_oppnent_occupied,
+			flip_opponent_occupied,
 			flip_self_occupied,
 			80 - from
 		);
@@ -2403,7 +2389,7 @@ impl Rule {
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
 	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
-	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -2413,10 +2399,10 @@ impl Rule {
 	pub fn win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
-		oppnent_occupied:BitBoard,
+		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
-		flip_oppnent_occupied:BitBoard,
-		from:u32,kind:KomaKind
+		flip_opponent_occupied:BitBoard,
+		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
@@ -2426,15 +2412,15 @@ impl Rule {
 			return None;
 		}
 
-		let opponent_ou_bitboard = 2 << o;
+		let opponent_ou_bitboard = 2 << (80 - o);
 
 		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+			flip_opponent_occupied,
 			flip_self_occupied,
-			flip_oppnent_occupied,
 			from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+		) | Rule::gen_candidate_bits_by_hisha_to_right(
+			flip_opponent_occupied,
 			flip_self_occupied,
-			flip_oppnent_occupied,
 			from
 		);
 
@@ -2444,18 +2430,18 @@ impl Rule {
 			let mut b = BitBoard { merged_bitboard:b };
 			let p = Rule::pop_lsb(&mut b);
 
-			return Some(p  as Square)
+			return Some(p as Square)
 		}
 
-		let opponent_ou_bitboard = 2 << (80 - o);
+		let opponent_ou_bitboard = 2 << o;
 
 		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-			oppnent_occupied,
 			self_occupied,
+			opponent_occupied,
 			80 - from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-			oppnent_occupied,
+		) | Rule::gen_candidate_bits_by_hisha_to_right(
 			self_occupied,
+			opponent_occupied,
 			80 - from
 		);
 
@@ -2484,7 +2470,7 @@ impl Rule {
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
 	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `sente_oppnent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -2494,10 +2480,10 @@ impl Rule {
 	pub fn win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
-		oppnent_occupied:BitBoard,
+		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
-		flip_oppnent_occupied:BitBoard,
-		from:u32,kind:KomaKind
+		flip_opponent_occupied:BitBoard,
+		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
@@ -2510,11 +2496,11 @@ impl Rule {
 		let opponent_ou_bitboard = 2 << (80 - o);
 
 		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-			flip_oppnent_occupied,
+			flip_opponent_occupied,
 			flip_self_occupied,
 			80 - from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-			flip_oppnent_occupied,
+		) | Rule::gen_candidate_bits_by_hisha_to_right(
+			flip_opponent_occupied,
 			flip_self_occupied,
 			80 - from
 		);
@@ -2532,11 +2518,11 @@ impl Rule {
 
 		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 			self_occupied,
-			oppnent_occupied,
+			opponent_occupied,
 			from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+		) | Rule::gen_candidate_bits_by_hisha_to_right(
 			self_occupied,
-			oppnent_occupied,
+			opponent_occupied,
 			from
 		);
 
@@ -2565,7 +2551,7 @@ impl Rule {
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 後手側から見た相手の王の配置を表すビットボード。
 	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
-	/// * `oppnent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -2575,10 +2561,10 @@ impl Rule {
 	pub fn win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
-		oppnent_occupied:BitBoard,
+		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
-		flip_oppnent_occupied:BitBoard,
-		from:u32,kind:KomaKind
+		flip_opponent_occupied:BitBoard,
+		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 
@@ -2591,11 +2577,11 @@ impl Rule {
 		let opponent_ou_bitboard = 2 << o;
 
 		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-			flip_oppnent_occupied,
+			flip_opponent_occupied,
 			flip_self_occupied,
 			from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-			flip_oppnent_occupied,
+		) | Rule::gen_candidate_bits_by_hisha_to_right(
+			flip_opponent_occupied,
 			flip_self_occupied,
 			from
 		);
@@ -2613,11 +2599,11 @@ impl Rule {
 
 		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 			self_occupied,
-			oppnent_occupied,
+			opponent_occupied,
 			80 - from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+		) | Rule::gen_candidate_bits_by_hisha_to_right(
 			self_occupied,
-			oppnent_occupied,
+			opponent_occupied,
 			80 - from
 		);
 
@@ -2653,14 +2639,14 @@ impl Rule {
 	pub fn win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		flip_self_occupied:BitBoard,
-		flip_oppnent_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
 		from:u32
 	) -> Option<Square> {
 		let opponent_ou_bitboard = unsafe { opponent_ou_bitboard.merged_bitboard };
 
 		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 			flip_self_occupied,
-			flip_oppnent_occupied,
+			flip_opponent_occupied,
 			80 - from
 		);
 
@@ -2688,7 +2674,7 @@ impl Rule {
 	pub fn win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		flip_self_occupied:BitBoard,
-		flip_oppnent_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
 		from:u32
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
@@ -2703,7 +2689,7 @@ impl Rule {
 
 		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 			flip_self_occupied,
-			flip_oppnent_occupied,
+			flip_opponent_occupied,
 			from
 		);
 
@@ -2797,10 +2783,11 @@ impl Rule {
 				}
 			},
 			SKyou if t == Teban::Sente => {
-				let bitboard = state.part.sente_self_board | state.part.sente_opponent_board;
-
 				if let Some(p) = Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
-					self_bitboard, ou_position_board, bitboard, from
+					 ou_position_board,
+					 state.part.gote_opponent_board,
+					 state.part.gote_self_board,
+					 from
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
 				}
@@ -2845,7 +2832,7 @@ impl Rule {
 					state.part.gote_self_board,
 		state.part.gote_opponent_board,
 		state.part.sente_self_board,
-	state.part.gote_opponent_board,
+	state.part.sente_opponent_board,
 					from, kind
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
