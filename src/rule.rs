@@ -2324,58 +2324,57 @@ impl Rule {
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
+		{
+			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
+			if o == -1 {
+				return None;
+			}
 
-		if o == -1 {
-			return None;
-		}
+			let opponent_ou_bitboard = 2 << o;
 
-		let opponent_ou_bitboard = 2 << o;
+			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+				self_occupied,
+				opponent_occupied,
+				from
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+				self_occupied,
+				opponent_occupied,
+				from
+			);
 
-		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-			self_occupied,
-			opponent_occupied,
-			from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-			self_occupied,
-			opponent_occupied,
-			from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
+				return Some(p as Square)
+			}
 
-			return Some(p  as Square)
-		}
+			let opponent_ou_bitboard = 2 << (80 - o);
 
-		let opponent_ou_bitboard = 2 << (80 - o);
+			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				80 - from
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				80 - from
+			);
 
-		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			80 - from
-		) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			80 - from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
-
-			return Some((80 - p)  as Square)
+				return Some((80 - p) as Square)
+			}
 		}
 
 		if kind == SKakuN {
-			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
-
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Sente,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2405,58 +2404,57 @@ impl Rule {
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
+		{
+			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
+			if o == -1 {
+				return None;
+			}
 
-		if o == -1 {
-			return None;
-		}
+			let opponent_ou_bitboard = 2 << (80 - o);
 
-		let opponent_ou_bitboard = 2 << (80 - o);
+			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				from
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				from
+			);
 
-		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			from
-		) | Rule::gen_candidate_bits_by_hisha_to_right(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
+				return Some(p as Square)
+			}
 
-			return Some(p as Square)
-		}
+			let opponent_ou_bitboard = 2 << o;
 
-		let opponent_ou_bitboard = 2 << o;
+			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+				self_occupied,
+				opponent_occupied,
+				80 - from
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+				self_occupied,
+				opponent_occupied,
+				80 - from
+			);
 
-		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-			self_occupied,
-			opponent_occupied,
-			80 - from
-		) | Rule::gen_candidate_bits_by_hisha_to_right(
-			self_occupied,
-			opponent_occupied,
-			80 - from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
-
-			return Some((80 - p)  as Square)
+				return Some((80 - p) as Square)
+			}
 		}
 
 		if kind == GKakuN {
-			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
-
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Gote,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2486,58 +2484,57 @@ impl Rule {
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
+		{
+			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
+			if o == -1 {
+				return None;
+			}
 
-		if o == -1 {
-			return None;
-		}
+			let opponent_ou_bitboard = 2 << (80 - o);
 
-		let opponent_ou_bitboard = 2 << (80 - o);
+			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				80 - from
+			) | Rule::gen_candidate_bits_by_hisha_to_right(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				80 - from
+			);
 
-		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			80 - from
-		) | Rule::gen_candidate_bits_by_hisha_to_right(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			80 - from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
+				return Some((80 - p) as Square)
+			}
 
-			return Some((80 - p)  as Square)
-		}
+			let opponent_ou_bitboard = 2 << o;
 
-		let opponent_ou_bitboard = 2 << o;
+			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+				self_occupied,
+				opponent_occupied,
+				from
+			) | Rule::gen_candidate_bits_by_hisha_to_right(
+				self_occupied,
+				opponent_occupied,
+				from
+			);
 
-		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-			self_occupied,
-			opponent_occupied,
-			from
-		) | Rule::gen_candidate_bits_by_hisha_to_right(
-			self_occupied,
-			opponent_occupied,
-			from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
-
-			return Some(p  as Square)
+				return Some(p as Square)
+			}
 		}
 
 		if kind == SHishaN {
-			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
-
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Sente,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2567,58 +2564,57 @@ impl Rule {
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
 		let mut opponent_ou_bitboard = opponent_ou_bitboard;
+		{
+			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
-		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
+			if o == -1 {
+				return None;
+			}
 
-		if o == -1 {
-			return None;
-		}
+			let opponent_ou_bitboard = 2 << (80 - o);
 
-		let opponent_ou_bitboard = 2 << o;
+			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				from
+			) | Rule::gen_candidate_bits_by_hisha_to_right(
+				flip_opponent_occupied,
+				flip_self_occupied,
+				from
+			);
 
-		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			from
-		) | Rule::gen_candidate_bits_by_hisha_to_right(
-			flip_opponent_occupied,
-			flip_self_occupied,
-			from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
+				return Some(p as Square)
+			}
 
-			return Some(p  as Square)
-		}
+			let opponent_ou_bitboard = 2 << o;
 
-		let opponent_ou_bitboard = 2 << (80 - o);
+			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+				self_occupied,
+				opponent_occupied,
+				80 - from
+			) | Rule::gen_candidate_bits_by_hisha_to_right(
+				self_occupied,
+				opponent_occupied,
+				80 - from
+			);
 
-		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-			self_occupied,
-			opponent_occupied,
-			80 - from
-		) | Rule::gen_candidate_bits_by_hisha_to_right(
-			self_occupied,
-			opponent_occupied,
-			80 - from
-		);
+			let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
 
-		let b = opponent_ou_bitboard & unsafe { board.merged_bitboard };
+			if b != 0 {
+				let mut b = BitBoard { merged_bitboard: b };
+				let p = Rule::pop_lsb(&mut b);
 
-		if b != 0 {
-			let mut b = BitBoard { merged_bitboard:b };
-			let p = Rule::pop_lsb(&mut b);
-
-			return Some((80 - p)  as Square)
+				return Some((80 - p) as Square)
+			}
 		}
 
 		if kind == GHishaN {
-			let opponent_ou_bitboard = BitBoard { merged_bitboard: opponent_ou_bitboard };
-
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Gote,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2642,7 +2638,15 @@ impl Rule {
 		flip_opponent_occupied:BitBoard,
 		from:u32
 	) -> Option<Square> {
-		let opponent_ou_bitboard = unsafe { opponent_ou_bitboard.merged_bitboard };
+		let mut opponent_ou_bitboard = opponent_ou_bitboard;
+
+		let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
+
+		if o == -1 {
+			return None;
+		}
+
+		let opponent_ou_bitboard = 2 << (80 - o);
 
 		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 			flip_self_occupied,
@@ -2658,7 +2662,7 @@ impl Rule {
 			let mut b = BitBoard { merged_bitboard:b };
 			let p = Rule::pop_lsb(&mut b);
 
-			Some(p  as Square)
+			Some(80 - p as Square)
 		}
 	}
 
@@ -2819,8 +2823,8 @@ impl Rule {
 			GKyou if t == Teban::Gote => {
 				if let Some(p) = Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
 					ou_position_board,
-									state.part.sente_opponent_board,
-												state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
 					from
 				) {
 					Rule::append_win_only_move(p,from,kind,nari_mask,deny_move_mask,false, mvs);
