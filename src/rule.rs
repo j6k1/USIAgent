@@ -1774,6 +1774,7 @@ impl Rule {
 	/// ビットボードの立っているビットのうち最下位のものの位置を返す
 	///
 	/// 呼出し後、最下位にあったビットは0に更新される
+	#[inline]
 	pub fn pop_lsb(bitboard:&mut BitBoard) -> Square {
 		let (bl,br) = unsafe {
 			match bitboard {
