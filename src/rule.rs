@@ -4586,7 +4586,7 @@ impl Rule {
 				Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
 					state.gote_opponent_ou_position_board,
 					state.gote_self_board,
-					state.sente_opponent_board,
+					state.gote_opponent_board,
 					state.sente_self_board,
 					state.sente_opponent_board,
 					from, kind
