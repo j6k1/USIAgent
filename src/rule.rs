@@ -2323,8 +2323,9 @@ impl Rule {
 		flip_opponent_occupied:BitBoard,
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
-		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 		{
+			let mut opponent_ou_bitboard = opponent_ou_bitboard;
+
 			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
 			if o == -1 {
@@ -2375,6 +2376,8 @@ impl Rule {
 		}
 
 		if kind == SKakuN {
+			let opponent_ou_bitboard = opponent_ou_bitboard;
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Sente,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2403,8 +2406,9 @@ impl Rule {
 		flip_opponent_occupied:BitBoard,
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
-		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 		{
+			let mut opponent_ou_bitboard = opponent_ou_bitboard;
+
 			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
 			if o == -1 {
@@ -2455,6 +2459,8 @@ impl Rule {
 		}
 
 		if kind == GKakuN {
+			let opponent_ou_bitboard = opponent_ou_bitboard;
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Gote,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2483,8 +2489,9 @@ impl Rule {
 		flip_opponent_occupied:BitBoard,
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
-		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 		{
+			let mut opponent_ou_bitboard = opponent_ou_bitboard;
+
 			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
 			if o == -1 {
@@ -2535,6 +2542,8 @@ impl Rule {
 		}
 
 		if kind == SHishaN {
+			let opponent_ou_bitboard = opponent_ou_bitboard;
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Sente,self_occupied,opponent_ou_bitboard,from,kind
 			)
@@ -2563,8 +2572,9 @@ impl Rule {
 		flip_opponent_occupied:BitBoard,
 		from:u32, kind:KomaKind
 	) -> Option<Square> {
-		let mut opponent_ou_bitboard = opponent_ou_bitboard;
 		{
+			let mut opponent_ou_bitboard = opponent_ou_bitboard;
+
 			let o = Rule::pop_lsb(&mut opponent_ou_bitboard);
 
 			if o == -1 {
@@ -2615,6 +2625,8 @@ impl Rule {
 		}
 
 		if kind == GHishaN {
+			let opponent_ou_bitboard = opponent_ou_bitboard;
+
 			Rule::win_only_move_once_with_point_and_kind_and_bitboard(
 				Teban::Gote,self_occupied,opponent_ou_bitboard,from,kind
 			)
