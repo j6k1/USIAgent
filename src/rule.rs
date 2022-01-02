@@ -3843,17 +3843,18 @@ impl Rule {
 				match kind {
 					SKyou => {
 						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-														state.part.gote_self_board,
-													state.part.gote_opponent_board,80 - from);
+							state.part.gote_opponent_board,
+							state.part.gote_self_board, 80 - from);
 						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
 							return true;
 						}
 					},
 					GKyou => {
 						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+							state.part.sente_opponent_board,
 							state.part.sente_self_board,
-							state.part.sente_opponent_board,from);
-						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+							from);
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
 							return true;
 						}
 					},
@@ -3897,7 +3898,7 @@ impl Rule {
 							80 - from
 						);
 
-						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
+						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
 							return true;
 						}
 
@@ -3911,7 +3912,7 @@ impl Rule {
 							from
 						);
 
-						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
 							return true;
 						}
 					},
@@ -3946,30 +3947,30 @@ impl Rule {
 					},
 					GHisha | GHishaN => {
 						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-							state.part.sente_self_board,
 							state.part.sente_opponent_board,
+							state.part.sente_self_board,
 							from
 						) | Rule::gen_candidate_bits_by_hisha_to_right(
-							state.part.sente_self_board,
 							state.part.sente_opponent_board,
+							state.part.sente_self_board,
 							from
 						);
 
-						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
+						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
 							return true;
 						}
 
 						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-							state.part.gote_opponent_board,
 							state.part.gote_self_board,
+							state.part.gote_opponent_board,
 							80 - from
 						) | Rule::gen_candidate_bits_by_hisha_to_right(
-							state.part.gote_opponent_board,
 							state.part.gote_self_board,
+							state.part.gote_opponent_board,
 							80 - from
 						);
 
-						if (unsafe { board.merged_bitboard } & (2 << (80 - to))) != 0 {
+						if (unsafe { board.merged_bitboard } & (2 << to)) != 0 {
 							return true;
 						}
 					},
