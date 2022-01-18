@@ -34,6 +34,8 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 	/// サポートしているオプションに関する設定情報（maxとminの値など）をオプション名をキーとしたマップで返す
 	fn get_options(&mut self) -> Result<BTreeMap<String,UsiOptType>,E>;
 	/// プレイヤーの機能で必要な時間のかかる前処理などをここで行う
+	/// # Arguments
+	/// * `on_keep_alive` - 定期的にGUIに空行を送信してエンジンがフリーズしていないことを通知するためのオブジェクト
 	fn take_ready<W,L>(&mut self, on_keep_alive:OnKeepAlive<W,L>)
 		-> Result<(),E> where W: USIOutputWriter + Send + 'static, L: Logger + Send + 'static;
 	/// オプションを設定する
@@ -346,7 +348,7 @@ pub trait KeepAliveSender {
 	/// Dropされる前の間指定された間隔（単位は秒）で空行を送信するオブジェクトを生成する
 	///
 	/// # Arguments
-	/// * `sec` - 空行を送信する間隔
+	/// * `sec` - 空行を送信する間隔（単位は秒単位s）
 	///
 	/// note: このメソッドから返された値を_から始まる任意の名前の変数に格納して、
 	/// 　　　　KeepAliveの送信が必要なくなるタイミングまで保持してください。
