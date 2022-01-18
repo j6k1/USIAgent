@@ -404,6 +404,7 @@ impl<W,L> Clone for OnKeepAlive<W,L> where W: USIOutputWriter + Send + 'static, 
 	}
 }
 /// KeepAliveの送信を指定された間隔で定期的に行う
+///
 /// note: このオブジェクトは`KeepAliveSender`を実装した型の`auto`メソッドから返されますが、
 ///       必ず返された値を_から始まる任意の名前の変数に格納して、KeepAliveの送信が必要なくなるタイミングまで保持してください。
 ///       このオブジェクトがスコープを抜けてdropされた時点でKeepAlive送信スレッドには停止要求が投げられ、

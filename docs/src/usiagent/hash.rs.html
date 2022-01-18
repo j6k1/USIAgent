@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src\hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>hash.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../usiagent/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src\hash.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>hash.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../usiagent/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -479,36 +479,19 @@
 <span id="479">479</span>
 <span id="480">480</span>
 <span id="481">481</span>
-<span id="482">482</span>
-<span id="483">483</span>
-<span id="484">484</span>
-<span id="485">485</span>
-<span id="486">486</span>
-<span id="487">487</span>
-<span id="488">488</span>
-<span id="489">489</span>
-<span id="490">490</span>
-<span id="491">491</span>
-<span id="492">492</span>
-<span id="493">493</span>
-<span id="494">494</span>
-<span id="495">495</span>
-<span id="496">496</span>
-<span id="497">497</span>
-</pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! 局面のハッシュ表現を取り扱う</span>
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">hash</span>::<span class="ident">Hash</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Add</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Sub</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">BitXor</span>;
+</pre><pre class="rust"><code><span class="doccomment">//! 局面のハッシュ表現を取り扱う</span>
+<span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
+<span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
+<span class="kw">use</span> <span class="ident">std::ops::Add</span>;
+<span class="kw">use</span> <span class="ident">std::ops::Sub</span>;
+<span class="kw">use</span> <span class="ident">std::ops::BitXor</span>;
 <span class="kw">use</span> <span class="ident">rand</span>;
-<span class="kw">use</span> <span class="ident">rand</span>::<span class="ident">Rng</span>;
-<span class="kw">use</span> <span class="ident">rand</span>::<span class="ident">Rand</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">num</span>::<span class="ident">Wrapping</span>;
+<span class="kw">use</span> <span class="ident">rand::Rng</span>;
+<span class="kw">use</span> <span class="ident">rand::Rand</span>;
+<span class="kw">use</span> <span class="ident">std::num::Wrapping</span>;
 
 <span class="kw">use</span> <span class="ident">shogi</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">rule</span>::<span class="ident">AppliedMove</span>;
+<span class="kw">use</span> <span class="ident">rule::AppliedMove</span>;
 
 <span class="doccomment">/// 主キーとサブキーの二つのキーを用いたマップ</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> {
@@ -516,8 +499,8 @@
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>,<span class="ident">K</span><span class="op">&gt;</span> <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> {
 	<span class="doccomment">/// `TwoKeyHashMap`の生成</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="kw">let</span> <span class="ident">map</span>:<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">K</span>,<span class="ident">T</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap</span>::<span class="ident">new</span>();
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
+		<span class="kw">let</span> <span class="ident">map</span>:<span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">K</span>,<span class="ident">T</span>)<span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
 
 		<span class="ident">TwoKeyHashMap</span> {
 			<span class="ident">map</span>:<span class="ident">map</span>
@@ -529,20 +512,20 @@
 	<span class="doccomment">/// # Arguments</span>
 	<span class="doccomment">/// * `k` - 主キー</span>
 	<span class="doccomment">/// * `sk` - サブキー</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get</span>(<span class="ident">k</span>) {
-			<span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+			<span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> =&gt; {
 				<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>[<span class="number">0</span>].<span class="number">1</span>)
 			},
-			<span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+			<span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> =&gt; {
 				<span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">v</span> {
-					<span class="kw">if</span> <span class="ident">e</span>.<span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">sk</span> {
+					<span class="kw">if</span> <span class="ident">e</span>.<span class="number">0</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">sk</span> {
 						<span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="number">1</span>);
 					}
 				}
 				<span class="prelude-val">None</span>
 			},
-			<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+			<span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
 		}
 	}
 
@@ -551,14 +534,14 @@
 	<span class="doccomment">/// # Arguments</span>
 	<span class="doccomment">/// * `k` - 主キー</span>
 	<span class="doccomment">/// * `sk` - サブキー</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get_mut</span>(<span class="ident">k</span>) {
-			<span class="prelude-val">Some</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> {
-				<span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
+			<span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; {
+				<span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
 					<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">v</span>[<span class="number">0</span>].<span class="number">1</span>)
 				} <span class="kw">else</span> <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> {
 					<span class="kw">for</span> <span class="ident">e</span> <span class="kw">in</span> <span class="ident">v</span> {
-						<span class="kw">if</span> <span class="ident">e</span>.<span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">sk</span> {
+						<span class="kw">if</span> <span class="ident">e</span>.<span class="number">0</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">sk</span> {
 							<span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">e</span>.<span class="number">1</span>);
 						}
 					}
@@ -567,7 +550,7 @@
 					<span class="prelude-val">None</span>
 				}
 			},
-			<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+			<span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
 		}
 	}
 
@@ -577,10 +560,10 @@
 	<span class="doccomment">/// * `k` - 主キー</span>
 	<span class="doccomment">/// * `sk` - サブキー</span>
 	<span class="doccomment">/// * `nv` - キーに対応する新しい項目（対応するキーがある場合は上書き、ない場合は追加される）</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">k</span>:<span class="ident">K</span>,<span class="ident">sk</span>:<span class="ident">K</span>,<span class="ident">nv</span>:<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">k</span>:<span class="ident">K</span>,<span class="ident">sk</span>:<span class="ident">K</span>,<span class="ident">nv</span>:<span class="ident">T</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>) {
-			<span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
-				<span class="kw">if</span> <span class="ident">v</span>[<span class="number">0</span>].<span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sk</span> {
+			<span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> =&gt; {
+				<span class="kw">if</span> <span class="ident">v</span>[<span class="number">0</span>].<span class="number">0</span> <span class="op">==</span> <span class="ident">sk</span> {
 					<span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">remove</span>(<span class="number">0</span>).<span class="number">1</span>;
 					<span class="ident">v</span>.<span class="ident">push</span>((<span class="ident">sk</span>,<span class="ident">nv</span>));
 					<span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">old</span>);
@@ -589,9 +572,9 @@
 					<span class="kw">return</span> <span class="prelude-val">None</span>;
 				}
 			},
-			<span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+			<span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">v</span>) <span class="kw">if</span> <span class="ident">v</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">1</span> =&gt; {
 				<span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">v</span>.<span class="ident">len</span>() {
-					<span class="kw">if</span> <span class="ident">v</span>[<span class="ident">i</span>].<span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sk</span> {
+					<span class="kw">if</span> <span class="ident">v</span>[<span class="ident">i</span>].<span class="number">0</span> <span class="op">==</span> <span class="ident">sk</span> {
 						<span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">v</span>.<span class="ident">remove</span>(<span class="ident">i</span>).<span class="number">1</span>;
 						<span class="ident">v</span>.<span class="ident">insert</span>(<span class="ident">i</span>,(<span class="ident">sk</span>,<span class="ident">nv</span>));
 						<span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">old</span>);
@@ -600,9 +583,9 @@
 				<span class="ident">v</span>.<span class="ident">push</span>((<span class="ident">sk</span>,<span class="ident">nv</span>));
 				<span class="kw">return</span> <span class="prelude-val">None</span>;
 			},
-			<span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (),
+			<span class="kw">_</span> =&gt; (),
 		}
-		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span>:<span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">K</span>,<span class="ident">T</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span>:<span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">K</span>,<span class="ident">T</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
 		<span class="ident">v</span>.<span class="ident">push</span>((<span class="ident">sk</span>,<span class="ident">nv</span>));
 		<span class="self">self</span>.<span class="ident">map</span>.<span class="ident">insert</span>(<span class="ident">k</span>,<span class="ident">v</span>);
 		<span class="prelude-val">None</span>
@@ -614,7 +597,7 @@
 	}
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>,<span class="ident">K</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span>, <span class="ident">T</span>: <span class="ident">Clone</span> {
-	<span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="ident">TwoKeyHashMap</span> {
 			<span class="ident">map</span>:<span class="self">self</span>.<span class="ident">map</span>.<span class="ident">clone</span>()
 		}
@@ -628,11 +611,11 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>,<span class="ident">K</span><span class="op">&gt;</span> <span class="ident">KyokumenMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span>, <span class="ident">T</span>: <span class="ident">Clone</span> {
 	<span class="doccomment">/// `KyokumenMap`の生成</span>
 	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>()
-		<span class="op">-</span><span class="op">&gt;</span> <span class="ident">KyokumenMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
+		-&gt; <span class="ident">KyokumenMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
 
 		<span class="ident">KyokumenMap</span> {
-			<span class="ident">sente_map</span>:<span class="ident">TwoKeyHashMap</span>::<span class="ident">new</span>(),
-			<span class="ident">gote_map</span>:<span class="ident">TwoKeyHashMap</span>::<span class="ident">new</span>(),
+			<span class="ident">sente_map</span>:<span class="ident">TwoKeyHashMap::new</span>(),
+			<span class="ident">gote_map</span>:<span class="ident">TwoKeyHashMap::new</span>(),
 		}
 	}
 
@@ -642,10 +625,10 @@
 	<span class="doccomment">/// * `teban` - 手番</span>
 	<span class="doccomment">/// * `k` - 主キー</span>
 	<span class="doccomment">/// * `sk` - サブキー</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">teban</span>:<span class="ident">Teban</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">teban</span>:<span class="ident">Teban</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="kw">match</span> <span class="ident">teban</span> {
-			<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">get</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
-			<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">get</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
+			<span class="ident">Teban::Sente</span> =&gt; <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">get</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
+			<span class="ident">Teban::Gote</span> =&gt; <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">get</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
 		}
 	}
 
@@ -655,10 +638,10 @@
 	<span class="doccomment">/// * `teban` - 手番</span>
 	<span class="doccomment">/// * `k` - 主キー</span>
 	<span class="doccomment">/// * `sk` - サブキー</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">teban</span>:<span class="ident">Teban</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">teban</span>:<span class="ident">Teban</span>,<span class="ident">k</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>,<span class="ident">sk</span>:<span class="kw-2">&amp;</span><span class="ident">K</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="kw">match</span> <span class="ident">teban</span> {
-			<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">get_mut</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
-			<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">get_mut</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
+			<span class="ident">Teban::Sente</span> =&gt; <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">get_mut</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
+			<span class="ident">Teban::Gote</span> =&gt; <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">get_mut</span>(<span class="ident">k</span>,<span class="ident">sk</span>),
 		}
 	}
 
@@ -669,10 +652,10 @@
 	<span class="doccomment">/// * `k` - 主キー</span>
 	<span class="doccomment">/// * `sk` - サブキー</span>
 	<span class="doccomment">/// * `nv` - キーに対応する新しい項目（対応するキーがある場合は上書き、ない場合は追加される）</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">teban</span>:<span class="ident">Teban</span>,<span class="ident">k</span>:<span class="ident">K</span>,<span class="ident">sk</span>:<span class="ident">K</span>,<span class="ident">nv</span>:<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">teban</span>:<span class="ident">Teban</span>,<span class="ident">k</span>:<span class="ident">K</span>,<span class="ident">sk</span>:<span class="ident">K</span>,<span class="ident">nv</span>:<span class="ident">T</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="kw">match</span> <span class="ident">teban</span> {
-			<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">insert</span>(<span class="ident">k</span>,<span class="ident">sk</span>,<span class="ident">nv</span>),
-			<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">insert</span>(<span class="ident">k</span>,<span class="ident">sk</span>,<span class="ident">nv</span>),
+			<span class="ident">Teban::Sente</span> =&gt; <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">insert</span>(<span class="ident">k</span>,<span class="ident">sk</span>,<span class="ident">nv</span>),
+			<span class="ident">Teban::Gote</span> =&gt; <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">insert</span>(<span class="ident">k</span>,<span class="ident">sk</span>,<span class="ident">nv</span>),
 		}
 	}
 
@@ -682,21 +665,21 @@
 	<span class="doccomment">/// * `teban` - 手番</span>
 	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,<span class="ident">teban</span>:<span class="ident">Teban</span>) {
 		<span class="kw">match</span> <span class="ident">teban</span> {
-			<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">clear</span>(),
-			<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">clear</span>(),
+			<span class="ident">Teban::Sente</span> =&gt; <span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">clear</span>(),
+			<span class="ident">Teban::Gote</span> =&gt; <span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">clear</span>(),
 		}
 	}
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">KyokumenMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span>, <span class="ident">T</span>: <span class="ident">Clone</span>, <span class="ident">TwoKeyHashMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span>: <span class="ident">Clone</span> {
-	<span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">KyokumenMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
+	<span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">KyokumenMap</span><span class="op">&lt;</span><span class="ident">K</span>,<span class="ident">T</span><span class="op">&gt;</span> {
 		<span class="ident">KyokumenMap</span> {
 			<span class="ident">sente_map</span>:<span class="self">self</span>.<span class="ident">sente_map</span>.<span class="ident">clone</span>(),
 			<span class="ident">gote_map</span>:<span class="self">self</span>.<span class="ident">gote_map</span>.<span class="ident">clone</span>(),
 		}
 	}
 }
-<span class="kw">const</span> <span class="ident">KOMA_KIND_MAX</span>:<span class="ident">usize</span> <span class="op">=</span> <span class="ident">KomaKind</span>::<span class="ident">Blank</span> <span class="kw">as</span> <span class="ident">usize</span>;
-<span class="kw">const</span> <span class="ident">MOCHIGOMA_KIND_MAX</span>:<span class="ident">usize</span> <span class="op">=</span> <span class="ident">MochigomaKind</span>::<span class="ident">Hisha</span> <span class="kw">as</span> <span class="ident">usize</span>;
+<span class="kw">const</span> <span class="ident">KOMA_KIND_MAX</span>:<span class="ident">usize</span> <span class="op">=</span> <span class="ident">KomaKind::Blank</span> <span class="kw">as</span> <span class="ident">usize</span>;
+<span class="kw">const</span> <span class="ident">MOCHIGOMA_KIND_MAX</span>:<span class="ident">usize</span> <span class="op">=</span> <span class="ident">MochigomaKind::Hisha</span> <span class="kw">as</span> <span class="ident">usize</span>;
 <span class="kw">const</span> <span class="ident">MOCHIGOMA_MAX</span>:<span class="ident">usize</span> <span class="op">=</span> <span class="number">18</span>;
 <span class="kw">const</span> <span class="ident">SUJI_MAX</span>:<span class="ident">usize</span> <span class="op">=</span> <span class="number">9</span>;
 <span class="kw">const</span> <span class="ident">DAN_MAX</span>:<span class="ident">usize</span> <span class="op">=</span> <span class="number">9</span>;
@@ -731,11 +714,11 @@
 	<span class="kw">where</span> <span class="ident">T</span>: <span class="ident">Add</span> <span class="op">+</span> <span class="ident">Sub</span> <span class="op">+</span> <span class="ident">BitXor</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Rand</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">InitialHash</span>,
 			<span class="ident">Wrapping</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>: <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Wrapping</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Wrapping</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">BitXor</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">Wrapping</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Copy</span> {
 	<span class="doccomment">/// `KyokumenHash`の生成</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">KyokumenHash</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rnd</span> <span class="op">=</span> <span class="ident">rand</span>::<span class="ident">XorShiftRng</span>::<span class="ident">new_unseeded</span>();
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">KyokumenHash</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rnd</span> <span class="op">=</span> <span class="ident">rand::XorShiftRng::new_unseeded</span>();
 
-		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kyokumen_hash_seeds</span>:[[<span class="ident">T</span>; <span class="ident">SUJI_MAX</span> <span class="op">*</span> <span class="ident">DAN_MAX</span>]; <span class="ident">KOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>] <span class="op">=</span> [[<span class="ident">T</span>::<span class="ident">INITIAL_HASH</span>; <span class="ident">SUJI_MAX</span> <span class="op">*</span> <span class="ident">DAN_MAX</span>]; <span class="ident">KOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>];
-		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mochigoma_hash_seeds</span>:[[[<span class="ident">T</span>; <span class="ident">MOCHIGOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>]; <span class="ident">MOCHIGOMA_MAX</span>]; <span class="number">2</span>] <span class="op">=</span> [[[<span class="ident">T</span>::<span class="ident">INITIAL_HASH</span>; <span class="ident">MOCHIGOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>]; <span class="ident">MOCHIGOMA_MAX</span>]; <span class="number">2</span>];
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">kyokumen_hash_seeds</span>:[[<span class="ident">T</span>; <span class="ident">SUJI_MAX</span> <span class="op">*</span> <span class="ident">DAN_MAX</span>]; <span class="ident">KOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>] <span class="op">=</span> [[<span class="ident">T::INITIAL_HASH</span>; <span class="ident">SUJI_MAX</span> <span class="op">*</span> <span class="ident">DAN_MAX</span>]; <span class="ident">KOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>];
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mochigoma_hash_seeds</span>:[[[<span class="ident">T</span>; <span class="ident">MOCHIGOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>]; <span class="ident">MOCHIGOMA_MAX</span>]; <span class="number">2</span>] <span class="op">=</span> [[[<span class="ident">T::INITIAL_HASH</span>; <span class="ident">MOCHIGOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>]; <span class="ident">MOCHIGOMA_MAX</span>]; <span class="number">2</span>];
 
 		<span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">KOMA_KIND_MAX</span> <span class="op">+</span> <span class="number">1</span>) {
 			<span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">SUJI_MAX</span> <span class="op">*</span> <span class="ident">DAN_MAX</span>) {
@@ -758,11 +741,11 @@
 
 	<span class="kw">fn</span> <span class="ident">calc_hash</span><span class="op">&lt;</span><span class="ident">AF</span>,<span class="ident">PF</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">h</span>:<span class="ident">T</span>,<span class="ident">t</span>:<span class="ident">Teban</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">Banmen</span>,<span class="ident">mc</span>:<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>,
 												<span class="ident">m</span>:<span class="ident">AppliedMove</span>,<span class="ident">obtained</span>:<span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MochigomaKind</span><span class="op">&gt;</span>,<span class="ident">add</span>:<span class="ident">AF</span>,<span class="ident">pull</span>:<span class="ident">PF</span>)
-		<span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> <span class="kw">where</span> <span class="ident">AF</span>: <span class="ident">Fn</span>(<span class="ident">T</span>,<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>, <span class="ident">PF</span>: <span class="ident">Fn</span>(<span class="ident">T</span>,<span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
+		-&gt; <span class="ident">T</span> <span class="kw">where</span> <span class="ident">AF</span>: <span class="ident">Fn</span>(<span class="ident">T</span>,<span class="ident">T</span>) -&gt; <span class="ident">T</span>, <span class="ident">PF</span>: <span class="ident">Fn</span>(<span class="ident">T</span>,<span class="ident">T</span>) -&gt; <span class="ident">T</span> {
 		<span class="kw">match</span> <span class="ident">b</span> {
-			<span class="kw-2">&amp;</span><span class="ident">Banmen</span>(<span class="kw-2">ref</span> <span class="ident">kinds</span>) <span class="op">=</span><span class="op">&gt;</span> {
+			<span class="kw-2">&amp;</span><span class="ident">Banmen</span>(<span class="kw-2">ref</span> <span class="ident">kinds</span>) =&gt; {
 				<span class="kw">match</span> <span class="ident">m</span> {
-					<span class="ident">AppliedMove</span>::<span class="ident">To</span>(<span class="ident">m</span>) <span class="op">=</span><span class="op">&gt;</span> {
+					<span class="ident">AppliedMove::To</span>(<span class="ident">m</span>) =&gt; {
 						<span class="kw">let</span> <span class="ident">from</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">src</span>();
 						<span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">dst</span>();
 						<span class="kw">let</span> <span class="ident">sx</span> <span class="op">=</span> <span class="ident">from</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">/</span> <span class="number">9</span>;
@@ -774,70 +757,64 @@
 						<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">h</span>;
 						<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">kinds</span>[<span class="ident">sy</span>][<span class="ident">sx</span>];
 
-						<span class="ident">hash</span> <span class="op">=</span>  <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">sy</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">sx</span>]);
-						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">KomaKind</span>::<span class="ident">Blank</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">sy</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">sx</span>]);
+						<span class="ident">hash</span> <span class="op">=</span>  <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">sy</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">sx</span>]);
+						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">KomaKind::Blank</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">sy</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">sx</span>]);
 
 						<span class="kw">let</span> <span class="ident">dk</span> <span class="op">=</span> <span class="ident">kinds</span>[<span class="ident">dy</span>][<span class="ident">dx</span>] <span class="kw">as</span> <span class="ident">usize</span>;
 
-						<span class="ident">hash</span> <span class="op">=</span>  <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">dk</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">dx</span>]);
+						<span class="ident">hash</span> <span class="op">=</span>  <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">dk</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">dx</span>]);
 
 						<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">n</span> {
 							<span class="kw">match</span> <span class="ident">k</span> {
-								<span class="ident">KomaKind</span>::<span class="ident">SFu</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">SFuN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">SKyou</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">SKyouN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">SKei</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">SKeiN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">SGin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">SGinN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">SKaku</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">SKakuN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">SHisha</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">SHishaN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">GFu</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">GFuN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">GKyou</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">GKyouN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">GKei</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">GKeiN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">GGin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">GGinN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">GKaku</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">GKakuN</span>,
-								<span class="ident">KomaKind</span>::<span class="ident">GHisha</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">KomaKind</span>::<span class="ident">GHishaN</span>,
-								<span class="ident">k</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">k</span>,
+								<span class="ident">KomaKind::SFu</span> =&gt; <span class="ident">KomaKind::SFuN</span>,
+								<span class="ident">KomaKind::SKyou</span> =&gt; <span class="ident">KomaKind::SKyouN</span>,
+								<span class="ident">KomaKind::SKei</span> =&gt; <span class="ident">KomaKind::SKeiN</span>,
+								<span class="ident">KomaKind::SGin</span> =&gt; <span class="ident">KomaKind::SGinN</span>,
+								<span class="ident">KomaKind::SKaku</span> =&gt; <span class="ident">KomaKind::SKakuN</span>,
+								<span class="ident">KomaKind::SHisha</span> =&gt; <span class="ident">KomaKind::SHishaN</span>,
+								<span class="ident">KomaKind::GFu</span> =&gt; <span class="ident">KomaKind::GFuN</span>,
+								<span class="ident">KomaKind::GKyou</span> =&gt; <span class="ident">KomaKind::GKyouN</span>,
+								<span class="ident">KomaKind::GKei</span> =&gt; <span class="ident">KomaKind::GKeiN</span>,
+								<span class="ident">KomaKind::GGin</span> =&gt; <span class="ident">KomaKind::GGinN</span>,
+								<span class="ident">KomaKind::GKaku</span> =&gt; <span class="ident">KomaKind::GKakuN</span>,
+								<span class="ident">KomaKind::GHisha</span> =&gt; <span class="ident">KomaKind::GHishaN</span>,
+								<span class="ident">k</span> =&gt; <span class="ident">k</span>,
 							}
 						} <span class="kw">else</span> {
 							<span class="ident">k</span>
 						} <span class="kw">as</span> <span class="ident">usize</span>;
 
-						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">dx</span>]);
+						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">dx</span>]);
 
 						<span class="ident">hash</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">obtained</span>  {
-								<span class="kw-2">&amp;</span><span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hash</span>,
-								<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">obtained</span>) <span class="op">=</span><span class="op">&gt;</span> {
+								<span class="kw-2">&amp;</span><span class="prelude-val">None</span> =&gt; <span class="ident">hash</span>,
+								<span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="ident">obtained</span>) =&gt; {
 									<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span>  <span class="kw">match</span> <span class="ident">t</span> {
-										<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> {
+										<span class="ident">Teban::Sente</span> =&gt; {
 											<span class="kw">match</span> <span class="ident">mc</span> {
-												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Pair</span>(<span class="kw-2">ref</span> <span class="ident">mc</span>,<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-													<span class="kw">match</span> <span class="ident">mc</span>.<span class="ident">get</span>(<span class="ident">obtained</span>) {
-														<span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>,
-														<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-													}
+												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Pair</span>(<span class="kw-2">ref</span> <span class="ident">mc</span>,<span class="kw">_</span>) =&gt; {
+													<span class="ident">mc</span>.<span class="ident">get</span>(<span class="ident">obtained</span>)
 												},
-												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Empty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Empty</span> =&gt; <span class="number">0</span>,
 											}
 										},
-										<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> {
+										<span class="ident">Teban::Gote</span> =&gt; {
 											<span class="kw">match</span> <span class="ident">mc</span> {
-												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Pair</span>(<span class="kw">_</span>,<span class="kw-2">ref</span> <span class="ident">mc</span>) <span class="op">=</span><span class="op">&gt;</span> {
-													<span class="kw">match</span> <span class="ident">mc</span>.<span class="ident">get</span>(<span class="ident">obtained</span>) {
-														<span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>,
-														<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
-													}
+												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Pair</span>(<span class="kw">_</span>,<span class="kw-2">ref</span> <span class="ident">mc</span>) =&gt; {
+													<span class="ident">mc</span>.<span class="ident">get</span>(<span class="ident">obtained</span>)
 												},
-												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Empty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+												<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Empty</span> =&gt; <span class="number">0</span>,
 											}
 										}
 									};
 
-									<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">obtained</span> <span class="kw">as</span> <span class="ident">usize</span>;
+									<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">obtained</span> <span class="kw">as</span> <span class="ident">usize</span>;
 
 									<span class="kw">match</span> <span class="ident">t</span> {
-										<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> {
+										<span class="ident">Teban::Sente</span> =&gt; {
 											<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">0</span>][<span class="ident">c</span>][<span class="ident">k</span>]);
 										},
-										<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> {
+										<span class="ident">Teban::Gote</span> =&gt; {
 											<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">1</span>][<span class="ident">c</span>][<span class="ident">k</span>]);
 										}
 									}
@@ -847,7 +824,7 @@
 
 						<span class="ident">hash</span>
 					},
-					<span class="ident">AppliedMove</span>::<span class="ident">Put</span>(<span class="ident">m</span>) <span class="op">=</span><span class="op">&gt;</span> {
+					<span class="ident">AppliedMove::Put</span>(<span class="ident">m</span>) =&gt; {
 						<span class="kw">let</span> <span class="ident">to</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">dst</span>();
 						<span class="kw">let</span> <span class="ident">mk</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">kind</span>();
 						<span class="kw">let</span> <span class="ident">dx</span> <span class="op">=</span> <span class="ident">to</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">/</span> <span class="number">9</span>;
@@ -856,32 +833,32 @@
 						<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hash</span> <span class="op">=</span> <span class="ident">h</span>;
 
 						<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">t</span> {
-							<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> {
+							<span class="ident">Teban::Sente</span> =&gt; {
 								<span class="kw">match</span> <span class="ident">mc</span> {
-									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Pair</span>(<span class="kw-2">ref</span> <span class="ident">mc</span>,<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-										<span class="kw">match</span> <span class="ident">mc</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">mk</span>) {
-											<span class="prelude-val">None</span> <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">=</span><span class="op">&gt;</span> {
+									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Pair</span>(<span class="kw-2">ref</span> <span class="ident">mc</span>,<span class="kw">_</span>) =&gt; {
+										<span class="kw">match</span> <span class="ident">mc</span>.<span class="ident">get</span>(<span class="ident">mk</span>) {
+											<span class="number">0</span> =&gt; {
 												<span class="kw">return</span> <span class="ident">hash</span>;
 											}
-											<span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>,
+											<span class="ident">c</span> =&gt; <span class="ident">c</span>,
 										}
 									},
-									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Empty</span> <span class="op">=</span><span class="op">&gt;</span> {
+									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Empty</span> =&gt; {
 										<span class="kw">return</span> <span class="ident">hash</span>;
 									}
 								}
 							},
-							<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> {
+							<span class="ident">Teban::Gote</span> =&gt; {
 								<span class="kw">match</span> <span class="ident">mc</span> {
-									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Pair</span>(<span class="kw">_</span>,<span class="kw-2">ref</span> <span class="ident">mc</span>) <span class="op">=</span><span class="op">&gt;</span> {
-										<span class="kw">match</span> <span class="ident">mc</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">mk</span>) {
-											<span class="prelude-val">None</span> <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="op">=</span><span class="op">&gt;</span> {
+									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Pair</span>(<span class="kw">_</span>,<span class="kw-2">ref</span> <span class="ident">mc</span>) =&gt; {
+										<span class="kw">match</span> <span class="ident">mc</span>.<span class="ident">get</span>(<span class="ident">mk</span>) {
+											<span class="number">0</span> =&gt; {
 												<span class="kw">return</span> <span class="ident">hash</span>;
 											}
-											<span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>,
+											<span class="ident">c</span> =&gt; <span class="ident">c</span>,
 										}
 									},
-									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>::<span class="ident">Empty</span> <span class="op">=</span><span class="op">&gt;</span> {
+									<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections::Empty</span> =&gt; {
 										<span class="kw">return</span> <span class="ident">hash</span>;
 									}
 								}
@@ -891,21 +868,21 @@
 						<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">mk</span> <span class="kw">as</span> <span class="ident">usize</span>;
 
 						<span class="kw">match</span> <span class="ident">t</span> {
-							<span class="ident">Teban</span>::<span class="ident">Sente</span> <span class="op">=</span><span class="op">&gt;</span> {
+							<span class="ident">Teban::Sente</span> =&gt; {
 								<span class="ident">hash</span> <span class="op">=</span> <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">0</span>][<span class="ident">c</span><span class="op">-</span><span class="number">1</span>][<span class="ident">k</span>]);
 							},
-							<span class="ident">Teban</span>::<span class="ident">Gote</span> <span class="op">=</span><span class="op">&gt;</span> {
+							<span class="ident">Teban::Gote</span> =&gt; {
 								<span class="ident">hash</span> <span class="op">=</span> <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">1</span>][<span class="ident">c</span><span class="op">-</span><span class="number">1</span>][<span class="ident">k</span>]);
 							}
 						}
 
 						<span class="kw">let</span> <span class="ident">dk</span> <span class="op">=</span> <span class="ident">kinds</span>[<span class="ident">dy</span>][<span class="ident">dx</span>] <span class="kw">as</span> <span class="ident">usize</span>;
 
-						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">dk</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">dx</span>]);
+						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">pull</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">dk</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">dx</span>]);
 
-						<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">KomaKind</span>::<span class="ident">from</span>((<span class="ident">t</span>,<span class="ident">mk</span>)) <span class="kw">as</span> <span class="ident">usize</span>;
+						<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">KomaKind::from</span>((<span class="ident">t</span>,<span class="ident">mk</span>)) <span class="kw">as</span> <span class="ident">usize</span>;
 
-						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">dx</span>]);
+						<span class="ident">hash</span> <span class="op">=</span> <span class="ident">add</span>(<span class="ident">hash</span>,<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>][<span class="ident">dy</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">dx</span>]);
 						<span class="ident">hash</span>
 					}
 				}
@@ -922,7 +899,7 @@
 	<span class="doccomment">/// * `mc` - 手の適用前の持ち駒</span>
 	<span class="doccomment">/// * `m` - 現在のハッシュに対して適用する指し手</span>
 	<span class="doccomment">/// * `obtained` - 獲った駒</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calc_main_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">h</span>:<span class="ident">T</span>,<span class="ident">t</span>:<span class="ident">Teban</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">Banmen</span>,<span class="ident">mc</span>:<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>,<span class="ident">m</span>:<span class="ident">AppliedMove</span>,<span class="ident">obtained</span>:<span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MochigomaKind</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calc_main_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">h</span>:<span class="ident">T</span>,<span class="ident">t</span>:<span class="ident">Teban</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">Banmen</span>,<span class="ident">mc</span>:<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>,<span class="ident">m</span>:<span class="ident">AppliedMove</span>,<span class="ident">obtained</span>:<span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MochigomaKind</span><span class="op">&gt;</span>) -&gt; <span class="ident">T</span> {
 		<span class="self">self</span>.<span class="ident">calc_hash</span>(<span class="ident">h</span>,<span class="ident">t</span>,<span class="ident">b</span>,<span class="ident">mc</span>,<span class="ident">m</span>,<span class="ident">obtained</span>,<span class="op">|</span><span class="ident">h</span>,<span class="ident">v</span><span class="op">|</span> <span class="ident">h</span> <span class="op">^</span> <span class="ident">v</span>, <span class="op">|</span><span class="ident">h</span>,<span class="ident">v</span><span class="op">|</span> <span class="ident">h</span> <span class="op">^</span> <span class="ident">v</span>)
 	}
 
@@ -935,7 +912,7 @@
 	<span class="doccomment">/// * `mc` - 手の適用前の持ち駒</span>
 	<span class="doccomment">/// * `m` - 現在のハッシュに対して適用する指し手</span>
 	<span class="doccomment">/// * `obtained` - 獲った駒</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calc_sub_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">h</span>:<span class="ident">T</span>,<span class="ident">t</span>:<span class="ident">Teban</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">Banmen</span>,<span class="ident">mc</span>:<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>,<span class="ident">m</span>:<span class="ident">AppliedMove</span>,<span class="ident">obtained</span>:<span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MochigomaKind</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calc_sub_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">h</span>:<span class="ident">T</span>,<span class="ident">t</span>:<span class="ident">Teban</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">Banmen</span>,<span class="ident">mc</span>:<span class="kw-2">&amp;</span><span class="ident">MochigomaCollections</span>,<span class="ident">m</span>:<span class="ident">AppliedMove</span>,<span class="ident">obtained</span>:<span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MochigomaKind</span><span class="op">&gt;</span>) -&gt; <span class="ident">T</span> {
 		<span class="self">self</span>.<span class="ident">calc_hash</span>(<span class="ident">h</span>,<span class="ident">t</span>,<span class="ident">b</span>,<span class="ident">mc</span>,<span class="ident">m</span>,<span class="ident">obtained</span>,<span class="op">|</span><span class="ident">h</span>,<span class="ident">v</span><span class="op">|</span> {
 			<span class="kw">let</span> <span class="ident">h</span> <span class="op">=</span> <span class="ident">Wrapping</span>(<span class="ident">h</span>);
 			<span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Wrapping</span>(<span class="ident">v</span>);
@@ -953,44 +930,36 @@
 	<span class="doccomment">/// * `b` - 盤面</span>
 	<span class="doccomment">/// * `ms` - 先手の持ち駒</span>
 	<span class="doccomment">/// * `mg` - 後手の持ち駒</span>
-	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calc_initial_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">Banmen</span>,
-		<span class="ident">ms</span>:<span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MochigomaKind</span>,<span class="ident">u32</span><span class="op">&gt;</span>,<span class="ident">mg</span>:<span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">MochigomaKind</span>,<span class="ident">u32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">T</span>,<span class="ident">T</span>) {
-		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mhash</span>:<span class="ident">T</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">INITIAL_HASH</span>;
-		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shash</span>:<span class="ident">Wrapping</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Wrapping</span>(<span class="ident">T</span>::<span class="ident">INITIAL_HASH</span>);
+	<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">calc_initial_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>,<span class="ident">b</span>:<span class="kw-2">&amp;</span><span class="ident">Banmen</span>,<span class="ident">ms</span>:<span class="kw-2">&amp;</span><span class="ident">Mochigoma</span>,<span class="ident">mg</span>:<span class="kw-2">&amp;</span><span class="ident">Mochigoma</span>) -&gt; (<span class="ident">T</span>,<span class="ident">T</span>) {
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mhash</span>:<span class="ident">T</span> <span class="op">=</span> <span class="ident">T::INITIAL_HASH</span>;
+		<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shash</span>:<span class="ident">Wrapping</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Wrapping</span>(<span class="ident">T::INITIAL_HASH</span>);
 
 		<span class="kw">match</span> <span class="ident">b</span> {
-			<span class="kw-2">&amp;</span><span class="ident">Banmen</span>(<span class="kw-2">ref</span> <span class="ident">kinds</span>) <span class="op">=</span><span class="op">&gt;</span> {
+			<span class="kw-2">&amp;</span><span class="ident">Banmen</span>(<span class="kw-2">ref</span> <span class="ident">kinds</span>) =&gt; {
 				<span class="kw">for</span> <span class="ident">y</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">9</span> {
 					<span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">9</span> {
 						<span class="kw">let</span> <span class="ident">k</span> <span class="op">=</span> <span class="ident">kinds</span>[<span class="ident">y</span>][<span class="ident">x</span>] <span class="kw">as</span> <span class="ident">usize</span>;
-						<span class="ident">mhash</span> <span class="op">=</span> <span class="ident">mhash</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span>][<span class="ident">y</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">x</span>];
-						<span class="ident">shash</span> <span class="op">=</span> <span class="ident">shash</span> <span class="op">+</span> <span class="ident">Wrapping</span>(<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span>][<span class="ident">y</span> <span class="op">*</span> <span class="number">8</span> <span class="op">+</span> <span class="ident">x</span>]);
+						<span class="ident">mhash</span> <span class="op">=</span> <span class="ident">mhash</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span>][<span class="ident">y</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">x</span>];
+						<span class="ident">shash</span> <span class="op">=</span> <span class="ident">shash</span> <span class="op">+</span> <span class="ident">Wrapping</span>(<span class="self">self</span>.<span class="ident">kyokumen_hash_seeds</span>[<span class="ident">k</span>][<span class="ident">y</span> <span class="op">*</span> <span class="number">9</span> <span class="op">+</span> <span class="ident">x</span>]);
 					}
 				}
 			}
 		}
-		<span class="kw">for</span> <span class="ident">k</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">MOCHIGOMA_KINDS</span> {
-			<span class="kw">match</span> <span class="ident">ms</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>) {
-				<span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> {
-					<span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>) {
-						<span class="ident">mhash</span> <span class="op">=</span> <span class="ident">mhash</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">0</span>][<span class="ident">i</span>][<span class="kw-2">*</span><span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>];
-						<span class="ident">shash</span> <span class="op">=</span> <span class="ident">shash</span> <span class="op">+</span> <span class="ident">Wrapping</span>(<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">0</span>][<span class="ident">i</span>][<span class="kw-2">*</span><span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>]);
-					}
-				},
-				<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (),
+		<span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">k</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">MOCHIGOMA_KINDS</span> {
+			<span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">ms</span>.<span class="ident">get</span>(<span class="ident">k</span>)) {
+				<span class="ident">mhash</span> <span class="op">=</span> <span class="ident">mhash</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">0</span>][<span class="ident">i</span>][<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>];
+				<span class="ident">shash</span> <span class="op">=</span> <span class="ident">shash</span> <span class="op">+</span> <span class="ident">Wrapping</span>(<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">0</span>][<span class="ident">i</span>][<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>]);
 			}
-			<span class="kw">match</span> <span class="ident">mg</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">k</span>) {
-				<span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> {
-					<span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>) {
-						<span class="ident">mhash</span> <span class="op">=</span> <span class="ident">mhash</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">1</span>][<span class="ident">i</span>][<span class="kw-2">*</span><span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>];
-						<span class="ident">shash</span> <span class="op">=</span> <span class="ident">shash</span> <span class="op">+</span> <span class="ident">Wrapping</span>(<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">1</span>][<span class="ident">i</span>][<span class="kw-2">*</span><span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>]);
-					}
-				},
-				<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (),
+
+			<span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">mg</span>.<span class="ident">get</span>(<span class="ident">k</span>)) {
+				<span class="ident">mhash</span> <span class="op">=</span> <span class="ident">mhash</span> <span class="op">^</span> <span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">1</span>][<span class="ident">i</span>][<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>];
+				<span class="ident">shash</span> <span class="op">=</span> <span class="ident">shash</span> <span class="op">+</span> <span class="ident">Wrapping</span>(<span class="self">self</span>.<span class="ident">mochigoma_hash_seeds</span>[<span class="number">1</span>][<span class="ident">i</span>][<span class="ident">k</span> <span class="kw">as</span> <span class="ident">usize</span>]);
 			}
 		}
 
 		(<span class="ident">mhash</span>,<span class="ident">shash</span>.<span class="number">0</span>)
 	}
-}</pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "usiagent";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+}</code></pre></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="usiagent" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</body></html>
