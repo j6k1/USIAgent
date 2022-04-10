@@ -17,5 +17,4 @@ license = "MIT"
 chrono = "0.4"
 rand = "0.4"
 crossbeam-channel = "0.3.9"
-[dependencies]
 queuingtask = "0.1.0"
