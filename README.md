@@ -1,7 +1,7 @@
 # USIAgent
 ## USIプロトコルに対応した将棋AIを開発するためのフレームワーク
 
-USIAgentは、Rustを用いて将棋AIの標準通信プロトコルであるUSIプロトコルに対応した将棋AIを容易に開発できます。  
+USIAgentは、Rustを用いて将棋AIの標準通信プロトコルであるUSIプロトコルに対応した将棋AIを容易に開発できます。
 
 使い方は、USIPlayerトレイトを実装してUsiAgent構造体のインスタンスを生成してstartするだけです。
 
@@ -11,5 +11,5 @@ USIAgentは、Rustを用いて将棋AIの標準通信プロトコルであるUSI
 
 
 
-### [ドキュメント](https://j6k1.github.io/USIAgent/usiagent/index.html)
+### [ドキュメント](https://docs.rs/USIAgent)
 
