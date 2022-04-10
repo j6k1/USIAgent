@@ -1,7 +1,17 @@
 [package]
 name = "usiagent"
 version = "0.6.0"
-authors = ["jinpu"]
+authors = ["jinpu <nanasi18@gmail.com>"]
+description = "USIAgent is a framework for Shogi AI development that supports the usi protocol."
+documentation = "https://docs.rs/USIAgent"
+homepage = "https://crates.io/crates/USIAgent"
+repository = "https://github.com/j6k1/USIAgent"
+
+readme = "README.md"
+
+keywords = ["shogi","shogiai","usi-protocol"]
+categories = []
+license = "MIT"
 
 [dependencies]
 chrono = "0.4"
