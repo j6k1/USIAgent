@@ -469,7 +469,6 @@ impl PeriodicallyInfoSender {
 		}
 	}
 }
-#[must_use]
 impl Drop for PeriodicallyInfoSender {
 	fn drop(&mut self) {
 		let _ = self.stop_sender.send(());
