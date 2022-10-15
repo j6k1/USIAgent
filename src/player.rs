@@ -8,6 +8,7 @@ use std::sync::atomic::Ordering;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::error::Error;
+use std::convert::TryFrom;
 
 use std::sync::mpsc::{Sender,Receiver};
 
@@ -20,7 +21,6 @@ use rule::*;
 use output::*;
 use Logger;
 use OnErrorHandler;
-use TryFrom;
 use crossbeam_channel::{unbounded, after};
 
 /// プレイヤー（AI本体）の実装

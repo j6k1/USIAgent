@@ -1,8 +1,8 @@
 //! 将棋の盤面や持ち駒等の定義
 use std::fmt;
 use std::fmt::Formatter;
+use std::convert::TryFrom;
 
-use TryFrom;
 use rule::AppliedMove;
 use error::*;
 
@@ -325,7 +325,9 @@ pub enum ObtainKind {
 	/// 龍
 	HishaN,
 }
-impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
+impl TryFrom<KomaKind> for ObtainKind {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(kind:KomaKind) -> Result<ObtainKind,TypeConvertError<String>> {
 		Ok(match kind {
 			KomaKind::SFu => ObtainKind::Fu,
@@ -362,7 +364,9 @@ impl TryFrom<KomaKind,TypeConvertError<String>> for ObtainKind {
 		})
 	}
 }
-impl TryFrom<KomaKind,TypeConvertError<String>> for MochigomaKind {
+impl TryFrom<KomaKind> for MochigomaKind {
+	type Error = TypeConvertError<String>;
+	
 	fn try_from(kind:KomaKind) -> Result<MochigomaKind,TypeConvertError<String>> {
 		Ok(match kind {
 			KomaKind::SFu => MochigomaKind::Fu,
@@ -418,7 +422,9 @@ pub enum MochigomaKind {
 	/// 飛車
 	Hisha,
 }
-impl TryFrom<ObtainKind,TypeConvertError<String>> for MochigomaKind {
+impl TryFrom<ObtainKind> for MochigomaKind {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(o:ObtainKind) -> Result<MochigomaKind,TypeConvertError<String>> {
 		Ok(match o {
 			ObtainKind::Fu | ObtainKind::FuN => MochigomaKind::Fu,

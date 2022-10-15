@@ -1,4 +1,5 @@
-use usiagent::TryFrom;
+use std::convert::TryFrom;
+
 use usiagent::shogi::*;
 use usiagent::protocol::*;
 use usiagent::error::*;
@@ -124,7 +125,7 @@ fn test_move_try_from() {
 	];
 
 	for (i,r) in input_and_expected.into_iter() {
-		assert_eq!(Move::try_from(&i),r);
+		assert_eq!(Move::try_from(i),r);
 	}
 }
 #[test]
@@ -246,7 +247,7 @@ fn test_banmen_try_from() {
 	];
 
 	for (i,r) in input_and_expected.into_iter() {
-		assert_eq!(Banmen::try_from(&i),r);
+		assert_eq!(Banmen::try_from(i),r);
 	}
 }
 #[test]

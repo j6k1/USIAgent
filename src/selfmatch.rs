@@ -15,6 +15,7 @@ use std::io::Write;
 use std::io::BufWriter;
 use std::fs;
 use std::fs::OpenOptions;
+use std::convert::TryFrom;
 
 use crossbeam_channel::unbounded;
 use crossbeam_channel::Sender;
@@ -34,7 +35,6 @@ use hash::*;
 use Logger;
 use logger::FileLogger;
 use OnErrorHandler;
-use TryFrom;
 use SandBox;
 use rule::*;
 use protocol::*;
@@ -734,7 +734,7 @@ impl<E> SelfMatchEngine<E>
 								SelfMatchMessage::NotifyMove(BestMove::Move(m,pm)) => {
 									match self_match_event_queue.lock() {
 										Ok(mut self_match_event_queue) => {
-											self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((&state.get_banmen(),&m))?));
+											self_match_event_queue.push(SelfMatchEvent::Moved(teban,Moved::try_from((state.get_banmen(),&m))?));
 										},
 										Err(ref e) => {
 											let _ = on_error_handler.lock().map(|h| h.call(e));

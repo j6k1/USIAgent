@@ -24,6 +24,7 @@ pub mod rule;
 use std::error::Error;
 use std::fmt;
 use std::{thread,time};
+use std::convert::TryFrom;
 use std::time::Instant;
 use std::sync::Mutex;
 use std::sync::Arc;
@@ -47,10 +48,6 @@ use shogi::*;
 use protocol::*;
 use rule::*;
 
-/// 値の変換を試みる
-pub trait TryFrom<T,E> where Self: Sized, E: Error + fmt::Display {
-	fn try_from(s:T) -> Result<Self, E> where E: fmt::Debug;
-}
 /// enumの各項目にインデックスが対応する型の最大のインデックスを取得する
 pub trait MaxIndex {
 	fn max_index() -> usize;
@@ -321,7 +318,7 @@ impl<T,E> UsiAgent<T,E>
 					let mut outputs:Vec<UsiOutput> = Vec::new();
 
 					for cmd in &commands {
-						outputs.push(UsiOutput::try_from(&cmd)?);
+						outputs.push(UsiOutput::try_from(cmd)?);
 					}
 
 					match ctx.system_event_queue.lock() {

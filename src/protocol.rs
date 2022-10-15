@@ -2,13 +2,13 @@
 use std::fmt;
 use std::error::Error;
 use std::collections::HashSet;
+use std::convert::TryFrom;
 
 use event::*;
 use shogi::*;
 use rule::*;
 use command::*;
 use error::*;
-use TryFrom;
 use Validate;
 
 /// USIプロトコル準拠のコマンド文字列
@@ -19,7 +19,9 @@ pub enum UsiOutput {
 }
 impl UsiOutput {
 }
-impl<'a> TryFrom<&'a UsiCommand,UsiOutputCreateError> for UsiOutput {
+impl<'a> TryFrom<&'a UsiCommand> for UsiOutput {
+	type Error = UsiOutputCreateError;
+
 	fn try_from(cmd: &UsiCommand) -> Result<UsiOutput, UsiOutputCreateError> {
 		Ok(UsiOutput::Command(cmd.to_usi_command()?))
 	}
@@ -76,7 +78,9 @@ impl ToSfen<ToMoveStringConvertError> for Move {
 		}
 	}
 }
-impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Move {
+impl<'a> TryFrom<&'a str> for Move {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(s: &'a str) -> Result<Move, TypeConvertError<String>> {
 		match s {
 			s if s.len() < 4 => {
@@ -286,7 +290,9 @@ impl ToSfen<ToMoveStringConvertError> for Vec<Move> {
 		Ok(strs.join(" "))
 	}
 }
-impl<'a> TryFrom<&'a str,TypeConvertError<String>> for KomaKind {
+impl<'a> TryFrom<&'a str> for KomaKind {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(s:&'a str) -> Result<KomaKind, TypeConvertError<String>> {
 		Ok(match s {
 			"K" => KomaKind::SOu,
@@ -321,7 +327,16 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for KomaKind {
 		})
 	}
 }
-impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Banmen {
+impl TryFrom<&String> for KomaKind {
+	type Error = TypeConvertError<String>;
+
+	fn try_from(value: &String) -> Result<Self, Self::Error> {
+		<KomaKind as TryFrom<&str>>::try_from(&*value)
+	}
+}
+impl<'a> TryFrom<&'a str> for Banmen {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(s: &'a str) -> Result<Banmen, TypeConvertError<String>> {
 		let mut chars = s.chars();
 
@@ -385,7 +400,9 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Banmen {
 		Ok(Banmen(banmen))
 	}
 }
-impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Teban {
+impl<'a> TryFrom<&'a str> for Teban {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(s: &'a str) -> Result<Teban, TypeConvertError<String>> {
 		Ok(match s {
 			"b" => Teban::Sente,
@@ -398,7 +415,9 @@ impl<'a> TryFrom<&'a str,TypeConvertError<String>> for Teban {
 		})
 	}
 }
-impl<'a> TryFrom<&'a str,TypeConvertError<String>> for MochigomaCollections {
+impl<'a> TryFrom<&'a str> for MochigomaCollections {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(s: &'a str) -> Result<MochigomaCollections, TypeConvertError<String>> {
 		Ok(match &*s {
 			"-" => MochigomaCollections::Pair(Mochigoma::new(),Mochigoma::new()),
@@ -569,7 +588,7 @@ impl PositionParser {
 		match params[0] {
 			"moves" if params.len() >= 2 => {
 				for m in &params[1..] {
-					r.push(Move::try_from(m)?);
+					r.push(Move::try_from(*m)?);
 				}
 
 				Ok(PositionParseResult(Teban::Sente,UsiInitialPosition::Startpos,1,r))
@@ -596,7 +615,7 @@ impl PositionParser {
 
 					if params.len() > 5 {
 						for m in &params[5..] {
-								mv.push(Move::try_from(m)?);
+								mv.push(Move::try_from(*m)?);
 						}
 					}
 

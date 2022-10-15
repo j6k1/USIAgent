@@ -1,8 +1,9 @@
+use std::convert::TryFrom;
+
 use usiagent::shogi::*;
 use usiagent::rule::{AppliedMove, LegalMove, LegalMoveTo, LegalMovePut};
 use usiagent::rule::BANMEN_START_POS;
 use usiagent::hash::*;
-use usiagent::TryFrom;
 
 #[allow(unused)]
 use usiagent::shogi::KomaKind::{

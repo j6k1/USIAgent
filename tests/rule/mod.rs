@@ -15,8 +15,8 @@ mod validate;
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::convert::From;
+use std::convert::TryFrom;
 
-use usiagent::TryFrom;
 use usiagent::Find;
 use usiagent::shogi::*;
 use usiagent::protocol::*;

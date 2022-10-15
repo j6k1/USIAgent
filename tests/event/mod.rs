@@ -1,9 +1,9 @@
 use std::time::{Instant,Duration};
+use std::convert::TryFrom;
 
 use usiagent::shogi::*;
 use usiagent::event::*;
 use usiagent::error::*;
-use usiagent::TryFrom;
 
 #[allow(unused)]
 use usiagent::shogi::KomaKind::{

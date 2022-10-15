@@ -1,4 +1,5 @@
 //! イベント処理
+use std::convert::TryFrom;
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Mutex;
@@ -6,7 +7,6 @@ use std::sync::Arc;
 use std::error::Error;
 use std::time::{Instant,Duration};
 
-use TryFrom;
 use MaxIndex;
 use error::EventDispatchError;
 use error::EventHandlerError;
@@ -497,7 +497,9 @@ impl fmt::Display for MovedKind {
 		}
 	}
 }
-impl<'a> TryFrom<(&'a Banmen,&'a Move),TypeConvertError<String>> for Moved {
+impl<'a> TryFrom<(&'a Banmen,&'a Move)> for Moved {
+	type Error = TypeConvertError<String>;
+
 	fn try_from(s:(&'a Banmen,&'a Move)) -> Result<Moved, TypeConvertError<String>> {
 		Ok(match s {
 			(&Banmen(ref kinds),&Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n))) => {

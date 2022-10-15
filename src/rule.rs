@@ -5,6 +5,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::ops::BitOr;
 use std::ops::Not;
+use std::convert::TryFrom;
 
 use shogi::*;
 use hash::*;
@@ -42,7 +43,6 @@ use shogi::KomaKind::{
 	GHishaN,
 	Blank
 };
-use TryFrom;
 use Find;
 
 trait KomaKindFrom<T> {

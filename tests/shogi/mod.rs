@@ -1,4 +1,5 @@
-use usiagent::TryFrom;
+use std::convert::TryFrom;
+
 use usiagent::Find;
 use usiagent::shogi::*;
 use usiagent::error::*;
