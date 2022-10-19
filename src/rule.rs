@@ -107,7 +107,7 @@ impl SquareToPoint for u32 {
 	}
 }
 /// 合法手
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum LegalMove {
 	/// 盤面上の駒を動かす手
 	To(LegalMoveTo),
@@ -115,7 +115,7 @@ pub enum LegalMove {
 	Put(LegalMovePut),
 }
 /// 盤面上の駒を動かす手
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub struct LegalMoveTo(u32);
 impl LegalMoveTo {
 	/// `LegalMoveTo`を生成
@@ -168,7 +168,7 @@ impl LegalMoveTo {
 	}
 }
 /// 持ち駒を置く手
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub struct LegalMovePut(u32);
 impl LegalMovePut {
 	/// `LegalMovePut`を生成
@@ -194,7 +194,7 @@ impl LegalMovePut {
 	}
 }
 /// 適用される手
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub enum AppliedMove {
 	/// 盤面上の駒を動かす手
 	To(AppliedMoveTo),
@@ -202,7 +202,7 @@ pub enum AppliedMove {
 	Put(AppliedMovePut)
 }
 /// 盤面上の駒を動かす手
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub struct AppliedMoveTo(u32);
 impl AppliedMoveTo {
 	/// 移動元の左上からx * 9 + yで表されるインデックス
@@ -227,7 +227,7 @@ impl From<LegalMoveTo> for AppliedMoveTo {
 	}
 }
 /// 持ち駒を置く手
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
 pub struct AppliedMovePut(u32);
 impl AppliedMovePut {
 	/// 駒を置く位置の左上からx * 9 + yで表されるインデックス

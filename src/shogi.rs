@@ -11,7 +11,7 @@ use MaxIndex;
 use std::collections::HashMap;
 
 /// 盤面上の駒の種別
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum KomaKind {
 	/// 先手歩
 	SFu = 0,
@@ -179,7 +179,7 @@ impl Find<KomaKind,Vec<KomaPosition>> for Banmen {
 	}
 }
 /// 手番
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum Teban {
 	/// 先手
 	Sente,
@@ -197,22 +197,22 @@ impl Teban {
 }
 /// 駒の位置
 /// `KomaPosition(x,y)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub struct KomaPosition(pub u32,pub u32);
 /// 駒の位置
 /// `KomaSrcPosition(x,y)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub struct KomaSrcPosition(pub u32,pub u32);
 /// 駒の位置
 /// `KomaDstToPosition(x,y,b)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス`b`は成るか否か
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub struct KomaDstToPosition(pub u32,pub u32,pub bool);
 /// 駒の位置
 /// `KomaDstPutPosition(x,y)`,`x`は右側から1 originのインデックス、`y`は上側から1 originのインデックス
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub struct KomaDstPutPosition(pub u32,pub u32);
 /// 指し手
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum Move {
 	/// 盤面上の駒を移動
 	To(KomaSrcPosition,KomaDstToPosition),
@@ -294,7 +294,7 @@ impl MochigomaCollections {
 	}
 }
 /// 獲った駒の種別
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum ObtainKind {
 	/// 歩
 	Fu = 0,
