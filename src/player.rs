@@ -227,23 +227,31 @@ pub trait InfoSender: Clone + Send + 'static {
 	/// # Arguments
 	/// * `commands` - infoサブコマンドのリスト
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError>;
+	/// infoコマンドを遅延なしで出力する
+	///
+	/// # Arguments
+	/// * `commands` - infoサブコマンドのリスト
+	fn send_immediate(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError>;
 }
 /// infoコマンドを標準出力へ出力する`InfoSender`の実装
-pub struct USIInfoSender {
-	sender:Sender<UsiInfoMessage>
+pub struct USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
+	sender:Sender<UsiInfoMessage>,
+	writer:Arc<Mutex<W>>
 }
-impl USIInfoSender {
+impl<W> USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
 	/// `USIInfoSender`の生成
 	///
 	/// # Arguments
 	/// * `sender` - infoコマンド出力スレッドへ通知するためのSender
-	pub fn new(sender:Sender<UsiInfoMessage>) -> USIInfoSender {
+	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
+	pub fn new(sender:Sender<UsiInfoMessage>,writer:Arc<Mutex<W>>) -> USIInfoSender<W> {
 		USIInfoSender {
-			sender:sender
+			sender:sender,
+			writer:writer
 		}
 	}
 
-	pub(crate) fn start_worker_thread<W,L>(&self,thinking:Arc<AtomicBool>,
+	pub(crate) fn start_worker_thread<L>(&self,thinking:Arc<AtomicBool>,
 		receiver:Receiver<UsiInfoMessage>,
 		writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 		where W: USIOutputWriter, L: Logger, Arc<Mutex<W>>: Send + 'static, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
@@ -290,7 +298,7 @@ impl USIInfoSender {
 		});
 	}
 }
-impl InfoSender for USIInfoSender {
+impl<W> InfoSender for USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
 		if let Err(_) = self.sender.send(UsiInfoMessage::Commands(commands)) {
 			Err(InfoSendError::Fail(String::from(
@@ -299,10 +307,29 @@ impl InfoSender for USIInfoSender {
 			Ok(())
 		}
 	}
+	
+	fn send_immediate(&mut self, commands: Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
+		let lines = vec![commands.to_usi_command()?];
+
+		match self.writer.lock() {
+			Ok(writer) => {
+				if let Err(_) =  writer.write(&lines) {
+					return Err(InfoSendError::Fail(String::from(
+						"info command send failed.")))
+				}
+			},
+			Err(_) => {
+				return Err(InfoSendError::Fail(String::from(
+					"Failed to secure exclusive lock on writer in the process of sending info command.")))
+			}
+		}
+
+		Ok(())
+	}
 }
-impl Clone for USIInfoSender {
-	fn clone(&self) -> USIInfoSender {
-		USIInfoSender::new(self.sender.clone())
+impl<W> Clone for USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
+	fn clone(&self) -> USIInfoSender<W> {
+		USIInfoSender::new(self.sender.clone(),Arc::clone(&self.writer))
 	}
 }
 /// コンソールへ出力する`InfoSender`の実装（出力用に別にスレッドを持ってはおらず呼び出し時に直接出力する）
@@ -333,6 +360,10 @@ impl InfoSender for ConsoleInfoSender {
 			}
 		}
 		Ok(())
+	}
+
+	fn send_immediate(&mut self, commands: Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
+		self.send(commands)
 	}
 }
 impl Clone for ConsoleInfoSender {
