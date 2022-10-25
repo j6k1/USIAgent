@@ -309,7 +309,7 @@ impl<W> InfoSender for USIInfoSender<W> where W: USIOutputWriter + Send + 'stati
 	}
 	
 	fn send_immediate(&mut self, commands: Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
-		let lines = vec![commands.to_usi_command()?];
+		let lines = vec![format!("info {}",commands.to_usi_command()?)];
 
 		match self.writer.lock() {
 			Ok(writer) => {
