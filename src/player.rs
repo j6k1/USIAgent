@@ -1,7 +1,7 @@
 //! AIの本体を実装するためのtrait等
 use std::{thread,time};
 use std::time::Instant;
-use std::sync::Mutex;
+use std::sync::{mpsc, Mutex};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -10,7 +10,7 @@ use std::fmt;
 use std::error::Error;
 use std::convert::TryFrom;
 
-use std::sync::mpsc::{Sender,Receiver};
+use std::sync::mpsc::{Sender, SendError};
 
 use command::*;
 use error::*;
@@ -235,72 +235,22 @@ pub trait InfoSender: Clone + Send + 'static {
 }
 /// infoコマンドを標準出力へ出力する`InfoSender`の実装
 pub struct USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
-	sender:Sender<UsiInfoMessage>,
-	writer:Arc<Mutex<W>>
+	worker:InfoSendWorker<W>
 }
 impl<W> USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
 	/// `USIInfoSender`の生成
 	///
 	/// # Arguments
-	/// * `sender` - infoコマンド出力スレッドへ通知するためのSender
-	/// * `writer` - USIコマンドを出力するためのオブジェクト。実装によって標準出力以外へ書き込むものを指定することも可能。
-	pub fn new(sender:Sender<UsiInfoMessage>,writer:Arc<Mutex<W>>) -> USIInfoSender<W> {
+	/// * `worker` - infoコマンド出力スレッドへ通知するためのWorker
+	pub fn new(worker:InfoSendWorker<W>) -> USIInfoSender<W> {
 		USIInfoSender {
-			sender:sender,
-			writer:writer
+			worker:worker
 		}
-	}
-
-	pub(crate) fn start_worker_thread<L>(&self,thinking:Arc<AtomicBool>,
-		receiver:Receiver<UsiInfoMessage>,
-		writer:Arc<Mutex<W>>,on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
-		where W: USIOutputWriter, L: Logger, Arc<Mutex<W>>: Send + 'static, Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
-
-		thinking.store(true,Ordering::Release);
-
-		thread::spawn(move || {
-			loop {
-				if !thinking.load(Ordering::Acquire) {
-					break;
-				}
-
-				match receiver.recv() {
-					Ok(UsiInfoMessage::Commands(commands)) => {
-						match UsiOutput::try_from(&UsiCommand::UsiInfo(commands)) {
-							Ok(UsiOutput::Command(ref s)) => {
-								match writer.lock() {
-									Err(ref e) => {
-										let _ = on_error_handler.lock().map(|h| h.call(e));
-										break;
-									},
-									Ok(ref writer) => {
-										let s = writer.write(s).is_err();
-										thread::sleep(time::Duration::from_millis(10));
-										s
-									}
-								};
-							},
-							Err(ref e) => {
-								let _ = on_error_handler.lock().map(|h| h.call(e));
-								break;
-							}
-						}
-					},
-					Ok(UsiInfoMessage::Quit) => {
-						break;
-					},
-					Err(ref e) => {
-						let _ = on_error_handler.lock().map(|h| h.call(e));
-						break;
-					}
-				}
-			}
-		});
 	}
 }
 impl<W> InfoSender for USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
 	fn send(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
-		if let Err(_) = self.sender.send(UsiInfoMessage::Commands(commands)) {
+		if let Err(_) = self.worker.sender.send(UsiInfoMessage::Commands(commands)) {
 			Err(InfoSendError::Fail(String::from(
 				"info command send failed.")))
 		} else {
@@ -311,7 +261,7 @@ impl<W> InfoSender for USIInfoSender<W> where W: USIOutputWriter + Send + 'stati
 	fn send_immediate(&mut self, commands: Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
 		let lines = vec![format!("info {}",commands.to_usi_command()?)];
 
-		match self.writer.lock() {
+		match self.worker.writer.lock() {
 			Ok(writer) => {
 				if let Err(_) =  writer.write(&lines) {
 					return Err(InfoSendError::Fail(String::from(
@@ -329,7 +279,90 @@ impl<W> InfoSender for USIInfoSender<W> where W: USIOutputWriter + Send + 'stati
 }
 impl<W> Clone for USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
 	fn clone(&self) -> USIInfoSender<W> {
-		USIInfoSender::new(self.sender.clone(),Arc::clone(&self.writer))
+		USIInfoSender::new(self.worker.clone())
+	}
+}
+/// USIInfoSenderでinfoコマンドを短い間隔で投げすぎないようウエイトを書けながら順次送信するためのオブジェクト
+pub struct InfoSendWorker<W> where W: USIOutputWriter {
+	sender:Sender<UsiInfoMessage>,
+	writer:Arc<Mutex<W>>,
+}
+impl<W> InfoSendWorker<W> where W: USIOutputWriter {
+	/// `InfoSendWorker`の生成
+	///
+	/// # Arguments
+	/// * `thinking` - プレイヤーの思考中フラグ
+	/// * `writer` - 出力へ書き込みためのwriter
+	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
+	pub fn new<L>(thinking:Arc<AtomicBool>,
+			   writer:Arc<Mutex<W>>,
+			   on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
+		-> InfoSendWorker<W> where L: Logger,
+								   Arc<Mutex<W>>: Send + 'static,
+								   Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
+		thinking.store(true,Ordering::Release);
+
+		let (sender,receiver) = mpsc::channel();
+		{
+			let writer = writer.clone();
+
+			thread::spawn(move || {
+				loop {
+					if !thinking.load(Ordering::Acquire) {
+						break;
+					}
+
+					match receiver.recv() {
+						Ok(UsiInfoMessage::Commands(commands)) => {
+							match UsiOutput::try_from(&UsiCommand::UsiInfo(commands)) {
+								Ok(UsiOutput::Command(ref s)) => {
+									match writer.lock() {
+										Err(ref e) => {
+											let _ = on_error_handler.lock().map(|h| h.call(e));
+											break;
+										},
+										Ok(ref writer) => {
+											let s = writer.write(s).is_err();
+											thread::sleep(time::Duration::from_millis(10));
+											s
+										}
+									};
+								},
+								Err(ref e) => {
+									let _ = on_error_handler.lock().map(|h| h.call(e));
+									break;
+								}
+							}
+						},
+						Ok(UsiInfoMessage::Quit) => {
+							break;
+						},
+						Err(ref e) => {
+							let _ = on_error_handler.lock().map(|h| h.call(e));
+							break;
+						}
+					}
+				}
+			});
+		}
+
+		InfoSendWorker {
+			sender:sender,
+			writer:writer
+		}
+	}
+
+	/// infoコマンド送信スレッドを終了させる
+	pub fn quit(&self) -> Result<(), SendError<UsiInfoMessage>> {
+		self.sender.send(UsiInfoMessage::Quit)
+	}
+}
+impl<W> Clone for InfoSendWorker<W> where W: USIOutputWriter {
+	fn clone(&self) -> Self {
+		InfoSendWorker {
+			sender:self.sender.clone(),
+			writer:self.writer.clone()
+		}
 	}
 }
 /// コンソールへ出力する`InfoSender`の実装（出力用に別にスレッドを持ってはおらず呼び出し時に直接出力する）

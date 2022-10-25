@@ -33,7 +33,6 @@ use std::sync::atomic::Ordering;
 use std::marker::Send;
 use std::marker::PhantomData;
 
-use std::sync::mpsc;
 use queuingtask::ThreadQueue;
 
 use command::*;
@@ -588,16 +587,16 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let (sender,receiver) = mpsc::channel();
+							let info_send_worker = InfoSendWorker::new(thinking.clone(),writer.clone(),on_error_handler_inner.clone());
 
-							let info_sender = USIInfoSender::new(sender.clone(),writer.clone());
+							let info_sender = {
+								let info_send_worker = info_send_worker.clone();
+								USIInfoSender::new(info_send_worker)
+							};
+
 							let pinfo_sender = USIPeriodicallyInfo::new(
 																		writer.clone(),
 																		false);
-							info_sender.start_worker_thread(
-								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
-							);
-
 							let thinking_inner = thinking.clone();
 
 							thread_queue.submit(move || {
@@ -631,7 +630,7 @@ impl<T,E> UsiAgent<T,E>
 
 										thinking_inner.store(false,Ordering::Release);
 
-										if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
+										if let Err(ref e) = info_send_worker.quit() {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											return;
 										}
@@ -701,17 +700,16 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let (sender,receiver) = mpsc::channel();
+							let info_send_worker = InfoSendWorker::new(thinking.clone(),writer.clone(),on_error_handler_inner.clone());
 
-							let info_sender = USIInfoSender::new(sender.clone(),writer.clone());
+							let info_sender = {
+								let info_send_worker = info_send_worker.clone();
+								USIInfoSender::new(info_send_worker)
+							};
+
 							let pinfo_sender = USIPeriodicallyInfo::new(
 																		writer.clone(),
 																		false);
-
-							info_sender.start_worker_thread(
-								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
-							);
-
 							let thinking_inner = thinking.clone();
 
 							thread_queue.submit(move || {
@@ -732,7 +730,7 @@ impl<T,E> UsiAgent<T,E>
 
 										thinking_inner.store(false,Ordering::Release);
 
-										if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
+										if let Err(ref e) = info_send_worker.quit() {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											return;
 										}
@@ -789,14 +787,14 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let (sender,receiver) = mpsc::channel();
+							let info_send_worker = InfoSendWorker::new(thinking.clone(),writer.clone(),on_error_handler_inner.clone());
 
-							let info_sender = USIInfoSender::new(sender.clone(),writer.clone());
+							let info_sender = {
+								let info_send_worker = info_send_worker.clone();
+								USIInfoSender::new(info_send_worker)
+							};
+
 							let pinfo_sender = USIPeriodicallyInfo::new(writer.clone(),false);
-
-							info_sender.start_worker_thread(
-								thinking.clone(),receiver,writer.clone(),on_error_handler_inner.clone()
-							);
 
 							let thinking_inner = thinking.clone();
 
@@ -816,7 +814,7 @@ impl<T,E> UsiAgent<T,E>
 														};
 										thinking_inner.store(false,Ordering::Release);
 
-										if let Err(ref e) = sender.send(UsiInfoMessage::Quit) {
+										if let Err(ref e) = info_send_worker.quit() {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											return;
 										}
