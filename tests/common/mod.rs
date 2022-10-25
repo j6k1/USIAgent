@@ -206,6 +206,9 @@ impl InfoSender for MockInfoSender {
 			Ok(())
 		}
 	}
+	fn send_immediate(&mut self, commands: Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
+		self.send(commands)
+	}
 }
 #[derive(Debug)]
 pub struct MockSfenKifuWriter {
