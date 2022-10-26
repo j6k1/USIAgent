@@ -1,9 +1,10 @@
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc, Mutex};
+use std::time::Duration;
 
 use usiagent::player::*;
 use usiagent::shogi::*;
 use usiagent::hash::*;
-use usiagent::rule;
+use usiagent::{OnErrorHandler, rule};
 use usiagent::rule::*;
 
 #[allow(unused)]
@@ -40,6 +41,7 @@ use usiagent::shogi::KomaKind::{
 };
 
 use common::*;
+use usiagent::command::UsiInfoSubCommand;
 
 #[test]
 fn test_apply_moves() {
@@ -117,4 +119,54 @@ fn test_apply_moves() {
 
 	assert!(mhash != imhash);
 	assert!(mhash != ishash);
+}
+#[test]
+fn test_send_immediate() {
+	let logger = StdErrorLogger::new();
+
+	let on_error_handler = OnErrorHandler::new( Arc::new(Mutex::new(logger)));
+	let on_error_handler = Arc::new(Mutex::new(on_error_handler));
+
+	let (output_writer,r) = {
+		let (s,r) = mpsc::channel();
+
+		let output_writer = MockOutputWriter::new(s);
+		(output_writer,r)
+	};
+
+	let info_send_worker = InfoSendWorker::new(Arc::new(Mutex::new(output_writer)),on_error_handler.clone());
+
+	let mut info_sender = {
+		let info_send_worker = info_send_worker.clone();
+		USIInfoSender::new(info_send_worker)
+	};
+
+	let h = std::thread::spawn(move || {
+		for i in 1..10000 {
+			let mut commands: Vec<UsiInfoSubCommand> = Vec::new();
+			commands.push(UsiInfoSubCommand::Str(format!("send {} timnes!",i)));
+
+			info_sender.send(commands).unwrap();
+		}
+
+		let mut commands: Vec<UsiInfoSubCommand> = Vec::new();
+		commands.push(UsiInfoSubCommand::Str(String::from("send immediate.")));
+		info_sender.send_immediate(commands).unwrap();
+	});
+
+	h.join().unwrap();
+	info_send_worker.quit().unwrap();
+
+	let mut found = false;
+
+	while !found {
+		let res = r.recv_timeout(Duration::from_millis(300)).expect("attempt to receive send_immediate result timed out.");
+
+		if &*res == "info string send immediate." {
+			found = true;
+			break;
+		}
+	}
+
+	assert!(found);
 }

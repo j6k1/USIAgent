@@ -526,7 +526,6 @@ impl<T,E> UsiAgent<T,E>
 
 		let thread_queue = thread_queue_arc.clone();
 
-		let thinking_arc = Arc::new(AtomicBool::new(false));
 		let in_ponder_arc = Arc::new(AtomicBool::new(false));
 
 		let writer = writer_arc.clone();
@@ -575,7 +574,6 @@ impl<T,E> UsiAgent<T,E>
 					let player = ctx.player.clone();
 					let system_event_queue = ctx.system_event_queue.clone();
 					let on_error_handler_inner = on_error_handler.clone();
-					let thinking = thinking_arc.clone();
 					let allow_immediate_move_inner = allow_immediate_move.clone();
 					let on_delay_move_handler_inner = on_delay_move_handler.clone();
 					let user_event_queue_inner = user_event_queue.clone();
@@ -587,7 +585,7 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let info_send_worker = InfoSendWorker::new(thinking.clone(),writer.clone(),on_error_handler_inner.clone());
+							let info_send_worker = InfoSendWorker::new(writer.clone(),on_error_handler_inner.clone());
 
 							let info_sender = {
 								let info_send_worker = info_send_worker.clone();
@@ -597,7 +595,6 @@ impl<T,E> UsiAgent<T,E>
 							let pinfo_sender = USIPeriodicallyInfo::new(
 																		writer.clone(),
 																		false);
-							let thinking_inner = thinking.clone();
 
 							thread_queue.submit(move || {
 								match player.lock() {
@@ -627,8 +624,6 @@ impl<T,E> UsiAgent<T,E>
 												}
 											}
 										};
-
-										thinking_inner.store(false,Ordering::Release);
 
 										if let Err(ref e) = info_send_worker.quit() {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -691,7 +686,6 @@ impl<T,E> UsiAgent<T,E>
 				SystemEvent::Go(UsiGo::Go(ref opt)) => {
 					let system_event_queue = ctx.system_event_queue.clone();
 					let on_error_handler_inner = on_error_handler.clone();
-					let thinking = thinking_arc.clone();
 					let player = ctx.player.clone();
 					let user_event_queue_inner = user_event_queue.clone();
 					let opt = Arc::new(*opt);
@@ -700,7 +694,7 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let info_send_worker = InfoSendWorker::new(thinking.clone(),writer.clone(),on_error_handler_inner.clone());
+							let info_send_worker = InfoSendWorker::new(writer.clone(),on_error_handler_inner.clone());
 
 							let info_sender = {
 								let info_send_worker = info_send_worker.clone();
@@ -710,7 +704,6 @@ impl<T,E> UsiAgent<T,E>
 							let pinfo_sender = USIPeriodicallyInfo::new(
 																		writer.clone(),
 																		false);
-							let thinking_inner = thinking.clone();
 
 							thread_queue.submit(move || {
 								match player.lock() {
@@ -727,8 +720,6 @@ impl<T,E> UsiAgent<T,E>
 																return;
 															}
 														};
-
-										thinking_inner.store(false,Ordering::Release);
 
 										if let Err(ref e) = info_send_worker.quit() {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -778,7 +769,6 @@ impl<T,E> UsiAgent<T,E>
 				SystemEvent::Go(UsiGo::Mate(opt)) => {
 					let system_event_queue = ctx.system_event_queue.clone();
 					let on_error_handler_inner = on_error_handler.clone();
-					let thinking = thinking_arc.clone();
 					let player = ctx.player.clone();
 					let user_event_queue_inner = user_event_queue.clone();
 					let opt = Arc::new(opt);
@@ -787,7 +777,7 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let info_send_worker = InfoSendWorker::new(thinking.clone(),writer.clone(),on_error_handler_inner.clone());
+							let info_send_worker = InfoSendWorker::new(writer.clone(),on_error_handler_inner.clone());
 
 							let info_sender = {
 								let info_send_worker = info_send_worker.clone();
@@ -795,8 +785,6 @@ impl<T,E> UsiAgent<T,E>
 							};
 
 							let pinfo_sender = USIPeriodicallyInfo::new(writer.clone(),false);
-
-							let thinking_inner = thinking.clone();
 
 							thread_queue.submit(move || {
 								match player.lock() {
@@ -812,7 +800,6 @@ impl<T,E> UsiAgent<T,E>
 																return;
 															}
 														};
-										thinking_inner.store(false,Ordering::Release);
 
 										if let Err(ref e) = info_send_worker.quit() {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));

@@ -1,7 +1,7 @@
 //! AIの本体を実装するためのtrait等
 use std::{thread,time};
 use std::time::Instant;
-use std::sync::{mpsc, Mutex};
+use std::sync::{atomic, mpsc, Mutex};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -286,6 +286,8 @@ impl<W> Clone for USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
 pub struct InfoSendWorker<W> where W: USIOutputWriter {
 	sender:Sender<UsiInfoMessage>,
 	writer:Arc<Mutex<W>>,
+	thinking:Arc<AtomicBool>,
+	quited:Arc<AtomicBool>
 }
 impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 	/// `InfoSendWorker`の生成
@@ -294,16 +296,16 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 	/// * `thinking` - プレイヤーの思考中フラグ
 	/// * `writer` - 出力へ書き込みためのwriter
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
-	pub fn new<L>(thinking:Arc<AtomicBool>,
-			   writer:Arc<Mutex<W>>,
+	pub fn new<L>(writer:Arc<Mutex<W>>,
 			   on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 		-> InfoSendWorker<W> where L: Logger,
 								   Arc<Mutex<W>>: Send + 'static,
 								   Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
-		thinking.store(true,Ordering::Release);
+		let thinking = Arc::new(AtomicBool::new(true));
 
 		let (sender,receiver) = mpsc::channel();
 		{
+			let thinking = thinking.clone();
 			let writer = writer.clone();
 
 			thread::spawn(move || {
@@ -348,20 +350,28 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 
 		InfoSendWorker {
 			sender:sender,
-			writer:writer
+			writer:writer,
+			thinking:thinking,
+			quited:Arc::new(AtomicBool::new(false))
 		}
 	}
 
 	/// infoコマンド送信スレッドを終了させる
 	pub fn quit(&self) -> Result<(), SendError<UsiInfoMessage>> {
-		self.sender.send(UsiInfoMessage::Quit)
+		if !self.quited.swap(true,atomic::Ordering::Release) {
+			self.sender.send(UsiInfoMessage::Quit)?;
+			self.thinking.store(false, atomic::Ordering::Release);
+		}
+		Ok(())
 	}
 }
 impl<W> Clone for InfoSendWorker<W> where W: USIOutputWriter {
 	fn clone(&self) -> Self {
 		InfoSendWorker {
 			sender:self.sender.clone(),
-			writer:self.writer.clone()
+			writer:self.writer.clone(),
+			thinking:self.thinking.clone(),
+			quited:self.quited.clone()
 		}
 	}
 }
