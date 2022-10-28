@@ -4775,6 +4775,392 @@ impl Rule {
 		false
 	}
 
+
+	/// 指した手で王手がかけられているかを返す。既に王手がかかっている状態から指された手の場合、trueを返すとは限らない。
+	///
+	/// # Arguments
+	/// * `state` - 現在(手が指される直前)の盤面
+	/// * `teban` - 手を打った側の手番
+	/// * `m` - 指された手
+	/// 引数が不正な場合の動作は未定義
+	pub fn is_oute_move(state:&State,teban:Teban,m:LegalMove) -> bool {
+		let (self_board,
+			opponent_board,
+			flip_self_board,
+			flip_opponent_board,
+			kaku_board,
+			hisha_board,
+			kyou_board,
+			opponent_ou_position_board,start,sign) = if teban == Teban::Sente {
+
+			(state.part.sente_self_board,
+			 state.part.sente_opponent_board,
+			 state.part.gote_opponent_board,
+			 state.part.gote_self_board,
+			 state.part.sente_kaku_board,
+			 state.part.sente_hisha_board,
+			 state.part.sente_kyou_board,
+			 state.part.sente_opponent_ou_position_board,0,-1)
+		} else {
+
+			(state.part.gote_self_board,
+			 state.part.gote_opponent_board,
+			 state.part.sente_opponent_board,
+			 state.part.sente_self_board,
+			 state.part.gote_kaku_board,
+			 state.part.gote_hisha_board,
+			 state.part.gote_kyou_board,
+			 state.part.gote_opponent_ou_position_board,80,1)
+		};
+
+		match m {
+			LegalMove::To(m) => {
+				let from = m.src();
+				let kind = state.banmen.0[from as usize / 9][from as usize % 9];
+				let board = Rule::gen_candidate_bits(teban, self_board,m.dst(),kind);
+
+				if unsafe { opponent_ou_position_board.merged_bitboard & board.merged_bitboard } != 0 {
+					return true;
+				}
+
+				let mut kaku_board = kaku_board;
+
+				loop {
+					let from = Rule::pop_lsb(&mut kaku_board);
+
+					if from == -1 {
+						break;
+					}
+
+					let from = ((start - from) * sign) as u32;
+
+					let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
+
+					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+
+					let ou_bitboard = opponent_ou_position_board;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						occ,
+						opponent_board,
+						from
+					) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						occ,
+						opponent_board,
+						from
+					);
+
+					if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+						return true;
+					}
+
+					let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
+
+					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+
+					let mut ou_bitboard = opponent_ou_position_board;
+
+					let p = Rule::pop_lsb(&mut ou_bitboard);
+
+					if p == -1 {
+						return false;
+					}
+
+					let ou_bitboard = BitBoard { merged_bitboard: (2 << (80 - p)) };
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						occ,
+						flip_opponent_board,
+						80 - from
+					) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						occ,
+						flip_opponent_board,
+						80 - from
+					);
+
+					if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+						return true;
+					}
+				}
+
+				let mut hisha_board = hisha_board;
+
+				loop {
+					let from = Rule::pop_lsb(&mut hisha_board);
+
+					if from == -1 {
+						break;
+					}
+
+					let from = ((start - from) * sign) as u32;
+
+					let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
+
+					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						occ,
+						flip_opponent_board,
+						80 - from
+					) | Rule::gen_candidate_bits_by_hisha_to_right(
+						occ,
+						flip_opponent_board,
+						80 - from
+					);
+
+					let mut ou_bitboard = opponent_ou_position_board;
+
+					let p = Rule::pop_lsb(&mut ou_bitboard);
+
+					if p == -1 {
+						return false;
+					}
+
+					let ou_bitboard = BitBoard { merged_bitboard: (2 << (80 - p)) };
+
+					if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+						return true;
+					}
+
+					let ou_bitboard = opponent_ou_position_board;
+
+					let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
+
+					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						occ,
+						opponent_board,
+						from
+					) | Rule::gen_candidate_bits_by_hisha_to_right(
+						occ,
+						opponent_board,
+						from
+					);
+
+					if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+						return true;
+					}
+				}
+
+				let mut kyou_board = kyou_board;
+
+				loop {
+					let from = Rule::pop_lsb(&mut kyou_board);
+
+					if from == -1 {
+						break;
+					}
+
+					let from = ((start - from) * sign) as u32;
+
+					let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
+
+					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+
+					let mut ou_bitboard = opponent_ou_position_board;
+
+					let p = Rule::pop_lsb(&mut ou_bitboard);
+
+					if p == -1 {
+						return false;
+					}
+
+					let ou_bitboard = BitBoard { merged_bitboard: (2 << (80 - p)) };
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						occ,
+						flip_opponent_board,
+						80 - from
+					);
+
+					if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+						return true;
+					}
+				}
+
+				false
+			},
+			LegalMove::Put(m) => {
+				let kind = From::from((teban,m.kind()));
+				let board = Rule::gen_candidate_bits(teban, self_board,m.dst(),kind);
+
+				if unsafe { opponent_ou_position_board.merged_bitboard & board.merged_bitboard } != 0 {
+					return true;
+				}
+
+				match kind {
+					KomaKind::SHisha => {
+						let mut hisha_board = hisha_board;
+
+						loop {
+							let from = Rule::pop_lsb(&mut hisha_board);
+
+							if from == -1 {
+								break;
+							}
+
+							let from = ((start - from) * sign) as u32;
+
+							let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
+
+							unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+
+							let mut ou_bitboard = opponent_ou_position_board;
+
+							let p = Rule::pop_lsb(&mut ou_bitboard);
+
+							if p == -1 {
+								return false;
+							}
+
+							let ou_bitboard = BitBoard { merged_bitboard: (2 << (80 - p)) };
+
+							let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+								occ,
+								flip_opponent_board,
+								80 - from
+							) | Rule::gen_candidate_bits_by_hisha_to_right(
+								occ,
+								flip_opponent_board,
+								80 - from
+							);
+
+							if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+								return true;
+							}
+
+							let ou_bitboard = opponent_ou_position_board;
+
+							let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
+
+							unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+
+							let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+								occ,
+								opponent_board,
+								from
+							) | Rule::gen_candidate_bits_by_hisha_to_right(
+								occ,
+								opponent_board,
+								from
+							);
+
+							if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+								return true;
+							}
+						}
+
+						false
+					},
+					KomaKind::SKaku => {
+						let mut kaku_board = kaku_board;
+
+						loop {
+							let from = Rule::pop_lsb(&mut kaku_board);
+
+							if from == -1 {
+								break;
+							}
+
+							let from = ((start - from) * sign) as u32;
+
+							let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
+
+							unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+
+							let ou_bitboard = opponent_ou_position_board;
+
+							let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+								occ,
+								opponent_board,
+								from
+							) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+								occ,
+								opponent_board,
+								from
+							);
+
+							if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+								return true;
+							}
+
+							let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
+
+							unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+
+							let mut ou_bitboard = opponent_ou_position_board;
+
+							let p = Rule::pop_lsb(&mut ou_bitboard);
+
+							if p == -1 {
+								return false;
+							}
+
+							let ou_bitboard = BitBoard { merged_bitboard: (2 << (80 - p)) };
+
+							let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+								occ,
+								flip_opponent_board,
+								80 - from
+							) | Rule::gen_candidate_bits_by_kaku_to_right_top(
+								occ,
+								flip_opponent_board,
+								80 - from
+							);
+
+							if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+								return true;
+							}
+						}
+
+						false
+					},
+					KomaKind::SKyou => {
+						let mut kyou_board = kyou_board;
+
+						loop {
+							let from = Rule::pop_lsb(&mut kyou_board);
+
+							if from == -1 {
+								break;
+							}
+
+							let from = ((start - from) * sign) as u32;
+
+							let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
+
+							unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+
+							let mut ou_bitboard = opponent_ou_position_board;
+
+							let p = Rule::pop_lsb(&mut ou_bitboard);
+
+							if p == -1 {
+								return false;
+							}
+
+							let ou_bitboard = BitBoard { merged_bitboard: (2 << (80 - p)) };
+
+							let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+								occ,
+								flip_opponent_board,
+								80 - from
+							);
+
+							if unsafe { board.merged_bitboard & ou_bitboard.merged_bitboard } != 0 {
+								return true;
+							}
+						}
+
+						false
+					},
+					_ => false
+				}
+			}
+		}
+	}
+
 	/// 千日手検出用マップの更新関数
 	///
 	/// # Arguments
