@@ -4855,6 +4855,11 @@ impl Rule {
 					_ => ()
 				}
 
+				let from = ((start - from as i32) * sign) as u32;
+
+				let self_board = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard & !(2 << from) } };
+				let flip_self_board = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard & !(2 << (80 - from)) } };
+
 				loop {
 					let from = Rule::pop_lsb(&mut kaku_board);
 
