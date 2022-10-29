@@ -4816,7 +4816,7 @@ impl Rule {
 		match m {
 			LegalMove::To(m) => {
 				let from = m.src();
-				let kind = state.banmen.0[from as usize / 9][from as usize % 9];
+				let kind = state.banmen.0[from as usize % 9][from as usize / 9];
 				let board = Rule::gen_candidate_bits(teban, self_board,m.dst(),kind);
 
 				if unsafe { opponent_ou_position_board.merged_bitboard & board.merged_bitboard } != 0 {
