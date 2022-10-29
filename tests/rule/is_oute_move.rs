@@ -2,7 +2,6 @@ use usiagent::rule::{LegalMove, LegalMoveTo, Rule, State};
 use usiagent::shogi::{Banmen, KomaKind, Teban};
 use usiagent::shogi::KomaKind::{Blank, GOu};
 
-
 #[test]
 fn is_oute_moveto_sente() {
     let position_and_kinds = vec![
@@ -189,5 +188,38 @@ fn is_oute_not_moveto_sente() {
                            LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
                                                           (m.1).0 * 9 + (m.1).1,
                                                           false,None))),"{:?} {:?}",kind,m);
+    }
+}
+
+#[test]
+fn is_oute_moveto_sente_hisha() {
+    let position_and_kinds = vec![
+        (3,0),
+        (0,2),
+        (8,2),
+        (3,8)
+    ];
+
+    let mvs = vec![
+        ((3,0),(4,0)),
+        ((0,2),(0,3)),
+        ((8,2),(8,3)),
+        ((3,8),(4,8))
+    ];
+
+    for &kind in [KomaKind::SHisha,KomaKind::SHishaN].iter() {
+        for (&m, &(x, y)) in mvs.iter().zip(position_and_kinds.iter()) {
+            let mut banmen = Banmen([[Blank; 9]; 9]);
+
+            banmen.0[3][4] = GOu;
+            banmen.0[y][x] = kind;
+
+            let state = State::new(banmen);
+
+            assert!(Rule::is_oute_move(&state, Teban::Sente,
+                                       LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
+                                                                      (m.1).0 * 9 + (m.1).1,
+                                                                      false, None))), "{:?} {:?}", kind, m);
+        }
     }
 }

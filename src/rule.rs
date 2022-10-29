@@ -4824,6 +4824,36 @@ impl Rule {
 				}
 
 				let mut kaku_board = kaku_board;
+				let mut hisha_board = hisha_board;
+				let mut kyou_board = kyou_board;
+
+				match kind {
+					KomaKind::SKaku | KomaKind::SKakuN => {
+						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard & !(2 << from) } };
+						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard | (2 << m.dst()) } };
+					},
+					KomaKind::GKaku | KomaKind::GKakuN => {
+						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard & !(2 << (80 - from)) } };
+						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard | (2 << (80 - m.dst())) } };
+					},
+					KomaKind::SHisha | KomaKind::SHishaN => {
+						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard & !(2 << from) } };
+						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard | (2 << m.dst()) } };
+					},
+					KomaKind::GHisha | KomaKind::GHishaN => {
+						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard & !(2 << (80 - from)) } };
+						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard | (2 << (80 - m.dst())) } };
+					},
+					KomaKind::SKyou => {
+						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard & !(2 << from) } };
+						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard | (2 << m.dst()) } };
+					},
+					KomaKind::GKyou  => {
+						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard & !(2 << (80 - from)) } };
+						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard | (2 << (80 - m.dst())) } };
+					},
+					_ => ()
+				}
 
 				loop {
 					let from = Rule::pop_lsb(&mut kaku_board);
@@ -4883,8 +4913,6 @@ impl Rule {
 					}
 				}
 
-				let mut hisha_board = hisha_board;
-
 				loop {
 					let from = Rule::pop_lsb(&mut hisha_board);
 
@@ -4942,8 +4970,6 @@ impl Rule {
 						return true;
 					}
 				}
-
-				let mut kyou_board = kyou_board;
 
 				loop {
 					let from = Rule::pop_lsb(&mut kyou_board);
