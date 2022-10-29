@@ -1,6 +1,6 @@
 use usiagent::rule::{LegalMove, LegalMoveTo, Rule, State};
 use usiagent::shogi::{Banmen, KomaKind, Teban};
-use usiagent::shogi::KomaKind::{Blank, GOu, SKin};
+use usiagent::shogi::KomaKind::{Blank, GOu, SKin, SKyou};
 
 #[test]
 fn is_oute_moveto_sente() {
@@ -514,11 +514,11 @@ fn is_oute_moveto_sente_kaku_open_path() {
     ];
 
     for &kind in [KomaKind::SKaku,KomaKind::SKakuN].iter() {
-        for (&m, &((hx, hy),(x,y))) in mvs.iter().zip(position_and_kinds.iter()) {
+        for (&m, &((kx, ky),(x,y))) in mvs.iter().zip(position_and_kinds.iter()) {
             let mut banmen = Banmen([[Blank; 9]; 9]);
 
             banmen.0[3][4] = GOu;
-            banmen.0[hy][hx] = kind;
+            banmen.0[ky][kx] = kind;
             banmen.0[y][x] = SKin;
 
             let state = State::new(banmen);
@@ -528,5 +528,132 @@ fn is_oute_moveto_sente_kaku_open_path() {
                                                                               (m.1).0 * 9 + (m.1).1,
                                                                               false, None))), "{:?} {:?}", SKin, m);
         }
+    }
+}
+#[test]
+fn is_oute_moveto_sente_kyou() {
+    let position_and_kinds = vec![
+        (4,8)
+    ];
+
+    let mvs = vec![
+        ((4,8),(4,7))
+    ];
+
+    for (&m, &(x, y)) in mvs.iter().zip(position_and_kinds.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[7][4] = KomaKind::GFu;
+        banmen.0[y][x] = KomaKind::SKyou;
+
+        let state = State::new(banmen);
+
+        assert_eq!(true,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
+                                                                          (m.1).0 * 9 + (m.1).1,
+                                                                          false, None))), "{:?} {:?}", SKyou, m);
+    }
+}
+#[test]
+fn is_oute_not_moveto_sente_kyou() {
+    let position_and_kinds = vec![
+        (3,8),
+        (5,8)
+    ];
+
+    let mvs = vec![
+        ((3,8),(3,7)),
+        ((5,8),(5,7))
+    ];
+
+    for (&m, &(x, y)) in mvs.iter().zip(position_and_kinds.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[y][x] = SKyou;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                            LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
+                                                                           (m.1).0 * 9 + (m.1).1,
+                                                                           false, None))), "{:?} {:?}", SKyou, m);
+    }
+}
+#[test]
+fn is_oute_not_moveto_sente_kyou_occupied_self() {
+    let position_and_kinds = vec![
+        (4,8)
+    ];
+
+    let mvs = vec![
+        ((4,8),(4,7))
+    ];
+
+    for (&m, &(x, y)) in mvs.iter().zip(position_and_kinds.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[y][x] = SKyou;
+        banmen.0[6][4] = KomaKind::SFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                            LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
+                                                                           (m.1).0 * 9 + (m.1).1,
+                                                                           false, None))), "{:?} {:?}", SKyou, m);
+    }
+}
+#[test]
+fn is_oute_not_moveto_sente_kyou_occupied_opponent() {
+    let position_and_kinds = vec![
+        (4,8)
+    ];
+
+    let mvs = vec![
+        ((4,8),(4,7))
+    ];
+
+    for (&m, &(x, y)) in mvs.iter().zip(position_and_kinds.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[y][x] = SKyou;
+        banmen.0[6][4] = KomaKind::GFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                            LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
+                                                                           (m.1).0 * 9 + (m.1).1,
+                                                                           false, None))), "{:?} {:?}", SKyou, m);
+    }
+}
+
+#[test]
+fn is_oute_moveto_sente_kyou_open_path() {
+    let position_and_kinds = vec![
+        ((4,8),(4,7))
+    ];
+
+    let mvs = vec![
+        ((4,7),(5,7))
+    ];
+
+    for (&m, &((kx, ky),(x,y))) in mvs.iter().zip(position_and_kinds.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[ky][kx] = SKyou;
+        banmen.0[y][x] = SKin;
+
+        let state = State::new(banmen);
+
+        assert_eq!(true,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
+                                                                          (m.1).0 * 9 + (m.1).1,
+                                                                          false, None))), "{:?} {:?}", SKin, m);
     }
 }
