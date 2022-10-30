@@ -1,5 +1,5 @@
-use usiagent::rule::{LegalMove, LegalMoveTo, Rule, State};
-use usiagent::shogi::{Banmen, KomaKind, Teban};
+use usiagent::rule::{LegalMove, LegalMovePut, LegalMoveTo, Rule, State};
+use usiagent::shogi::{Banmen, KomaKind, MochigomaKind, Teban};
 use usiagent::shogi::KomaKind::{Blank, GOu, SKin, SKyou};
 
 #[test]
@@ -631,7 +631,6 @@ fn is_oute_not_moveto_sente_kyou_occupied_opponent() {
                                                                            false, None))), "{:?} {:?}", SKyou, m);
     }
 }
-
 #[test]
 fn is_oute_moveto_sente_kyou_open_path() {
     let position_and_kinds = vec![
@@ -655,5 +654,46 @@ fn is_oute_moveto_sente_kyou_open_path() {
                                            LegalMove::To(LegalMoveTo::new((m.0).0 * 9 + (m.0).1,
                                                                           (m.1).0 * 9 + (m.1).1,
                                                                           false, None))), "{:?} {:?}", SKin, m);
+    }
+}
+
+#[test]
+fn is_oute_moveput_sente() {
+    let mvs = vec![
+        (4,4,MochigomaKind::Fu),
+        (4,8,MochigomaKind::Kyou),
+        (3,5,MochigomaKind::Kei),
+        (5,5,MochigomaKind::Kei),
+        (3,4,MochigomaKind::Gin),
+        (4,4,MochigomaKind::Gin),
+        (5,4,MochigomaKind::Gin),
+        (3,2,MochigomaKind::Gin),
+        (5,2,MochigomaKind::Gin),
+        (3,4,MochigomaKind::Kin),
+        (4,4,MochigomaKind::Kin),
+        (5,4,MochigomaKind::Kin),
+        (3,3,MochigomaKind::Kin),
+        (5,3,MochigomaKind::Kin),
+        (4,2,MochigomaKind::Kin),
+        (0,7,MochigomaKind::Kaku),
+        (8,7,MochigomaKind::Kaku),
+        (1,0,MochigomaKind::Kaku),
+        (7,0,MochigomaKind::Kaku),
+        (4,8,MochigomaKind::Hisha),
+        (0,3,MochigomaKind::Hisha),
+        (8,3,MochigomaKind::Hisha),
+        (4,0,MochigomaKind::Hisha)
+    ];
+
+    for &(x,y,kind) in mvs.iter() {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(true,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::Put(LegalMovePut::new(kind,
+                                                                          x * 9 + y))), "{:?} {},{}", kind, x, y);
     }
 }
