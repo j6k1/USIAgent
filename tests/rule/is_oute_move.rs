@@ -832,3 +832,165 @@ fn is_oute_not_moveput_sente() {
                                                                             x * 9 + y))), "{:?} {},{}", kind, x, y);
     }
 }
+#[test]
+fn is_oute_not_moveput_sente_kaku_self_occupied() {
+    let mvs = vec![
+        (0,7,MochigomaKind::Kaku),
+        (8,7,MochigomaKind::Kaku),
+        (1,0,MochigomaKind::Kaku),
+        (7,0,MochigomaKind::Kaku),
+    ];
+
+    let occ = vec![
+        (1,6),
+        (7,6),
+        (2,1),
+        (6,1)
+    ];
+
+    for (&(x,y,kind),&(ox,oy)) in mvs.iter().zip(occ.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[oy][ox] = KomaKind::SFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::Put(LegalMovePut::new(kind,
+                                                                            x * 9 + y))), "{:?} {},{}", kind, x, y);
+    }
+}
+#[test]
+fn is_oute_not_moveput_sente_kaku_opponent_occupied() {
+    let mvs = vec![
+        (0,7,MochigomaKind::Kaku),
+        (8,7,MochigomaKind::Kaku),
+        (1,0,MochigomaKind::Kaku),
+        (7,0,MochigomaKind::Kaku),
+    ];
+
+    let occ = vec![
+        (1,6),
+        (7,6),
+        (2,1),
+        (6,1)
+    ];
+
+    for (&(x,y,kind),&(ox,oy)) in mvs.iter().zip(occ.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[oy][ox] = KomaKind::GFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::Put(LegalMovePut::new(kind,
+                                                                            x * 9 + y))), "{:?} {},{}", kind, x, y);
+    }
+}
+#[test]
+fn is_oute_not_moveput_sente_hisha_self_occupied() {
+    let mvs = vec![
+        (4,8,MochigomaKind::Hisha),
+        (0,3,MochigomaKind::Hisha),
+        (8,3,MochigomaKind::Hisha),
+        (4,0,MochigomaKind::Hisha)
+    ];
+
+    let occ = vec![
+        (4,7),
+        (1,3),
+        (7,3),
+        (4,1)
+    ];
+
+    for (&(x,y,kind),&(ox,oy)) in mvs.iter().zip(occ.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[oy][ox] = KomaKind::SFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::Put(LegalMovePut::new(kind,
+                                                                            x * 9 + y))), "{:?} {},{}", kind, x, y);
+    }
+}
+#[test]
+fn is_oute_not_moveput_sente_hisha_opponent_occupied() {
+    let mvs = vec![
+        (4,8,MochigomaKind::Hisha),
+        (0,3,MochigomaKind::Hisha),
+        (8,3,MochigomaKind::Hisha),
+        (4,0,MochigomaKind::Hisha)
+    ];
+
+    let occ = vec![
+        (4,7),
+        (1,3),
+        (7,3),
+        (4,1)
+    ];
+
+    for (&(x,y,kind),&(ox,oy)) in mvs.iter().zip(occ.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[oy][ox] = KomaKind::GFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::Put(LegalMovePut::new(kind,
+                                                                            x * 9 + y))), "{:?} {},{}", kind, x, y);
+    }
+}
+#[test]
+fn is_oute_not_moveput_sente_kyou_self_occupied() {
+    let mvs = vec![
+        (4,8,MochigomaKind::Kyou)
+    ];
+
+    let occ = vec![
+        (4,7)
+    ];
+
+    for (&(x,y,kind),&(ox,oy)) in mvs.iter().zip(occ.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[oy][ox] = KomaKind::SFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::Put(LegalMovePut::new(kind,
+                                                                            x * 9 + y))), "{:?} {},{}", kind, x, y);
+    }
+}
+#[test]
+fn is_oute_not_moveput_sente_kyou_opponent_occupied() {
+    let mvs = vec![
+        (4,8,MochigomaKind::Kyou)
+    ];
+
+    let occ = vec![
+        (4,7)
+    ];
+
+    for (&(x,y,kind),&(ox,oy)) in mvs.iter().zip(occ.iter()) {
+        let mut banmen = Banmen([[Blank; 9]; 9]);
+
+        banmen.0[3][4] = GOu;
+        banmen.0[oy][ox] = KomaKind::GFu;
+
+        let state = State::new(banmen);
+
+        assert_eq!(false,Rule::is_oute_move(&state, Teban::Sente,
+                                           LegalMove::Put(LegalMovePut::new(kind,
+                                                                            x * 9 + y))), "{:?} {},{}", kind, x, y);
+    }
+}
