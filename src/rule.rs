@@ -4828,29 +4828,17 @@ impl Rule {
 				let mut kyou_board = kyou_board;
 
 				match kind {
-					KomaKind::SKaku | KomaKind::SKakuN => {
+					KomaKind::SKaku | KomaKind::SKakuN | KomaKind::GKaku | KomaKind::GKakuN => {
 						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard & !(2 << from) } };
 						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard | (2 << m.dst()) } };
 					},
-					KomaKind::GKaku | KomaKind::GKakuN => {
-						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard & !(2 << (80 - from)) } };
-						kaku_board = unsafe { BitBoard { merged_bitboard: kaku_board.merged_bitboard | (2 << (80 - m.dst())) } };
-					},
-					KomaKind::SHisha | KomaKind::SHishaN => {
+					KomaKind::SHisha | KomaKind::SHishaN | KomaKind::GHisha | KomaKind::GHishaN => {
 						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard & !(2 << from) } };
 						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard | (2 << m.dst()) } };
 					},
-					KomaKind::GHisha | KomaKind::GHishaN => {
-						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard & !(2 << (80 - from)) } };
-						hisha_board = unsafe { BitBoard { merged_bitboard: hisha_board.merged_bitboard | (2 << (80 - m.dst())) } };
-					},
-					KomaKind::SKyou => {
+					KomaKind::SKyou | KomaKind::GKyou => {
 						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard & !(2 << from) } };
 						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard | (2 << m.dst()) } };
-					},
-					KomaKind::GKyou  => {
-						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard & !(2 << (80 - from)) } };
-						kyou_board = unsafe { BitBoard { merged_bitboard: kyou_board.merged_bitboard | (2 << (80 - m.dst())) } };
 					},
 					_ => ()
 				}
@@ -4867,11 +4855,9 @@ impl Rule {
 						break;
 					}
 
-					let from = ((start - from) * sign) as u32;
+					let from = ((start - from as i32) * sign) as u32;
 
-					let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
-
-					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+					let occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
 
 					let ou_bitboard = opponent_ou_position_board;
 
@@ -4889,9 +4875,7 @@ impl Rule {
 						return true;
 					}
 
-					let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
-
-					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+					let occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
 
 					let mut ou_bitboard = opponent_ou_position_board;
 
@@ -4925,11 +4909,9 @@ impl Rule {
 						break;
 					}
 
-					let from = ((start - from) * sign) as u32;
+					let from = ((start - from as i32) * sign) as u32;
 
-					let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
-
-					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+					let occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						occ,
@@ -4957,9 +4939,7 @@ impl Rule {
 
 					let ou_bitboard = opponent_ou_position_board;
 
-					let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
-
-					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+					let occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						occ,
@@ -4983,11 +4963,9 @@ impl Rule {
 						break;
 					}
 
-					let from = ((start - from) * sign) as u32;
+					let from = ((start - from as i32) * sign) as u32;
 
-					let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
-
-					unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+					let occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
 
 					let mut ou_bitboard = opponent_ou_position_board;
 
@@ -5025,9 +5003,7 @@ impl Rule {
 
 				match kind {
 					MochigomaKind::Hisha => {
-						let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
-
-						unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+						let occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
 
 						let mut ou_bitboard = opponent_ou_position_board;
 
@@ -5055,9 +5031,7 @@ impl Rule {
 
 						let ou_bitboard = opponent_ou_position_board;
 
-						let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
-
-						unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+						let occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
 
 						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 							occ,
@@ -5076,9 +5050,7 @@ impl Rule {
 						}
 					}
 					MochigomaKind::Kaku => {
-						let mut occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
-
-						unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << from) };
+						let occ = unsafe { BitBoard { merged_bitboard: self_board.merged_bitboard } };
 
 						let ou_bitboard = opponent_ou_position_board;
 
@@ -5096,9 +5068,7 @@ impl Rule {
 							return true;
 						}
 
-						let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
-
-						unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+						let occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
 
 						let mut ou_bitboard = opponent_ou_position_board;
 
@@ -5127,9 +5097,7 @@ impl Rule {
 						}
 					},
 					MochigomaKind::Kyou => {
-						let mut occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
-
-						unsafe { occ.merged_bitboard = occ.merged_bitboard & !(2 << (80 - from)) };
+						let occ = unsafe { BitBoard { merged_bitboard: flip_self_board.merged_bitboard } };
 
 						let mut ou_bitboard = opponent_ou_position_board;
 
