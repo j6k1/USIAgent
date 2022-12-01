@@ -33,7 +33,7 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 	/// * `sk` - サブキー
 	pub fn get(&self,k:&K,sk:&K) -> Option<&T> {
 		match self.map.get(k) {
-			Some(v) if v.len() == 1 => {
+			Some(v) if v.len() == 1 && v[0].0 == *sk => {
 				Some(&v[0].1)
 			},
 			Some(v) if v.len() > 1 => {
@@ -56,7 +56,7 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 	pub fn get_mut(&mut self,k:&K,sk:&K) -> Option<&mut T> {
 		match self.map.get_mut(k) {
 			Some(v) => {
-				if v.len() == 1 {
+				if v.len() == 1 && v[0].0 == *sk {
 					Some(&mut v[0].1)
 				} else if v.len() > 1 {
 					for e in v {
@@ -108,6 +108,47 @@ impl<T,K> TwoKeyHashMap<K,T> where K: Eq + Hash {
 		v.push((sk,nv));
 		self.map.insert(k,v);
 		None
+	}
+
+	/// 指定された主キーとサブキーの項目を削除する
+	///
+	/// # Arguments
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
+	pub fn remove(&mut self,k:&K,sk:&K) -> Option<T> {
+		let (s,old) = match self.map.get_mut(&k) {
+			Some(ref mut v) if v.len() == 1 => {
+				if v[0].0 == *sk {
+					let old = v.remove(0).1;
+					(true,Some(old))
+				} else {
+					return None;
+				}
+			},
+			Some(ref mut v) if v.len() > 1 => {
+				let mut r = None;
+				for i in 0..v.len() {
+					if v[i].0 == *sk {
+						let old = v.remove(i).1;
+						r = Some(old);
+						break;
+					}
+				}
+
+				if r.is_some() {
+					(false,r)
+				} else {
+					return None;
+				}
+			},
+			_ => (false,None),
+		};
+
+		if s {
+			self.map.remove(k);
+		}
+
+		old
 	}
 
 	/// マップをクリア
@@ -175,6 +216,19 @@ impl<T,K> KyokumenMap<K,T> where K: Eq + Hash + Clone, T: Clone {
 		match teban {
 			Teban::Sente => self.sente_map.insert(k,sk,nv),
 			Teban::Gote => self.gote_map.insert(k,sk,nv),
+		}
+	}
+
+	/// 指定された主キーとサブキーの項目を削除する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `k` - 主キー
+	/// * `sk` - サブキー
+	pub fn remove(&mut self,teban:Teban,k:&K,sk:&K) -> Option<T> {
+		match teban {
+			Teban::Sente => self.sente_map.remove(k,sk),
+			Teban::Gote => self.gote_map.remove(k,sk),
 		}
 	}
 

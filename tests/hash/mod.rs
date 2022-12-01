@@ -1015,3 +1015,90 @@ fn test_put_mochigomacollection_all_zero_gote() {
         assert_eq!(expected,(mhash,shash));
     }
 }
+#[test]
+fn test_kyokumenmap_get_subkey_is_different() {
+    let insert = vec![
+        vec![(1,1,1)],
+        vec![(1,1,1),(1,2,2)]
+    ];
+
+    let compared = vec![
+        vec![(1,2,None)],
+        vec![(1,1,Some(1)),(1,3,None)]
+    ];
+
+    for teban in [Teban::Sente,Teban::Gote] {
+        for (insert,compared) in insert.iter().zip(compared.iter()) {
+            let mut map = KyokumenMap::<u64,u32>::new();
+
+            for i in insert.iter() {
+                map.insert(teban,i.0,i.1,i.2);
+            }
+
+            for c in compared.iter() {
+                assert_eq!(map.get(teban,&c.0,&c.1),c.2.as_ref());
+            }
+        }
+    }
+}
+#[test]
+fn test_kyokumenmap_get_mut_subkey_is_different() {
+    let insert = vec![
+        vec![(1,1,1)],
+        vec![(1,1,1),(1,2,2)]
+    ];
+
+    let mut compared = vec![
+        vec![(1,2,None)],
+        vec![(1,1,Some(1)),(1,3,None)]
+    ];
+
+    for teban in [Teban::Sente,Teban::Gote] {
+        for (insert, compared) in insert.iter().zip(compared.iter_mut()) {
+            let mut map = KyokumenMap::<u64,u32>::new();
+
+            for i in insert.iter() {
+                map.insert(teban,i.0,i.1,i.2);
+            }
+
+            for c in compared.iter_mut() {
+                assert_eq!(map.get_mut(teban,&c.0,&c.1),c.2.as_mut());
+            }
+        }
+    }
+}
+#[test]
+fn test_kyokumenmap_remove() {
+    let insert = vec![
+        vec![(1,1,1)],
+        vec![(1,1,1),(1,2,2)],
+    ];
+
+    let remove = vec![
+        (1,1),
+        (1,1)
+    ];
+
+    let compared = vec![
+        vec![],
+        vec![(1,2,2)]
+    ];
+
+    for teban in [Teban::Sente,Teban::Gote] {
+        for (insert,(remove,compared)) in insert.iter().zip(remove.iter().zip(compared.iter())) {
+            let mut map = KyokumenMap::<u64,u32>::new();
+
+            for i in insert.iter() {
+                map.insert(teban,i.0,i.1,i.2);
+            }
+
+            map.remove(teban,&remove.0,&remove.1);
+
+            assert_eq!(map.get(teban,&remove.0,&remove.1),None);
+
+            for c in compared.iter() {
+                assert_eq!(map.get(teban,&c.0,&c.1),Some(&c.2));
+            }
+        }
+    }
+}
