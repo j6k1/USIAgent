@@ -12,6 +12,7 @@ mod is_mate;
 mod sennichite;
 mod validate;
 mod is_oute_move;
+mod control;
 
 use std::collections::HashMap;
 use std::time::{Instant,Duration};

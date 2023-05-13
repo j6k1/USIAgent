@@ -1246,6 +1246,27 @@ impl Rule {
 		mvs
 	}
 
+	#[inline]
+	fn gen_candidate_bits_by_kaku_to_right_top_with_exclude(
+		self_occupied:BitBoard,
+		opponent_occupied:BitBoard,
+		exclude:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
+
+		let mask = KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize] << 1;
+
+		occ = occ & mask;
+
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { exclude.merged_bitboard };
+
+		BitBoard {
+			merged_bitboard: candidate
+		}
+	}
+
 	/// 盤面上の駒を移動する合法手のうち、角の右上に移動する手をビットボードに列挙
 	///
 	/// # Arguments
@@ -1260,14 +1281,24 @@ impl Rule {
 		opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
+		Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(self_occupied,opponent_occupied,self_occupied,from)
+	}
+
+	#[inline]
+	fn gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+		self_occupied:BitBoard,
+		opponent_occupied:BitBoard,
+		exclude:BitBoard,
+		from:u32
+	) -> BitBoard {
 		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
 
-		let mask = KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize] << 1;
+		let mask = KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize] << 1;
 
 		occ = occ & mask;
 
 		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
-		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { exclude.merged_bitboard };
 
 		BitBoard {
 			merged_bitboard: candidate
@@ -1288,18 +1319,7 @@ impl Rule {
 		opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
-		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
-
-		let mask = KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize] << 1;
-
-		occ = occ & mask;
-
-		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
-		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
-
-		BitBoard {
-			merged_bitboard: candidate
-		}
+		Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(self_occupied,opponent_occupied,self_occupied,from)
 	}
 
 	/// 先手の角の合法手を列挙してバッファに追加
@@ -1472,6 +1492,27 @@ impl Rule {
 		}
 	}
 
+	#[inline]
+	fn gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
+		exclude:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let occ = unsafe { flip_self_occupied.merged_bitboard | flip_opponent_occupied.merged_bitboard };
+
+		let x = from / 9;
+
+		let mask = V_MASK << (x * 9 + 1);
+
+		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { exclude.merged_bitboard };
+
+		BitBoard {
+			merged_bitboard: candidate
+		}
+	}
+
 	/// 盤面上の駒を移動する合法手のうち、飛車と香車の上に移動する手をビットボードに列挙
 	/// 反転したビットボードを渡す仕様のため返されたビットボードから列挙される手は盤面をひっくり返した時の形になっていることに注意。
 	///
@@ -1487,14 +1528,26 @@ impl Rule {
 		flip_opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
-		let occ = unsafe { flip_self_occupied.merged_bitboard | flip_opponent_occupied.merged_bitboard };
+		Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(flip_self_occupied,flip_opponent_occupied,flip_self_occupied,from)
+	}
+
+	#[inline]
+	fn gen_candidate_bits_by_hisha_to_right_with_exclude(
+		self_occupied:BitBoard,
+		opponent_occupied:BitBoard,
+		exclude:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
 
 		let x = from / 9;
 
-		let mask = V_MASK << (x * 9 + 1);
+		let mask = H_MASK << (from - 9 * x + 1);
+
+		occ = occ & mask;
 
 		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
-		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { flip_self_occupied.merged_bitboard };
+		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { exclude.merged_bitboard };
 
 		BitBoard {
 			merged_bitboard: candidate
@@ -1515,20 +1568,7 @@ impl Rule {
 		opponent_occupied:BitBoard,
 		from:u32
 	) -> BitBoard {
-		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
-
-		let x = from / 9;
-
-		let mask = H_MASK << (from - 9 * x + 1);
-
-		occ = occ & mask;
-
-		// ビットボードの最初の1ビット目は盤面の範囲外でfrom+1を引いた値を求めたいので4をビットシフトする
-		let candidate = (((occ.wrapping_sub(4 << from)) ^ occ) & mask) & !unsafe { self_occupied.merged_bitboard };
-
-		BitBoard {
-			merged_bitboard: candidate
-		}
+		Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(self_occupied,opponent_occupied,self_occupied,from)
 	}
 
 	/// 先手の飛車の合法手を列挙してバッファに追加
@@ -5125,6 +5165,324 @@ impl Rule {
 				}
 			}
 		}
+	}
+
+	/// 駒の効きの数を計算する
+	///
+	/// # Arguments
+	/// * `teban` - 攻め手側の手番（受け側の効きを計算したいときは逆にする）
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	pub fn control_count(teban:Teban,state:&State,to:Square) -> usize {
+		let x = to / 9;
+		let y = to - x * 9;
+		let mut count = 0;
+
+		let board = if teban == Teban::Sente {
+			!BitBoard { merged_bitboard: 1 << (to + 1) }
+		} else {
+			!BitBoard { merged_bitboard: 1 << (80 - to + 1) }
+		};
+
+		for dx in (x-1).max(0)..=(x+1).min(8) {
+			for dy in (y-1).max(0)..=(y+1).min(8) {
+				let b = Rule::gen_candidate_bits(teban,
+													 board,
+													 dx as u32 * 9 + dy as u32,
+													 state.banmen.0[dy as usize][dx as usize]);
+				if unsafe { b.merged_bitboard != 0 } {
+					count += 1;
+				}
+			}
+		}
+
+		if teban == Teban::Sente {
+			if x > 0 && y < 7 && state.banmen.0[y as usize + 2][x as usize - 1] == KomaKind::SKei {
+				count += 1;
+			}
+
+			if x < 8 && y < 7 && state.banmen.0[y as usize + 2][x as usize + 1] == KomaKind::SKei {
+				count += 1;
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+				state.part.sente_self_board,
+				state.part.sente_opponent_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
+				state.part.sente_self_board,
+				state.part.sente_opponent_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			);
+
+			let b = unsafe { b.merged_bitboard & state.part.sente_kaku_board.merged_bitboard };
+			let mut b = BitBoard { merged_bitboard: b };
+
+			loop {
+				let p = Rule::pop_lsb(&mut b);
+
+				if p == -1 {
+					break;
+				}
+
+				count += 1;
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			);
+
+			let mut kaku_board = state.part.sente_kaku_board;
+
+			loop {
+				let p = Rule::pop_lsb(&mut kaku_board);
+
+				if p == -1 {
+					break;
+				}
+
+				let p = 80 - p + 1;
+
+				if unsafe { (b.merged_bitboard & (1 << p)) != 0 } {
+					count += 1;
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			);
+
+			let mut hisha_board = state.part.sente_hisha_board;
+
+			loop {
+				let p = Rule::pop_lsb(&mut hisha_board);
+
+				if p == -1 {
+					break;
+				}
+
+				let p = 80 - p + 1;
+
+				if unsafe { (b.merged_bitboard & (1 << p)) != 0 } {
+					count += 1;
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+				state.part.sente_self_board,
+				state.part.sente_opponent_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+				state.part.sente_self_board,
+				state.part.sente_opponent_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			);
+
+			{
+				let b = unsafe { b.merged_bitboard & state.part.sente_hisha_board.merged_bitboard };
+				let mut b = BitBoard { merged_bitboard: b };
+
+				loop {
+					let p = Rule::pop_lsb(&mut b);
+
+					if p == -1 {
+						break;
+					}
+
+					count += 1;
+				}
+			}
+
+			{
+				let b = unsafe { b.merged_bitboard & state.part.sente_kyou_board.merged_bitboard };
+
+				if b != 0 {
+					count += 1;
+				}
+			}
+		} else {
+			if x > 0 && y > 1 && state.banmen.0[y as usize - 2][x as usize + 1] == KomaKind::GKei {
+				count += 1;
+			}
+
+			if x < 8 && y > 1 && state.banmen.0[y as usize - 2][x as usize - 1] == KomaKind::GKei {
+				count += 1;
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			);
+
+			let mut kaku_board = state.part.gote_kaku_board;
+
+			loop {
+				let p = Rule::pop_lsb(&mut kaku_board);
+
+				if p == -1 {
+					break;
+				}
+
+				let p = 80 - p + 1;
+
+				if unsafe { (b.merged_bitboard & (1 << p)) != 0 } {
+					count += 1;
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+				state.part.sente_self_board,
+				state.part.sente_opponent_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
+				state.part.sente_self_board,
+				state.part.sente_opponent_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			);
+
+			let b = unsafe { b.merged_bitboard & state.part.gote_kaku_board.merged_bitboard };
+			let mut b = BitBoard { merged_bitboard: b };
+
+			loop {
+				let p = Rule::pop_lsb(&mut b);
+
+				if p == -1 {
+					break;
+				}
+
+				count += 1;
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+				state.part.sente_opponent_board,
+				state.part.sente_self_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+				state.part.sente_opponent_board,
+				state.part.sente_self_board,
+				BitBoard { merged_bitboard: 0 },
+				to as u32
+			);
+
+			{
+				let b = unsafe { b.merged_bitboard & state.part.gote_hisha_board.merged_bitboard };
+				let mut b = BitBoard { merged_bitboard: b };
+
+				loop {
+					let p = Rule::pop_lsb(&mut b);
+
+					if p == -1 {
+						break;
+					}
+
+					count += 1;
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+				state.part.gote_opponent_board,
+				state.part.gote_self_board,
+				BitBoard { merged_bitboard: 0 },
+				80 - to as u32
+			);
+
+			let mut hisha_board = state.part.gote_hisha_board;
+
+			loop {
+				let p = Rule::pop_lsb(&mut hisha_board);
+
+				if p == -1 {
+					break;
+				}
+
+				let p = 80 - p + 1;
+
+				if unsafe { (b.merged_bitboard & (1 << p)) != 0 } {
+					count += 1;
+				}
+			}
+
+			let mut kyou_board = state.part.gote_kyou_board;
+
+			loop {
+				let p = Rule::pop_lsb(&mut kyou_board);
+
+				if p == -1 {
+					break;
+				}
+
+				let p = 80 - p + 1;
+
+				if unsafe { (b.merged_bitboard & (1 << p)) != 0 } {
+					count += 1;
+				}
+			}
+		}
+
+		count
+	}
+
+	/// 駒が成れる手か判定する
+	///
+	/// # Arguments
+	/// * `kind` - 移動する駒の種類
+	/// * `from` - 移動元
+	/// * `to` - 移動先
+	pub fn is_possible_nari(kind:KomaKind,from:Square,to:Square) -> bool {
+		let nari_mask = match kind {
+			SFu | SKyou => SENTE_NARI_MASK,
+			SKei => SENTE_NARI_MASK,
+			SGin | SHisha | SKaku => SENTE_NARI_MASK,
+			GFu | GKyou => GOTE_NARI_MASK,
+			GKei => GOTE_NARI_MASK,
+			GGin | GHisha | GKaku => GOTE_NARI_MASK,
+			SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN => {
+				0
+			},
+			GKin | GOu | GFuN | GKyouN | GKeiN | GGinN | GHishaN | GKakuN => {
+				0
+			},
+			Blank => {
+				0
+			}
+		};
+
+		nari_mask & (1 << to) != 0 || nari_mask & (1 << from) != 0
 	}
 
 	/// 千日手検出用マップの更新関数
