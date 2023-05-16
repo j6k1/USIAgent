@@ -14,6 +14,7 @@ mod validate;
 mod is_oute_move;
 mod control;
 mod is_possible_nari;
+mod position;
 
 use std::collections::HashMap;
 use std::time::{Instant,Duration};

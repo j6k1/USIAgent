@@ -87,7 +87,7 @@ impl KomaKindFrom<u32> for MochigomaKind {
 pub trait SquareToPoint {
 	fn square_to_point(self) -> (u32,u32);
 }
-type Square = i32;
+pub type Square = i32;
 impl SquareToPoint for Square {
 	#[inline]
 	fn square_to_point(self) -> (u32,u32) {
@@ -5479,6 +5479,55 @@ impl Rule {
 		};
 
 		nari_mask & (1 << to) != 0 || nari_mask & (1 << from) != 0
+	}
+
+
+	/// 現在の王の位置をSquareで返す
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	pub fn ou_square(teban:Teban,state:&State) -> Square {
+		match teban {
+			Teban::Sente => {
+				let bitboard = state.part.gote_opponent_ou_position_board;
+
+				let (bl,br) = unsafe {
+					match bitboard {
+						BitBoard { bitboard } => {
+							(*bitboard.get_unchecked(0),*bitboard.get_unchecked(1))
+						}
+					}
+				};
+
+				if bl != 0 {
+					80 - (bl.trailing_zeros() as Square - 1)
+				} else if br != 0 {
+					80 - (br.trailing_zeros() as Square + 63)
+				} else {
+					-1
+				}
+			},
+			Teban::Gote => {
+				let bitboard = state.part.sente_opponent_ou_position_board;
+
+				let (bl,br) = unsafe {
+					match bitboard {
+						BitBoard { bitboard } => {
+							(*bitboard.get_unchecked(0),*bitboard.get_unchecked(1))
+						}
+					}
+				};
+
+				if bl != 0 {
+					bl.trailing_zeros() as Square - 1
+				} else if br != 0 {
+					br.trailing_zeros() as Square + 63
+				} else {
+					-1
+				}
+			}
+		}
 	}
 
 	/// 千日手検出用マップの更新関数
