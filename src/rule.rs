@@ -5465,12 +5465,8 @@ impl Rule {
 	/// * `to` - 移動先
 	pub fn is_possible_nari(kind:KomaKind,from:Square,to:Square) -> bool {
 		let nari_mask = match kind {
-			SFu | SKyou => SENTE_NARI_MASK,
-			SKei => SENTE_NARI_MASK,
-			SGin | SHisha | SKaku => SENTE_NARI_MASK,
-			GFu | GKyou => GOTE_NARI_MASK,
-			GKei => GOTE_NARI_MASK,
-			GGin | GHisha | GKaku => GOTE_NARI_MASK,
+			SFu | SKyou | SKei | SGin | SHisha | SKaku => SENTE_NARI_MASK,
+			GFu | GKyou | GKei | GGin | GHisha | GKaku => GOTE_NARI_MASK,
 			SKin | SOu | SFuN | SKyouN | SKeiN | SGinN | SHishaN | SKakuN => {
 				0
 			},
