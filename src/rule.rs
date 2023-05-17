@@ -5321,11 +5321,11 @@ impl Rule {
 				}
 			}
 		} else {
-			if x > 0 && y > 1 && state.banmen.0[y as usize - 2][x as usize + 1] == KomaKind::GKei {
+			if x < 8 && y > 1 && state.banmen.0[y as usize - 2][x as usize + 1] == KomaKind::GKei {
 				count += 1;
 			}
 
-			if x < 8 && y > 1 && state.banmen.0[y as usize - 2][x as usize - 1] == KomaKind::GKei {
+			if x > 0 && y > 1 && state.banmen.0[y as usize - 2][x as usize - 1] == KomaKind::GKei {
 				count += 1;
 			}
 

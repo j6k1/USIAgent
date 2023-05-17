@@ -79,6 +79,21 @@ fn test_sente_kei_has_control() {
     }
 }
 #[test]
+fn test_sente_kei_has_control_edge() {
+    let positions = [(0,6),(8,6)];
+    let target_positions = [(1,4),(7,4)];
+
+    let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+    for (&(x,y),&(tx,ty)) in positions.iter().zip(target_positions.iter()) {
+        let mut banmen = blank_banmen.clone();
+
+        banmen.0[y][x] = SKei;
+
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 1);
+    }
+}
+#[test]
 fn test_sente_gin_has_control() {
     let positions = [vec![(4,5),(3,3),(5,3)],vec![(3,5),(5,5)]];
     let answers = [3,2];
@@ -270,6 +285,21 @@ fn test_gote_kei_has_control() {
         }
 
         assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 2);
+    }
+}
+#[test]
+fn test_gote_kei_has_control_edge() {
+    let positions = [(0,6),(8,6)];
+    let target_positions = [(1,4),(7,4)];
+
+    let blank_banmen = Banmen([[Blank; 9]; 9]);
+
+    for (&(x,y),&(tx,ty)) in positions.iter().zip(target_positions.iter()) {
+        let mut banmen = blank_banmen.clone();
+
+        banmen.0[8-y][8-x] = GKei;
+
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 80 - (tx * 9 + ty)), 1);
     }
 }
 #[test]
