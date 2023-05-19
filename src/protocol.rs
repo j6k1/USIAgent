@@ -1229,6 +1229,11 @@ impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoSubCommand {
 		})
 	}
 }
+impl ToUsiCommand<String,UsiOutputCreateError> for UsiInfoCommand {
+	fn to_usi_command(&self) -> Result<String, UsiOutputCreateError> {
+		Ok(format!("info {}",self.0.to_usi_command()?))
+	}
+}
 impl ToUsiCommand<String,UsiOutputCreateError> for UsiOptType {
 	fn to_usi_command(&self) -> Result<String, UsiOutputCreateError> {
 		Ok(match *self {

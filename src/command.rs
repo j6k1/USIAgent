@@ -112,6 +112,9 @@ pub enum UsiScoreMate {
 	/// \-
 	Minus,
 }
+/// infoコマンド
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UsiInfoCommand(pub Vec<UsiInfoSubCommand>);
 /// 詰め将棋の解答
 #[derive(Debug,Eq,PartialEq)]
 pub enum CheckMate {
