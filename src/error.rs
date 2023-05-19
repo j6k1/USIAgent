@@ -11,6 +11,7 @@ use crossbeam_channel::SendError;
 use crossbeam_channel::RecvError;
 
 use command::UsiCommand;
+use player::UsiInfoMessage;
 use selfmatch::SelfMatchMessage;
 
 /// イベント処理時のエラー
@@ -294,6 +295,45 @@ impl error::Error for InfoSendError {
 impl From<UsiOutputCreateError> for InfoSendError {
 	fn from(e: UsiOutputCreateError) -> InfoSendError {
 		InfoSendError::Fail(format!("{}",e))
+	}
+}
+/// infoコマンド送信スレッドのエラー
+#[derive(Debug)]
+pub enum InfoSendWorkerError {
+	RecvError(std::sync::mpsc::RecvError),
+	SendError(std::sync::mpsc::SendError<UsiInfoMessage>)
+}
+impl fmt::Display for InfoSendWorkerError {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			InfoSendWorkerError::RecvError(_) => write!(f,"An error occurred when receiving the message."),
+			InfoSendWorkerError::SendError(_) => write!(f,"An error occurred when sending the message."),
+		}
+	}
+}
+impl error::Error for InfoSendWorkerError {
+	fn description(&self) -> &str {
+		match *self {
+			InfoSendWorkerError::RecvError(_) => "An error occurred when receiving the message.",
+			InfoSendWorkerError::SendError(_) => "An error occurred while sending the message.",
+		}
+	}
+
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+		match *self {
+			InfoSendWorkerError::RecvError(ref e) => Some(e),
+			InfoSendWorkerError::SendError(ref e) => Some(e)
+		}
+	}
+}
+impl From<std::sync::mpsc::RecvError> for InfoSendWorkerError {
+	fn from(e: std::sync::mpsc::RecvError) -> InfoSendWorkerError {
+		InfoSendWorkerError::RecvError(e)
+	}
+}
+impl From<std::sync::mpsc::SendError<UsiInfoMessage>> for InfoSendWorkerError {
+	fn from(e: std::sync::mpsc::SendError<UsiInfoMessage>) -> InfoSendWorkerError {
+		InfoSendWorkerError::SendError(e)
 	}
 }
 /// USIコマンド文字列の型変換エラー

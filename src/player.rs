@@ -10,7 +10,7 @@ use std::fmt;
 use std::error::Error;
 use std::convert::TryFrom;
 
-use std::sync::mpsc::{Sender, SendError};
+use std::sync::mpsc::{Receiver, Sender};
 
 use command::*;
 use error::*;
@@ -289,6 +289,8 @@ pub struct InfoSendWorker<W> where W: USIOutputWriter {
 	thinking:Arc<AtomicBool>,
 	quited:Arc<AtomicBool>
 }
+const INFO_SEND_BUFFER_SIZE:usize = 100;
+
 impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 	/// `InfoSendWorker`の生成
 	///
@@ -297,11 +299,13 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 	/// * `writer` - 出力へ書き込みためのwriter
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	pub fn new<L>(writer:Arc<Mutex<W>>,
+			   notifier:Sender<()>,
 			   on_error_handler:Arc<Mutex<OnErrorHandler<L>>>)
 		-> InfoSendWorker<W> where L: Logger,
 								   Arc<Mutex<W>>: Send + 'static,
 								   Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
 		let thinking = Arc::new(AtomicBool::new(true));
+		let mut buffer = Vec::with_capacity(INFO_SEND_BUFFER_SIZE);
 
 		let (sender,receiver) = mpsc::channel();
 		{
@@ -311,32 +315,65 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 			thread::spawn(move || {
 				loop {
 					if !thinking.load(Ordering::Acquire) {
+						if buffer.len() > 0 {
+							match writer.lock() {
+								Err(ref e) => {
+									let _ = on_error_handler.lock().map(|h| h.call(e));
+									break;
+								},
+								Ok(ref writer) => {
+									if let Err(ref e) = writer.write(&buffer) {
+										let _ = on_error_handler.lock().map(|h| h.call(e));
+										break;
+									}
+								}
+							}
+						}
 						break;
 					}
 
 					match receiver.recv() {
 						Ok(UsiInfoMessage::Commands(commands)) => {
-							match UsiOutput::try_from(&UsiCommand::UsiInfo(commands)) {
-								Ok(UsiOutput::Command(ref s)) => {
-									match writer.lock() {
-										Err(ref e) => {
-											let _ = on_error_handler.lock().map(|h| h.call(e));
-											break;
-										},
-										Ok(ref writer) => {
-											let s = writer.write(s).is_err();
-											thread::sleep(time::Duration::from_millis(10));
-											s
-										}
-									};
-								},
+							let command = match UsiInfoCommand(commands).to_usi_command() {
+								Ok(command) => command,
 								Err(ref e) => {
 									let _ = on_error_handler.lock().map(|h| h.call(e));
 									break;
 								}
+							};
+
+							buffer.push(command);
+
+							if buffer.len() >= INFO_SEND_BUFFER_SIZE {
+								match writer.lock() {
+									Err(ref e) => {
+										let _ = on_error_handler.lock().map(|h| h.call(e));
+										break;
+									},
+									Ok(ref writer) => {
+										if let Err(ref e) = writer.write(&buffer) {
+											let _ = on_error_handler.lock().map(|h| h.call(e));
+											break;
+										}
+										buffer.clear();
+									}
+								}
 							}
 						},
 						Ok(UsiInfoMessage::Quit) => {
+							if buffer.len() > 0 {
+								match writer.lock() {
+									Err(ref e) => {
+										let _ = on_error_handler.lock().map(|h| h.call(e));
+									},
+									Ok(ref writer) => {
+										if let Err(ref e) = writer.write(&buffer) {
+											let _ = on_error_handler.lock().map(|h| h.call(e));
+										}
+									}
+								}
+							}
+
 							break;
 						},
 						Err(ref e) => {
@@ -344,6 +381,10 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 							break;
 						}
 					}
+				}
+
+				if let Err(ref e) = notifier.send(()) {
+					let _ = on_error_handler.lock().map(|h| h.call(e));
 				}
 			});
 		}
@@ -357,10 +398,11 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 	}
 
 	/// infoコマンド送信スレッドを終了させる
-	pub fn quit(&self) -> Result<(), SendError<UsiInfoMessage>> {
+	pub fn quit(&self,receiver:Receiver<()>) -> Result<(), InfoSendWorkerError> {
 		if !self.quited.swap(true,atomic::Ordering::Release) {
 			self.sender.send(UsiInfoMessage::Quit)?;
 			self.thinking.store(false, atomic::Ordering::Release);
+			receiver.recv()?;
 		}
 		Ok(())
 	}

@@ -26,7 +26,7 @@ use std::fmt;
 use std::{thread,time};
 use std::convert::TryFrom;
 use std::time::Instant;
-use std::sync::Mutex;
+use std::sync::{mpsc, Mutex};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
@@ -585,7 +585,11 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let info_send_worker = InfoSendWorker::new(writer.clone(),on_error_handler_inner.clone());
+							let (info_send_worker,on_info_send_worker_quit_receiver) = {
+								let (notifier,receiver) = mpsc::channel();
+
+								(InfoSendWorker::new(writer.clone(),notifier,on_error_handler_inner.clone()),receiver)
+							};
 
 							let info_sender = {
 								let info_send_worker = info_send_worker.clone();
@@ -625,7 +629,7 @@ impl<T,E> UsiAgent<T,E>
 											}
 										};
 
-										if let Err(ref e) = info_send_worker.quit() {
+										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											return;
 										}
@@ -694,7 +698,11 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let info_send_worker = InfoSendWorker::new(writer.clone(),on_error_handler_inner.clone());
+							let (info_send_worker,on_info_send_worker_quit_receiver) = {
+								let (notifier,receiver) = mpsc::channel();
+
+								(InfoSendWorker::new(writer.clone(),notifier,on_error_handler_inner.clone()),receiver)
+							};
 
 							let info_sender = {
 								let info_send_worker = info_send_worker.clone();
@@ -721,7 +729,7 @@ impl<T,E> UsiAgent<T,E>
 															}
 														};
 
-										if let Err(ref e) = info_send_worker.quit() {
+										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											return;
 										}
@@ -777,7 +785,11 @@ impl<T,E> UsiAgent<T,E>
 
 					match thread_queue.lock() {
 						Ok(mut thread_queue) => {
-							let info_send_worker = InfoSendWorker::new(writer.clone(),on_error_handler_inner.clone());
+							let (info_send_worker,on_info_send_worker_quit_receiver) = {
+								let (notifier,receiver) = mpsc::channel();
+
+								(InfoSendWorker::new(writer.clone(),notifier,on_error_handler_inner.clone()),receiver)
+							};
 
 							let info_sender = {
 								let info_send_worker = info_send_worker.clone();
@@ -801,7 +813,7 @@ impl<T,E> UsiAgent<T,E>
 															}
 														};
 
-										if let Err(ref e) = info_send_worker.quit() {
+										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
 											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											return;
 										}

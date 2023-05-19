@@ -134,7 +134,11 @@ fn test_send_immediate() {
 		(output_writer,r)
 	};
 
-	let info_send_worker = InfoSendWorker::new(Arc::new(Mutex::new(output_writer)),on_error_handler.clone());
+	let (info_send_worker,on_info_send_worker_quit_receiver) = {
+		let (notifier,receiver) = mpsc::channel();
+
+		(InfoSendWorker::new(Arc::new(Mutex::new(output_writer)),notifier,on_error_handler.clone()),receiver)
+	};
 
 	let mut info_sender = {
 		let info_send_worker = info_send_worker.clone();
@@ -155,7 +159,7 @@ fn test_send_immediate() {
 	});
 
 	h.join().unwrap();
-	info_send_worker.quit().unwrap();
+	info_send_worker.quit(on_info_send_worker_quit_receiver).unwrap();
 
 	let mut found = false;
 

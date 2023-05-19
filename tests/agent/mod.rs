@@ -5623,7 +5623,7 @@ fn test_info_send_commands_without_str() {
 											]) {
 												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
 											} else {
-												thread::sleep(Duration::from_millis(150));
+												thread::sleep(Duration::from_millis(50));
 												Ok(BestMove::Resign)
 											}
 										})]),
@@ -5785,7 +5785,7 @@ fn test_info_send_commands_without_str_and_multipv() {
 											]) {
 												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
 											} else {
-												thread::sleep(Duration::from_millis(100));
+												thread::sleep(Duration::from_millis(50));
 												Ok(BestMove::Resign)
 											}
 										})]),
@@ -5943,6 +5943,7 @@ fn test_info_send_commands_without_pv_and_multipv() {
 											]) {
 												Err(CommonError::Fail(String::from("An error occurred when sending the info command.")))
 											} else {
+												thread::sleep(Duration::from_millis(50));
 												Ok(BestMove::Resign)
 											}
 										})]),
@@ -6095,8 +6096,7 @@ fn test_info_send_commands_with_str_5times() {
 												}
 											}
 
-											thread::sleep(Duration::from_millis(250));
-
+											thread::sleep(Duration::from_millis(50));
 											Ok(BestMove::Resign)
 										})]),
 										ConsumedIterator::new(vec![]),
