@@ -4,7 +4,6 @@ use std::time::Instant;
 use std::sync::{atomic, mpsc, Mutex};
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::error::Error;
@@ -286,7 +285,6 @@ impl<W> Clone for USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
 pub struct InfoSendWorker<W> where W: USIOutputWriter {
 	sender:Sender<UsiInfoMessage>,
 	writer:Arc<Mutex<W>>,
-	thinking:Arc<AtomicBool>,
 	quited:Arc<AtomicBool>
 }
 const INFO_SEND_BUFFER_SIZE:usize = 100;
@@ -295,8 +293,8 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 	/// `InfoSendWorker`の生成
 	///
 	/// # Arguments
-	/// * `thinking` - プレイヤーの思考中フラグ
 	/// * `writer` - 出力へ書き込みためのwriter
+	/// * `notifier` - 処理の完了通知用のSender
 	/// * `on_error_handler` - エラーをログファイルなどに出力するためのオブジェクト
 	pub fn new<L>(writer:Arc<Mutex<W>>,
 			   notifier:Sender<()>,
@@ -304,34 +302,14 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 		-> InfoSendWorker<W> where L: Logger,
 								   Arc<Mutex<W>>: Send + 'static,
 								   Arc<Mutex<OnErrorHandler<L>>>: Send + 'static {
-		let thinking = Arc::new(AtomicBool::new(true));
 		let mut buffer = Vec::with_capacity(INFO_SEND_BUFFER_SIZE);
 
 		let (sender,receiver) = mpsc::channel();
 		{
-			let thinking = thinking.clone();
 			let writer = writer.clone();
 
 			thread::spawn(move || {
 				loop {
-					if !thinking.load(Ordering::Acquire) {
-						if buffer.len() > 0 {
-							match writer.lock() {
-								Err(ref e) => {
-									let _ = on_error_handler.lock().map(|h| h.call(e));
-									break;
-								},
-								Ok(ref writer) => {
-									if let Err(ref e) = writer.write(&buffer) {
-										let _ = on_error_handler.lock().map(|h| h.call(e));
-										break;
-									}
-								}
-							}
-						}
-						break;
-					}
-
 					match receiver.recv() {
 						Ok(UsiInfoMessage::Commands(commands)) => {
 							let command = match UsiInfoCommand(commands).to_usi_command() {
@@ -392,7 +370,6 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 		InfoSendWorker {
 			sender:sender,
 			writer:writer,
-			thinking:thinking,
 			quited:Arc::new(AtomicBool::new(false))
 		}
 	}
@@ -401,7 +378,6 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 	pub fn quit(&self,receiver:Receiver<()>) -> Result<(), InfoSendWorkerError> {
 		if !self.quited.swap(true,atomic::Ordering::Release) {
 			self.sender.send(UsiInfoMessage::Quit)?;
-			self.thinking.store(false, atomic::Ordering::Release);
 			receiver.recv()?;
 		}
 		Ok(())
@@ -412,7 +388,6 @@ impl<W> Clone for InfoSendWorker<W> where W: USIOutputWriter {
 		InfoSendWorker {
 			sender:self.sender.clone(),
 			writer:self.writer.clone(),
-			thinking:self.thinking.clone(),
 			quited:self.quited.clone()
 		}
 	}

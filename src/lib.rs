@@ -629,11 +629,6 @@ impl<T,E> UsiAgent<T,E>
 											}
 										};
 
-										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
-											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-											return;
-										}
-
 										busy_inner.store(false,Ordering::Release);
 
 										match bm {
@@ -668,6 +663,11 @@ impl<T,E> UsiAgent<T,E>
 											Err(ref e) => {
 												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
+										}
+
+										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
+											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
+											return;
 										}
 									},
 									Err(ref e) => {
@@ -729,11 +729,6 @@ impl<T,E> UsiAgent<T,E>
 															}
 														};
 
-										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
-											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-											return;
-										}
-
 										busy_inner.store(false,Ordering::Release);
 
 										match m {
@@ -755,6 +750,11 @@ impl<T,E> UsiAgent<T,E>
 											Err(ref e) => {
 												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
+										}
+
+										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
+											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
+											return;
 										}
 									},
 									Err(ref e) => {
@@ -813,11 +813,6 @@ impl<T,E> UsiAgent<T,E>
 															}
 														};
 
-										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
-											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-											return;
-										}
-
 										busy_inner.store(false,Ordering::Release);
 
 										match m {
@@ -839,6 +834,11 @@ impl<T,E> UsiAgent<T,E>
 											Err(ref e) => {
 												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 											}
+										}
+
+										if let Err(ref e) = info_send_worker.quit(on_info_send_worker_quit_receiver) {
+											let _ = on_error_handler_inner.lock().map(|h| h.call(e));
+											return;
 										}
 									},
 									Err(ref e) => {
