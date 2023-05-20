@@ -1,6 +1,6 @@
 [package]
 name = "usiagent"
-version = "0.6.6"
+version = "0.6.7"
 authors = ["jinpu <nanasi18@gmail.com>"]
 description = "USIAgent is a framework for Shogi AI development that supports the usi protocol."
 documentation = "https://docs.rs/USIAgent"
