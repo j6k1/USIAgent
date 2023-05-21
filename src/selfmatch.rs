@@ -1283,7 +1283,7 @@ impl<E> SelfMatchEngine<E>
 		thread::spawn(move || {
 			while !quit_ready.load(Ordering::Acquire) {
 				match input_reader.read() {
-					Ok(line) => {
+					Ok(Some(line)) => {
 						match input_handler(line) {
 							Ok(false) => {
 								return;

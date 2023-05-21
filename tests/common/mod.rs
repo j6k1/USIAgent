@@ -104,10 +104,10 @@ impl MockInputReader {
 	}
 }
 impl USIInputReader for MockInputReader {
-	fn read(&mut self) -> io::Result<String> {
+	fn read(&mut self) -> io::Result<Option<String>> {
 		let l = self.rcv.recv().expect("Failed to receive input.");
 
-		Ok(l.to_string())
+		Ok(Some(l.to_string()))
 	}
 }
 #[derive(Debug)]

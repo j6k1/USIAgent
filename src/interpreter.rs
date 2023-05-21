@@ -49,7 +49,7 @@ impl USIInterpreter {
 					Err(ref e) => {
 						let _ = on_error_handler.lock().map(|h| h.call(e));
 					},
-					Ok(ref line) => {
+					Ok(Some(ref line)) => {
 						let f = line.split(" ").collect::<Vec<&str>>();
 
 						match event_queue.lock() {
@@ -170,6 +170,17 @@ impl USIInterpreter {
 										});
 									}
 								}
+							}
+						}
+					},
+					Ok(None) => {
+						match event_queue.lock() {
+							Err(ref e) => {
+								let _ = on_error_handler.lock().map(|h| h.call(e));
+							},
+							Ok(mut event_queue) => {
+								event_queue.push(SystemEvent::Quit);
+								break;
 							}
 						}
 					}
