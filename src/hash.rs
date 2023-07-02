@@ -4,10 +4,11 @@ use std::hash::Hash;
 use std::ops::Add;
 use std::ops::Sub;
 use std::ops::BitXor;
-use rand;
-use rand::Rng;
-use rand::Rand;
+use rand::{prelude, Rng, SeedableRng};
+use rand::prelude::{Distribution};
+use rand_xorshift::XorShiftRng;
 use std::num::Wrapping;
+use rand::distributions::Standard;
 
 use shogi::*;
 use rule::AppliedMove;
@@ -278,17 +279,20 @@ impl InitialHash for u8 {
 }
 /// 局面のハッシュ値を計算する。差分計算対応
 pub struct KyokumenHash<T>
-	where T: Add + Sub + BitXor<Output = T> + Rand + Copy + InitialHash,
-			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy {
+	where T: Add + Sub + BitXor<Output = T> + Copy + InitialHash,
+			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy,
+		    Standard: Distribution<T> {
 	kyokumen_hash_seeds:[[T; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1],
 	mochigoma_hash_seeds:[[[T; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2],
 }
 impl<T> KyokumenHash<T>
-	where T: Add + Sub + BitXor<Output = T> + Rand + Copy + InitialHash,
-			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy {
+	where T: Add + Sub + BitXor<Output = T> + Copy + InitialHash,
+			Wrapping<T>: Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>> + BitXor<Output = Wrapping<T>> + Copy,
+		    Standard: Distribution<T> {
 	/// `KyokumenHash`の生成
 	pub fn new() -> KyokumenHash<T> {
-		let mut rnd = rand::XorShiftRng::new_unseeded();
+		let mut rnd = prelude::thread_rng();
+		let mut rnd = XorShiftRng::from_seed(rnd.gen::<[u8;16]>());
 
 		let mut kyokumen_hash_seeds:[[T; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1] = [[T::INITIAL_HASH; SUJI_MAX * DAN_MAX]; KOMA_KIND_MAX + 1];
 		let mut mochigoma_hash_seeds:[[[T; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2] = [[[T::INITIAL_HASH; MOCHIGOMA_KIND_MAX + 1]; MOCHIGOMA_MAX]; 2];

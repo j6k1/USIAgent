@@ -2,6 +2,8 @@
 #![doc(html_root_url="https://j6k1.github.io/USIAgent/")]
 extern crate chrono;
 extern crate rand;
+extern crate rand_distr;
+extern crate rand_xorshift;
 #[macro_use]
 extern crate crossbeam_channel;
 extern crate queuingtask;
