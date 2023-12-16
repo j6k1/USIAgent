@@ -216,6 +216,8 @@ pub trait USIPlayer<E>: fmt::Debug where E: PlayerError {
 pub enum UsiInfoMessage {
 	/// infoコマンドのサブコマンドのリスト
 	Commands(Vec<UsiInfoSubCommand>),
+	/// 送信バッファの中身を全て書き込む
+	Flush,
 	/// infoコマンド発行スレッドを停止させる
 	Quit,
 }
@@ -231,6 +233,9 @@ pub trait InfoSender: Clone + Send + 'static {
 	/// # Arguments
 	/// * `commands` - infoサブコマンドのリスト
 	fn send_immediate(&mut self,commands:Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError>;
+	fn flush(&mut self) -> Result<(), InfoSendError> {
+		Ok(())
+	}
 }
 /// infoコマンドを標準出力へ出力する`InfoSender`の実装
 pub struct USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
@@ -274,6 +279,15 @@ impl<W> InfoSender for USIInfoSender<W> where W: USIOutputWriter + Send + 'stati
 		}
 
 		Ok(())
+	}
+
+	fn flush(&mut self) -> Result<(), InfoSendError> {
+		if let Err(_) = self.worker.sender.send(UsiInfoMessage::Flush) {
+			Err(InfoSendError::Fail(String::from(
+				"info sender buffer flush failed.")))
+		} else {
+			Ok(())
+		}
 	}
 }
 impl<W> Clone for USIInfoSender<W> where W: USIOutputWriter + Send + 'static {
@@ -334,6 +348,20 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 											break;
 										}
 										buffer.clear();
+									}
+								}
+							}
+						},
+						Ok(UsiInfoMessage::Flush) => {
+							if buffer.len() > 0 {
+								match writer.lock() {
+									Err(ref e) => {
+										let _ = on_error_handler.lock().map(|h| h.call(e));
+									},
+									Ok(ref writer) => {
+										if let Err(ref e) = writer.write(&buffer) {
+											let _ = on_error_handler.lock().map(|h| h.call(e));
+										}
 									}
 								}
 							}
