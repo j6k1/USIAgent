@@ -91,7 +91,7 @@ pub type Square = i32;
 impl SquareToPoint for Square {
 	#[inline]
 	fn square_to_point(self) -> (u32,u32) {
-		let x = self / 9;
+		let x = self * 114 / 1024;
 		let y = self - x * 9;
 
 		(x as u32,y as u32)
@@ -100,7 +100,7 @@ impl SquareToPoint for Square {
 impl SquareToPoint for u32 {
 	#[inline]
 	fn square_to_point(self) -> (u32,u32) {
-		let x = self / 9;
+		let x = self * 114 / 1024;
 		let y = self - x * 9;
 
 		(x,y)
