@@ -2,9 +2,10 @@
 use std::convert::TryFrom;
 use std::fmt;
 use std::marker::PhantomData;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard, PoisonError, TryLockError};
 use std::sync::Arc;
 use std::error::Error;
+use std::ops::Deref;
 use std::time::{Instant,Duration};
 
 use MaxIndex;
@@ -624,6 +625,10 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 		self.events.len() > 0
 	}
 }
+/// イベントキューの読み取り。読みだした後キューは空になる
+pub trait DrainEvents<EV,E> {
+	fn drain_events(self) -> Result<Vec<EV>,E>;
+}
 /// イベントディスパッチャ
 pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
 											E: MapEventKind<K> + fmt::Debug,
@@ -672,10 +677,11 @@ pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
 	/// * [`EventDispatchError`] 手が合法手でない
 	///
 	/// [`EventDispatchError`]: ../error/enum.EventDispatchError.html
-	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
+	fn dispatch_events<'a,DE>(&mut self, ctx:&T, event_queue:impl DrainEvents<E,DE>) ->
 										Result<(), EventDispatchError<'a,EventQueue<E,K>,E,UE>>
 										where E: fmt::Debug, K: fmt::Debug,
 												UE: Error + fmt::Debug,
+											    EventDispatchError<'a,EventQueue<E,K>,E,UE>: From<DE>,
 												EventHandlerError<K,UE>: From<UE>,
 												usize: From<K>;
 }
@@ -741,12 +747,12 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 		self.once_handlers[usize::from(id)].push(Box::new(handler));
 	}
 
-	fn dispatch_events<'a>(&mut self, ctx:&T, event_queue:&'a Mutex<EventQueue<E,K>>) ->
+	fn dispatch_events<'a,DE>(&mut self, ctx:&T, event_queue:impl DrainEvents<E,DE>) ->
 									Result<(), EventDispatchError<'a,EventQueue<E,K>,E,UE>>
-									where E: fmt::Debug, K: fmt::Debug, usize: From<K> {
-		let events = {
-			event_queue.lock()?.drain_events()
-		};
+									where E: fmt::Debug, K: fmt::Debug,
+										  EventDispatchError<'a,EventQueue<E,K>,E,UE>: From<DE>,
+										  usize: From<K> {
+		let events = event_queue.drain_events()?;
 
 		let mut has_error = false;
 
@@ -781,6 +787,23 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 			true => Err(EventDispatchError::ContainError),
 			false => Ok(()),
 		}
+	}
+}
+impl<'a,E,K> DrainEvents<E,PoisonError<MutexGuard<'a,EventQueue<E,K>>>> for &'a Mutex<EventQueue<E,K>>
+	where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
+
+	fn drain_events(self) -> Result<Vec<E>, PoisonError<MutexGuard<'a,EventQueue<E,K>>>> {
+		match self.try_lock() {
+			Ok(mut queue) => Ok(queue.drain_events()),
+			Err(TryLockError::WouldBlock) => Ok(Vec::with_capacity(0)),
+			Err(TryLockError::Poisoned(e)) => Err(e)
+		}
+	}
+}
+impl<'a,E,K> DrainEvents<E,PoisonError<MutexGuard<'a,EventQueue<E,K>>>> for &'a Arc<Mutex<EventQueue<E,K>>>
+	where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug{
+	fn drain_events(self) -> Result<Vec<E>, PoisonError<MutexGuard<'a, EventQueue<E, K>>>> {
+		self.deref().drain_events()
 	}
 }
 /// システムイベントキュー
