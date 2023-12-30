@@ -625,9 +625,10 @@ impl<E,K> EventQueue<E,K> where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 		self.events.len() > 0
 	}
 }
-/// イベントキューの読み取り。読みだした後キューは空になる
-pub trait DrainEvents<EV,E> {
-	fn drain_events(self) -> Result<Vec<EV>,E>;
+/// ディスパッチャに対してイベントを供給する。
+pub trait EventProvider<E> {
+	type Error;
+	fn provide(self) -> Result<Vec<E>,Self::Error>;
 }
 /// イベントディスパッチャ
 pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
@@ -677,11 +678,12 @@ pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
 	/// * [`EventDispatchError`] 手が合法手でない
 	///
 	/// [`EventDispatchError`]: ../error/enum.EventDispatchError.html
-	fn dispatch_events<'a,DE>(&mut self, ctx:&T, event_queue:impl DrainEvents<E,DE>) ->
+	fn dispatch_events<'a,P>(&mut self, ctx:&T, event_queue:P) ->
 										Result<(), EventDispatchError<'a,EventQueue<E,K>,E,UE>>
 										where E: fmt::Debug, K: fmt::Debug,
-												UE: Error + fmt::Debug,
-											    EventDispatchError<'a,EventQueue<E,K>,E,UE>: From<DE>,
+												P: EventProvider<E>,
+											  	UE: Error + fmt::Debug,
+											    EventDispatchError<'a,EventQueue<E,K>,E,UE>: From<P::Error>,
 												EventHandlerError<K,UE>: From<UE>,
 												usize: From<K>;
 }
@@ -747,12 +749,13 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 		self.once_handlers[usize::from(id)].push(Box::new(handler));
 	}
 
-	fn dispatch_events<'a,DE>(&mut self, ctx:&T, event_queue:impl DrainEvents<E,DE>) ->
+	fn dispatch_events<'a,P>(&mut self, ctx:&T, event_queue:P) ->
 									Result<(), EventDispatchError<'a,EventQueue<E,K>,E,UE>>
 									where E: fmt::Debug, K: fmt::Debug,
-										  EventDispatchError<'a,EventQueue<E,K>,E,UE>: From<DE>,
+										  P: EventProvider<E>,
+										  EventDispatchError<'a,EventQueue<E,K>,E,UE>: From<P::Error>,
 										  usize: From<K> {
-		let events = event_queue.drain_events()?;
+		let events = event_queue.provide()?;
 
 		let mut has_error = false;
 
@@ -789,10 +792,12 @@ impl<'b,K,E,T,L,UE> EventDispatcher<'b,K,E,T,UE> for USIEventDispatcher<'b,K,E,T
 		}
 	}
 }
-impl<'a,E,K> DrainEvents<E,PoisonError<MutexGuard<'a,EventQueue<E,K>>>> for &'a Mutex<EventQueue<E,K>>
+impl<'a,E,K> EventProvider<E> for &'a Mutex<EventQueue<E,K>>
 	where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug {
 
-	fn drain_events(self) -> Result<Vec<E>, PoisonError<MutexGuard<'a,EventQueue<E,K>>>> {
+	type Error = PoisonError<MutexGuard<'a,EventQueue<E,K>>>;
+
+	fn provide(self) -> Result<Vec<E>, PoisonError<MutexGuard<'a,EventQueue<E,K>>>> {
 		match self.try_lock() {
 			Ok(mut queue) => Ok(queue.drain_events()),
 			Err(TryLockError::WouldBlock) => Ok(Vec::with_capacity(0)),
@@ -800,10 +805,13 @@ impl<'a,E,K> DrainEvents<E,PoisonError<MutexGuard<'a,EventQueue<E,K>>>> for &'a 
 		}
 	}
 }
-impl<'a,E,K> DrainEvents<E,PoisonError<MutexGuard<'a,EventQueue<E,K>>>> for &'a Arc<Mutex<EventQueue<E,K>>>
+impl<'a,E,K> EventProvider<E> for &'a Arc<Mutex<EventQueue<E,K>>>
 	where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug{
-	fn drain_events(self) -> Result<Vec<E>, PoisonError<MutexGuard<'a, EventQueue<E, K>>>> {
-		self.deref().drain_events()
+
+	type Error = PoisonError<MutexGuard<'a,EventQueue<E,K>>>;
+
+	fn provide(self) -> Result<Vec<E>, PoisonError<MutexGuard<'a, EventQueue<E, K>>>> {
+		self.deref().provide()
 	}
 }
 /// システムイベントキュー
