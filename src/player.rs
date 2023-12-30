@@ -263,22 +263,8 @@ impl<W> InfoSender for USIInfoSender<W> where W: USIOutputWriter + Send + 'stati
 	}
 	
 	fn send_immediate(&mut self, commands: Vec<UsiInfoSubCommand>) -> Result<(), InfoSendError> {
-		let lines = vec![UsiInfoCommand(commands).to_usi_command()?];
-
-		match self.worker.writer.lock() {
-			Ok(writer) => {
-				if let Err(_) =  writer.write(&lines) {
-					return Err(InfoSendError::Fail(String::from(
-						"info command send failed.")))
-				}
-			},
-			Err(_) => {
-				return Err(InfoSendError::Fail(String::from(
-					"Failed to secure exclusive lock on writer in the process of sending info command.")))
-			}
-		}
-
-		Ok(())
+		self.send(commands)?;
+		Ok(self.flush()?)
 	}
 
 	fn flush(&mut self) -> Result<(), InfoSendError> {
