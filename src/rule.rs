@@ -2189,7 +2189,7 @@ impl Rule {
 	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut Vec<LegalMove>) {
 		if t == Teban::Sente {
 			for p in &mut state.part.sente_fu_board.clone() {
-				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					let (x,y) = p.square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2205,7 +2205,7 @@ impl Rule {
 			}
 
 			for p in &mut state.part.sente_kyou_board.clone() {
-				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					let (x,y) = p.square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2221,7 +2221,7 @@ impl Rule {
 			}
 
 			for p in &mut state.part.sente_kei_board.clone() {
-				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					let (x,y) = p.square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2237,7 +2237,7 @@ impl Rule {
 			}
 
 			for p in &mut state.part.sente_gin_board.clone() {
-				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					let (x,y) = p.square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2261,7 +2261,7 @@ impl Rule {
 			}
 
 			for p in &mut state.part.sente_kaku_board.clone() {
-				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					let (x,y) = p.square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2277,7 +2277,7 @@ impl Rule {
 			}
 
 			for p in &mut state.part.sente_hisha_board.clone() {
-				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					let (x,y) = p.square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2309,7 +2309,7 @@ impl Rule {
 			} };
 
 			for p in &mut b {
-				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					let (x,y) = (80 - p).square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2329,7 +2329,7 @@ impl Rule {
 			} };
 
 			for p in &mut b {
-				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					let (x,y) = (80 - p).square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2349,7 +2349,7 @@ impl Rule {
 			} };
 
 			for p in &mut b {
-				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					let (x,y) = (80 - p).square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2369,7 +2369,7 @@ impl Rule {
 			} };
 
 			for p in &mut b {
-				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					let (x,y) = (80 - p).square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2401,7 +2401,7 @@ impl Rule {
 			} };
 
 			for p in &mut b {
-				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					let (x,y) = (80 - p).square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -2421,7 +2421,7 @@ impl Rule {
 			} };
 
 			for p in &mut b {
-				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					let (x,y) = (80 - p).square_to_point();
 
 					Rule::legal_moves_with_point_and_kind_and_buffer(
@@ -3665,17 +3665,17 @@ impl Rule {
 									}
 								};
 							},
-							SHisha | SHishaN => {
-								ps.sente_hisha_board = unsafe {
-									BitBoard {
-										merged_bitboard: ps.sente_hisha_board.merged_bitboard ^ (from_mask | to_mask)
-									}
-								};
-							},
 							SKaku | SKakuN => {
 								ps.sente_kaku_board = unsafe {
 									BitBoard {
 										merged_bitboard: ps.sente_kaku_board.merged_bitboard ^ (from_mask | to_mask)
+									}
+								};
+							},
+							SHisha | SHishaN => {
+								ps.sente_hisha_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.sente_hisha_board.merged_bitboard ^ (from_mask | to_mask)
 									}
 								};
 							},
@@ -3721,17 +3721,17 @@ impl Rule {
 									}
 								};
 							},
-							GHisha | GHishaN => {
-								ps.gote_hisha_board = unsafe {
-									BitBoard {
-										merged_bitboard: ps.gote_hisha_board.merged_bitboard ^ (from_mask | to_mask)
-									}
-								};
-							},
 							GKaku | GKakuN => {
 								ps.gote_kaku_board = unsafe {
 									BitBoard {
 										merged_bitboard: ps.gote_kaku_board.merged_bitboard ^ (from_mask | to_mask)
+									}
+								};
+							},
+							GHisha | GHishaN => {
+								ps.gote_hisha_board = unsafe {
+									BitBoard {
+										merged_bitboard: ps.gote_hisha_board.merged_bitboard ^ (from_mask | to_mask)
 									}
 								};
 							},

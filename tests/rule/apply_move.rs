@@ -87,7 +87,7 @@ fn test_apply_move_none_check_sente() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&omc),
+	assert_eq!(sort_legal_mvs_legacy(Teban::Sente,state.get_banmen(),legal_moves_all(&Teban::Sente,state.get_banmen(),&omc)),
 		Rule::legal_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -151,7 +151,7 @@ fn test_apply_move_none_check_mochigoma_not_empty_sente() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&omc),
+	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Sente,&banmen,&omc)),
 			   Rule::legal_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 				   LegalMove::from(m)
 			   }).collect::<Vec<LegalMove>>()
@@ -218,7 +218,7 @@ fn test_apply_move_none_check_gote() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&omc),
+	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
 		Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -293,7 +293,7 @@ fn test_apply_move_none_check_mochigoma_not_empty_gote() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&omc),
+	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
 			   Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 				   LegalMove::from(m)
 			   }).collect::<Vec<LegalMove>>()
@@ -334,7 +334,7 @@ fn test_apply_move_none_check_nari_move_sente() {
 		}
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&mc.clone().into()),
+	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Sente,&banmen,&mc.clone().into())),
 		Rule::legal_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -386,7 +386,7 @@ fn test_apply_move_none_check_nari_move_gote() {
 		}
 	}
 
-	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc.clone().into()),
+	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Gote,&banmen,&mc.clone().into())),
 		Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -440,7 +440,7 @@ fn test_apply_move_none_check_put_move_sente() {
 			}
 		}
 
-		assert_eq!(legal_moves_all(&Teban::Sente,&banmen,&omc),
+		assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Sente,&banmen,&omc)),
 			Rule::legal_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
@@ -506,7 +506,7 @@ fn test_apply_move_none_check_put_move_gote() {
 			}
 		}
 
-		assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&omc),
+		assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
 			Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()

@@ -16,6 +16,7 @@ mod control;
 mod is_possible_nari;
 mod position;
 
+use std::cmp;
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::convert::From;
@@ -26,7 +27,7 @@ use usiagent::shogi::*;
 use usiagent::protocol::*;
 use usiagent::error::*;
 use usiagent::rule;
-use usiagent::rule::BANMEN_START_POS;
+use usiagent::rule::{BANMEN_START_POS, SquareToPoint};
 use usiagent::hash::*;
 
 #[allow(unused)]
@@ -61,8 +62,73 @@ use usiagent::shogi::KomaKind::{
 	GHishaN,
 	Blank
 };
+
+fn normalize(k:KomaKind) -> KomaKind {
+	match k {
+		SFu | SFuN => SFu,
+		SKyou | SKyouN => SKyou,
+		SKei | SKeiN => SKei,
+		SGin | SGinN => SGin,
+		SKin => SKin,
+		SKaku | SKakuN => SKaku,
+		SHisha | SHishaN => SHisha,
+		SOu => SOu,
+		GFu | GFuN => GFu,
+		GKyou | GKyouN => GKyou,
+		GKei | GKeiN => GKei,
+		GGin | GGinN => GGin,
+		GKin => GKin,
+		GKaku | GKakuN => GKaku,
+		GHisha | GHishaN => GHisha,
+		GOu => GOu,
+		Blank => Blank
+	}
+}
+
+pub fn sort_legal_mvs_legacy(teban:Teban,banmen:&Banmen,mut mvs:Vec<LegalMove>) -> Vec<LegalMove> {
+	mvs.sort_by(|a,b| {
+		match (a,b) {
+			(&LegalMove::To(KomaSrcPosition(ax,ay), _, _),&LegalMove::To(KomaSrcPosition(bx,by), _, _)) => {
+				let ax = 9 - ax;
+				let ay = ay - 1;
+				let bx = 9 - bx;
+				let by = by - 1;
+
+				if teban == Teban::Sente {
+					normalize(banmen.0[ay as usize][ax as usize]).cmp(&normalize(banmen.0[by as usize][bx as usize])).then(ax.cmp(&bx)).then(by.cmp(&ay))
+				} else {
+					normalize(banmen.0[ay as usize][ax as usize]).cmp(&normalize(banmen.0[by as usize][bx as usize])).then(bx.cmp(&ax)).then(ay.cmp(&by))
+				}
+			},
+			_ => cmp::Ordering::Equal
+		}
+	});
+
+	mvs
+}
+#[allow(dead_code)]
+pub fn sort_legal_mvs(teban:Teban,banmen:&Banmen,mut mvs:Vec<usiagent::rule::LegalMove>) -> Vec<usiagent::rule::LegalMove> {
+	mvs.sort_by(|a,b| {
+		match (a,b) {
+			(rule::LegalMove::To(a),rule::LegalMove::To(b)) => {
+				let (ax,ay) = a.src().square_to_point();
+				let (bx,by) = b.src().square_to_point();
+
+
+				if teban == Teban::Sente {
+					normalize(banmen.0[ay as usize][ax as usize]).cmp(&normalize(banmen.0[by as usize][bx as usize])).then(ax.cmp(&bx)).then(by.cmp(&ay))
+				} else {
+					normalize(banmen.0[ay as usize][ax as usize]).cmp(&normalize(banmen.0[by as usize][bx as usize])).then(bx.cmp(&ax)).then(ay.cmp(&by))
+				}
+			},
+			_ => cmp::Ordering::Equal
+		}
+	});
+
+	mvs
+}
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug)]
-enum LegalMove {
+pub enum LegalMove {
 	To(KomaSrcPosition,KomaDstToPosition,Option<ObtainKind>),
 	Put(MochigomaKind,KomaDstPutPosition),
 }
