@@ -11,7 +11,7 @@ use MaxIndex;
 use std::collections::HashMap;
 
 /// 盤面上の駒の種別
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
+#[derive(Clone, Copy, Eq, PartialOrd, Ord, PartialEq, Debug, Hash)]
 pub enum KomaKind {
 	/// 先手歩
 	SFu = 0,

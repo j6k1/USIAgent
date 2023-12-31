@@ -1103,8 +1103,7 @@ impl Rule {
 			80 - from
 		};
 
-		let x = from / 9;
-		let y = from - x * 9;
+		let (x,y) = from.square_to_point();
 
 		let mut mask = if kind < GFu {
 			CANDIDATE_BITS[kind as usize]
@@ -1593,7 +1592,7 @@ impl Rule {
 	) -> BitBoard {
 		let mut occ = unsafe { self_occupied.merged_bitboard | opponent_occupied.merged_bitboard };
 
-		let x = from / 9;
+		let x = from * 114 / 1024;
 
 		let mask = H_MASK << (from - 9 * x + 1);
 
@@ -2188,31 +2187,265 @@ impl Rule {
 	/// assert!(mvs.len() > 0);
 	/// ```
 	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut Vec<LegalMove>) {
-		/// Todo
-		/*
 		if t == Teban::Sente {
-			let mut board = &mut state.part.sente_fu_board.clone();
+			for p in &mut state.part.sente_fu_board.clone() {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+					let (x,y) = p.square_to_point();
 
-			for p in &mut board {
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SFu, mvs
+					);
+				} else {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SFuN, mvs
+					);
+				}
+			}
+
+			for p in &mut state.part.sente_kyou_board.clone() {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKyou, mvs
+					);
+				} else {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKyouN, mvs
+					);
+				}
+			}
+
+			for p in &mut state.part.sente_kei_board.clone() {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKei, mvs
+					);
+				} else {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKeiN, mvs
+					);
+				}
+			}
+
+			for p in &mut state.part.sente_gin_board.clone() {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SGin, mvs
+					);
+				} else {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SGinN, mvs
+					);
+				}
+			}
+
+			for p in &mut state.part.sente_kin_board.clone() {
+				let (x,y) = p.square_to_point();
+
+				Rule::legal_moves_with_point_and_kind_and_buffer(
+					t, state, x as u32, y as u32, KomaKind::SKin, mvs
+				);
+			}
+
+			for p in &mut state.part.sente_kaku_board.clone() {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKaku, mvs
+					);
+				} else {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKakuN, mvs
+					);
+				}
+			}
+
+			for p in &mut state.part.sente_hisha_board.clone() {
+				if unsafe { state.part.sente_nari_board.merged_bitboard & 2 << p } == 0 {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SHisha, mvs
+					);
+				} else {
+					let (x,y) = p.square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SHishaN, mvs
+					);
+				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				let (x,y) = p.square_to_point();
+
+				Rule::legal_moves_with_point_and_kind_and_buffer(
+					t, state, x as u32, y as u32, KomaKind::SOu, mvs
+				);
 			}
 		} else {
-			let mut board = BitBoard { merged_bitboard: 0 };
-		}
-		 */
-		match &state.banmen {
-			&Banmen(ref kinds) => {
-				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len() {
-						let (x,y) = match t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8-x,8-y),
-						};
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_fu_board.merged_bitboard.reverse_bits() >> 45
+			} };
 
-						Rule::legal_moves_with_point_and_kind_and_buffer(
-							t, state, x as u32, y as u32, kinds[y][x], mvs
-						);
-					}
+			for p in &mut b {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GFu, mvs
+					);
+				} else {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GFuN, mvs
+					);
 				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_kyou_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GKyou, mvs
+					);
+				} else {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GKyouN, mvs
+					);
+				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_kei_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GKei, mvs
+					);
+				} else {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GKeiN, mvs
+					);
+				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_gin_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GGin, mvs
+					);
+				} else {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GGinN, mvs
+					);
+				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_kin_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				let (x,y) = (80 - p).square_to_point();
+
+				Rule::legal_moves_with_point_and_kind_and_buffer(
+					t, state, x as u32, y as u32, KomaKind::GKin, mvs
+				);
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_kaku_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKaku, mvs
+					);
+				} else {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::SKakuN, mvs
+					);
+				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_hisha_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				if unsafe { state.part.gote_nari_board.merged_bitboard & 2 << (80 - p) } == 0 {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GHisha, mvs
+					);
+				} else {
+					let (x,y) = (80 - p).square_to_point();
+
+					Rule::legal_moves_with_point_and_kind_and_buffer(
+						t, state, x as u32, y as u32, KomaKind::GHishaN, mvs
+					);
+				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.sente_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				let (x,y) = (80 - p).square_to_point();
+
+				Rule::legal_moves_with_point_and_kind_and_buffer(
+					t, state, x as u32, y as u32, KomaKind::GOu, mvs
+				);
 			}
 		}
 	}
@@ -2332,9 +2565,9 @@ impl Rule {
 				}
 
 				let (x,p_mask) = if t == Teban::Sente {
-					(p / 9,1 << p)
+					(p * 114 / 1024,1 << p)
 				} else {
-					((80 - p) / 9, 1 << (80 - p))
+					((80 - p) * 114 / 1024, 1 << (80 - p))
 				};
 
 				if deny_move_bitboard & p_mask != 0 {
