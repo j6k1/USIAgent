@@ -6,6 +6,7 @@ use std::fmt::Formatter;
 use std::ops::BitOr;
 use std::ops::Not;
 use std::convert::TryFrom;
+use chrono::Local;
 
 use shogi::*;
 use hash::*;
@@ -44,6 +45,8 @@ use shogi::KomaKind::{
 	Blank
 };
 use Find;
+use math::Prng;
+use movepick::{MovePicker, RandomPicker};
 
 trait KomaKindFrom<T> {
 	fn kind_from(k:T) -> Self;
@@ -1160,7 +1163,7 @@ impl Rule {
 		deny_move_mask:u128,
 		inverse_position:bool,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let to = m as u32;
 
@@ -1176,11 +1179,11 @@ impl Rule {
 		let nari = kind.is_nari();
 
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
-			mvs.push(move_builder(from, to, true));
+			mvs.push(move_builder(from, to, true)).unwrap();
 		}
 
 		if nari || deny_move_mask & to_mask == 0 {
-			mvs.push(move_builder(from, to, false));
+			mvs.push(move_builder(from, to, false)).unwrap();
 		}
 	}
 
@@ -1203,7 +1206,7 @@ impl Rule {
 		nari_mask:u128,
 		deny_move_mask:u128,
 		inverse_position:bool,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) {
 		let to = m as u32;
 
@@ -1221,11 +1224,11 @@ impl Rule {
 		let o = Some(ObtainKind::Ou);
 
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
-			mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o)));
+			mvs.push(LegalMove::To(LegalMoveTo::new(from, to, true, o))).unwrap();
 		}
 
 		if deny_move_mask & to_mask == 0 {
-			mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o)));
+			mvs.push(LegalMove::To(LegalMoveTo::new(from, to, false, o))).unwrap();
 		}
 	}
 
@@ -1251,7 +1254,7 @@ impl Rule {
 		deny_move_mask:u128,
 		inverse_position:bool,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits(teban, self_occupied, from, kind);
 
@@ -1290,12 +1293,13 @@ impl Rule {
 		inverse_position:bool,
 		move_builder:&F
 	) -> Vec<LegalMove> where F: Fn(u32,u32,bool) -> LegalMove {
-		let mut mvs:Vec<LegalMove> = Vec::with_capacity(8);
+		let seed = Local::now().timestamp();
+		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
 		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 			teban,self_occupied,from,kind,nari_mask,deny_move_mask,inverse_position,move_builder,&mut mvs);
 
-		mvs
+		mvs.into()
 	}
 
 	#[inline]
@@ -1398,7 +1402,7 @@ impl Rule {
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,80 - from);
 
@@ -1483,7 +1487,7 @@ impl Rule {
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,from);
 
@@ -1647,7 +1651,7 @@ impl Rule {
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
 
@@ -1732,7 +1736,7 @@ impl Rule {
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
 
@@ -1812,7 +1816,7 @@ impl Rule {
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
 
@@ -1847,7 +1851,7 @@ impl Rule {
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let mut board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
 
@@ -1906,13 +1910,14 @@ impl Rule {
 	pub fn legal_moves_with_point_and_kind(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		let seed = Local::now().timestamp();
+		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
 		Rule::legal_moves_with_point_and_kind_and_buffer(
 			t,state,x,y,kind,&mut mvs
 		);
 
-		mvs
+		mvs.into()
 	}
 
 	/// ビットボードから列挙された合法手の情報から`LegalMove`を生成して返す
@@ -1954,7 +1959,7 @@ impl Rule {
 	pub fn legal_moves_with_point_and_kind_and_buffer(
 		t:Teban,state:&State,
 		x:u32,y:u32,kind:KomaKind,
-		mvs:&mut Vec<LegalMove>
+		mvs:&mut impl MovePicker<LegalMove>
 	) {
 		let from = x * 9 + y;
 
@@ -2162,11 +2167,12 @@ impl Rule {
 	/// ```
 	pub fn legal_moves_from_banmen(t:Teban,state:&State)
 		-> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		let seed = Local::now().timestamp();
+		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
 		Rule::legal_moves_from_banmen_with_buffer(t,state,&mut mvs);
 
-		mvs
+		mvs.into()
 	}
 
 	/// 手番と盤面の状態を元に合法手を生成してバッファに追加
@@ -2179,14 +2185,20 @@ impl Rule {
 	/// `State`の状態が不正な時の動作は未定義
 	/// # Examples
 	/// ```
+	/// extern crate chrono;
+	///
 	/// use usiagent::rule::*;
 	/// use usiagent::shogi::*;
-	/// let mut mvs = Vec::new();
+	/// use usiagent::movepick::*;
+	/// use usiagent::math::*;
+	/// use chrono::Local;
+	/// let seed = Local::now().timestamp();
+	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
 	/// Rule::legal_moves_from_banmen_with_buffer(Teban::Sente,&state,&mut mvs);
 	/// assert!(mvs.len() > 0);
 	/// ```
-	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut Vec<LegalMove>) {
+	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) {
 		if t == Teban::Sente {
 			for p in &mut state.part.sente_fu_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
@@ -2607,11 +2619,12 @@ impl Rule {
 	pub fn legal_moves_from_mochigoma(t:Teban,mc:&MochigomaCollections,state:&State)
 		-> Vec<LegalMove> {
 
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		let seed = Local::now().timestamp();
+		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
 		Rule::legal_moves_from_mochigoma_with_buffer(t,mc,state,&mut mvs);
 
-		mvs
+		mvs.into()
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に駒を置く合法手を生成してバッファに追加
@@ -2623,15 +2636,21 @@ impl Rule {
 	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
 	/// # Examples
 	/// ```
+	/// extern crate chrono;
+	///
 	/// use usiagent::rule::*;
 	/// use usiagent::shogi::*;
-	/// let mut mvs = Vec::new();
+	/// use usiagent::movepick::*;
+	/// use usiagent::math::*;
+	/// use chrono::Local;
+	/// let seed = Local::now().timestamp();
+	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
 	/// Rule::legal_moves_from_mochigoma_with_buffer(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs);
 	/// assert!(mvs.len() == 0);
 	/// ```
 	pub fn legal_moves_from_mochigoma_with_buffer(
-		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut Vec<LegalMove>
+		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) {
 		let mc = match mc {
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
@@ -2717,9 +2736,9 @@ impl Rule {
 				}
 
 				if t == Teban::Sente {
-					mvs.push(LegalMove::Put(LegalMovePut::new(m,p as u32)));
+					mvs.push(LegalMove::Put(LegalMovePut::new(m,p as u32))).unwrap();
 				} else {
-					mvs.push(LegalMove::Put(LegalMovePut::new(m,80 - p as u32)));
+					mvs.push(LegalMove::Put(LegalMovePut::new(m,80 - p as u32))).unwrap();
 				}
 			}
 		}
@@ -2743,11 +2762,47 @@ impl Rule {
 	/// ```
 	pub fn legal_moves_all(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		let seed = Local::now().timestamp();
+		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
 		Rule::legal_moves_from_banmen_with_buffer(t, state, &mut mvs);
 		Rule::legal_moves_from_mochigoma_with_buffer(t, mc, state, &mut mvs);
-		mvs
+		mvs.into()
+	}
+
+	/// 手番と盤面の状態と持ち駒を元に合法手を生成してMovePickerへ格納する
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	///
+	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
+	/// # Examples
+	/// ```
+	/// extern crate chrono;
+	///
+	/// use usiagent::math::Prng;
+	/// use usiagent::movepick::RandomPicker;
+	/// use usiagent::rule::*;
+	/// use usiagent::shogi::*;
+	/// use usiagent::movepick::*;
+	/// use usiagent::math::*;
+	/// use chrono::Local;
+	/// let state = State::new(BANMEN_START_POS.clone());
+	/// let seed = Local::now().timestamp();
+	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
+	///
+	/// Rule::legal_moves_all_with_buffer(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs);
+	/// assert!(mvs.len() > 0);
+	/// ```
+	pub fn legal_moves_all_with_buffer(t:Teban,
+									   state:&State,
+									   mc:&MochigomaCollections,
+									   mvs:&mut impl MovePicker<LegalMove>) {
+		mvs.reset();
+		Rule::legal_moves_from_banmen_with_buffer(t, state, mvs);
+		Rule::legal_moves_from_mochigoma_with_buffer(t, mc, state, mvs);
 	}
 
 	/// 王を取る手のうち一マスだけ駒を動かす手を返す
@@ -3210,9 +3265,10 @@ impl Rule {
 	pub fn win_only_moves_with_point_and_kind(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		let seed = Local::now().timestamp();
+		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 		Rule::win_only_moves_with_point_and_kind_and_buffer(t, state, x, y, kind, &mut mvs);
-		mvs
+		mvs.into()
 	}
 
 	/// 王を取れる手のうち一マスだけ駒を動かす合法手を列挙してバッファに追加する
@@ -3227,7 +3283,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
 	pub fn win_only_moves_with_point_and_kind_and_buffer(
-		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut Vec<LegalMove>
+		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut impl MovePicker<LegalMove>
 	) {
 		let from = x * 9 + y;
 
@@ -3426,7 +3482,8 @@ impl Rule {
 	/// ```
 	pub fn win_only_moves(t:Teban,state:&State)
 		-> Vec<LegalMove> {
-		let mut mvs:Vec<LegalMove> = Vec::new();
+		let seed = Local::now().timestamp();
+		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
 		match &state.banmen {
 			&Banmen(ref kinds) => {
@@ -3443,7 +3500,7 @@ impl Rule {
 				}
 			}
 		}
-		mvs
+		mvs.into()
 	}
 
 	/// 盤面上の位置を元に王を取れる手か王手の合法手のみを列挙して返す

@@ -22,6 +22,8 @@ pub mod hash;
 pub mod selfmatch;
 pub mod protocol;
 pub mod rule;
+pub mod movepick;
+pub mod math;
 
 use std::error::Error;
 use std::fmt;

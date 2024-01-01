@@ -710,3 +710,22 @@ impl From<io::Error> for KifuWriteError {
 }
 /// `USIPlayer`の実装から投げられるエラーであることを示すマーカートレイト
 pub trait PlayerError: Error + fmt::Debug + Send + 'static {}
+/// サイズ超過のエラー
+#[derive(Debug,Eq,PartialEq)]
+pub struct LimitSizeError(pub usize);
+impl fmt::Display for LimitSizeError {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			LimitSizeError(s) => write!(f,"Size exceeded the following values {}",s)
+		}
+	}
+}
+impl error::Error for LimitSizeError {
+	fn description(&self) -> &str {
+		"Size exceeds the upper limit."
+	}
+
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+		None
+	}
+}
