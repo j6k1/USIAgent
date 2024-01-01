@@ -2212,6 +2212,22 @@ impl Rule {
 				}
 			}
 
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					t, state.part.sente_self_board, p as u32, SOu,
+					0, 0,
+					false,
+					&Rule::default_moveto_builder(&state.banmen, unsafe {
+						state.part.sente_opponent_board.merged_bitboard
+					}),
+					mvs
+				);
+			}
+
 			for p in &mut state.part.sente_kyou_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer(
@@ -2356,22 +2372,6 @@ impl Rule {
 					);
 				}
 			}
-
-			let mut b = BitBoard { merged_bitboard: unsafe {
-				state.part.gote_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
-			} };
-
-			for p in &mut b {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-					t, state.part.sente_self_board, p as u32, SOu,
-					0, 0,
-					false,
-					&Rule::default_moveto_builder(&state.banmen, unsafe {
-						state.part.sente_opponent_board.merged_bitboard
-					}),
-					mvs
-				);
-			}
 		} else {
 			let mut b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_fu_board.merged_bitboard.reverse_bits() >> 45
@@ -2399,6 +2399,22 @@ impl Rule {
 						mvs
 					);
 				}
+			}
+
+			let mut b = BitBoard { merged_bitboard: unsafe {
+				state.part.sente_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in &mut b {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					t,state.part.gote_self_board,80 - p as u32,GOu,
+					0,0,
+					true,
+					&Rule::default_moveto_builder(&state.banmen,unsafe {
+						state.part.sente_self_board.merged_bitboard
+					}),
+					mvs
+				);
 			}
 
 			let mut b = BitBoard { merged_bitboard: unsafe {
@@ -2568,22 +2584,6 @@ impl Rule {
 						mvs
 					)
 				}
-			}
-
-			let mut b = BitBoard { merged_bitboard: unsafe {
-				state.part.sente_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
-			} };
-
-			for p in &mut b {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-					t,state.part.gote_self_board,80 - p as u32,GOu,
-					0,0,
-					true,
-					&Rule::default_moveto_builder(&state.banmen,unsafe {
-						state.part.sente_self_board.merged_bitboard
-					}),
-					mvs
-				);
 			}
 		}
 	}

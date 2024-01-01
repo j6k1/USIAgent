@@ -63,25 +63,25 @@ use usiagent::shogi::KomaKind::{
 	Blank
 };
 
-fn normalize(k:KomaKind) -> KomaKind {
+fn normalize(k:KomaKind) -> usize {
 	match k {
-		SFu | SFuN => SFu,
-		SKyou | SKyouN => SKyou,
-		SKei | SKeiN => SKei,
-		SGin | SGinN => SGin,
-		SKin => SKin,
-		SKaku | SKakuN => SKaku,
-		SHisha | SHishaN => SHisha,
-		SOu => SOu,
-		GFu | GFuN => GFu,
-		GKyou | GKyouN => GKyou,
-		GKei | GKeiN => GKei,
-		GGin | GGinN => GGin,
-		GKin => GKin,
-		GKaku | GKakuN => GKaku,
-		GHisha | GHishaN => GHisha,
-		GOu => GOu,
-		Blank => Blank
+		SFu | SFuN => 1,
+		SOu => 2,
+		SKyou | SKyouN => 3,
+		SKei | SKeiN => 4,
+		SGin | SGinN => 5,
+		SKin => 6,
+		SKaku | SKakuN => 7,
+		SHisha | SHishaN => 8,
+		GFu | GFuN => 1,
+		GOu => 2,
+		GKyou | GKyouN => 3,
+		GKei | GKeiN => 4,
+		GGin | GGinN => 5,
+		GKin => 6,
+		GKaku | GKakuN => 7,
+		GHisha | GHishaN => 8,
+		Blank => 9999
 	}
 }
 
