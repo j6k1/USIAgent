@@ -405,7 +405,7 @@ impl TryFrom<KomaKind> for MochigomaKind {
 	}
 }
 /// 持ち駒の種別
-#[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
+#[derive(Clone, Copy, Eq, PartialOrd, Ord, PartialEq, Debug, Hash)]
 pub enum MochigomaKind {
 	/// 歩
 	Fu = 0,

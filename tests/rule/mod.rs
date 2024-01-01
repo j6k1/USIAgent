@@ -100,6 +100,32 @@ pub fn sort_legal_mvs_legacy(teban:Teban,banmen:&Banmen,mut mvs:Vec<LegalMove>) 
 					normalize(banmen.0[ay as usize][ax as usize]).cmp(&normalize(banmen.0[by as usize][bx as usize])).then(bx.cmp(&ax)).then(ay.cmp(&by))
 				}
 			},
+			(&LegalMove::To(_,_,_),&LegalMove::Put(_,_)) => cmp::Ordering::Less,
+			(&LegalMove::Put(_,_),&LegalMove::To(_,_,_)) => cmp::Ordering::Greater,
+			_ => cmp::Ordering::Equal,
+		}
+	});
+
+	mvs
+}
+
+pub fn sort_legal_mvs_legacy_move(teban:Teban,banmen:&Banmen,mut mvs:Vec<Move>) -> Vec<Move> {
+	mvs.sort_by(|a,b| {
+		match (a,b) {
+			(&Move::To(KomaSrcPosition(ax,ay), _),&Move::To(KomaSrcPosition(bx,by), _)) => {
+				let ax = 9 - ax;
+				let ay = ay - 1;
+				let bx = 9 - bx;
+				let by = by - 1;
+
+				if teban == Teban::Sente {
+					normalize(banmen.0[ay as usize][ax as usize]).cmp(&normalize(banmen.0[by as usize][bx as usize])).then(ax.cmp(&bx)).then(by.cmp(&ay))
+				} else {
+					normalize(banmen.0[ay as usize][ax as usize]).cmp(&normalize(banmen.0[by as usize][bx as usize])).then(bx.cmp(&ax)).then(ay.cmp(&by))
+				}
+			},
+			(&Move::To(_,_),&Move::Put(_,_)) => cmp::Ordering::Less,
+			(&Move::Put(_,_),&Move::To(_,_)) => cmp::Ordering::Greater,
 			_ => cmp::Ordering::Equal
 		}
 	});
@@ -135,8 +161,16 @@ pub enum LegalMove {
 impl LegalMove {
 	pub fn to_move(&self) -> Move {
 		match self  {
-			&LegalMove::To(ref ms, ref md, _) => Move::To(*ms,*md),
-			&LegalMove::Put(ref mk, ref md) => Move::Put(*mk,*md),
+				&LegalMove::To(ref ms, ref md, _) => Move::To(*ms,*md),
+				&LegalMove::Put(ref mk, ref md) => Move::Put(*mk,*md),
+		}
+	}
+}
+impl From<Move> for LegalMove {
+	fn from(m: Move) -> Self {
+		match m  {
+			Move::To(ms,md) => LegalMove::To( ms, md,None),
+			Move::Put(mk,md) => LegalMove::Put(mk, md),
 		}
 	}
 }

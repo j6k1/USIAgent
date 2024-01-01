@@ -495,7 +495,7 @@ fn test_legal_moves_banmen_with_kaku_bottom_wall_self_sente() {
 
 		banmen.0[7][x] = SKaku;
 
-		assert_eq!(legal_moves_from_banmen(&Teban::Sente,&banmen),
+		assert_eq!(sort_legal_mvs_legacy(Teban::Sente,&banmen,legal_moves_from_banmen(&Teban::Sente,&banmen)),
 			Rule::legal_moves_from_banmen(Teban::Sente,&State::new(banmen.clone())).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
@@ -8218,7 +8218,7 @@ fn test_legal_moves_all_gote() {
 		position => position.extract()
 	};
 
-	assert_eq!(legal_moves_all(&Teban::Gote,&banmen,&mc.clone().into()),
+	assert_eq!(sort_legal_mvs_legacy(Teban::Gote,&banmen,legal_moves_all(&Teban::Gote,&banmen,&mc.clone().into())),
 		Rule::legal_moves_all(Teban::Gote,&State::new(banmen.clone()),&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()

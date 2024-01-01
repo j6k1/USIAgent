@@ -110,7 +110,7 @@ fn test_respond_oute_only_moves_all_sente() {
 			}
 		}
 
-		assert_eq!(answer,
+		assert_eq!(sort_legal_mvs_legacy_move(Teban::Sente,state.get_banmen(),answer),
 			Rule::respond_oute_only_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 				m.to_applied_move().to_move()
 			}).collect::<Vec<Move>>()
@@ -136,7 +136,7 @@ fn test_respond_oute_only_moves_all_win_move_sente() {
 
 	let state = State::new(banmen);
 
-	assert_eq!(answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>(),
+	assert_eq!(sort_legal_mvs_legacy(Teban::Sente,state.get_banmen(),answer.into_iter().map(|m| LegalMove::from(m)).collect::<Vec<LegalMove>>()),
 		Rule::respond_oute_only_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -316,7 +316,7 @@ fn test_respond_oute_only_moves_all_gote() {
 			}
 		}).collect::<Vec<Move>>();
 
-		assert_eq!(answer,
+		assert_eq!(sort_legal_mvs_legacy_move(Teban::Gote,state.get_banmen(),answer),
 			Rule::respond_oute_only_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 				m.to_applied_move().to_move()
 			}).collect::<Vec<Move>>()

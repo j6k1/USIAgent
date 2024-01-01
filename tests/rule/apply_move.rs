@@ -151,7 +151,7 @@ fn test_apply_move_none_check_mochigoma_not_empty_sente() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Sente,&banmen,&omc)),
+	assert_eq!(sort_legal_mvs_legacy(Teban::Sente,&banmen,legal_moves_all(&Teban::Sente,&banmen,&omc)),
 			   Rule::legal_moves_all(Teban::Sente,&state,&mc).into_iter().map(|m| {
 				   LegalMove::from(m)
 			   }).collect::<Vec<LegalMove>>()
@@ -218,7 +218,7 @@ fn test_apply_move_none_check_gote() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
+	assert_eq!(sort_legal_mvs_legacy(Teban::Gote,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
 		Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
@@ -293,7 +293,7 @@ fn test_apply_move_none_check_mochigoma_not_empty_gote() {
 		teban = teban.opposite();
 	}
 
-	assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
+	assert_eq!(sort_legal_mvs_legacy(Teban::Gote,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
 			   Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 				   LegalMove::from(m)
 			   }).collect::<Vec<LegalMove>>()
@@ -468,9 +468,9 @@ fn test_apply_move_none_check_put_move_gote() {
 	for m in &mvs {
 		let mut banmen = BANMEN_START_POS.clone();
 
-		banmen.0[6][8] = Blank;
-		banmen.0[6][7] = Blank;
-		banmen.0[8][8] = Blank;
+		banmen.0[8-6][8-8] = Blank;
+		banmen.0[8-6][8-7] = Blank;
+		banmen.0[8-8][8-8] = Blank;
 
 		let mut state = State::new(banmen.clone());
 
@@ -506,7 +506,7 @@ fn test_apply_move_none_check_put_move_gote() {
 			}
 		}
 
-		assert_eq!(sort_legal_mvs_legacy(teban,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
+		assert_eq!(sort_legal_mvs_legacy(Teban::Gote,&banmen,legal_moves_all(&Teban::Gote,&banmen,&omc)),
 			Rule::legal_moves_all(Teban::Gote,&state,&mc).into_iter().map(|m| {
 				LegalMove::from(m)
 			}).collect::<Vec<LegalMove>>()
