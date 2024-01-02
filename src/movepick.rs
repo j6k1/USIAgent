@@ -33,6 +33,7 @@ impl<T> MovePicker<T> for RandomPicker<T> where T: Copy {
             self.mvs[self.count as usize] = m;
 
             self.count += 1;
+
             Ok(self.count)
         }
     }

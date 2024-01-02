@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use std::convert::TryFrom;
 
-use rule::AppliedMove;
+use rule::{AppliedMove};
 use error::*;
 
 use Find;
@@ -182,7 +182,7 @@ impl Find<KomaKind,Vec<KomaPosition>> for Banmen {
 #[derive(Clone, Copy, Eq, PartialOrd, PartialEq, Debug, Hash)]
 pub enum Teban {
 	/// 先手
-	Sente,
+	Sente = 0,
 	/// 後手
 	Gote,
 }
@@ -486,18 +486,44 @@ impl From<(Teban,MochigomaKind)> for KomaKind {
 		}
 	}
 }
+const MOCHIGOMA_START_INDEXES:[u8; MOCHIGOMA_KIND_MAX + 1] = [
+	0,
+	18,
+	22,
+	26,
+	30,
+	34,
+	36
+];
+const MOCHIGOMA_MAX_COUNT:[u8; MOCHIGOMA_KIND_MAX + 1] = [
+	18,
+	4,
+	4,
+	4,
+	4,
+	2,
+	2
+];
+const MOCHIGOMA_MASK:[u64; MOCHIGOMA_KIND_MAX + 1] = [
+	0b111111111111111111,
+	0b1111,
+	0b1111,
+	0b1111,
+	0b1111,
+	0b11,
+	0b11
+];
+const MOCHIGOMA_NEXT_INDEXES:u128 = 0b100100100001000010000100001000000000000000000;
 /// 持ち駒を固定長配列で管理するための構造体
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Mochigoma {
-	values:[usize; MOCHIGOMA_KIND_MAX + 1],
-	sum:usize
+	bitboard:u64
 }
 impl Mochigoma {
 	/// Mochigomaを生成
 	pub fn new() -> Mochigoma {
 		Mochigoma {
-			values:[0; MOCHIGOMA_KIND_MAX + 1],
-			sum:0
+			bitboard:0
 		}
 	}
 
@@ -508,13 +534,14 @@ impl Mochigoma {
 	/// * `count` - `kind`で指定した持ち駒の枚数
 	#[inline]
 	pub fn insert(&mut self,kind:MochigomaKind,count:usize) {
-		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
-		let c = *p;
+		let mut bits = 0;
+		let index = MOCHIGOMA_START_INDEXES[kind as usize];
 
-		self.sum -= c;
-		self.sum += count;
+		for _ in 0..count.min(MOCHIGOMA_MAX_COUNT[kind as usize] as usize) {
+			bits = (bits << 1) | 1;
+		}
 
-		*p = count;
+		self.bitboard = (self.bitboard & !(MOCHIGOMA_MASK[kind as usize] << index)) | (bits << index)
 	}
 
 	/// 指定した持ち駒の枚数を取得
@@ -523,31 +550,19 @@ impl Mochigoma {
 	/// * `kind` - 持ち駒の種類
 	#[inline]
 	pub fn get(&self,kind:MochigomaKind) -> usize {
-		unsafe { *self.values.get_unchecked(kind as usize) }
+		((self.bitboard >> MOCHIGOMA_START_INDEXES[kind as usize]) & MOCHIGOMA_MASK[kind as usize]).trailing_ones() as usize
 	}
 
 	/// 全ての持ち駒が空か？
 	#[inline]
 	pub fn is_empty(&self) -> bool {
-		self.sum == 0
+		self.bitboard == 0
 	}
 
 	/// 持ち駒の種類と個数のタプルを要素に持つイテレータを返す
 	#[inline]
 	pub fn iter<'a>(&'a self) -> impl Iterator<Item=(MochigomaKind,usize)> + 'a {
-		const MAP:[MochigomaKind; MOCHIGOMA_KIND_MAX+1] = [
-			MochigomaKind::Fu,
-			MochigomaKind::Kyou,
-			MochigomaKind::Kei,
-			MochigomaKind::Gin,
-			MochigomaKind::Kin,
-			MochigomaKind::Kaku,
-			MochigomaKind::Hisha
-		];
-
-		self.values.iter().enumerate().map(|(i,&c)| {
-			(unsafe { *MAP.get_unchecked(i) },c)
-		})
+		MochigomaIterator::new(self.bitboard)
 	}
 
 	/// 指定した持ち駒を一枚追加
@@ -556,8 +571,13 @@ impl Mochigoma {
 	/// * `kind` - 持ち駒の種類
 	#[inline]
 	pub fn put(&mut self,kind:MochigomaKind) {
-		unsafe { *self.values.get_unchecked_mut(kind as usize) += 1 };
-		self.sum += 1;
+		let mut b = self.bitboard;
+
+		b = b >> MOCHIGOMA_START_INDEXES[kind as usize] & MOCHIGOMA_MASK[kind as usize];
+
+		b = (b << 1 | 1) & MOCHIGOMA_MASK[kind as usize];
+
+		self.bitboard = self.bitboard | (b << MOCHIGOMA_START_INDEXES[kind as usize]);
 	}
 
 	/// 指定した持ち駒を一枚取り出す
@@ -566,14 +586,18 @@ impl Mochigoma {
 	/// * `kind` - 持ち駒の種類
 	#[inline]
 	pub fn pull(&mut self,kind:MochigomaKind) -> Result<usize,InvalidStateError> {
-		let p = unsafe { self.values.get_unchecked_mut(kind as usize) };
+		let index = MOCHIGOMA_START_INDEXES[kind as usize];
 
-		if *p == 0 {
+		let mut b = self.bitboard >> index & MOCHIGOMA_MASK[kind as usize];
+
+		if b == 0 {
 			Err(InvalidStateError(String::from("I don't have any pieces.")))
 		} else {
-			*p -= 1;
-			self.sum -= 1;
-			Ok(*p)
+			b = b >> 1;
+
+			self.bitboard =  self.bitboard & !(MOCHIGOMA_MASK[kind as usize] << index) | (b << index);
+
+			Ok(128 - b.leading_zeros() as usize)
 		}
 	}
 
@@ -591,6 +615,50 @@ impl Mochigoma {
 		m.insert(MochigomaKind::Hisha, 1);
 
 		m
+	}
+}
+pub struct MochigomaIterator {
+	bitboard:u64,
+	next_indexes:u128,
+	current_index:usize
+}
+impl MochigomaIterator {
+	pub fn new(bitboard:u64) -> MochigomaIterator {
+		MochigomaIterator {
+			bitboard,
+			next_indexes:MOCHIGOMA_NEXT_INDEXES,
+			current_index:0
+		}
+	}
+}
+impl Iterator for MochigomaIterator {
+	type Item = (MochigomaKind,usize);
+
+	fn next(&mut self) -> Option<Self::Item> {
+		const MAP:[MochigomaKind; MOCHIGOMA_KIND_MAX + 1] = [
+			MochigomaKind::Fu,
+			MochigomaKind::Kyou,
+			MochigomaKind::Kei,
+			MochigomaKind::Gin,
+			MochigomaKind::Kin,
+			MochigomaKind::Kaku,
+			MochigomaKind::Hisha
+		];
+
+		if self.next_indexes == 0 {
+			None
+		} else {
+			let c = (self.bitboard & MOCHIGOMA_MASK[self.current_index]).trailing_ones();
+
+			let current_index = self.current_index;
+			let next_index = self.next_indexes.trailing_zeros();
+
+			self.bitboard >>= next_index;
+			self.next_indexes >>= next_index + 1;
+			self.current_index += 1;
+
+			Some((MAP[current_index],c as usize))
+		}
 	}
 }
 impl From<&Mochigoma> for HashMap<MochigomaKind,u32> {
@@ -673,7 +741,7 @@ mod tests {
 		}
 
 		for &kind in &MOCHIGOMA_KINDS {
-			assert_eq!(2,m.get(kind))
+			assert_eq!(2,m.get(kind));
 		}
 	}
 
@@ -719,9 +787,9 @@ mod tests {
 			(MochigomaKind::Kyou,2),
 			(MochigomaKind::Kei,3),
 			(MochigomaKind::Gin,4),
-			(MochigomaKind::Kin,5),
-			(MochigomaKind::Kaku,6),
-			(MochigomaKind::Hisha,7),
+			(MochigomaKind::Kin,4),
+			(MochigomaKind::Kaku,2),
+			(MochigomaKind::Hisha,2),
 		],m.iter().collect::<Vec<(MochigomaKind,usize)>>());
 	}
 

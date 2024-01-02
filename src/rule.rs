@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::fmt;
 use std::fmt::Formatter;
-use std::ops::BitOr;
+use std::ops::{BitAnd, BitOr};
 use std::ops::Not;
 use std::convert::TryFrom;
 use chrono::Local;
@@ -485,6 +485,15 @@ impl BitOr for BitBoard {
 	fn bitor(self, rhs: Self) -> Self {
 		unsafe {
 			BitBoard { merged_bitboard: self.merged_bitboard | rhs.merged_bitboard }
+		}
+	}
+}
+impl BitAnd for BitBoard {
+	type Output = Self;
+
+	fn bitand(self, rhs: Self) -> Self::Output {
+		unsafe {
+			BitBoard { merged_bitboard: self.merged_bitboard & rhs.merged_bitboard }
 		}
 	}
 }
@@ -1167,11 +1176,7 @@ impl Rule {
 	) where F: Fn(u32,u32,bool) -> LegalMove {
 		let to = m as u32;
 
-		let to = if inverse_position {
-			80 - to
-		} else {
-			to
-		};
+		let to = (!inverse_position as i32 * 80 - (80 - to as i32)).abs() as u32;
 
 		let to_mask = 1 << to;
 		let from_mask = 1 << from;
@@ -1872,28 +1877,29 @@ impl Rule {
 	/// 呼出し後、最下位にあったビットは0に更新される
 	#[inline]
 	pub fn pop_lsb(bitboard:&mut BitBoard) -> Square {
-		let (bl,br) = unsafe {
-			match bitboard {
-				BitBoard { bitboard } => {
-					(*bitboard.get_unchecked(0),*bitboard.get_unchecked(1))
-				}
-			}
-		};
+		let rp = unsafe { bitboard.bitboard.get_unchecked_mut(0) };
 
-		if bl != 0 {
-			let p = bl.trailing_zeros() as Square;
-			unsafe {
-				*(bitboard.bitboard.get_unchecked_mut(0)) = bl & (bl - 1);
-			}
-			return p - 1;
-		} else if br != 0 {
+		let br = *rp;
+
+		if br != 0 {
 			let p = br.trailing_zeros() as Square;
-			unsafe {
-				*(bitboard.bitboard.get_unchecked_mut(1)) = br & (br - 1);
-			}
-			return p + 63;
+
+			*rp = br & (br - 1);
+
+			return p - 1;
 		} else {
-			return -1;
+			let lp = unsafe { bitboard.bitboard.get_unchecked_mut(1) };
+			let bl = *lp;
+
+			if bl == 0 {
+				return -1;
+			}
+
+			let p = bl.trailing_zeros() as Square;
+
+			*lp = bl & (bl - 1);
+
+			return p + 63;
 		}
 	}
 
@@ -2200,15 +2206,17 @@ impl Rule {
 	/// ```
 	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) {
 		if t == Teban::Sente {
+			let move_builder = Rule::default_moveto_builder(&state.banmen, unsafe {
+				state.part.sente_opponent_board.merged_bitboard
+			});
+
 			for p in &mut state.part.sente_fu_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 						t,state.part.sente_self_board,p as u32,SFu,
 						SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
 						false,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2216,9 +2224,7 @@ impl Rule {
 						t,state.part.sente_self_board,p as u32,SFuN,
 						0,0,
 						false,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2233,9 +2239,7 @@ impl Rule {
 					t, state.part.sente_self_board, p as u32, SOu,
 					0, 0,
 					false,
-					&Rule::default_moveto_builder(&state.banmen, unsafe {
-						state.part.sente_opponent_board.merged_bitboard
-					}),
+					&move_builder,
 					mvs
 				);
 			}
@@ -2247,9 +2251,7 @@ impl Rule {
 						state.part.gote_opponent_board,
 						p as u32,
 						SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2257,9 +2259,7 @@ impl Rule {
 						t,state.part.sente_self_board,p as u32,SKyouN,
 						0,0,
 						false,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2271,9 +2271,7 @@ impl Rule {
 						t,state.part.sente_self_board,p as u32,SKei,
 						SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,
 						false,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2281,9 +2279,7 @@ impl Rule {
 						t, state.part.sente_self_board, p as u32, SKeiN,
 						0, 0,
 						false,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2295,9 +2291,7 @@ impl Rule {
 						t, state.part.sente_self_board, p as u32, SGin,
 						SENTE_NARI_MASK, 0,
 						false,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2305,9 +2299,7 @@ impl Rule {
 						t, state.part.sente_self_board, p as u32, SGinN,
 						0, 0,
 						false,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2318,9 +2310,7 @@ impl Rule {
 					t, state.part.sente_self_board, p as u32, SKin,
 					0, 0,
 					false,
-					&Rule::default_moveto_builder(&state.banmen, unsafe {
-						state.part.sente_opponent_board.merged_bitboard
-					}),
+					&move_builder,
 					mvs
 				);
 			}
@@ -2334,9 +2324,7 @@ impl Rule {
 						state.part.gote_opponent_board,
 						p as u32,SKaku,
 						SENTE_NARI_MASK,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2347,9 +2335,7 @@ impl Rule {
 						state.part.gote_opponent_board,
 						p as u32,SKakuN,
 						0,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2364,9 +2350,7 @@ impl Rule {
 						state.part.gote_opponent_board,
 						p as u32,SHisha,
 						SENTE_NARI_MASK,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2377,14 +2361,16 @@ impl Rule {
 						state.part.gote_opponent_board,
 						p as u32,SHishaN,
 						0,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_opponent_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
 			}
 		} else {
+			let move_builder = Rule::default_moveto_builder(&state.banmen, unsafe {
+				state.part.sente_self_board.merged_bitboard
+			});
+
 			let mut b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_fu_board.merged_bitboard.reverse_bits() >> 45
 			} };
@@ -2395,9 +2381,7 @@ impl Rule {
 						t,state.part.gote_self_board,80 - p as u32,GFu,
 						GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
 						true,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2405,9 +2389,7 @@ impl Rule {
 						t,state.part.gote_self_board,80 - p as u32,GFuN,
 						0,0,
 						true,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2422,9 +2404,7 @@ impl Rule {
 					t,state.part.gote_self_board,80 - p as u32,GOu,
 					0,0,
 					true,
-					&Rule::default_moveto_builder(&state.banmen,unsafe {
-						state.part.sente_self_board.merged_bitboard
-					}),
+					&move_builder,
 					mvs
 				);
 			}
@@ -2440,9 +2420,7 @@ impl Rule {
 						state.part.sente_opponent_board,
 						80 - p as u32,
 						GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2450,9 +2428,7 @@ impl Rule {
 						t,state.part.gote_self_board,80 - p as u32,GKyouN,
 						0,0,
 						true,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2468,9 +2444,7 @@ impl Rule {
 						t,state.part.gote_self_board,80 - p as u32,GKei,
 						GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,
 						true,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2478,9 +2452,7 @@ impl Rule {
 						t,state.part.gote_self_board,80 - p as u32,GKeiN,
 						0,0,
 						true,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2496,9 +2468,7 @@ impl Rule {
 						t,state.part.gote_self_board,80 - p as u32,GGin,
 						GOTE_NARI_MASK,0,
 						true,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2506,9 +2476,7 @@ impl Rule {
 						t,state.part.gote_self_board,80 - p as u32,GGinN,
 						0,0,
 						true,
-						&Rule::default_moveto_builder(&state.banmen, unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2523,9 +2491,7 @@ impl Rule {
 					t,state.part.gote_self_board,80 - p as u32,GKin,
 					0,0,
 					true,
-					&Rule::default_moveto_builder(&state.banmen, unsafe {
-						state.part.sente_self_board.merged_bitboard
-					}),
+					&move_builder,
 					mvs
 				);
 			}
@@ -2543,9 +2509,7 @@ impl Rule {
 						state.part.sente_opponent_board,
 						80 - p as u32,GKaku,
 						GOTE_NARI_MASK,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				} else {
@@ -2556,9 +2520,7 @@ impl Rule {
 						state.part.sente_opponent_board,
 						80 - p as u32,GKakuN,
 						0,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					);
 				}
@@ -2577,9 +2539,7 @@ impl Rule {
 						state.part.sente_opponent_board,
 						80 - p as u32,GHisha,
 						GOTE_NARI_MASK,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					)
 				} else {
@@ -2590,9 +2550,7 @@ impl Rule {
 						state.part.sente_opponent_board,
 						80 - p as u32,GHishaN,
 						0,0,
-						&Rule::default_moveto_builder(&state.banmen,unsafe {
-							state.part.sente_self_board.merged_bitboard
-						}),
+						&move_builder,
 						mvs
 					)
 				}
@@ -2673,7 +2631,7 @@ impl Rule {
 				continue;
 			}
 
-			let (deny_move_bitboard,candidate_bitboard,fu_bitboard) = match t {
+			let (deny_move_bitboard,candidate_bitboard) = match t {
 				Teban::Sente => {
 					let deny_move_bitboard = match m {
 						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
@@ -2685,16 +2643,13 @@ impl Rule {
 						state.part.sente_self_board | state.part.sente_opponent_board
 					};
 
-					let sente_fu_bitboard = unsafe {
-						(state.part.sente_fu_board.merged_bitboard & !state.part.sente_nari_board.merged_bitboard) >> 1
-					};
-
-					(deny_move_bitboard,candidate_bitboard,sente_fu_bitboard)
+					(deny_move_bitboard,candidate_bitboard)
 				},
 				Teban::Gote => {
+					// 後手側だが、盤面をひっくり返した状態で候補手の位置もひっくり返っているので、先手のマスク番を使えばよい。
 					let deny_move_bitboard = match m {
-						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
-						MochigomaKind::Kei => DENY_MOVE_GOTE_KEI_MASK,
+						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+						MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK,
 						_ => 0
 					};
 
@@ -2702,44 +2657,38 @@ impl Rule {
 						state.part.gote_self_board | state.part.gote_opponent_board
 					};
 
-					let gote_fu_bitboard = unsafe {
-						(state.part.gote_fu_board.merged_bitboard & !state.part.gote_nari_board.merged_bitboard) >> 1
-					};
-
-					(deny_move_bitboard,candidate_bitboard,gote_fu_bitboard)
+					(deny_move_bitboard,candidate_bitboard)
 				}
 			};
 
-			let mut candidate_bitboard = BitBoard {
-				merged_bitboard: unsafe { !candidate_bitboard.merged_bitboard & BANMEN_MASK }
-			};
-
-			loop {
-				let p = Rule::pop_lsb(&mut candidate_bitboard);
-
-				if p == -1 {
-					break;
-				}
-
-				let (x,p_mask) = if t == Teban::Sente {
-					(p * 114 / 1024,1 << p)
-				} else {
-					((80 - p) * 114 / 1024, 1 << (80 - p))
-				};
-
-				if deny_move_bitboard & p_mask != 0 {
-					continue;
-				}
-
-				if m == MochigomaKind::Fu && fu_bitboard & 0b111111111 << x * 9 != 0 {
-					continue;
-				}
+			let fu_mask = if m == MochigomaKind::Fu {
+				let mut b = 0u128;
 
 				if t == Teban::Sente {
-					mvs.push(LegalMove::Put(LegalMovePut::new(m,p as u32))).unwrap();
+					for p in state.part.sente_fu_board & !state.part.sente_nari_board {
+						b |= 0b111111111 << (p * 114 / 1024 * 9);
+					}
+
+					b
 				} else {
-					mvs.push(LegalMove::Put(LegalMovePut::new(m,80 - p as u32))).unwrap();
+					for p in state.part.gote_fu_board & !state.part.gote_nari_board {
+						b |= 0b111111111 << ((8 - p * 114 / 1024) * 9);
+					}
+
+					b
 				}
+			} else {
+				0
+			};
+
+			let candidate_bitboard = BitBoard {
+				merged_bitboard: unsafe { !candidate_bitboard.merged_bitboard & BANMEN_MASK & !(deny_move_bitboard << 1) & !(fu_mask << 1) }
+			};
+
+			for p in candidate_bitboard {
+				let p =  ((((t as i32) + 1) & 1) * 80 - (80 - p as i32)).abs() as u32;
+
+				mvs.push(LegalMove::Put(LegalMovePut::new(m,p as u32))).unwrap();
 			}
 		}
 	}

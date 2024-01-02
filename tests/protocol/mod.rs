@@ -779,8 +779,8 @@ fn test_mochigomacollections_to_sfen() {
 			acc
 		})),Ok(String::from("2R2B2G2S2N2L9P2r2b2g2s2n2l9p"))),
 		(MochigomaCollections::Pair(vec![
-			(MochigomaKind::Hisha,4),
-			(MochigomaKind::Kaku,4),
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,2),
 			(MochigomaKind::Kin,4),
 			(MochigomaKind::Gin,4),
 			(MochigomaKind::Kei,4),
@@ -789,10 +789,10 @@ fn test_mochigomacollections_to_sfen() {
 		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
-		}),Mochigoma::new()),Ok(String::from("4R4B4G4S4N4L18P"))),
+		}),Mochigoma::new()),Ok(String::from("2R2B4G4S4N4L18P"))),
 		(MochigomaCollections::Pair(Mochigoma::new(), vec![
-			(MochigomaKind::Hisha,4),
-			(MochigomaKind::Kaku,4),
+			(MochigomaKind::Hisha,2),
+			(MochigomaKind::Kaku,2),
 			(MochigomaKind::Kin,4),
 			(MochigomaKind::Gin,4),
 			(MochigomaKind::Kei,4),
@@ -801,7 +801,7 @@ fn test_mochigomacollections_to_sfen() {
 		].into_iter().fold(Mochigoma::new(), |mut acc,(k,n)| {
 			acc.insert(k,n);
 			acc
-		})),Ok(String::from("4r4b4g4s4n4l18p"))),
+		})),Ok(String::from("2r2b4g4s4n4l18p"))),
 		(MochigomaCollections::Pair(vec![
 			(MochigomaKind::Hisha,1),
 			(MochigomaKind::Kaku,1),
