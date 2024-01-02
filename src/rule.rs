@@ -516,13 +516,57 @@ impl fmt::Debug for BitBoard {
 		write!(f, "{}", unsafe { self.merged_bitboard })
 	}
 }
-impl Iterator for BitBoard {
-	type Item = Square;
-	fn next(&mut self) -> Option<Self::Item> {
-		match Rule::pop_lsb(self) {
-			-1 => None,
-			p => Some(p)
+/// ビットボードの再開ビットを取り出すイテレータ
+pub struct PopLsbIter {
+	board:BitBoard,
+	index:usize
+}
+impl PopLsbIter {
+	pub fn new(board:BitBoard) -> PopLsbIter {
+		let br = (unsafe { *board.bitboard.get_unchecked(0) } == 0) as usize;
+		let bl = (unsafe { *board.bitboard.get_unchecked(1) } == 0) as usize;
+
+		let index = br + (bl & br);
+
+		PopLsbIter {
+			board,
+			index
 		}
+	}
+}
+impl Iterator for PopLsbIter {
+	type Item = Square;
+
+	#[inline]
+	fn next(&mut self) -> Option<Self::Item> {
+		if self.index == 2 {
+			None
+		} else {
+			let p = unsafe { self.board.bitboard.get_unchecked_mut(self.index) };
+
+			if *p == 0 {
+				return None;
+			}
+
+			let s = (*p).trailing_zeros() as Square + self.index as Square * 64 - 1;
+
+			let bits = *p;
+
+			*p = bits & (bits - 1);
+
+			self.index += ((*p) == 0) as usize;
+
+			Some(s as Square)
+		}
+	}
+}
+impl IntoIterator for BitBoard {
+	type Item = Square;
+	type IntoIter = PopLsbIter;
+
+	#[inline]
+	fn into_iter(self) -> Self::IntoIter {
+		PopLsbIter::new(self.clone())
 	}
 }
 /// 合法手生成に内部で利用するビットボード群と盤面を管理する構造体
@@ -2210,7 +2254,7 @@ impl Rule {
 				state.part.sente_opponent_board.merged_bitboard
 			});
 
-			for p in &mut state.part.sente_fu_board.clone() {
+			for p in state.part.sente_fu_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 						t,state.part.sente_self_board,p as u32,SFu,
@@ -2230,11 +2274,11 @@ impl Rule {
 				}
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					t, state.part.sente_self_board, p as u32, SOu,
 					0, 0,
@@ -2244,7 +2288,7 @@ impl Rule {
 				);
 			}
 
-			for p in &mut state.part.sente_kyou_board.clone() {
+			for p in state.part.sente_kyou_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer(
 						state.part.gote_self_board,
@@ -2265,7 +2309,7 @@ impl Rule {
 				}
 			}
 
-			for p in &mut state.part.sente_kei_board.clone() {
+			for p in state.part.sente_kei_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 						t,state.part.sente_self_board,p as u32,SKei,
@@ -2285,7 +2329,7 @@ impl Rule {
 				}
 			}
 
-			for p in &mut state.part.sente_gin_board.clone() {
+			for p in state.part.sente_gin_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 						t, state.part.sente_self_board, p as u32, SGin,
@@ -2305,7 +2349,7 @@ impl Rule {
 				}
 			}
 
-			for p in &mut state.part.sente_kin_board.clone() {
+			for p in state.part.sente_kin_board.clone() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					t, state.part.sente_self_board, p as u32, SKin,
 					0, 0,
@@ -2315,7 +2359,7 @@ impl Rule {
 				);
 			}
 
-			for p in &mut state.part.sente_kaku_board.clone() {
+			for p in state.part.sente_kaku_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
 						state.part.sente_self_board,
@@ -2341,7 +2385,7 @@ impl Rule {
 				}
 			}
 
-			for p in &mut state.part.sente_hisha_board.clone() {
+			for p in state.part.sente_hisha_board.clone() {
 				if unsafe { state.part.sente_nari_board.merged_bitboard & (2 << p) } == 0 {
 					Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
 						state.part.sente_self_board,
@@ -2371,11 +2415,11 @@ impl Rule {
 				state.part.sente_self_board.merged_bitboard
 			});
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_fu_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 						t,state.part.gote_self_board,80 - p as u32,GFu,
@@ -2395,11 +2439,11 @@ impl Rule {
 				}
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.sente_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					t,state.part.gote_self_board,80 - p as u32,GOu,
 					0,0,
@@ -2409,11 +2453,11 @@ impl Rule {
 				);
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_kyou_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer(
 						state.part.sente_self_board,
@@ -2434,11 +2478,11 @@ impl Rule {
 				}
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_kei_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 						t,state.part.gote_self_board,80 - p as u32,GKei,
@@ -2458,11 +2502,11 @@ impl Rule {
 				}
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_gin_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 						t,state.part.gote_self_board,80 - p as u32,GGin,
@@ -2482,11 +2526,11 @@ impl Rule {
 				}
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_kin_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					t,state.part.gote_self_board,80 - p as u32,GKin,
 					0,0,
@@ -2496,11 +2540,11 @@ impl Rule {
 				);
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_kaku_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
 						state.part.gote_self_board,
@@ -2526,11 +2570,11 @@ impl Rule {
 				}
 			}
 
-			let mut b = BitBoard { merged_bitboard: unsafe {
+			let b = BitBoard { merged_bitboard: unsafe {
 				state.part.gote_hisha_board.merged_bitboard.reverse_bits() >> 45
 			} };
 
-			for p in &mut b {
+			for p in b {
 				if unsafe { state.part.gote_nari_board.merged_bitboard & (2 << (80 - p)) } == 0 {
 					Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
 						state.part.gote_self_board,
