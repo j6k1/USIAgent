@@ -26,11 +26,12 @@ impl<T> RandomPicker<T> where T: Copy {
     }
 }
 impl<T> MovePicker<T> for RandomPicker<T> where T: Copy {
+    #[inline]
     fn push(&mut self,m:T) -> Result<u16, LimitSizeError> {
         if self.count == MOVE_MAX {
             Err(LimitSizeError(self.count as usize))
         } else {
-            self.mvs[self.count as usize] = m;
+            unsafe { *self.mvs.get_unchecked_mut(self.count as usize) = m };
 
             self.count += 1;
 
@@ -38,11 +39,13 @@ impl<T> MovePicker<T> for RandomPicker<T> where T: Copy {
         }
     }
 
+    #[inline]
     fn reset(&mut self) {
         self.current = 0;
         self.count = 0;
     }
 
+    #[inline]
     fn len(&self) -> usize {
         self.count as usize
     }
@@ -50,6 +53,7 @@ impl<T> MovePicker<T> for RandomPicker<T> where T: Copy {
 impl<T> Iterator for RandomPicker<T> where T: Copy {
     type Item = T;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.current + 1 >= self.count {
             None
@@ -58,9 +62,7 @@ impl<T> Iterator for RandomPicker<T> where T: Copy {
 
             let swap_index = self.rnd.rnd(self.count as u64 - index as u64) as u16 + index;
 
-            let tmp = self.mvs[index as usize];
-            self.mvs[index as usize] = self.mvs[swap_index as usize];
-            self.mvs[swap_index as usize] = tmp;
+            self.mvs.swap(index as usize,swap_index as usize);
 
             self.current += 1;
 

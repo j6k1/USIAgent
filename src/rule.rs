@@ -2670,69 +2670,162 @@ impl Rule {
 			}
 		};
 
-		for (m,count) in mc.iter() {
-			if count == 0 {
-				continue;
+		if t == Teban::Sente {
+			let mut it = mc.iter();
+			let mut shared_candidate_bitboard = BitBoard { merged_bitboard: 0 };
+
+			if let Some((_,c)) = it.next()  {
+				if c > 0 {
+					let fu_mask = {
+						let mut b = 0u128;
+
+						for p in state.part.sente_fu_board & !state.part.sente_nari_board {
+							b |= 0b111111111 << (p * 114 / 1024 * 9);
+						}
+
+						b
+					};
+
+					let candidate_bitboard = unsafe {
+						!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
+							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
+					};
+
+					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+					for p in candidate_bitboard {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					}
+				}
 			}
 
-			let (deny_move_bitboard,candidate_bitboard) = match t {
-				Teban::Sente => {
-					let deny_move_bitboard = match m {
-						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
-						MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK,
-						_ => 0
+
+			if let Some((_,c)) = it.next() {
+				if c > 0 {
+					let candidate_bitboard = unsafe {
+						!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
+							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1)
 					};
 
-					let candidate_bitboard = {
-						state.part.sente_self_board | state.part.sente_opponent_board
-					};
+					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
 
-					(deny_move_bitboard,candidate_bitboard)
-				},
-				Teban::Gote => {
-					// 後手側だが、盤面をひっくり返した状態で候補手の位置もひっくり返っているので、先手のマスク番を使えばよい。
-					let deny_move_bitboard = match m {
-						MochigomaKind::Fu | MochigomaKind::Kyou => DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
-						MochigomaKind::Kei => DENY_MOVE_SENTE_KEI_MASK,
-						_ => 0
-					};
-
-					let candidate_bitboard = {
-						state.part.gote_self_board | state.part.gote_opponent_board
-					};
-
-					(deny_move_bitboard,candidate_bitboard)
-				}
-			};
-
-			let fu_mask = if m == MochigomaKind::Fu {
-				let mut b = 0u128;
-
-				if t == Teban::Sente {
-					for p in state.part.sente_fu_board & !state.part.sente_nari_board {
-						b |= 0b111111111 << (p * 114 / 1024 * 9);
+					for p in candidate_bitboard {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
 					}
-
-					b
-				} else {
-					for p in state.part.gote_fu_board & !state.part.gote_nari_board {
-						b |= 0b111111111 << ((8 - p * 114 / 1024) * 9);
-					}
-
-					b
 				}
-			} else {
-				0
-			};
+			}
 
-			let candidate_bitboard = BitBoard {
-				merged_bitboard: unsafe { !candidate_bitboard.merged_bitboard & BANMEN_MASK & !(deny_move_bitboard << 1) & !(fu_mask << 1) }
-			};
+			if let Some((_,c)) = it.next() {
+				if c > 0 {
+					let candidate_bitboard = unsafe {
+						!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
+							BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1)
+					};
 
-			for p in candidate_bitboard {
-				let p =  ((((t as i32) + 1) & 1) * 80 - (80 - p as i32)).abs() as u32;
+					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
 
-				mvs.push(LegalMove::Put(LegalMovePut::new(m,p as u32))).unwrap();
+					for p in candidate_bitboard {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+					}
+				}
+			}
+
+			for (m,count) in it  {
+				if count == 0 {
+					continue;
+				}
+
+				if unsafe { shared_candidate_bitboard.merged_bitboard } == 0 {
+					let b = unsafe { !(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard & BANMEN_MASK };
+
+					shared_candidate_bitboard = BitBoard { merged_bitboard: b };
+				};
+
+				for p in shared_candidate_bitboard {
+					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
+				}
+			}
+		} else {
+			let mut it = mc.iter();
+			let mut shared_candidate_bitboard = BitBoard { merged_bitboard: 0 };
+
+			if let Some((_,c)) = it.next() {
+				if c > 0 {
+					let fu_mask = {
+						let mut b = 0u128;
+
+						for p in state.part.gote_fu_board & !state.part.gote_nari_board {
+							b |= 0b111111111 << ((8 - p * 114 / 1024) * 9);
+						}
+
+						b
+					};
+
+					let candidate_bitboard = unsafe {
+						!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
+							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
+					};
+
+					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+					for p in candidate_bitboard {
+						let p = 80 - p;
+
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					}
+				}
+			}
+
+
+			if let Some((_,c)) = it.next() {
+				if c > 0 {
+					let candidate_bitboard = unsafe {
+						!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
+							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1)
+					};
+
+					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+					for p in candidate_bitboard {
+						let p = 80 - p;
+
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+					}
+				}
+			}
+
+			if let Some((_,c)) = it.next() {
+				if c > 0 {
+					let candidate_bitboard = unsafe {
+						!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
+							BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1)
+					};
+
+					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+					for p in candidate_bitboard {
+						let p = 80 - p;
+
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+					}
+				}
+			}
+
+			for (m,count) in it  {
+				if count == 0 {
+					continue;
+				}
+
+				if unsafe { shared_candidate_bitboard.merged_bitboard } == 0 {
+					let b = unsafe { !(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard & BANMEN_MASK };
+
+					shared_candidate_bitboard = BitBoard { merged_bitboard: b };
+				};
+
+				for p in shared_candidate_bitboard {
+					let p = 80 - p;
+					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
+				}
 			}
 		}
 	}
