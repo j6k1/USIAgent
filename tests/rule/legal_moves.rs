@@ -1,4 +1,5 @@
 use usiagent::shogi::*;
+use usiagent::shogi::MochigomaCollections;
 use usiagent::rule;
 use usiagent::rule::Rule;
 use usiagent::rule::State;
