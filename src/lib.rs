@@ -24,6 +24,7 @@ pub mod protocol;
 pub mod rule;
 pub mod movepick;
 pub mod math;
+pub mod bits;
 
 use std::error::Error;
 use std::fmt;

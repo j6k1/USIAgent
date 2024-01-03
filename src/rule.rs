@@ -7,6 +7,7 @@ use std::ops::{BitAnd, BitOr};
 use std::ops::Not;
 use std::convert::TryFrom;
 use chrono::Local;
+use bits::pop_lsb;
 
 use shogi::*;
 use hash::*;
@@ -548,11 +549,7 @@ impl Iterator for PopLsbIter {
 				return None;
 			}
 
-			let s = (*p).trailing_zeros() as Square + self.index as Square * 64 - 1;
-
-			let bits = *p;
-
-			*p = bits & (bits - 1);
+			let s = pop_lsb(&mut *p) as Square + self.index as Square * 64 - 1;
 
 			self.index += ((*p) == 0) as usize;
 
