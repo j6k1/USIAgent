@@ -8,7 +8,7 @@ pub fn blsr64(v:u64) -> u64 {
     let v = v & (v - 1);
     v
 }
-#[inline(always)]
+#[inline]
 pub fn pop_lsb(bits:&mut u64) -> u64 {
     let index = lsb64(*bits);
 
