@@ -566,6 +566,47 @@ impl IntoIterator for BitBoard {
 		PopLsbIter::new(self.clone())
 	}
 }
+pub struct PopLsbIterCallback<F> {
+	callback:F
+}
+impl BitBoard {
+	pub fn iter(self) -> impl Iterator<Item = Square> {
+		let br = (unsafe { *self.bitboard.get_unchecked(0) } == 0) as usize;
+		let bl = (unsafe { *self.bitboard.get_unchecked(1) } == 0) as usize;
+
+		let mut index = br + (bl & br);
+
+		let mut board = self;
+
+		PopLsbIterCallback {
+			callback: move || {
+				if index == 2 {
+					None
+				} else {
+					let p = unsafe { board.bitboard.get_unchecked_mut(index) };
+
+					if *p == 0 {
+						return None;
+					}
+
+					let s = pop_lsb(&mut *p) as Square + index as Square * 64 - 1;
+
+					index += ((*p) == 0) as usize;
+
+					Some(s as Square)
+				}
+			}
+		}
+	}
+}
+impl<F> Iterator for PopLsbIterCallback<F> where F: FnMut() -> Option<Square> {
+	type Item = Square;
+
+	#[inline]
+	fn next(&mut self) -> Option<Self::Item> {
+		(self.callback)()
+	}
+}
 /// 合法手生成に内部で利用するビットボード群と盤面を管理する構造体
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct State {
