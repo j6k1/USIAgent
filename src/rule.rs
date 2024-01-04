@@ -1806,12 +1806,6 @@ impl Validate for Moved {
 		}
 	}
 }
-/*
-enum Inverse {
-	True = 0,
-	False = 1
-}
-*/
 /// 合法手の列挙等を行う将棋のルールを管理
 pub struct Rule {
 
@@ -1885,6 +1879,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn append_legal_moves_from_banmen<F>(
 		m:Square,
 		from:u32,
@@ -1923,6 +1918,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn append_win_only_move(
 		m:Square,
 		from:u32,
@@ -1970,6 +1966,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F>(
 		teban:Teban,
 		self_occupied:BitBoard,
@@ -2114,6 +2111,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
@@ -2180,6 +2178,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
@@ -2240,7 +2239,7 @@ impl Rule {
 	) -> BitBoard {
 		let occ = unsafe { flip_self_occupied.merged_bitboard | flip_opponent_occupied.merged_bitboard };
 
-		let x = from / 9;
+		let x = from * 114 / 1024;
 
 		let mask = V_MASK << (x * 9 + 1);
 
@@ -2325,6 +2324,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
@@ -2391,6 +2391,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
@@ -2454,6 +2455,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
@@ -2485,6 +2487,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
@@ -2514,6 +2517,7 @@ impl Rule {
 	/// * `kind` - 移動する駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_with_point_and_kind(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
@@ -2532,6 +2536,7 @@ impl Rule {
 	/// # Arguments
 	/// * `banmen` - 現在の盤面
 	/// * `opponent_bitboard` - 相手の駒の配置を表すビットボード。常に先手視点
+	#[inline]
 	pub fn default_moveto_builder<'a>(banmen:&'a Banmen,opponent_bitboard:u128) -> impl Fn(u32,u32,bool) -> LegalMove + 'a {
 		move |from,to,nari| {
 			let to_mask = 1 << (to + 1);
@@ -2563,6 +2568,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_with_point_and_kind_and_buffer(
 		t:Teban,state:&State,
 		x:u32,y:u32,kind:KomaKind,
@@ -2708,6 +2714,7 @@ impl Rule {
 	/// * `y` - 左上を0,0とする移動元のy座標
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn legal_moves_with_point(t:Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
 		match &state.banmen {
@@ -2725,6 +2732,7 @@ impl Rule {
 	/// * `src` - 移動元の位置
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn legal_moves_with_src(t:Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
@@ -2741,6 +2749,7 @@ impl Rule {
 	///
 	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
 	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn legal_moves_with_dst_to(t:Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
@@ -2757,6 +2766,7 @@ impl Rule {
 	///
 	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
 	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn legal_moves_with_dst_put(t:Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
@@ -2778,6 +2788,7 @@ impl Rule {
 	/// let mvs = Rule::legal_moves_from_banmen(Teban::Sente,&state);
 	/// assert!(mvs.len() > 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_from_banmen(t:Teban,state:&State)
 		-> Vec<LegalMove> {
 		let seed = Local::now().timestamp();
@@ -2811,6 +2822,7 @@ impl Rule {
 	/// Rule::legal_moves_from_banmen_by_strategy::<Fast>(Teban::Sente,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_from_banmen_by_strategy<S: GenerateStrategy>(teban:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
 		let move_builder = 		if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, unsafe {
@@ -2856,6 +2868,7 @@ impl Rule {
 	/// Rule::legal_moves_from_banmen_with_buffer(Teban::Sente,&state,&mut mvs);
 	/// assert!(mvs.len() > 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) {
 		Rule::legal_moves_from_banmen_by_strategy::<Fast>(t,state,mvs).unwrap();
 	}
@@ -2876,6 +2889,7 @@ impl Rule {
 	/// let mvs = Rule::legal_moves_from_mochigoma(Teban::Sente,&MochigomaCollections::Empty,&state);
 	/// assert!(mvs.len() == 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_from_mochigoma(t:Teban,mc:&MochigomaCollections,state:&State)
 		-> Vec<LegalMove> {
 
@@ -2909,6 +2923,7 @@ impl Rule {
 	/// Rule::legal_moves_from_mochigoma_by_strategy::<Fast>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() == 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_from_mochigoma_by_strategy<S: GenerateStrategy>(
 		teban:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) -> Result<(),LimitSizeError> {
@@ -2984,6 +2999,7 @@ impl Rule {
 	/// Rule::legal_moves_from_mochigoma_with_buffer(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs);
 	/// assert!(mvs.len() == 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_from_mochigoma_with_buffer(
 		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) {
@@ -3006,6 +3022,7 @@ impl Rule {
 	/// let mvs = Rule::legal_moves_all(Teban::Sente,&state,&MochigomaCollections::Empty);
 	/// assert!(mvs.len() > 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_all(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let seed = Local::now().timestamp();
@@ -3042,6 +3059,7 @@ impl Rule {
 	/// Rule::legal_moves_all_with_buffer(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs);
 	/// assert!(mvs.len() > 0);
 	/// ```
+	#[inline]
 	pub fn legal_moves_all_with_buffer(t:Teban,
 									   state:&State,
 									   mc:&MochigomaCollections,
@@ -3061,6 +3079,7 @@ impl Rule {
 	/// * `kind` - 移動する駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_move_once_with_point_and_kind_and_bitboard(
 		teban:Teban,self_occupied:BitBoard,opponent_ou_bitboard:BitBoard,from:u32,kind:KomaKind
 	) -> Option<Square> {
@@ -3092,6 +3111,7 @@ impl Rule {
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
@@ -3171,6 +3191,7 @@ impl Rule {
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
@@ -3248,6 +3269,7 @@ impl Rule {
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
@@ -3327,6 +3349,7 @@ impl Rule {
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		self_occupied:BitBoard,
@@ -3403,6 +3426,7 @@ impl Rule {
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		flip_self_occupied:BitBoard,
@@ -3442,6 +3466,7 @@ impl Rule {
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
 		opponent_ou_bitboard:BitBoard,
 		flip_self_occupied:BitBoard,
@@ -3482,6 +3507,7 @@ impl Rule {
 	/// * `kind` - 駒の種類
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_moves_with_point_and_kind(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind
 	) -> Vec<LegalMove> {
@@ -3502,6 +3528,7 @@ impl Rule {
 	/// * `mvs` - 手を追加するバッファ
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_moves_with_point_and_kind_and_buffer(
 		t:Teban,state:&State,x:u32,y:u32,kind:KomaKind,mvs:&mut impl MovePicker<LegalMove>
 	) {
@@ -3631,6 +3658,7 @@ impl Rule {
 	/// * `y` - 盤面左上を0,0とする移動元のy座標
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::win_only_movesの内部から呼び出される）
+	#[inline]
 	pub fn win_only_moves_with_point(t:Teban,state:&State,x:u32,y:u32)
 		-> Vec<LegalMove> {
 		match &state.banmen {
@@ -3648,6 +3676,7 @@ impl Rule {
 	/// * `src` - 移動元の位置
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn win_only_moves_with_src(t:Teban,state:&State,src:KomaSrcPosition)
 		-> Vec<LegalMove> {
 		match src {
@@ -3663,6 +3692,7 @@ impl Rule {
 	/// * `dst` - 移動元の位置
 	///
 	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
+	#[inline]
 	pub fn win_only_moves_with_dst_to(t:Teban,state:&State,dst:KomaDstToPosition)
 		-> Vec<LegalMove> {
 		match dst {
@@ -3678,6 +3708,7 @@ impl Rule {
 	/// * `dst` - 移動元の位置
 	///
 	/// 移動元の位置からさらに移動できる位置を取得するときに使う。
+	#[inline]
 	pub fn win_only_moves_with_dst_put(t:Teban,state:&State,dst:KomaDstPutPosition)
 		-> Vec<LegalMove> {
 		match dst {
@@ -3700,6 +3731,7 @@ impl Rule {
 	/// let mvs = Rule::win_only_moves(Teban::Sente,&state);
 	/// assert!(mvs.len() == 0);
 	/// ```
+	#[inline]
 	pub fn win_only_moves(t:Teban,state:&State)
 		-> Vec<LegalMove> {
 		let seed = Local::now().timestamp();
@@ -3733,6 +3765,7 @@ impl Rule {
 	/// * `y` - 左上を0,0とする移動元のy座標
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::oute_only_moves_allの内部から呼び出される）
+	#[inline]
 	pub fn oute_only_moves_with_point(
 		t:Teban,state:&State,mc:&MochigomaCollections,x:u32,y:u32
 	) -> Vec<LegalMove> {
@@ -3790,6 +3823,7 @@ impl Rule {
 	/// let mvs = Rule::oute_only_moves_from_banmen(Teban::Sente,&state,&MochigomaCollections::Empty);
 	/// assert!(mvs.len() == 0);
 	/// ```
+	#[inline]
 	pub fn oute_only_moves_from_banmen(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mvs = Rule::win_only_moves(t,state);
@@ -3849,6 +3883,7 @@ impl Rule {
 	/// let mvs = Rule::oute_only_moves_from_mochigoma(Teban::Sente,&MochigomaCollections::Empty,&state);
 	/// assert!(mvs.len() == 0);
 	/// ```
+	#[inline]
 	pub fn oute_only_moves_from_mochigoma(t:Teban,mc:&MochigomaCollections,state:&State) -> Vec<LegalMove> {
 		Rule::legal_moves_from_mochigoma(t, mc, state)
 			.into_iter().filter(|mv| {
@@ -3890,6 +3925,7 @@ impl Rule {
 	/// let mvs = Rule::oute_only_moves_all(Teban::Sente,&state,&MochigomaCollections::Empty);
 	/// assert!(mvs.len() == 0);
 	/// ```
+	#[inline]
 	pub fn oute_only_moves_all(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		let mvs = Rule::win_only_moves(t,state);
@@ -3955,6 +3991,7 @@ impl Rule {
 	/// let mvs = Rule::respond_oute_only_moves_all(Teban::Sente,&state,&MochigomaCollections::Empty);
 	/// assert!(mvs.len() > 0);
 	/// ```
+	#[inline]
 	pub fn respond_oute_only_moves_all(t:Teban,state:&State,mc:&MochigomaCollections)
 		-> Vec<LegalMove> {
 		Rule::legal_moves_all(t, state, mc)
@@ -3991,6 +4028,7 @@ impl Rule {
 	/// banmen.0[5][8] = KomaKind::SFu;
 	/// assert_eq!(State::new(banmen).get_part(),&p);
 	/// ```
+	#[inline]
 	pub fn apply_move_to_partial_state_none_check(state:&State,t:Teban,_:&MochigomaCollections,m:AppliedMove)
 		-> PartialState {
 		let mut ps = state.part.clone();
@@ -4485,6 +4523,7 @@ impl Rule {
 	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な時の動作は未定義
+	#[inline]
 	pub fn apply_move_none_check(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> (State,MochigomaCollections,Option<MochigomaKind>) {
 		let ps = Rule::apply_move_to_partial_state_none_check(state,t,mc,m);
@@ -4502,6 +4541,7 @@ impl Rule {
 	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な時の動作は未定義
+	#[inline]
 	pub fn apply_move_to_banmen_and_mochigoma_none_check(
 		banmen:&Banmen,t:Teban,mc:&MochigomaCollections,m:AppliedMove
 	) -> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
@@ -4688,6 +4728,7 @@ impl Rule {
 	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`が不正な時の動作は未定義
+	#[inline]
 	pub fn is_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
 		match m {
 			AppliedMove::To(m) => {
@@ -4996,6 +5037,7 @@ impl Rule {
 	/// * [`InvalidState`] 手が合法手でない
 	///
 	/// [`InvalidState`]: ../error/enum.ShogiError.html#variant.InvalidState
+	#[inline]
 	pub fn apply_valid_move(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<(State,MochigomaCollections,Option<MochigomaKind>),ShogiError> {
 
@@ -5021,6 +5063,7 @@ impl Rule {
 	/// * `oute_kyokumen_map` - 連続王手の千日手を検出するためのマップ
 	/// * `hasher` - 局面のハッシュを計算するためのオブジェクト
 	/// 引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn apply_moves(mut state:State,mut teban:Teban,
 						mut mc:MochigomaCollections,
 						m:&Vec<AppliedMove>,mut mhash:u64,mut shash:u64,
@@ -5077,6 +5120,7 @@ impl Rule {
 	/// * `r` - コールバックから返されて最終的にこの関数からの返却値の一部となる値
 	/// * `f` - コールバック関数
 	/// 引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn apply_moves_with_callback<T,F>(
 						mut state:State,
 						mut teban:Teban,
@@ -5110,6 +5154,7 @@ impl Rule {
 	/// * `mc` - 持ち駒
 	/// * `limit` - 持ち時間を使い切った時点の時間
 	/// `State`の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_nyugyoku_win(state:&State,t:Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
 		if Rule::is_mate(t.opposite(),state) {
 			return false
@@ -5288,6 +5333,7 @@ impl Rule {
 	/// * [`InvalidStateError`] 王手をかけられていない状態で呼び出された
 	///
 	/// [`InvalidStateError`]: ../error/struct.InvalidStateError.html
+	#[inline]
 	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<bool,InvalidStateError> {
 
@@ -5312,6 +5358,7 @@ impl Rule {
 	/// * `mc` - 持ち駒
 	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_put_fu_and_mate(state:&State,teban:Teban,mc:&MochigomaCollections,m:AppliedMove) -> bool {
 		match m {
 			AppliedMove::Put(m) => {
@@ -5353,6 +5400,7 @@ impl Rule {
 	/// * `teban` - 手を列挙したい手番
 	/// * `m` - 適用する手
 	/// `State`もしくは`AppliedMove`の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_win(state:&State,teban:Teban,m:AppliedMove) -> bool {
 		match m {
 			AppliedMove::To(m) => {
@@ -5385,6 +5433,7 @@ impl Rule {
 	/// * `t` - 手を列挙したい手番
 	/// * `state` - 盤面の状態
 	/// `State`が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_mate(t:Teban,state:&State)
 		-> bool {
 
@@ -5417,6 +5466,7 @@ impl Rule {
 	/// * `y` - 盤面左上を0,0とした時の移動元のy座標
 	/// * `kind` - 駒の種類
 	/// 引数が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_mate_with_partial_state_and_point_and_kind(t:Teban,ps:&PartialState,x:u32,y:u32,kind:KomaKind) -> bool {
 		let from = x * 9 + y;
 
@@ -5431,6 +5481,7 @@ impl Rule {
 	/// * `from` - 盤面左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
 	/// 引数が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_mate_with_partial_state_and_from_and_kind(t:Teban,ps:&PartialState,from:u32,kind:KomaKind) -> bool {
 		let state = ps;
 
@@ -5511,6 +5562,7 @@ impl Rule {
 	/// * `t` - 手を列挙したい手番
 	/// * `ps` - 盤面の状態を表すビットボード
 	/// `PartialState`が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_mate_with_partial_state_repeat_move_kinds(t:Teban,ps:&PartialState) -> bool {
 		match t {
 			Teban::Sente => {
@@ -5578,6 +5630,7 @@ impl Rule {
 	/// * `ps` - 相手の手番側の手の適用後の盤面の状態を表すビットボード
 	/// * `m` - 相手の手番側が打った手
 	/// 引数が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_mate_with_partial_state_and_old_banmen_and_opponent_move(
 		t:Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
 	) -> bool {
@@ -5649,6 +5702,7 @@ impl Rule {
 	/// * `teban` - 手を打った側の手番
 	/// * `m` - 指された手
 	/// 引数が不正な場合の動作は未定義
+	#[inline]
 	pub fn is_oute_move(state:&State,teban:Teban,m:LegalMove) -> bool {
 		let (self_board,
 			opponent_board,
@@ -5682,7 +5736,7 @@ impl Rule {
 		match m {
 			LegalMove::To(m) => {
 				let from = m.src();
-				let kind = state.banmen.0[from as usize % 9][from as usize / 9];
+				let kind = state.banmen.0[from as usize % 9][from as usize * 114 / 1024];
 				let board = Rule::gen_candidate_bits(teban, self_board,m.dst(),kind);
 
 				if unsafe { opponent_ou_position_board.merged_bitboard & board.merged_bitboard } != 0 {
@@ -5995,8 +6049,9 @@ impl Rule {
 	/// * `teban` - 攻め手側の手番（受け側の効きを計算したいときは逆にする）
 	/// * `state` - 盤面の状態
 	/// * `to` - 効きを調べたい位置
+	#[inline]
 	pub fn control_count(teban:Teban,state:&State,to:Square) -> usize {
-		let x = to / 9;
+		let x = to * 114 / 1024;
 		let y = to - x * 9;
 		let mut count = 0;
 
@@ -6229,6 +6284,7 @@ impl Rule {
 	/// * `kind` - 移動する駒の種類
 	/// * `from` - 移動元
 	/// * `to` - 移動先
+	#[inline]
 	pub fn is_possible_nari(kind:KomaKind,from:Square,to:Square) -> bool {
 		let nari_mask = match kind {
 			SFu | SKyou | SKei | SGin | SHisha | SKaku => SENTE_NARI_MASK,
@@ -6253,6 +6309,7 @@ impl Rule {
 	/// # Arguments
 	/// * `teban` - 手番
 	/// * `state` - 盤面の状態
+	#[inline]
 	pub fn ou_square(teban:Teban,state:&State) -> Square {
 		match teban {
 			Teban::Sente => {
@@ -6303,6 +6360,7 @@ impl Rule {
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
 	/// * `kyokumen_map` - 千日手検出用のマップ
+	#[inline]
 	pub fn update_sennichite_map(_:&State,teban:Teban,mhash:u64,shash:u64,
 									kyokumen_map:&mut KyokumenMap<u64,u32>) {
 		match kyokumen_map.get(teban,&mhash,&shash) {
@@ -6322,6 +6380,7 @@ impl Rule {
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
 	/// * `kyokumen_map` - 千日手検出用のマップ
+	#[inline]
 	pub fn is_sennichite(_:&State,teban:Teban,mhash:u64,shash:u64,
 									kyokumen_map:&KyokumenMap<u64,u32>) -> bool {
 		match kyokumen_map.get(teban,&mhash,&shash) {
@@ -6339,6 +6398,7 @@ impl Rule {
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
 	/// * `oute_kyokumen_map` - 千日手検出用のマップ
+	#[inline]
 	pub fn update_sennichite_by_oute_map(state:&State,teban:Teban,mhash:u64,shash:u64,
 									oute_kyokumen_map:&mut KyokumenMap<u64,u32>) {
 
@@ -6358,6 +6418,7 @@ impl Rule {
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
 	/// * `oute_kyokumen_map` - 千日手検出用のマップ
+	#[inline]
 	pub fn is_sennichite_by_oute(state:&State,teban:Teban,mhash:u64,shash:u64,
 									oute_kyokumen_map:&KyokumenMap<u64,u32>)
 		-> bool {
@@ -6376,6 +6437,7 @@ impl Rule {
 	/// * `limit` - 持ち時間
 	/// * `teban` - 現在の手番
 	/// * `consumed` - 手番中の現在までの経過時間
+	#[inline]
 	pub fn update_time_limit(limit:&UsiGoTimeLimit,teban:Teban,consumed:Duration) -> UsiGoTimeLimit {
 		match teban {
 			Teban::Sente => {
@@ -6434,6 +6496,7 @@ impl Rule {
 	/// 持ち駒の状態を平手初期局面の時の駒を全部持ち駒にした状態で返す。
 	///
 	/// 返されるのは`HashMap<MochigomaKind,u32>`なので先手後手それぞれについて呼び出す必要がある
+	#[inline]
 	pub fn filled_mochigoma_hashmap() -> HashMap<MochigomaKind,u32> {
 		let mut m:HashMap<MochigomaKind,u32> = HashMap::new();
 
