@@ -1072,6 +1072,7 @@ impl GenerateStrategy for Fast {
 			for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SFu,
+					false,
 					SENTE_NARI_MASK, DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
 					false,
 					move_builder,
@@ -1082,6 +1083,7 @@ impl GenerateStrategy for Fast {
 			for p in (state.part.sente_fu_board & state.part.sente_nari_board).iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SFuN,
+					true,
 					0, 0,
 					false,
 					move_builder,
@@ -1098,6 +1100,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.gote_self_board, 80 - p as u32, GFu,
+					false,
 					GOTE_NARI_MASK, DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
 					true,
 					move_builder,
@@ -1112,6 +1115,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban,state.part.gote_self_board,80 - p as u32,GFuN,
+					true,
 					0,0,
 					true,
 					move_builder,
@@ -1131,6 +1135,7 @@ impl GenerateStrategy for Fast {
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					p as u32,
+					false,
 					SENTE_NARI_MASK, DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
 					move_builder,
 					mvs
@@ -1140,6 +1145,7 @@ impl GenerateStrategy for Fast {
 			for p in (state.part.sente_kyou_board & state.part.sente_nari_board).iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SKyouN,
+					true,
 					0, 0,
 					false,
 					move_builder,
@@ -1158,6 +1164,7 @@ impl GenerateStrategy for Fast {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					80 - p as u32,
+					false,
 					GOTE_NARI_MASK, DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
 					move_builder,
 					mvs
@@ -1171,6 +1178,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban,state.part.gote_self_board,80 - p as u32,GKyouN,
+					true,
 					0,0,
 					true,
 					move_builder,
@@ -1188,6 +1196,7 @@ impl GenerateStrategy for Fast {
 			for p in (state.part.sente_kei_board & !state.part.sente_nari_board).iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SKei,
+					false,
 					SENTE_NARI_MASK, DENY_MOVE_SENTE_KEI_MASK,
 					false,
 					move_builder,
@@ -1198,6 +1207,7 @@ impl GenerateStrategy for Fast {
 			for p in (state.part.sente_kei_board & state.part.sente_nari_board).iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SKeiN,
+					true,
 					0, 0,
 					false,
 					move_builder,
@@ -1214,6 +1224,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.gote_self_board, 80 - p as u32, GKei,
+					false,
 					GOTE_NARI_MASK, DENY_MOVE_GOTE_KEI_MASK,
 					true,
 					move_builder,
@@ -1228,6 +1239,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban,state.part.gote_self_board,80 - p as u32,GKeiN,
+					true,
 					0,0,
 					true,
 					move_builder,
@@ -1245,6 +1257,7 @@ impl GenerateStrategy for Fast {
 			for p in (state.part.sente_gin_board & !state.part.sente_nari_board).iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SGin,
+					false,
 					SENTE_NARI_MASK, 0,
 					false,
 					move_builder,
@@ -1255,6 +1268,7 @@ impl GenerateStrategy for Fast {
 			for p in (state.part.sente_gin_board & state.part.sente_nari_board).iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SGinN,
+					true,
 					0, 0,
 					false,
 					move_builder,
@@ -1271,6 +1285,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.gote_self_board, 80 - p as u32, GGin,
+					false,
 					GOTE_NARI_MASK, 0,
 					true,
 					move_builder,
@@ -1285,6 +1300,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban,state.part.gote_self_board,80 - p as u32,GGinN,
+					true,
 					0,0,
 					true,
 					move_builder,
@@ -1300,7 +1316,7 @@ impl GenerateStrategy for Fast {
 		if teban == Teban::Sente {
 			for p in state.part.sente_kin_board.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-					teban, state.part.sente_self_board, p as u32, SKin, 0, 0,
+					teban, state.part.sente_self_board, p as u32, SKin, false, 0,  0,
 					false,
 					move_builder,
 					mvs
@@ -1316,6 +1332,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.gote_self_board, 80 - p as u32, GKin,
+					false,
 					0, 0,
 					true,
 					move_builder,
@@ -1336,6 +1353,7 @@ impl GenerateStrategy for Fast {
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					p as u32, SKaku,
+					false,
 					SENTE_NARI_MASK, 0,
 					move_builder,
 					mvs
@@ -1348,6 +1366,7 @@ impl GenerateStrategy for Fast {
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					p as u32,SKakuN,
+					true,
 					0,0,
 					move_builder,
 					mvs
@@ -1367,6 +1386,7 @@ impl GenerateStrategy for Fast {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					80 - p as u32, GKaku,
+					false,
 					GOTE_NARI_MASK, 0,
 					move_builder,
 					mvs
@@ -1384,6 +1404,7 @@ impl GenerateStrategy for Fast {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					80 - p as u32,GKakuN,
+					true,
 					0,0,
 					move_builder,
 					mvs
@@ -1403,6 +1424,7 @@ impl GenerateStrategy for Fast {
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					p as u32, SHisha,
+					false,
 					SENTE_NARI_MASK, 0,
 					move_builder,
 					mvs
@@ -1415,6 +1437,7 @@ impl GenerateStrategy for Fast {
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					p as u32,SHishaN,
+					true,
 					0,0,
 					move_builder,
 					mvs
@@ -1434,6 +1457,7 @@ impl GenerateStrategy for Fast {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					80 - p as u32, GHisha,
+					false,
 					GOTE_NARI_MASK, 0,
 					move_builder,
 					mvs
@@ -1451,6 +1475,7 @@ impl GenerateStrategy for Fast {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					80 - p as u32,GHishaN,
+					true,
 					0,0,
 					move_builder,
 					mvs
@@ -1470,6 +1495,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban, state.part.sente_self_board, p as u32, SOu,
+					false,
 					0, 0,
 					false,
 					move_builder,
@@ -1484,6 +1510,7 @@ impl GenerateStrategy for Fast {
 			for p in b.iter() {
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					teban,state.part.gote_self_board,80 - p as u32,GOu,
+					false,
 					0,0,
 					true,
 					&move_builder,
@@ -1832,7 +1859,7 @@ impl Rule {
 	pub fn append_legal_moves_from_banmen<F>(
 		m:Square,
 		from:u32,
-		kind:KomaKind,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		inverse_position:bool,
@@ -1845,8 +1872,6 @@ impl Rule {
 
 		let to_mask = 1 << to;
 		let from_mask = 1 << from;
-
-		let nari = kind.is_nari();
 
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
 			mvs.push(move_builder(from, to, true)).unwrap();
@@ -1920,6 +1945,7 @@ impl Rule {
 		teban:Teban,
 		self_occupied:BitBoard,
 		from:u32,kind:KomaKind,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		inverse_position:bool,
@@ -1930,7 +1956,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,inverse_position,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,inverse_position,move_builder,mvs
 			);
 		}
 	}
@@ -1953,6 +1979,7 @@ impl Rule {
 		teban:Teban,
 		self_occupied:BitBoard,
 		from:u32,kind:KomaKind,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		inverse_position:bool,
@@ -1962,7 +1989,7 @@ impl Rule {
 		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
 		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-			teban,self_occupied,from,kind,nari_mask,deny_move_mask,inverse_position,move_builder,&mut mvs);
+			teban,self_occupied,from,kind,nari,nari_mask,deny_move_mask,inverse_position,move_builder,&mut mvs);
 
 		mvs.into()
 	}
@@ -2064,6 +2091,7 @@ impl Rule {
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
@@ -2073,7 +2101,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
@@ -2081,7 +2109,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
@@ -2089,7 +2117,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
@@ -2097,13 +2125,13 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
 		if kind == SKakuN {
 			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-				Teban::Sente,self_occupied,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				Teban::Sente,self_occupied,from,kind,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 	}
@@ -2129,6 +2157,7 @@ impl Rule {
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
@@ -2138,7 +2167,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
@@ -2146,7 +2175,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
@@ -2154,7 +2183,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
@@ -2162,13 +2191,13 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
 		if kind == GKakuN {
 			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-				Teban::Gote,self_occupied,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				Teban::Gote,self_occupied,from,kind,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 	}
@@ -2273,6 +2302,7 @@ impl Rule {
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
@@ -2282,7 +2312,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
@@ -2290,7 +2320,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
@@ -2298,7 +2328,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
@@ -2306,13 +2336,13 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
 		if kind == SHishaN {
 			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-				Teban::Sente,self_occupied,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				Teban::Sente,self_occupied,from,kind,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 	}
@@ -2338,6 +2368,7 @@ impl Rule {
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,kind:KomaKind,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
@@ -2347,7 +2378,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
@@ -2355,7 +2386,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
@@ -2363,7 +2394,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 
@@ -2371,13 +2402,13 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 
 		if kind == GHishaN {
 			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
-				Teban::Gote,self_occupied,from,kind,nari_mask,deny_move_mask,true,move_builder,mvs
+				Teban::Gote,self_occupied,from,kind,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 	}
@@ -2398,6 +2429,7 @@ impl Rule {
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
@@ -2407,7 +2439,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,SKyou,nari_mask,deny_move_mask,true,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
 	}
@@ -2428,6 +2460,7 @@ impl Rule {
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,
+		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
 		move_builder:&F,
@@ -2437,7 +2470,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,GKyou,nari_mask,deny_move_mask,false,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
 	}
@@ -2553,7 +2586,7 @@ impl Rule {
 
 				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					t,self_bitboard,from,kind,
-					nari_mask,deny_move_mask,
+					kind.is_nari(),nari_mask,deny_move_mask,
 					kind >= GFu && kind < Blank,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2564,6 +2597,7 @@ impl Rule {
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					from,
+					kind.is_nari(),
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2576,6 +2610,7 @@ impl Rule {
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					from,kind,
+					kind.is_nari(),
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2588,6 +2623,7 @@ impl Rule {
 				state.part.gote_self_board,
 				state.part.gote_opponent_board,
 				from,kind,
+					kind.is_nari(),
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2598,6 +2634,7 @@ impl Rule {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					from,
+					kind.is_nari(),
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2610,6 +2647,7 @@ impl Rule {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					from,kind,
+					kind.is_nari(),
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
@@ -2622,6 +2660,7 @@ impl Rule {
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					from,kind,
+					kind.is_nari(),
 					nari_mask,deny_move_mask,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
