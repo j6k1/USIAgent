@@ -1832,10 +1832,8 @@ impl Rule {
 
 		let (x,y) = from.square_to_point();
 
-		let mut mask = if kind < GFu {
-			CANDIDATE_BITS[kind as usize]
-		} else if kind < Blank {
-			CANDIDATE_BITS[kind as usize - 14]
+		let mut mask = if kind < Blank {
+			CANDIDATE_BITS[kind as usize - (kind >= GFu) as usize * 14]
 		} else {
 			return BitBoard { merged_bitboard: 0 };
 		};
@@ -3006,6 +3004,43 @@ impl Rule {
 		Rule::legal_moves_from_mochigoma_by_strategy::<Fast>(t,mc,state,mvs).unwrap();
 	}
 
+	/// 手番と盤面の状態と持ち駒を元に合法手を生成してMovePickerへ格納する
+	///
+	/// # Arguments
+	/// * `t` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	///
+	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
+	/// # Examples
+	/// ```
+	/// extern crate chrono;
+	///
+	/// use usiagent::math::Prng;
+	/// use usiagent::movepick::RandomPicker;
+	/// use usiagent::rule::*;
+	/// use usiagent::shogi::*;
+	/// use usiagent::movepick::*;
+	/// use usiagent::math::*;
+	/// use chrono::Local;
+	/// let state = State::new(BANMEN_START_POS.clone());
+	/// let seed = Local::now().timestamp();
+	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
+	///
+	/// Rule::legal_moves_all_by_strategy(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
+	/// assert!(mvs.len() > 0);
+	/// ```
+	#[inline]
+	pub fn legal_moves_all_by_strategy<S: GenerateStrategy>(t:Teban,
+									   state:&State,
+									   mc:&MochigomaCollections,
+									   mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
+		mvs.reset();
+		Rule::legal_moves_from_banmen_by_strategy::<S>(t, state, mvs)?;
+		Rule::legal_moves_from_mochigoma_by_strategy::<S>(t, mc, state, mvs)?;
+
+		Ok(())
+	}
 	/// 手番と盤面の状態と持ち駒を元に合法手を生成して返す
 	///
 	/// # Arguments
@@ -3028,8 +3063,8 @@ impl Rule {
 		let seed = Local::now().timestamp();
 		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
-		Rule::legal_moves_from_banmen_with_buffer(t, state, &mut mvs);
-		Rule::legal_moves_from_mochigoma_with_buffer(t, mc, state, &mut mvs);
+		Rule::legal_moves_all_by_strategy::<Fast>(t,state,mc,&mut mvs).unwrap();
+
 		mvs.into()
 	}
 
@@ -3064,9 +3099,7 @@ impl Rule {
 									   state:&State,
 									   mc:&MochigomaCollections,
 									   mvs:&mut impl MovePicker<LegalMove>) {
-		mvs.reset();
-		Rule::legal_moves_from_banmen_with_buffer(t, state, mvs);
-		Rule::legal_moves_from_mochigoma_with_buffer(t, mc, state, mvs);
+		Rule::legal_moves_all_by_strategy::<Fast>(t,state,mc,mvs).unwrap()
 	}
 
 	/// 王を取る手のうち一マスだけ駒を動かす手を返す
