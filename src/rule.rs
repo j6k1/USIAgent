@@ -1621,13 +1621,12 @@ impl GenerateStrategy for Fast {
 		if teban == Teban::Sente {
 			if count > 0 {
 				if unsafe { (*shared_candidatebits).merged_bitboard } == 0 {
-					let b = unsafe { !(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard & BANMEN_MASK };
+					let b = unsafe { !(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard & BANMEN_MASK };
 
 					*shared_candidatebits = BitBoard { merged_bitboard: b };
 				};
 
 				for p in (*shared_candidatebits).iter() {
-					let p = 80 - p;
 					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
 				}
 			}
@@ -2741,7 +2740,7 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::legal_moves_from_banmen_by_strategy::<Fast>(Teban::Sente,&state,&mut mvs)?;
+	/// Rule::legal_moves_from_banmen_by_strategy::<Fast>(Teban::Sente,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	pub fn legal_moves_from_banmen_by_strategy<S: GenerateStrategy>(teban:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
@@ -2839,15 +2838,15 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::legal_moves_from_mochigoma_with_buffer(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs);
+	/// Rule::legal_moves_from_mochigoma_by_strategy::<Fast>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() == 0);
 	/// ```
-	pub fn legal_moves_from_mochigoma_with_buffer(
-		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
-	) {
+	pub fn legal_moves_from_mochigoma_by_strategy<S: GenerateStrategy>(
+		teban:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
+	) -> Result<(),LimitSizeError> {
 		let mc = match mc {
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
-				match t {
+				match teban {
 					Teban::Sente => {
 						ms
 					},
@@ -2857,168 +2856,70 @@ impl Rule {
 				}
 			},
 			&MochigomaCollections::Empty => {
-				return;
+				return Ok(());
 			}
 		};
 
-		if t == Teban::Sente {
-			let mut it = mc.iter();
-			let mut shared_candidate_bitboard = BitBoard { merged_bitboard: 0 };
+		let mut it = mc.iter();
 
-			if let Some((_,c)) = it.next()  {
-				if c > 0 {
-					let fu_mask = {
-						let mut b = 0u128;
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
 
-						for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
-							b |= 0b111111111 << (p * 114 / 1024 * 9);
-						}
+		S::generate_drop_fu(teban,state,count,mvs)?;
 
-						b
-					};
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
 
-					let candidate_bitboard = unsafe {
-						!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
-							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
-					};
+		S::generate_drop_kyou(teban,state,count,mvs)?;
 
-					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
 
-					for p in candidate_bitboard.iter() {
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
-					}
-				}
-			}
+		S::generate_drop_kei(teban,state,count,mvs)?;
 
+		let mut shared_candidatebits = BitBoard { merged_bitboard: 0 };
 
-			if let Some((_,c)) = it.next() {
-				if c > 0 {
-					let candidate_bitboard = unsafe {
-						!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
-							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1)
-					};
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
 
-					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+		S::generate_drop_gin(teban,state,count,&mut shared_candidatebits,mvs)?;
 
-					for p in candidate_bitboard.iter() {
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
-					}
-				}
-			}
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
 
-			if let Some((_,c)) = it.next() {
-				if c > 0 {
-					let candidate_bitboard = unsafe {
-						!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
-							BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1)
-					};
+		S::generate_drop_kin(teban,state,count,&mut shared_candidatebits,mvs)?;
 
-					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
 
-					for p in candidate_bitboard.iter() {
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
-					}
-				}
-			}
+		S::generate_drop_kaku(teban,state,count,&mut shared_candidatebits,mvs)?;
 
-			for (m,count) in it  {
-				if count == 0 {
-					continue;
-				}
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
 
-				if unsafe { shared_candidate_bitboard.merged_bitboard } == 0 {
-					let b = unsafe { !(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard & BANMEN_MASK };
+		S::generate_drop_hisha(teban,state,count,&mut shared_candidatebits,mvs)?;
 
-					shared_candidate_bitboard = BitBoard { merged_bitboard: b };
-				};
-
-				for p in shared_candidate_bitboard.iter() {
-					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
-				}
-			}
-		} else {
-			let mut it = mc.iter();
-			let mut shared_candidate_bitboard = BitBoard { merged_bitboard: 0 };
-
-			if let Some((_,c)) = it.next() {
-				if c > 0 {
-					let fu_mask = {
-						let mut b = 0u128;
-
-						for p in (state.part.gote_fu_board & !state.part.gote_nari_board).iter() {
-							b |= 0b111111111 << ((8 - p * 114 / 1024) * 9);
-						}
-
-						b
-					};
-
-					let candidate_bitboard = unsafe {
-						!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
-							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
-					};
-
-					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
-
-					for p in candidate_bitboard.iter() {
-						let p = 80 - p;
-
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
-					}
-				}
-			}
-
-
-			if let Some((_,c)) = it.next() {
-				if c > 0 {
-					let candidate_bitboard = unsafe {
-						!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
-							BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1)
-					};
-
-					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
-
-					for p in candidate_bitboard.iter() {
-						let p = 80 - p;
-
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
-					}
-				}
-			}
-
-			if let Some((_,c)) = it.next() {
-				if c > 0 {
-					let candidate_bitboard = unsafe {
-						!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
-							BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1)
-					};
-
-					let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
-
-					for p in candidate_bitboard.iter() {
-						let p = 80 - p;
-
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
-					}
-				}
-			}
-
-			for (m,count) in it  {
-				if count == 0 {
-					continue;
-				}
-
-				if unsafe { shared_candidate_bitboard.merged_bitboard } == 0 {
-					let b = unsafe { !(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard & BANMEN_MASK };
-
-					shared_candidate_bitboard = BitBoard { merged_bitboard: b };
-				};
-
-				for p in shared_candidate_bitboard.iter() {
-					let p = 80 - p;
-					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
-				}
-			}
-		}
+		Ok(())
+	}
+	/// 手番と盤面の状態と持ち駒を元に駒を置く合法手を生成してバッファに追加
+	///
+	/// * `t` - 手を列挙したい手番
+	/// * `mc` - 持ち駒
+	/// * `state` - 盤面の状態
+	/// * `mvs` - 手を追加するバッファ
+	/// `State`もしくは`MochigomaCollections`の状態が不正な時の動作は未定義
+	/// # Examples
+	/// ```
+	/// extern crate chrono;
+	///
+	/// use usiagent::rule::*;
+	/// use usiagent::shogi::*;
+	/// use usiagent::movepick::*;
+	/// use usiagent::math::*;
+	/// use chrono::Local;
+	/// let seed = Local::now().timestamp();
+	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
+	/// let state = State::new(BANMEN_START_POS.clone());
+	/// Rule::legal_moves_from_mochigoma_with_buffer(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs);
+	/// assert!(mvs.len() == 0);
+	/// ```
+	pub fn legal_moves_from_mochigoma_with_buffer(
+		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
+	) {
+		Rule::legal_moves_from_mochigoma_by_strategy::<Fast>(t,mc,state,mvs).unwrap();
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に合法手を生成して返す
