@@ -53,6 +53,7 @@ trait KomaKindFrom<T> {
 	fn kind_from(k:T) -> Self;
 }
 impl KomaKindFrom<u32> for ObtainKind {
+	#[inline]
 	fn kind_from(k:u32) -> ObtainKind {
 		match k {
 			0 => ObtainKind::Fu,
@@ -74,6 +75,7 @@ impl KomaKindFrom<u32> for ObtainKind {
 	}
 }
 impl KomaKindFrom<u32> for MochigomaKind {
+	#[inline]
 	fn kind_from(k:u32) -> MochigomaKind {
 		match k {
 			0 => MochigomaKind::Fu,
@@ -129,6 +131,7 @@ impl LegalMoveTo {
 	/// * `to` - 盤面左上を0,0とし、x * 9 + yで表される移動先の駒の位置
 	/// * `nari` - 成るか否か
 	/// * `obtaind` - 獲った駒
+	#[inline]
 	pub fn new(src:u32,to:u32,nari:bool,obtaind:Option<ObtainKind>) -> LegalMoveTo {
 		let n:u32 = if nari {
 			1
@@ -180,6 +183,7 @@ impl LegalMovePut {
 	/// # Arguments
 	/// * `kind` - 置く駒の種類
 	/// * `to` - 盤面左上を0,0とし、x * 9 + yで表される移動先の駒の位置
+	#[inline]
 	pub fn new(kind:MochigomaKind,to:u32) -> LegalMovePut {
 		LegalMovePut(
 			(to & 0b1111111) << 3 |
@@ -226,6 +230,7 @@ impl AppliedMoveTo {
 	}
 }
 impl From<LegalMoveTo> for AppliedMoveTo {
+	#[inline]
 	fn from(m:LegalMoveTo) -> AppliedMoveTo {
 		AppliedMoveTo(m.0 & 0b111111111111111)
 	}
@@ -246,11 +251,13 @@ impl AppliedMovePut {
 	}
 }
 impl From<LegalMovePut> for AppliedMovePut {
+	#[inline]
 	fn from(m:LegalMovePut) -> AppliedMovePut {
 		AppliedMovePut(m.0)
 	}
 }
 impl From<LegalMove> for AppliedMove {
+	#[inline]
 	fn from(m:LegalMove) -> AppliedMove {
 		match m {
 			LegalMove::To(m) => AppliedMove::To(AppliedMoveTo::from(m)),
@@ -259,6 +266,7 @@ impl From<LegalMove> for AppliedMove {
 	}
 }
 impl From<Move> for AppliedMove {
+	#[inline]
 	fn from(m:Move) -> AppliedMove {
 		match m {
 			Move::To(KomaSrcPosition(sx,sy),KomaDstToPosition(dx,dy,n)) => {
@@ -298,15 +306,18 @@ impl From<Move> for AppliedMove {
 }
 impl LegalMove {
 	/// `AppliedMove`へ変換
+	#[inline]
 	pub fn to_applied_move(self) -> AppliedMove {
 		AppliedMove::from(self)
 	}
 	/// `Move`へ変換
+	#[inline]
 	pub fn to_move(self) -> Move {
 		Move::from(self)
 	}
 }
 impl From<LegalMove> for Move {
+	#[inline]
 	fn from(m:LegalMove) -> Move {
 		match m {
 			LegalMove::To(m) => {
@@ -337,11 +348,13 @@ impl From<LegalMove> for Move {
 }
 impl AppliedMove {
 	/// `Move`へ変換
+	#[inline]
 	pub fn to_move(self) -> Move {
 		Move::from(self)
 	}
 }
 impl From<AppliedMove> for Move {
+	#[inline]
 	fn from(m:AppliedMove) -> Move {
 		match m {
 			AppliedMove::To(m) => {
@@ -370,6 +383,7 @@ impl From<AppliedMove> for Move {
 	}
 }
 impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
+	#[inline]
 	fn find(&self,query:&(KomaSrcPosition,KomaDstToPosition)) -> Option<Move> {
 		match query {
 			&(ref s,ref d) => {
@@ -401,6 +415,7 @@ impl Find<(KomaSrcPosition,KomaDstToPosition),Move> for Vec<LegalMove> {
 	}
 }
 impl Find<KomaPosition,Move> for Vec<LegalMove> {
+	#[inline]
 	fn find(&self,query:&KomaPosition) -> Option<Move> {
 		let (x,y) = match query {
 			&KomaPosition(x,y) => (x,y)
@@ -427,6 +442,7 @@ impl Find<KomaPosition,Move> for Vec<LegalMove> {
 	}
 }
 impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<LegalMove> {
+	#[inline]
 	fn find(&self,query:&(MochigomaKind,KomaDstPutPosition)) -> Option<Move> {
 		match query {
 			&(ref k, ref d) => {
@@ -452,6 +468,7 @@ impl Find<(MochigomaKind,KomaDstPutPosition),Move> for Vec<LegalMove> {
 	}
 }
 impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
+	#[inline]
 	fn find(&self,query:&ObtainKind) -> Option<Vec<Move>> {
 		let mut mvs:Vec<Move> = Vec::new();
 
@@ -483,6 +500,7 @@ pub union BitBoard {
 impl BitOr for BitBoard {
 	type Output = Self;
 
+	#[inline]
 	fn bitor(self, rhs: Self) -> Self {
 		unsafe {
 			BitBoard { merged_bitboard: self.merged_bitboard | rhs.merged_bitboard }
@@ -492,6 +510,7 @@ impl BitOr for BitBoard {
 impl BitAnd for BitBoard {
 	type Output = Self;
 
+	#[inline]
 	fn bitand(self, rhs: Self) -> Self::Output {
 		unsafe {
 			BitBoard { merged_bitboard: self.merged_bitboard & rhs.merged_bitboard }
@@ -501,6 +520,7 @@ impl BitAnd for BitBoard {
 impl Not for BitBoard {
 	type Output = Self;
 
+	#[inline]
 	fn not(self) -> Self {
 		unsafe {
 			BitBoard { merged_bitboard: !self.merged_bitboard }
@@ -508,11 +528,13 @@ impl Not for BitBoard {
 	}
 }
 impl PartialEq for BitBoard {
+	#[inline]
 	fn eq(&self,other:&BitBoard) -> bool {
 		unsafe { self.merged_bitboard == other.merged_bitboard }
 	}
 }
 impl fmt::Debug for BitBoard {
+	#[inline]
 	fn fmt(&self, f: &mut Formatter) -> fmt::Result {
 		write!(f, "{}", unsafe { self.merged_bitboard })
 	}
@@ -522,6 +544,7 @@ pub struct PopLsbIterByCallback<F> {
 	callback:F
 }
 impl BitBoard {
+	#[inline]
 	pub fn iter(self) -> impl Iterator<Item = Square> {
 		let br = (unsafe { *self.bitboard.get_unchecked(0) } == 0) as usize;
 		let bl = (unsafe { *self.bitboard.get_unchecked(1) } == 0) as usize;
@@ -570,6 +593,7 @@ impl State {
 	///
 	/// # Arguments
 	/// * `banmen` - 盤面
+	#[inline]
 	pub fn new(banmen:Banmen) -> State {
 		let mut sente_self_board:u128 = 0;
 		let mut sente_opponent_board:u128 = 0;
@@ -670,6 +694,7 @@ impl State {
 	///
 	/// # Arguments
 	/// * `f` - コールバック関数
+	#[inline]
 	pub fn map_banmen<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen) -> T {
 		f(&self.banmen)
 	}
@@ -677,14 +702,17 @@ impl State {
 	///
 	/// # Arguments
 	/// * `f` - コールバック関数
+	#[inline]
 	pub fn map<F,T>(&self,mut f:F) -> T where F: FnMut(&Banmen,&PartialState) -> T {
 		f(&self.banmen,&self.part)
 	}
 	/// 盤面への不変な参照を返す
+	#[inline]
 	pub fn get_banmen(&self) -> &Banmen {
 		&self.banmen
 	}
 	/// `PartialState`への不変な参照を返す
+	#[inline]
 	pub fn get_part(&self) -> &PartialState {
 		&self.part
 	}
@@ -744,6 +772,7 @@ impl PartialState {
 	///
 	/// # Arguments
 	/// * `banmen` - 自身に対応する盤面
+	#[inline]
 	pub fn to_full_state(&self,banmen:Banmen) -> State {
 		State {
 			banmen:banmen,
