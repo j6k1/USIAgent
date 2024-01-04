@@ -518,7 +518,7 @@ impl fmt::Debug for BitBoard {
 	}
 }
 /// ビットボードの最下位ビットを取り出すイテレータ
-pub struct PopLsbIterCallback<F> {
+pub struct PopLsbIterByCallback<F> {
 	callback:F
 }
 impl BitBoard {
@@ -530,7 +530,7 @@ impl BitBoard {
 
 		let mut board = self;
 
-		PopLsbIterCallback {
+		PopLsbIterByCallback {
 			callback: move || {
 				if index == 2 {
 					None
@@ -551,7 +551,7 @@ impl BitBoard {
 		}
 	}
 }
-impl<F> Iterator for PopLsbIterCallback<F> where F: FnMut() -> Option<Square> {
+impl<F> Iterator for PopLsbIterByCallback<F> where F: FnMut() -> Option<Square> {
 	type Item = Square;
 
 	#[inline]
@@ -1033,6 +1033,638 @@ pub const BANMEN_START_POS:Banmen = Banmen([
 	[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 	[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
 ]);
+pub trait GenerateStrategy {
+	fn generate_fu<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_kyou<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_kei<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_gin<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_kin<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_kaku<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_hisha<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_ou<'a,B>(teban:Teban,state:&State,move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn generate_drop_fu(teban:Teban,state:&State,count:usize,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	fn generate_drop_kyou(teban:Teban,state:&State,count:usize,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	fn generate_drop_kei(teban:Teban,state:&State,count:usize,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	fn generate_drop_common(teban:Teban,state:&State,m:MochigomaKind, count:usize,shared_candidatebits:&mut BitBoard,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError>;
+	fn generate_drop_gin(teban:Teban,state:&State,count:usize,shared_candidatebits:&mut BitBoard,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError>;
+	fn generate_drop_kin(teban:Teban,state:&State,count:usize,shared_candidatebits:&mut BitBoard,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError>;
+	fn generate_drop_kaku(teban:Teban,state:&State,count:usize,shared_candidatebits:&mut BitBoard,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError>;
+	fn generate_drop_hisha(teban:Teban,state:&State,count:usize,shared_candidatebits:&mut BitBoard,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(),LimitSizeError>;
+}
+pub struct Fast;
+impl GenerateStrategy for Fast {
+	fn generate_fu<'a,B>(teban: Teban, state: &State, move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SFu,
+					SENTE_NARI_MASK, DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+
+			for p in (state.part.sente_fu_board & state.part.sente_nari_board).iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SFuN,
+					0, 0,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let candidatebits = unsafe { state.part.gote_fu_board.merged_bitboard };
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & !state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.gote_self_board, 80 - p as u32, GFu,
+					GOTE_NARI_MASK, DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban,state.part.gote_self_board,80 - p as u32,GFuN,
+					0,0,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_kyou<'a,B>(teban: Teban, state: &State, move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_kyou_board & !state.part.sente_nari_board).iter() {
+				Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32,
+					SENTE_NARI_MASK, DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+					move_builder,
+					mvs
+				);
+			}
+
+			for p in (state.part.sente_kyou_board & state.part.sente_nari_board).iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SKyouN,
+					0, 0,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let candidatebits = unsafe { state.part.gote_kyou_board.merged_bitboard };
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & !state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32,
+					GOTE_NARI_MASK, DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
+					move_builder,
+					mvs
+				);
+			}
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban,state.part.gote_self_board,80 - p as u32,GKyouN,
+					0,0,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_kei<'a,B>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_kei_board & !state.part.sente_nari_board).iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SKei,
+					SENTE_NARI_MASK, DENY_MOVE_SENTE_KEI_MASK,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+
+			for p in (state.part.sente_kei_board & state.part.sente_nari_board).iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SKeiN,
+					0, 0,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let candidatebits = unsafe { state.part.gote_kei_board.merged_bitboard };
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & !state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.gote_self_board, 80 - p as u32, GKei,
+					GOTE_NARI_MASK, DENY_MOVE_GOTE_KEI_MASK,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban,state.part.gote_self_board,80 - p as u32,GKeiN,
+					0,0,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_gin<'a,B>(teban: Teban, state: &State, move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_gin_board & !state.part.sente_nari_board).iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SGin,
+					SENTE_NARI_MASK, 0,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+
+			for p in (state.part.sente_gin_board & state.part.sente_nari_board).iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SGinN,
+					0, 0,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let candidatebits = unsafe { state.part.gote_gin_board.merged_bitboard };
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & !state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.gote_self_board, 80 - p as u32, GGin,
+					GOTE_NARI_MASK, 0,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban,state.part.gote_self_board,80 - p as u32,GGinN,
+					0,0,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_kin<'a, B>(teban: Teban, state: &State, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in state.part.sente_kin_board.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SKin, 0, 0,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let candidatebits = unsafe { state.part.gote_kin_board.merged_bitboard };
+
+			let b = BitBoard {
+				merged_bitboard: candidatebits.reverse_bits() >> 45
+			};
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.gote_self_board, 80 - p as u32, GKin,
+					GOTE_NARI_MASK, 0,
+					true,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_kaku<'a, B>(teban: Teban, state: &State, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
+				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32, SKaku,
+					SENTE_NARI_MASK, 0,
+					move_builder,
+					mvs
+				);
+			}
+			for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
+				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32,SKakuN,
+					0,0,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let candidatebits = unsafe { state.part.gote_kaku_board.merged_bitboard };
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & !state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32, GKaku,
+					GOTE_NARI_MASK, 0,
+					move_builder,
+					mvs
+				);
+			}
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32,GKakuN,
+					0,0,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_hisha<'a, B>(teban: Teban, state: &State, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
+				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32, SHisha,
+					SENTE_NARI_MASK, 0,
+					move_builder,
+					mvs
+				);
+			}
+			for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
+				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32,SHishaN,
+					0,0,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let candidatebits = unsafe { state.part.gote_hisha_board.merged_bitboard };
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & !state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32, GHisha,
+					GOTE_NARI_MASK, 0,
+					move_builder,
+					mvs
+				);
+			}
+
+			let b = BitBoard { merged_bitboard: unsafe {
+				(candidatebits & state.part.gote_nari_board.merged_bitboard).reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32,GHishaN,
+					0,0,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_ou<'a, B>(teban: Teban, state: &State, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			let b = BitBoard { merged_bitboard: unsafe {
+				state.part.gote_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban, state.part.sente_self_board, p as u32, SOu,
+					0, 0,
+					false,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			let b = BitBoard { merged_bitboard: unsafe {
+				state.part.sente_opponent_ou_position_board.merged_bitboard.reverse_bits() >> 45
+			} };
+
+			for p in b.iter() {
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+					teban,state.part.gote_self_board,80 - p as u32,GOu,
+					0,0,
+					true,
+					&move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_drop_fu(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				let fu_mask = {
+					let mut b = 0u128;
+
+					for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
+						b |= 0b111111111 << (p * 114 / 1024 * 9);
+					}
+
+					b
+				};
+
+				let candidate_bitboard = unsafe {
+					!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
+				};
+
+				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+				for p in candidate_bitboard.iter() {
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+				}
+			}
+		} else {
+			if count > 0 {
+				let fu_mask = {
+					let mut b = 0u128;
+
+					for p in (state.part.gote_fu_board & !state.part.gote_nari_board).iter() {
+						b |= 0b111111111 << ((8 - p * 114 / 1024) * 9);
+					}
+
+					b
+				};
+
+				let candidate_bitboard = unsafe {
+					!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
+				};
+
+				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+				for p in candidate_bitboard.iter() {
+					let p = 80 - p;
+
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_drop_kyou(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				let candidate_bitboard = unsafe {
+					!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1)
+				};
+
+				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+				for p in candidate_bitboard.iter() {
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+				}
+			}
+		} else {
+			if count > 0 {
+				let candidate_bitboard = unsafe {
+					!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1)
+				};
+
+				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+				for p in candidate_bitboard.iter() {
+					let p = 80 - p;
+
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_drop_kei(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				let candidate_bitboard = unsafe {
+					!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1)
+				};
+
+				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+				for p in candidate_bitboard.iter() {
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+				}
+			}
+		} else {
+			if count > 0 {
+				let candidate_bitboard = unsafe {
+					!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1)
+				};
+
+				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
+
+				for p in candidate_bitboard.iter() {
+					let p = 80 - p;
+
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize, shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				if unsafe { (*shared_candidatebits).merged_bitboard } == 0 {
+					let b = unsafe { !(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard & BANMEN_MASK };
+
+					*shared_candidatebits = BitBoard { merged_bitboard: b };
+				};
+
+				for p in (*shared_candidatebits).iter() {
+					let p = 80 - p;
+					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
+				}
+			}
+		} else {
+			if count > 0 {
+				if unsafe { (*shared_candidatebits).merged_bitboard } == 0 {
+					let b = unsafe { !(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard & BANMEN_MASK };
+
+					*shared_candidatebits = BitBoard { merged_bitboard: b };
+				};
+
+				for p in (*shared_candidatebits).iter() {
+					let p = 80 - p;
+					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	fn generate_drop_gin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
+	}
+
+	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
+	}
+
+	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,mvs)
+	}
+
+	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,mvs)
+	}
+}
 /// オブジェクトの状態の検証用
 pub trait Validate {
 	/// 状態が正しければtrueを、そうでなければfalseを返す
