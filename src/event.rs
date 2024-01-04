@@ -6,6 +6,8 @@ use std::sync::{Mutex, MutexGuard, PoisonError, TryLockError};
 use std::sync::Arc;
 use std::error::Error;
 use std::ops::Deref;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::RecvError;
 use std::time::{Instant,Duration};
 
 use MaxIndex;
@@ -803,6 +805,15 @@ impl<'a,E,K> EventProvider<E> for &'a Mutex<EventQueue<E,K>>
 			Err(TryLockError::WouldBlock) => Ok(Vec::with_capacity(0)),
 			Err(TryLockError::Poisoned(e)) => Err(e)
 		}
+	}
+}
+impl<'a,E> EventProvider<E> for &'a Receiver<E>
+	where E: fmt::Debug + 'a {
+
+	type Error = RecvError;
+
+	fn provide(self) -> Result<Vec<E>, RecvError> {
+		Ok(vec![self.recv()?].into_iter().chain(self.try_iter()).collect())
 	}
 }
 impl<'a,E,K> EventProvider<E> for &'a Arc<Mutex<EventQueue<E,K>>>
