@@ -1050,6 +1050,7 @@ const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b100000000_100000000_100000000_10
 const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
 const BANMEN_MASK: u128 = 0b111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111_0;
 const NYUGYOKU_MASK:u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
+const DOUBLE_FU_CHECK_MASK:u128 = 0b100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
 /// 左上を(0,0)とした平手初期局面
 pub const BANMEN_START_POS:Banmen = Banmen([
 	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
@@ -1554,19 +1555,17 @@ impl GenerateStrategy for Fast {
 	fn generate_drop_fu(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
 			if count > 0 {
-				let fu_mask = {
-					let mut b = 0u128;
-
-					for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
-						b |= 0b111111111 << (p * 114 / 1024 * 9);
-					}
-
-					b
+				let board = DOUBLE_FU_CHECK_MASK - unsafe {
+					(state.part.sente_fu_board & !state.part.sente_nari_board).merged_bitboard >> 1
 				};
+
+				let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
+
+				let mask = (DOUBLE_FU_CHECK_MASK - (mask_source >> 8)) ^ DOUBLE_FU_CHECK_MASK;
 
 				let candidate_bitboard = unsafe {
 					!(state.part.sente_self_board | state.part.sente_opponent_board).merged_bitboard &
-						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1)
 				};
 
 				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
@@ -1577,19 +1576,17 @@ impl GenerateStrategy for Fast {
 			}
 		} else {
 			if count > 0 {
-				let fu_mask = {
-					let mut b = 0u128;
-
-					for p in (state.part.gote_fu_board & !state.part.gote_nari_board).iter() {
-						b |= 0b111111111 << ((8 - p * 114 / 1024) * 9);
-					}
-
-					b
+				let board = DOUBLE_FU_CHECK_MASK - unsafe {
+					(state.part.gote_fu_board & !state.part.gote_nari_board).merged_bitboard.reverse_bits() >> 46
 				};
+
+				let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
+
+				let mask = (DOUBLE_FU_CHECK_MASK - (mask_source >> 8)) ^ DOUBLE_FU_CHECK_MASK;
 
 				let candidate_bitboard = unsafe {
 					!(state.part.gote_self_board | state.part.gote_opponent_board).merged_bitboard &
-						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(fu_mask << 1)
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1)
 				};
 
 				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
@@ -3027,7 +3024,7 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	///
-	/// Rule::legal_moves_all_by_strategy(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
+	/// Rule::legal_moves_all_by_strategy::<Fast>(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	#[inline]
