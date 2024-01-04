@@ -406,6 +406,7 @@ impl TryFrom<KomaKind> for MochigomaKind {
 }
 /// 持ち駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, Ord, PartialEq, Debug, Hash)]
+#[repr(u8)]
 pub enum MochigomaKind {
 	/// 歩
 	Fu = 0,
@@ -513,7 +514,7 @@ const MOCHIGOMA_MASK:[u64; MOCHIGOMA_KIND_MAX + 1] = [
 	0b11,
 	0b11
 ];
-const MOCHIGOMA_NEXT_INDEXES:u128 = 0b100100100001000010000100001000000000000000000;
+const MOCHIGOMA_MASK_SOURCE:u64 = 0b10_10_1000_1000_1000_1000_100000000000000000;
 /// 持ち駒を固定長配列で管理するための構造体
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct Mochigoma {
@@ -619,14 +620,14 @@ impl Mochigoma {
 }
 pub struct MochigomaIterator {
 	bitboard:u64,
-	next_indexes:u128,
+	mask:u64,
 	current_index:usize
 }
 impl MochigomaIterator {
 	pub fn new(bitboard:u64) -> MochigomaIterator {
 		MochigomaIterator {
 			bitboard,
-			next_indexes:MOCHIGOMA_NEXT_INDEXES,
+			mask:MOCHIGOMA_MASK_SOURCE,
 			current_index:0
 		}
 	}
@@ -635,29 +636,21 @@ impl Iterator for MochigomaIterator {
 	type Item = (MochigomaKind,usize);
 
 	fn next(&mut self) -> Option<Self::Item> {
-		const MAP:[MochigomaKind; MOCHIGOMA_KIND_MAX + 1] = [
-			MochigomaKind::Fu,
-			MochigomaKind::Kyou,
-			MochigomaKind::Kei,
-			MochigomaKind::Gin,
-			MochigomaKind::Kin,
-			MochigomaKind::Kaku,
-			MochigomaKind::Hisha
-		];
-
-		if self.next_indexes == 0 {
+		if self.mask == 0 {
 			None
 		} else {
-			let c = (self.bitboard & MOCHIGOMA_MASK[self.current_index]).trailing_ones();
+			let next_index = self.mask.trailing_zeros() + 1;
+			let mask = (self.mask - 1) ^ self.mask;
+
+			let c = (self.bitboard & mask).trailing_ones();
 
 			let current_index = self.current_index;
-			let next_index = self.next_indexes.trailing_zeros();
 
+			self.mask >>= next_index;
 			self.bitboard >>= next_index;
-			self.next_indexes >>= next_index + 1;
 			self.current_index += 1;
 
-			Some((MAP[current_index],c as usize))
+			Some((unsafe { std::mem::transmute(current_index as u8) }, c as usize))
 		}
 	}
 }
