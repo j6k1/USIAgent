@@ -1094,8 +1094,8 @@ pub trait GenerateStrategy {
 	fn generate_drop_hisha(teban:Teban,state:&State,count:usize,shared_candidatebits:&mut BitBoard,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError>;
 }
-pub struct Fast;
-impl GenerateStrategy for Fast {
+pub struct NonEvasionsAll;
+impl GenerateStrategy for NonEvasionsAll {
 	fn generate_fu<'a,B>(teban: Teban, state: &State, move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -2814,7 +2814,7 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::legal_moves_from_banmen_by_strategy::<Fast>(Teban::Sente,&state,&mut mvs).is_ok();
+	/// Rule::legal_moves_from_banmen_by_strategy::<NonEvasionsAll>(Teban::Sente,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	#[inline]
@@ -2865,7 +2865,7 @@ impl Rule {
 	/// ```
 	#[inline]
 	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) {
-		Rule::legal_moves_from_banmen_by_strategy::<Fast>(t,state,mvs).unwrap();
+		Rule::legal_moves_from_banmen_by_strategy::<NonEvasionsAll>(t,state,mvs).unwrap();
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に駒を置く合法手を生成して返す
@@ -2915,7 +2915,7 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::legal_moves_from_mochigoma_by_strategy::<Fast>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
+	/// Rule::legal_moves_from_mochigoma_by_strategy::<NonEvasionsAll>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() == 0);
 	/// ```
 	#[inline]
@@ -2998,7 +2998,7 @@ impl Rule {
 	pub fn legal_moves_from_mochigoma_with_buffer(
 		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) {
-		Rule::legal_moves_from_mochigoma_by_strategy::<Fast>(t,mc,state,mvs).unwrap();
+		Rule::legal_moves_from_mochigoma_by_strategy::<NonEvasionsAll>(t,mc,state,mvs).unwrap();
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に合法手を生成してMovePickerへ格納する
@@ -3024,7 +3024,7 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	///
-	/// Rule::legal_moves_all_by_strategy::<Fast>(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
+	/// Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	#[inline]
@@ -3060,7 +3060,7 @@ impl Rule {
 		let seed = Local::now().timestamp();
 		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
-		Rule::legal_moves_all_by_strategy::<Fast>(t,state,mc,&mut mvs).unwrap();
+		Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(t,state,mc,&mut mvs).unwrap();
 
 		mvs.into()
 	}
@@ -3096,7 +3096,7 @@ impl Rule {
 									   state:&State,
 									   mc:&MochigomaCollections,
 									   mvs:&mut impl MovePicker<LegalMove>) {
-		Rule::legal_moves_all_by_strategy::<Fast>(t,state,mc,mvs).unwrap()
+		Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(t,state,mc,mvs).unwrap()
 	}
 
 	/// 王を取る手のうち一マスだけ駒を動かす手を返す
