@@ -11,7 +11,7 @@ pub trait MovePicker<T> : Iterator<Item =T> {
 }
 pub struct RandomPicker<T> {
     rnd:Prng,
-    mvs:[T; 593],
+    mvs:[MaybeUninit<T>; 593],
     current:u16,
     count:u16
 }
@@ -19,7 +19,7 @@ impl<T> RandomPicker<T> where T: Copy {
     pub fn new(r:Prng) -> RandomPicker<T> {
         RandomPicker {
             rnd:r,
-            mvs:[unsafe { MaybeUninit::zeroed().assume_init() }; 593],
+            mvs:[MaybeUninit::uninit(); 593],
             current:0,
             count:0
         }
@@ -31,7 +31,7 @@ impl<T> MovePicker<T> for RandomPicker<T> where T: Copy {
         if self.count == MOVE_MAX {
             Err(LimitSizeError(self.count as usize))
         } else {
-            unsafe { *self.mvs.get_unchecked_mut(self.count as usize) = m };
+            unsafe { self.mvs.get_unchecked_mut(self.count as usize).write(m) };
 
             self.count += 1;
 
@@ -66,7 +66,7 @@ impl<T> Iterator for RandomPicker<T> where T: Copy {
 
             self.current += 1;
 
-            Some(self.mvs[index as usize])
+            Some(unsafe { (*self.mvs.get_unchecked(index as usize)).assume_init() })
         }
     }
 }
@@ -75,7 +75,7 @@ impl<T> From<RandomPicker<T>> for Vec<T> where T: Copy {
         let mut mvs = Vec::with_capacity(MOVE_MAX as usize);
 
         for i in 0..value.count {
-            mvs.push(value.mvs[i as usize]);
+            mvs.push(unsafe { value.mvs[i as usize].assume_init() });
         }
         mvs
     }
