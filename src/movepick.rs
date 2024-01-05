@@ -55,7 +55,7 @@ impl<T> Iterator for RandomPicker<T> where T: Copy {
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current + 1 >= self.count {
+        if self.current >= self.count {
             None
         } else {
             let index = self.current;
