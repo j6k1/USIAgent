@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::fmt;
 use std::fmt::{Formatter};
-use std::ops::{BitAnd, BitOr};
+use std::ops::{BitAnd, BitAndAssign, BitOr, Sub};
 use std::ops::Not;
 use std::convert::TryFrom;
 use chrono::Local;
@@ -527,10 +527,63 @@ impl Not for BitBoard {
 		}
 	}
 }
+impl Sub for BitBoard {
+	type Output = Self;
+
+	#[inline]
+	fn sub(self, rhs: Self) -> Self::Output {
+		unsafe {
+			BitBoard { merged_bitboard: self.merged_bitboard - rhs.merged_bitboard }
+		}
+	}
+}
 impl PartialEq for BitBoard {
 	#[inline]
 	fn eq(&self,other:&BitBoard) -> bool {
 		unsafe { self.merged_bitboard == other.merged_bitboard }
+	}
+}
+impl BitOr<u128> for BitBoard {
+	type Output = Self;
+
+	#[inline]
+	fn bitor(self, rhs: u128) -> Self {
+		unsafe {
+			BitBoard { merged_bitboard: self.merged_bitboard | rhs }
+		}
+	}
+}
+impl BitAnd<u128> for BitBoard {
+	type Output = Self;
+
+	#[inline]
+	fn bitand(self, rhs: u128) -> Self::Output {
+		unsafe {
+			BitBoard { merged_bitboard: self.merged_bitboard & rhs }
+		}
+	}
+}
+impl BitAndAssign<u128> for BitBoard {
+	fn bitand_assign(&mut self, rhs: u128) {
+		*self = unsafe {
+			BitBoard { merged_bitboard: self.merged_bitboard & rhs }
+		}
+	}
+}
+impl Sub<u128> for BitBoard {
+	type Output = Self;
+
+	#[inline]
+	fn sub(self, rhs: u128) -> Self::Output {
+		unsafe {
+			BitBoard { merged_bitboard: self.merged_bitboard - rhs }
+		}
+	}
+}
+impl PartialEq<u128> for BitBoard {
+	#[inline]
+	fn eq(&self,other:&u128) -> bool {
+		unsafe { self.merged_bitboard == *other }
 	}
 }
 impl fmt::Debug for BitBoard {
@@ -571,6 +624,12 @@ impl BitBoard {
 					Some(s as Square)
 				}
 			}
+		}
+	}
+
+	pub fn reverse(self) -> BitBoard {
+		BitBoard {
+			merged_bitboard: unsafe { self.merged_bitboard.reverse_bits() >> 45 }
 		}
 	}
 }
@@ -668,236 +727,216 @@ impl State {
 						} else if kind >= GFuN && kind < Blank {
 							gote_nari_board ^= 1 << (x * 9 + y + 1);
 						}
-
-						if kind == SOu {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
-							let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
-							let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | (1u128 << (from + 1))
-							};
-
-							sente_ou_reverse_control_board = mask;
-						}
-
-						if kind == GOu {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
-							let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
-							let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | (1u128 << (from + 1))
-							};
-
-							gote_ou_reverse_control_board = mask;
-						}
-
-						if kind == SKaku || kind == SKakuN {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
-							let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
-							let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_kaku_to_right_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | (1u128 << (from + 1))
-							};
-
-							if sente_kaku1_control_board == 0 {
-								sente_kaku1_control_board = mask;
-							} else {
-								sente_kaku2_control_board = mask;
-							}
-
-							if let Some(min)  = (BitBoard { merged_bitboard: sente_kaku_board }).iter().next() {
-								if (1u128 << min as u128) & sente_kaku1_control_board == 0 {
-									std::mem::swap(&mut sente_kaku1_control_board,&mut sente_kaku2_control_board);
-								}
-							}
-						}
-
-						if kind == GKaku || kind == GKakuN {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
-							let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
-							let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_kaku_to_right_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | (1u128 << (from + 1))
-							};
-
-							if gote_kaku1_control_board == 0 {
-								gote_kaku1_control_board = mask;
-							} else {
-								gote_kaku2_control_board = mask;
-							}
-
-							if let Some(min)  = (BitBoard { merged_bitboard: gote_kaku_board }).iter().next() {
-								if (1u128 << min as u128) & gote_kaku1_control_board == 0 {
-									std::mem::swap(&mut gote_kaku1_control_board,&mut gote_kaku2_control_board);
-								}
-							}
-						}
-
-						if kind == SHisha || kind == SHishaN {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
-							let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
-							let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | (1u128 << (from + 1))
-							};
-
-							if sente_hisha1_control_board == 0 {
-								sente_hisha1_control_board = mask;
-							} else {
-								sente_hisha2_control_board = mask;
-							}
-
-							if let Some(min)  = (BitBoard { merged_bitboard: sente_hisha_board }).iter().next() {
-								if (1u128 << min as u128) & sente_hisha1_control_board == 0 {
-									std::mem::swap(&mut sente_hisha1_control_board,&mut sente_hisha2_control_board);
-								}
-							}
-						}
-
-						if kind == GHisha || kind == GHishaN {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
-							let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
-							let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 | (1u128 << (from + 1))
-							};
-
-							if gote_hisha1_control_board == 0 {
-								gote_hisha1_control_board = mask;
-							} else {
-								gote_hisha2_control_board = mask;
-							}
-
-							if let Some(min)  = (BitBoard { merged_bitboard: gote_hisha_board }).iter().next() {
-								if (1u128 << min as u128) & gote_hisha1_control_board == 0 {
-									std::mem::swap(&mut gote_hisha1_control_board,&mut gote_hisha2_control_board);
-								}
-							}
-						}
-
-						if kind == SKyou {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
-							let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									gote_self_board, gote_opponent_board, 80 - from
-								).merged_bitboard.reverse_bits() >> 45 & !sente_self_board.merged_bitboard
-								| (1u128 << (from + 1))
-							};
-
-							sente_kyou_control_board |= mask;
-						}
-
-						if kind == GKyou {
-							let from = (x * 9 + y) as u32;
-
-							let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
-							let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
-
-							let mask = unsafe {
-								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-									sente_self_board, sente_opponent_board, from
-								).merged_bitboard
-								& !sente_opponent_board.merged_bitboard
-								| (1u128 << (from + 1))
-							};
-
-							gote_kyou_control_board |= mask;
-						}
 					}
 				}
+			}
+		}
+
+		for from in (BitBoard { merged_bitboard: BANMEN_MASK }).iter() {
+			let from = from as u32;
+			let (x,y) = from.square_to_point();
+
+			let kind = banmen.0[y as usize][x as usize];
+
+			if kind == SOu {
+				let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+				let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
+				let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 & (
+						sente_self_board.merged_bitboard | sente_opponent_board.merged_bitboard
+					) | (1u128 << (from + 1))
+				};
+
+				sente_ou_reverse_control_board = mask;
+			}
+
+			if kind == GOu {
+				let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+				let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
+				let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 & (
+						sente_self_board.merged_bitboard | sente_opponent_board.merged_bitboard
+					)  | (1u128 << (from + 1))
+				};
+
+				gote_ou_reverse_control_board = mask;
+			}
+
+			if kind == SKaku || kind == SKakuN {
+				let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+				let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
+				let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_kaku_to_right_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 & (
+						sente_self_board.merged_bitboard | sente_opponent_board.merged_bitboard
+					) | (1u128 << (from + 1))
+				};
+
+				if sente_kaku1_control_board == 0 {
+					sente_kaku1_control_board = mask;
+				} else {
+					sente_kaku2_control_board = mask;
+				}
+			}
+
+			if kind == GKaku || kind == GKakuN {
+				let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+				let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
+				let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_kaku_to_right_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 & (
+						sente_self_board.merged_bitboard | sente_opponent_board.merged_bitboard
+					) | (1u128 << (from + 1))
+				};
+
+				if gote_kaku1_control_board == 0 {
+					gote_kaku1_control_board = mask;
+				} else {
+					gote_kaku2_control_board = mask;
+				}
+			}
+
+			if kind == SHisha || kind == SHishaN {
+				let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+				let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
+				let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 & (
+						sente_self_board.merged_bitboard | sente_opponent_board.merged_bitboard
+					) | (1u128 << (from + 1))
+				};
+
+				if sente_hisha1_control_board == 0 {
+					sente_hisha1_control_board = mask;
+				} else {
+					sente_hisha2_control_board = mask;
+				}
+			}
+
+			if kind == GHisha || kind == GHishaN {
+				let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+				let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
+				let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45 & (
+						sente_self_board.merged_bitboard | sente_opponent_board.merged_bitboard
+					) | (1u128 << (from + 1))
+				};
+
+				if gote_hisha1_control_board == 0 {
+					gote_hisha1_control_board = mask;
+				} else {
+					gote_hisha2_control_board = mask;
+				}
+			}
+
+			if kind == SKyou {
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+				let gote_self_board = BitBoard { merged_bitboard: gote_self_board };
+				let gote_opponent_board = BitBoard { merged_bitboard: gote_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board, gote_opponent_board, 80 - from
+					).merged_bitboard.reverse_bits() >> 45
+					& sente_opponent_board.merged_bitboard
+					| (1u128 << (from + 1))
+				};
+
+				sente_kyou_control_board |= mask;
+			}
+
+			if kind == GKyou {
+				let sente_self_board = BitBoard { merged_bitboard: sente_self_board };
+				let sente_opponent_board = BitBoard { merged_bitboard: sente_opponent_board };
+
+				let mask = unsafe {
+					Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board, sente_opponent_board, from
+					).merged_bitboard
+						& sente_self_board.merged_bitboard
+						| (1u128 << (from + 1))
+				};
+
+				gote_kyou_control_board |= mask;
 			}
 		}
 
@@ -4389,6 +4428,11 @@ impl Rule {
 
 						let kind = kinds[sy as usize][sx as usize];
 
+						let old_gote_self_board = ps.gote_self_board;
+						let old_gote_oppoent_board = ps.gote_opponent_board;
+						let old_sente_self_board = ps.sente_self_board;
+						let old_sente_opponent_board = ps.sente_opponent_board;
+
 						let obtained = if kind < GFu {
 							ps.sente_self_board = unsafe {
 								BitBoard {
@@ -4405,21 +4449,6 @@ impl Rule {
 								ps.sente_nari_board = unsafe {
 									BitBoard { merged_bitboard: ps.sente_nari_board.merged_bitboard ^ to_mask }
 								};
-								if kind == SKyou {
-									let mut mask = unsafe { ps.sente_kyou_control_board.merged_bitboard };
-									let reverse_mask = BitBoard { merged_bitboard: mask.reverse_bits() >> 45 };
-
-									let remove_mask = unsafe {
-										Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-											reverse_mask,reverse_mask, 80 - from
-										).merged_bitboard.reverse_bits() >> 45 & !ps.sente_self_board.merged_bitboard
-										| (1u128 << (from + 1))
-									};
-
-									mask &= !remove_mask;
-
-									ps.sente_kyou_control_board.merged_bitboard = mask;
-								}
 							} else if unsafe { from_mask & ps.sente_nari_board.merged_bitboard != 0 } {
 								ps.sente_nari_board = unsafe {
 									BitBoard { merged_bitboard: ps.sente_nari_board.merged_bitboard ^ (from_mask | to_mask) }
@@ -4442,19 +4471,6 @@ impl Rule {
 								ps.gote_nari_board = unsafe {
 									BitBoard { merged_bitboard: ps.gote_nari_board.merged_bitboard ^ to_mask }
 								};
-								if kind == GKyou {
-									let mut mask = ps.gote_kyou_control_board;
-									let remove_mask = unsafe {
-										Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-											mask, mask, from
-										).merged_bitboard & ps.sente_opponent_board.merged_bitboard
-										| (1u128 << (from + 1))
-									};
-
-									unsafe { mask.merged_bitboard &= !remove_mask };
-
-									ps.gote_kyou_control_board.merged_bitboard = unsafe { mask.merged_bitboard };
-								}
 							} else if unsafe { from_mask & ps.gote_nari_board.merged_bitboard != 0 } {
 								ps.gote_nari_board = unsafe {
 									BitBoard { merged_bitboard: ps.gote_nari_board.merged_bitboard ^ (from_mask | to_mask) }
@@ -4465,6 +4481,14 @@ impl Rule {
 							false
 						};
 
+						let old_sente_kyou_board = ps.sente_kyou_board;
+						let old_gote_kyou_board = ps.gote_kyou_board;
+
+						let old_sente_kaku1_control_board = ps.sente_kaku1_control_board;
+						let old_gote_kaku1_control_board = ps.gote_kaku1_control_board;
+						let old_sente_hisha1_control_board = ps.sente_hisha1_control_board;
+						let old_gote_hisha1_control_board = ps.gote_hisha1_control_board;
+
 						match kind {
 							SFu | SFuN => {
 								ps.sente_fu_board = unsafe {
@@ -4473,36 +4497,7 @@ impl Rule {
 									}
 								};
 							},
-							SKyou => {
-								ps.sente_kyou_board = unsafe {
-									BitBoard {
-										merged_bitboard: ps.sente_kyou_board.merged_bitboard ^ (from_mask | to_mask)
-									}
-								};
-								let mut mask = ps.sente_kyou_control_board;
-								let mut reverse_mask = mask;
-
-								unsafe { reverse_mask.merged_bitboard = reverse_mask.merged_bitboard.reverse_bits() >> 45 };
-
-								let remove_mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										reverse_mask, reverse_mask, 80 - from
-									).merged_bitboard.reverse_bits() >> 45
-									| (1u128 << (from + 1))
-								};
-
-								unsafe { mask.merged_bitboard &= !remove_mask };
-
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 & ps.sente_self_board.merged_bitboard
-									| (1u128 << (from + 1))
-								};
-
-								unsafe { ps.sente_kyou_control_board.merged_bitboard |= mask };
-							},
-							SKyouN => {
+							SKyou | SKyouN => {
 								ps.sente_kyou_board = unsafe {
 									BitBoard {
 										merged_bitboard: ps.sente_kyou_board.merged_bitboard ^ (from_mask | to_mask)
@@ -4536,33 +4531,6 @@ impl Rule {
 										merged_bitboard: ps.sente_kaku_board.merged_bitboard ^ (from_mask | to_mask)
 									}
 								};
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
-								};
-
-								if unsafe { ps.sente_kaku1_control_board.merged_bitboard & (1u128 << (from + 1)) != 0 }  {
-									ps.sente_kaku1_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								} else {
-									ps.sente_kaku2_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								}
-
-								if let Some(min)  = ps.sente_kaku_board.iter().next() {
-									if (1u128 << min as u128) & unsafe { ps.sente_kaku1_control_board.merged_bitboard } == 0 {
-										std::mem::swap(&mut ps.sente_kaku1_control_board,&mut ps.sente_kaku2_control_board);
-									}
-								}
 							},
 							SHisha | SHishaN => {
 								ps.sente_hisha_board = unsafe {
@@ -4570,63 +4538,12 @@ impl Rule {
 										merged_bitboard: ps.sente_hisha_board.merged_bitboard ^ (from_mask | to_mask)
 									}
 								};
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45
-									| (1u128 << (to + 1))
-								};
-
-								if unsafe { ps.sente_hisha1_control_board.merged_bitboard & (1u128 << (from + 1)) != 0 } {
-									ps.sente_hisha1_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								} else {
-									ps.sente_hisha2_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								}
-
-								if let Some(min)  = ps.sente_hisha_board.iter().next() {
-									if (1u128 << min as u128) & unsafe { ps.sente_hisha1_control_board.merged_bitboard } == 0 {
-										std::mem::swap(&mut ps.sente_hisha1_control_board,&mut ps.sente_hisha2_control_board);
-									}
-								}
 							},
 							SOu => {
 								ps.gote_opponent_ou_position_board = unsafe {
 									BitBoard {
 										merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard ^ (inverse_from_mask | inverse_to_mask)
 									}
-								};
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
-								};
-
-								ps.sente_ou_reverse_control_board = BitBoard {
-									merged_bitboard: mask
 								};
 							},
 							GFu | GFuN => {
@@ -4636,33 +4553,7 @@ impl Rule {
 									}
 								};
 							},
-							GKyou => {
-								ps.gote_kyou_board = unsafe {
-									BitBoard {
-										merged_bitboard: ps.gote_kyou_board.merged_bitboard ^ (from_mask | to_mask)
-									}
-								};
-								let mut mask = ps.sente_kyou_control_board;
-
-								let remove_mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										mask, mask, from
-									).merged_bitboard
-									| (1u128 << (from + 1))
-								};
-
-								unsafe { mask.merged_bitboard &= !remove_mask };
-
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.gote_self_board, ps.gote_opponent_board,from
-									).merged_bitboard & ps.sente_opponent_board.merged_bitboard
-									| (1u128 << (from + 1))
-								};
-
-								unsafe { ps.gote_kyou_control_board.merged_bitboard |= mask };
-							},
-							GKyouN => {
+							GKyou | GKyouN => {
 								ps.gote_kyou_board = unsafe {
 									BitBoard {
 										merged_bitboard: ps.gote_kyou_board.merged_bitboard ^ (from_mask | to_mask)
@@ -4696,33 +4587,6 @@ impl Rule {
 										merged_bitboard: ps.gote_kaku_board.merged_bitboard ^ (from_mask | to_mask)
 									}
 								};
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
-								};
-
-								if unsafe { ps.gote_kaku1_control_board.merged_bitboard & (1u128 << (from + 1)) != 0 } {
-									ps.gote_kaku1_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								} else {
-									ps.gote_kaku2_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								}
-
-								if let Some(min)  = ps.gote_kaku_board.iter().next() {
-									if (1u128 << min as u128) & unsafe { ps.gote_kaku1_control_board.merged_bitboard } == 0 {
-										std::mem::swap(&mut ps.gote_kaku1_control_board,&mut ps.gote_kaku2_control_board);
-									}
-								}
 							},
 							GHisha | GHishaN => {
 								ps.gote_hisha_board = unsafe {
@@ -4730,34 +4594,6 @@ impl Rule {
 										merged_bitboard: ps.gote_hisha_board.merged_bitboard ^ (from_mask | to_mask)
 									}
 								};
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45
-									| (1u128 << (to + 1))
-								};
-
-								if unsafe { ps.gote_hisha1_control_board.merged_bitboard & (1u128 << (from + 1)) != 0 } {
-									ps.gote_hisha1_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								} else {
-									ps.gote_hisha2_control_board = BitBoard {
-										merged_bitboard: mask
-									};
-								}
-
-								if let Some(min)  = ps.gote_hisha_board.iter().next() {
-									if (1u128 << min as u128) & unsafe { ps.gote_hisha1_control_board.merged_bitboard } == 0 {
-										std::mem::swap(&mut ps.gote_hisha1_control_board,&mut ps.gote_hisha2_control_board);
-									}
-								}
 							},
 							GOu => {
 								ps.sente_opponent_ou_position_board = unsafe {
@@ -4765,31 +4601,254 @@ impl Rule {
 										merged_bitboard: ps.sente_opponent_ou_position_board.merged_bitboard ^ (from_mask | to_mask)
 									}
 								};
-								let mask = unsafe {
-									Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.sente_self_board, ps.sente_opponent_board, to
-									).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-										ps.gote_self_board, ps.gote_opponent_board, 80 - to
-									).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
-								};
-
-								ps.gote_ou_reverse_control_board = BitBoard {
-									merged_bitboard: mask
-								};
 							},
 							Blank => (),
+						}
+
+						for p in (ps.sente_kyou_board & !ps.sente_nari_board).iter() {
+							let p = p as u32;
+
+							let from = if old_sente_kyou_board & from_mask != 0 {
+								from
+							} else {
+								p
+							};
+
+							let remove_mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									old_gote_self_board,old_gote_oppoent_board, 80 - from
+								).merged_bitboard.reverse_bits() >> 45 & ps.sente_opponent_board.merged_bitboard
+								| (1u128 << (from + 1))
+							};
+
+							ps.sente_kyou_control_board &= !remove_mask;
+
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 & ps.sente_opponent_board.merged_bitboard
+								| (1u128 << (p + 1))
+							};
+
+							unsafe { ps.sente_kyou_control_board.merged_bitboard |= mask };
+						}
+
+						for p in ps.sente_kaku_board.iter() {
+							let p = p as u32;
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 & (
+									ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+								) | (1u128 << (p + 1))
+							};
+
+							if unsafe { ps.sente_kaku1_control_board.merged_bitboard & (1u128 << (p + 1)) != 0 }  {
+								ps.sente_kaku1_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							} else {
+								ps.sente_kaku2_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							}
+
+							if let Some(min)  = ps.sente_kaku_board.iter().next() {
+								if (1u128 << (min + 1) as u128) & unsafe { ps.sente_kaku1_control_board.merged_bitboard } == 0 {
+									std::mem::swap(&mut ps.sente_kaku1_control_board,&mut ps.sente_kaku2_control_board);
+								}
+							}
+						}
+
+						for p in ps.sente_hisha_board.iter() {
+							let p = p as u32;
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 & (
+									ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+								) | (1u128 << (p + 1))
+							};
+
+							if unsafe { ps.sente_hisha1_control_board.merged_bitboard & (1u128 << (p + 1)) != 0 } {
+								ps.sente_hisha1_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							} else {
+								ps.sente_hisha2_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							}
+
+							if let Some(min)  = ps.sente_hisha_board.iter().next() {
+								if (1u128 << (min + 1) as u128) & unsafe { ps.sente_hisha1_control_board.merged_bitboard } == 0 {
+									std::mem::swap(&mut ps.sente_hisha1_control_board,&mut ps.sente_hisha2_control_board);
+								}
+							}
+						}
+
+						for p in ps.gote_opponent_ou_position_board.reverse().iter() {
+							let p = p as u32;
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 & (
+									ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+								) | (1u128 << (p + 1))
+							};
+
+							ps.sente_ou_reverse_control_board = BitBoard {
+								merged_bitboard: mask
+							};
+						}
+
+						for p in (ps.gote_kyou_board & !ps.gote_nari_board).iter() {
+							let p = p as u32;
+
+							let from = if old_gote_kyou_board & from_mask != 0 {
+								from
+							} else {
+								p
+							};
+
+							let remove_mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									old_sente_self_board, old_sente_opponent_board, from
+								).merged_bitboard & ps.sente_self_board.merged_bitboard
+								| (1u128 << (from + 1))
+							};
+
+							ps.gote_kyou_control_board &= !remove_mask;
+
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.sente_self_board, ps.sente_opponent_board,p
+								).merged_bitboard & ps.sente_self_board.merged_bitboard
+								| (1u128 << (p + 1))
+							};
+
+							unsafe { ps.gote_kyou_control_board.merged_bitboard |= mask };
+						}
+
+						for p in ps.gote_kaku_board.iter() {
+							let p = p as u32;
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 & (
+									ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+								) | (1u128 << (p + 1))
+							};
+
+							if unsafe { ps.gote_kaku1_control_board.merged_bitboard & (1u128 << (p + 1)) != 0 } {
+								ps.gote_kaku1_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							} else {
+								ps.gote_kaku2_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							}
+
+							if let Some(min)  = ps.gote_kaku_board.iter().next() {
+								if (1u128 << (min + 1) as u128) & unsafe { ps.gote_kaku1_control_board.merged_bitboard } == 0 {
+									std::mem::swap(&mut ps.gote_kaku1_control_board,&mut ps.gote_kaku2_control_board);
+								}
+							}
+						}
+
+						for p in ps.gote_hisha_board.iter() {
+							let p = p as u32;
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 & (
+									ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+								) | (1u128 << (p + 1))
+							};
+
+							if unsafe { ps.gote_hisha1_control_board.merged_bitboard & (1u128 << (p + 1)) != 0 } {
+								ps.gote_hisha1_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							} else {
+								ps.gote_hisha2_control_board = BitBoard {
+									merged_bitboard: mask
+								};
+							}
+
+							if let Some(min)  = ps.gote_hisha_board.iter().next() {
+								if (1u128 << (min + 1) as u128) & unsafe { ps.gote_hisha1_control_board.merged_bitboard } == 0 {
+									std::mem::swap(&mut ps.gote_hisha1_control_board,&mut ps.gote_hisha2_control_board);
+								}
+							}
+						}
+
+						for p in ps.sente_opponent_ou_position_board.iter() {
+							let p = p as u32;
+							let mask = unsafe {
+								Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_top(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.sente_self_board, ps.sente_opponent_board, p
+								).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+									ps.gote_self_board, ps.gote_opponent_board, 80 - p
+								).merged_bitboard.reverse_bits() >> 45 & (
+									ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+								) | (1u128 << (p + 1))
+							};
+
+							ps.gote_ou_reverse_control_board = BitBoard {
+								merged_bitboard: mask
+							};
 						}
 
 						if obtained {
@@ -4851,7 +4910,8 @@ impl Rule {
 									let mask = unsafe {
 										Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 											mask, mask, 80 - to
-										).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
+										).merged_bitboard.reverse_bits() >> 45 &
+										ps.sente_opponent_board.merged_bitboard | (1u128 << (to + 1))
 									};
 
 									unsafe { ps.sente_kyou_control_board.merged_bitboard &= !mask };
@@ -4891,10 +4951,16 @@ impl Rule {
 										}
 									};
 									unsafe {
-										if ps.sente_kaku1_control_board.merged_bitboard & to_mask != 0 {
+										if old_sente_kaku1_control_board.merged_bitboard & to_mask != 0 {
 											ps.sente_kaku1_control_board.merged_bitboard = 0;
 										} else {
 											ps.sente_kaku2_control_board.merged_bitboard = 0;
+										}
+									}
+
+									if let Some(min)  = ps.sente_kaku_board.iter().next() {
+										if (1u128 << (min + 1) as u128) & unsafe { ps.sente_kaku1_control_board.merged_bitboard } == 0 {
+											std::mem::swap(&mut ps.sente_kaku1_control_board,&mut ps.sente_kaku2_control_board);
 										}
 									}
 								},
@@ -4905,10 +4971,16 @@ impl Rule {
 										}
 									};
 									unsafe {
-										if ps.sente_hisha1_control_board.merged_bitboard & to_mask != 0 {
+										if old_sente_hisha1_control_board.merged_bitboard & to_mask != 0 {
 											ps.sente_hisha1_control_board.merged_bitboard = 0;
 										} else {
 											ps.sente_hisha2_control_board.merged_bitboard = 0;
+										}
+									}
+
+									if let Some(min)  = ps.sente_hisha_board.iter().next() {
+										if (1u128 << (min + 1) as u128) & unsafe { ps.sente_hisha1_control_board.merged_bitboard } == 0 {
+											std::mem::swap(&mut ps.sente_hisha1_control_board,&mut ps.sente_hisha2_control_board);
 										}
 									}
 								}
@@ -4918,6 +4990,7 @@ impl Rule {
 											merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & (inverse_from_mask | inverse_to_mask)
 										}
 									};
+									ps.sente_ou_reverse_control_board.merged_bitboard = 0;
 								},
 								GFu | GFuN => {
 									ps.gote_fu_board = unsafe {
@@ -4937,7 +5010,8 @@ impl Rule {
 									let mask = unsafe {
 										Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 											mask, mask, to
-										).merged_bitboard | (1u128 << (to + 1))
+										).merged_bitboard &
+										ps.sente_self_board.merged_bitboard | (1u128 << (to + 1))
 									};
 
 									unsafe { ps.gote_kyou_control_board.merged_bitboard &= !mask };
@@ -4977,10 +5051,16 @@ impl Rule {
 										}
 									};
 									unsafe {
-										if ps.gote_kaku1_control_board.merged_bitboard & to_mask != 0 {
+										if old_gote_kaku1_control_board.merged_bitboard & to_mask != 0 {
 											ps.gote_kaku1_control_board.merged_bitboard = 0;
 										} else {
 											ps.gote_kaku2_control_board.merged_bitboard = 0;
+										}
+									}
+
+									if let Some(min)  = ps.gote_kaku_board.iter().next() {
+										if (1u128 << (min + 1) as u128) & unsafe { ps.gote_kaku1_control_board.merged_bitboard } == 0 {
+											std::mem::swap(&mut ps.gote_kaku1_control_board,&mut ps.gote_kaku2_control_board);
 										}
 									}
 								},
@@ -4991,10 +5071,16 @@ impl Rule {
 										}
 									};
 									unsafe {
-										if ps.gote_hisha1_control_board.merged_bitboard & to_mask != 0 {
+										if old_gote_hisha1_control_board.merged_bitboard & to_mask != 0 {
 											ps.gote_hisha1_control_board.merged_bitboard = 0;
 										} else {
 											ps.gote_hisha2_control_board.merged_bitboard = 0;
+										}
+									}
+
+									if let Some(min)  = ps.gote_hisha_board.iter().next() {
+										if (1u128 << (min + 1) as u128) & unsafe { ps.gote_hisha1_control_board.merged_bitboard } == 0 {
+											std::mem::swap(&mut ps.gote_hisha1_control_board,&mut ps.gote_hisha2_control_board);
 										}
 									}
 								},
@@ -5004,6 +5090,7 @@ impl Rule {
 											merged_bitboard: ps.sente_opponent_ou_position_board.merged_bitboard & obtained_mask
 										}
 									};
+									ps.gote_ou_reverse_control_board.merged_bitboard = 0;
 								},
 								Blank => ()
 							}
@@ -5044,7 +5131,7 @@ impl Rule {
 										let mask = unsafe {
 											Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 												ps.gote_self_board, ps.gote_opponent_board, 80 - to
-											).merged_bitboard.reverse_bits() >> 45 & ps.sente_self_board.merged_bitboard
+											).merged_bitboard.reverse_bits() >> 45 & ps.sente_opponent_board.merged_bitboard
 											| (1u128 << (to + 1))
 										};
 
@@ -5086,7 +5173,9 @@ impl Rule {
 												ps.sente_self_board, ps.sente_opponent_board, to
 											).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 												ps.gote_self_board, ps.gote_opponent_board, 80 - to
-											).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
+											).merged_bitboard.reverse_bits() >> 45 & (
+												ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+											) | (1u128 << (to + 1))
 										};
 
 										if unsafe { ps.sente_kaku1_control_board.merged_bitboard } == 0 {
@@ -5100,7 +5189,7 @@ impl Rule {
 										}
 
 										if let Some(min)  = ps.sente_kaku_board.iter().next() {
-											if (1u128 << min as u128) & unsafe { ps.sente_kaku1_control_board.merged_bitboard } == 0 {
+											if (1u128 << (min + 1) as u128) & unsafe { ps.sente_kaku1_control_board.merged_bitboard } == 0 {
 												std::mem::swap(&mut ps.sente_kaku1_control_board,&mut ps.sente_kaku2_control_board);
 											}
 										}
@@ -5120,7 +5209,9 @@ impl Rule {
 												ps.sente_self_board, ps.sente_opponent_board, to
 											).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
 												ps.gote_self_board, ps.gote_opponent_board, 80 - to
-											).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
+											).merged_bitboard.reverse_bits() >> 45 & (
+												ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+											) | (1u128 << (to + 1))
 										};
 
 										if unsafe { ps.sente_hisha1_control_board.merged_bitboard } == 0 {
@@ -5134,7 +5225,7 @@ impl Rule {
 										}
 
 										if let Some(min)  = ps.sente_hisha_board.iter().next() {
-											if (1u128 << min as u128) & unsafe { ps.sente_hisha1_control_board.merged_bitboard } == 0 {
+											if (1u128 << (min + 1) as u128) & unsafe { ps.sente_hisha1_control_board.merged_bitboard } == 0 {
 												std::mem::swap(&mut ps.sente_hisha1_control_board,&mut ps.sente_hisha2_control_board);
 											}
 										}
@@ -5172,7 +5263,7 @@ impl Rule {
 										let remove_mask = unsafe {
 											Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 												mask, mask, to
-											).merged_bitboard
+											).merged_bitboard & ps.sente_self_board.merged_bitboard
 											| (1u128 << (to + 1))
 										};
 
@@ -5180,8 +5271,9 @@ impl Rule {
 
 										let mask = unsafe {
 											Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-												ps.gote_self_board, ps.gote_opponent_board,to
-											).merged_bitboard & ps.sente_opponent_board.merged_bitboard | (1u128 << (to + 1))
+												ps.sente_self_board, ps.sente_opponent_board,to
+											).merged_bitboard & ps.sente_self_board.merged_bitboard |
+											(1u128 << (to + 1))
 										};
 
 										ps.gote_kyou_control_board.merged_bitboard = mask;
@@ -5222,7 +5314,9 @@ impl Rule {
 												ps.sente_self_board, ps.sente_opponent_board, to
 											).merged_bitboard | Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 												ps.gote_self_board, ps.gote_opponent_board, 80 - to
-											).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
+											).merged_bitboard.reverse_bits() >> 45 & (
+												ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+											) | (1u128 << (to + 1))
 										};
 
 										if unsafe { ps.gote_kaku1_control_board.merged_bitboard } == 0 {
@@ -5236,7 +5330,7 @@ impl Rule {
 										}
 
 										if let Some(min)  = ps.gote_kaku_board.iter().next() {
-											if (1u128 << min as u128) & unsafe { ps.gote_kaku1_control_board.merged_bitboard } == 0 {
+											if (1u128 << (min + 1) as u128) & unsafe { ps.gote_kaku1_control_board.merged_bitboard } == 0 {
 												std::mem::swap(&mut ps.gote_kaku1_control_board,&mut ps.gote_kaku2_control_board);
 											}
 										}
@@ -5256,7 +5350,9 @@ impl Rule {
 												ps.sente_self_board, ps.sente_opponent_board, to
 											).merged_bitboard | Rule::gen_candidate_bits_by_hisha_to_right(
 												ps.gote_self_board, ps.gote_opponent_board, 80 - to
-											).merged_bitboard.reverse_bits() >> 45 | (1u128 << (to + 1))
+											).merged_bitboard.reverse_bits() >> 45 & (
+												ps.sente_self_board.merged_bitboard | ps.sente_opponent_board.merged_bitboard
+											) | (1u128 << (to + 1))
 										};
 
 										if unsafe { ps.gote_hisha1_control_board.merged_bitboard } == 0 {
@@ -5270,7 +5366,7 @@ impl Rule {
 										}
 
 										if let Some(min)  = ps.gote_hisha_board.iter().next() {
-											if (1u128 << min as u128) & unsafe { ps.gote_hisha1_control_board.merged_bitboard } == 0 {
+											if (1u128 << (min + 1) as u128) & unsafe { ps.gote_hisha1_control_board.merged_bitboard } == 0 {
 												std::mem::swap(&mut ps.gote_hisha1_control_board,&mut ps.gote_hisha2_control_board);
 											}
 										}
