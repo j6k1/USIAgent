@@ -6240,6 +6240,417 @@ impl Rule {
 		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(o, &state.banmen, &ps, m))
 	}
 
+	/// 後手の進路上にある駒が移動することで先手の王が飛車に取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
+	///
+	/// # Arguments
+	///
+	/// * `state` - 盤面の状態
+	/// `State`が不正な場合の動作は未定義
+	#[inline]
+	pub fn genarate_mask_if_possible_check_from_hisha_gote(state:&State) -> BitBoard {
+		if let Some(op) = state.part.gote_opponent_ou_position_board.iter().next() {
+			let op = 80 - op;
+			let (ox,oy) = op.square_to_point();
+			let op = op as u32;
+
+			let exists = state.part.sente_ou_reverse_control_board & state.part.gote_hisha1_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if ox == sx && oy > sy {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if ox == sx {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse();
+				} else if oy == sy && ox > sx {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if oy == sy {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse()
+				}
+			}
+
+			let exists = state.part.sente_ou_reverse_control_board & state.part.gote_hisha2_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if ox == sx && oy > sy {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if ox == sx {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse();
+				} else if oy == sy && ox > sx {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if oy == sy {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse()
+				}
+			}
+
+			BitBoard { merged_bitboard: BANMEN_MASK }
+		} else {
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		}
+	}
+
+	/// 先手の進路上にある駒が移動することで後手の王が飛車取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
+	///
+	/// # Arguments
+	///
+	/// * `state` - 盤面の状態
+	/// `State`が不正な場合の動作は未定義
+	#[inline]
+	pub fn genarate_mask_if_possible_check_from_hisha_sente(state:&State) -> BitBoard {
+		if let Some(op) = state.part.sente_opponent_ou_position_board.iter().next() {
+			let (ox,oy) = op.square_to_point();
+			let op = op as u32;
+
+			let exists = state.part.gote_ou_reverse_control_board & state.part.sente_hisha1_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if ox == sx && oy > sy {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if ox == sx {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse();
+				} else if oy == sy && ox > sx {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if oy == sy {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse()
+				}
+			}
+
+			let exists = state.part.sente_ou_reverse_control_board & state.part.sente_hisha2_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if ox == sx && oy > sy {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if ox == sx {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse();
+				} else if oy == sy && ox > sx {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						gote_self_board,gote_opponent_board,op
+					);
+				} else if oy == sy {
+					return Rule::gen_candidate_bits_by_hisha_to_right(
+						sente_self_board,sente_opponent_board,80 - op
+					).reverse()
+				}
+			}
+
+			BitBoard { merged_bitboard: BANMEN_MASK }
+		} else {
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		}
+	}
+
+	/// 後手の進路上にある駒が移動することで先手の王が角に取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
+	///
+	/// # Arguments
+	///
+	/// * `state` - 盤面の状態
+	/// `State`が不正な場合の動作は未定義
+	#[inline]
+	pub fn genarate_mask_if_possible_check_from_kaku_gote(state:&State) -> BitBoard {
+		if let Some(op) = state.part.gote_opponent_ou_position_board.iter().next() {
+			let op = 80 - op;
+			let (ox,oy) = op.square_to_point();
+			let op = op as u32;
+
+			let exists = state.part.sente_ou_reverse_control_board & state.part.gote_kaku1_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if (ox as i32 - sx as i32).abs() == (oy as i32 - sy as i32).abs() {
+					if ox > sx && oy > sy {
+						return Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						sente_self_board,sente_opponent_board,op
+						);
+					} else if ox > sx {
+						return Rule::gen_candidate_bits_by_kaku_to_right_top(
+							sente_self_board,sente_opponent_board,op
+						).reverse();
+					} else if oy > sy {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse();
+					} else {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse()
+					}
+				}
+			}
+
+			let exists = state.part.sente_ou_reverse_control_board & state.part.gote_kaku2_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if (ox as i32 - sx as i32).abs() == (oy as i32 - sy as i32).abs() {
+					if ox > sx && oy > sy {
+						return Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+							sente_self_board,sente_opponent_board,op
+						);
+					} else if ox > sx {
+						return Rule::gen_candidate_bits_by_kaku_to_right_top(
+							sente_self_board,sente_opponent_board,op
+						).reverse();
+					} else if oy > sy {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse();
+					} else {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse()
+					}
+				}
+			}
+
+			BitBoard { merged_bitboard: BANMEN_MASK }
+		} else {
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		}
+	}
+
+	/// 先手の進路上にある駒が移動することで後手の王が角に取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
+	///
+	/// # Arguments
+	///
+	/// * `state` - 盤面の状態
+	/// `State`が不正な場合の動作は未定義
+	#[inline]
+	pub fn genarate_mask_if_possible_check_from_kaku_sente(state:&State) -> BitBoard {
+		if let Some(op) = state.part.sente_opponent_ou_position_board.iter().next() {
+			let (ox,oy) = op.square_to_point();
+			let op = op as u32;
+
+			let exists = state.part.gote_ou_reverse_control_board & state.part.sente_kaku1_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if (ox as i32 - sx as i32).abs() == (oy as i32 - sy as i32).abs() {
+					if ox > sx && oy > sy {
+						return Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+							sente_self_board,sente_opponent_board,op
+						);
+					} else if ox > sx {
+						return Rule::gen_candidate_bits_by_kaku_to_right_top(
+							sente_self_board,sente_opponent_board,op
+						).reverse();
+					} else if oy > sy {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse();
+					} else {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse()
+					}
+				}
+			}
+
+			let exists = state.part.gote_ou_reverse_control_board & state.part.sente_kaku2_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				let (sx, sy) = exists.iter().next().map(|p| p.square_to_point()).expect(
+					"Items that should have been taken from the iterator could not be obtained."
+				);
+
+				if (ox as i32 - sx as i32).abs() == (oy as i32 - sy as i32).abs() {
+					if ox > sx && oy > sy {
+						return Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+							sente_self_board,sente_opponent_board,op
+						);
+					} else if ox > sx {
+						return Rule::gen_candidate_bits_by_kaku_to_right_top(
+							sente_self_board,sente_opponent_board,op
+						).reverse();
+					} else if oy > sy {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse();
+					} else {
+						return Rule::gen_candidate_bits_by_hisha_to_right(
+							gote_self_board,gote_opponent_board,80 - op
+						).reverse()
+					}
+				}
+			}
+
+			BitBoard { merged_bitboard: BANMEN_MASK }
+		} else {
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		}
+	}
+
+	/// 後手の進路上にある駒が移動することで先手の王が香車に取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
+	///
+	/// # Arguments
+	///
+	/// * `state` - 盤面の状態
+	/// `State`が不正な場合の動作は未定義
+	#[inline]
+	pub fn genarate_mask_if_possible_check_from_kyou_gote(state:&State) -> BitBoard {
+		if let Some(op) = state.part.gote_opponent_ou_position_board.iter().next() {
+			let op = 80 - op;
+			let op = op as u32;
+
+			let exists = state.part.sente_ou_reverse_control_board & state.part.gote_kyou_control_board;
+
+			if exists != 0 {
+				let gote_opponent_board = state.part.gote_opponent_board & !exists.reverse();
+				let gote_self_board = state.part.gote_self_board & !exists.reverse();
+
+				return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+					gote_self_board,gote_opponent_board,op
+				);
+			}
+
+			for p in (state.part.gote_kyou_board & state.part.gote_nari_board).iter() {
+				let control_mask = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,p as u32
+				);
+
+				if control_mask & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.gote_self_board & !control_mask,
+						state.part.gote_opponent_board,p as u32);
+				}
+			}
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		} else {
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		}
+	}
+
+	/// 先手の進路上にある駒が移動することで後手の王が香車に取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
+	///
+	/// # Arguments
+	///
+	/// * `state` - 盤面の状態
+	/// `State`が不正な場合の動作は未定義
+	#[inline]
+	pub fn genarate_mask_if_possible_check_from_kyou_sente(state:&State) -> BitBoard {
+		if let Some(op) = state.part.sente_opponent_ou_position_board.iter().next() {
+			let op = op as u32;
+
+			let exists = state.part.gote_ou_reverse_control_board & state.part.sente_kyou_control_board;
+
+			if exists != 0 {
+				let sente_self_board = state.part.sente_self_board & !exists;
+				let sente_opponent_board = state.part.sente_opponent_board & !exists;
+
+				return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+					sente_self_board,sente_opponent_board,80 - op
+				).reverse();
+			}
+
+			for p in (state.part.sente_kyou_board & state.part.sente_nari_board).iter() {
+				let control_mask = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,80 - p as u32
+				);
+
+				if control_mask & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					return Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.sente_self_board & !control_mask,
+						state.part.sente_opponent_board,80 - p as u32).reverse();
+				}
+			}
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		} else {
+			BitBoard { merged_bitboard: BANMEN_MASK}
+		}
+	}
+
 	/// 手が打ち歩詰めか否かを返す
 	///
 	/// # Arguments
