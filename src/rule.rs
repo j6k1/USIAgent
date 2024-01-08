@@ -2025,7 +2025,7 @@ impl GenerateStrategy for NonEvasionsAll {
 
 				for p in candidate_bitboard.iter() {
 					let p = 80 - p;
-					if state.part.gote_opponent_ou_position_board & 1u128 << (80 - p as u128 + 1 + 1) == 0 ||
+					if state.part.gote_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
 						!Rule::is_put_fu_and_mate_gote(state,80 - p as u32) {
 						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
 					}
@@ -6669,7 +6669,7 @@ impl Rule {
 		let mut mask = BitBoard { merged_bitboard: 0 };
 
 		let sente_self_board = state.part.sente_self_board | b;
-		let gote_opponent_board = state.part.gote_self_board | (1 << ((80 - p as u128) + 1));
+		let gote_opponent_board = state.part.gote_opponent_board | (1 << ((80 - p as u128) + 1));
 
 		let mask_if_possible_check_from_hisha = Rule::genarate_mask_if_possible_check_from_hisha_gote(state);
 		let mask_if_possible_check_from_kaku = Rule::genarate_mask_if_possible_check_from_kaku_gote(state);
@@ -6986,7 +6986,7 @@ impl Rule {
 		let mut mask = BitBoard { merged_bitboard: 0 };
 
 		let gote_self_board = state.part.gote_self_board | (1 << ((80 - p as u128) + 1));
-		let sente_opponent_board = state.part.gote_self_board | b;
+		let sente_opponent_board = state.part.sente_opponent_board | b;
 
 		let mask_if_possible_check_from_hisha = Rule::genarate_mask_if_possible_check_from_hisha_sente(state);
 		let mask_if_possible_check_from_kaku = Rule::genarate_mask_if_possible_check_from_kaku_sente(state);
