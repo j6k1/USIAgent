@@ -2000,7 +2000,10 @@ impl GenerateStrategy for NonEvasionsAll {
 				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
 
 				for p in candidate_bitboard.iter() {
-					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					if state.part.sente_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
+						!Rule::is_put_fu_and_mate_sente(state,p as u32) {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					}
 				}
 			}
 		} else {
@@ -2022,8 +2025,10 @@ impl GenerateStrategy for NonEvasionsAll {
 
 				for p in candidate_bitboard.iter() {
 					let p = 80 - p;
-
-					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					if state.part.gote_opponent_ou_position_board & 1u128 << (80 - p as u128 + 1 + 1) == 0 ||
+						!Rule::is_put_fu_and_mate_gote(state,80 - p as u32) {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					}
 				}
 			}
 		}
