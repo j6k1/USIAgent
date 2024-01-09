@@ -1,7 +1,14 @@
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+use rand::{Rng, SeedableRng};
+use rand_xorshift::XorShiftRng;
+use usiagent::math::Prng;
+use usiagent::movepick::RandomPicker;
 use usiagent::shogi::*;
 use usiagent::shogi::MochigomaCollections;
 use usiagent::rule;
-use usiagent::rule::Rule;
+use usiagent::rule::{NonEvasionsAll, Rule};
 use usiagent::rule::State;
 
 use super::*;
@@ -8224,4 +8231,51 @@ fn test_legal_moves_all_gote() {
 			LegalMove::from(m)
 		}).collect::<Vec<LegalMove>>()
 	);
+}
+#[ignore]
+#[test]
+fn test_regal_moves_all_by_nonevasions_all_strategy() {
+	let position_parser = PositionParser::new();
+
+	let mut rng = rand::thread_rng();
+	let mut rng = XorShiftRng::from_seed(rng.gen());
+
+	let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
+
+	for (n,(sfen,answer)) in BufReader::new(
+		File::open(
+			Path::new("data").join("floodgate").join("legalmoves").join("kyokumen_sfen.txt")
+		).unwrap()).lines().zip(BufReader::new(
+		File::open(
+				Path::new("data").join("floodgate").join("legalmoves").join("answer_noevasions_all.txt")
+		).unwrap()).lines()).enumerate() {
+
+		let mut expected = answer.unwrap().split(' ').into_iter().map(|m| m.to_string()).collect::<Vec<String>>();
+
+		expected.sort();
+
+		let expected = expected.join(" ");
+
+		let sfen = format!("sfen {}",sfen.unwrap());
+
+		let (teban, banmen, mc, _, _) = position_parser.parse(&sfen.split(' ').collect::<Vec<&str>>()).unwrap().extract();
+
+		let state = State::new(banmen);
+
+		Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(teban, &state, &mc, &mut buffer).unwrap();
+
+		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
+
+		let mut mvs = mvs.into_iter().map(|m| m.to_move().to_sfen().unwrap()).collect::<Vec<String>>();
+
+		mvs.sort();
+
+		let mvs = mvs.join(" ");
+
+		if &expected != &mvs {
+			println!("line {}: {}",n, sfen);
+		}
+
+		assert_eq!(expected, mvs);
+	}
 }

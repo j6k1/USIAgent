@@ -80,3 +80,13 @@ impl<T> From<RandomPicker<T>> for Vec<T> where T: Copy {
         mvs
     }
 }
+impl<'a,T> From<&'a RandomPicker<T>> for Vec<T> where T: Copy {
+    fn from(value: &'a RandomPicker<T>) -> Self {
+        let mut mvs = Vec::with_capacity(MOVE_MAX as usize);
+
+        for i in 0..value.count {
+            mvs.push(unsafe { value.mvs[i as usize].assume_init() });
+        }
+        mvs
+    }
+}
