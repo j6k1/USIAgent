@@ -1451,24 +1451,25 @@ pub const BANMEN_START_POS:Banmen = Banmen([
 ]);
 pub trait GenerateStrategy {
 	type Environment;
+	type AppendStrategy: AppendStrategy;
 
 	fn generate_piece(teban:Teban,state:&State,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
 	fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError>;
-	fn generate_fu<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_fu<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
-	fn generate_kyou<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kyou<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
-	fn generate_kei<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kei<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
-	fn generate_gin<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_gin<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
-	fn generate_kin<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kin<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
-	fn generate_kaku<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kaku<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
-	fn generate_hisha<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_hisha<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
-	fn generate_ou<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_ou<'a,B,AS: AppendStrategy>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	fn generate_drop_fu(teban:Teban,state:&State,count:usize, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
 	fn generate_drop_kyou(teban:Teban,state:&State,count:usize, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
@@ -1497,6 +1498,18 @@ pub trait AppendStrategy {
 	fn apppend_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 						   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+						   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+						   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+						  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+						  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_inverse_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+								   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+								   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_inverse_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+								  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+								  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	fn apppend_fu_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
@@ -1531,6 +1544,7 @@ pub trait AppendStrategy {
 pub struct NonEvasionsAll;
 impl GenerateStrategy for NonEvasionsAll {
 	type Environment = ();
+	type AppendStrategy = AppendAll;
 
 	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
@@ -1546,14 +1560,14 @@ impl GenerateStrategy for NonEvasionsAll {
 
 		let mut env = ();
 
-		Self::generate_fu(teban,state,&move_builder,&mut env, mvs)?;
-		Self::generate_ou(teban,state,&move_builder,&mut env,mvs)?;
-		Self::generate_kyou(teban,state,&move_builder,&mut env,mvs)?;
-		Self::generate_kei(teban,state,&move_builder,&mut env,mvs)?;
-		Self::generate_gin(teban,state,&move_builder,&mut env,mvs)?;
-		Self::generate_kin(teban,state,&move_builder,&mut env,mvs)?;
-		Self::generate_kaku(teban,state,&move_builder,&mut env,mvs)?;
-		Self::generate_hisha(teban,state,&move_builder,&mut env,mvs)?;
+		Self::generate_fu::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env, mvs)?;
+		Self::generate_ou::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env,mvs)?;
+		Self::generate_kyou::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env,mvs)?;
+		Self::generate_kei::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env,mvs)?;
+		Self::generate_gin::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env,mvs)?;
+		Self::generate_kin::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env,mvs)?;
+		Self::generate_kaku::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env,mvs)?;
+		Self::generate_hisha::<_,Self::AppendStrategy>(teban,state,&move_builder,&mut env,mvs)?;
 
 		Ok(())
 	}
@@ -1614,11 +1628,11 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_fu<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_fu<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SFu,
 					false,
 					SENTE_NARI_MASK, DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
@@ -1629,7 +1643,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			}
 
 			for p in (state.part.sente_fu_board & state.part.sente_nari_board).iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SFuN,
 					true,
 					0, 0,
@@ -1646,7 +1660,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.gote_self_board, 80 - p as u32, GFu,
 					false,
 					GOTE_NARI_MASK, DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
@@ -1661,7 +1675,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban,state.part.gote_self_board,80 - p as u32,GFuN,
 					true,
 					0,0,
@@ -1676,11 +1690,11 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_kyou<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kyou<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for p in (state.part.sente_kyou_board & !state.part.sente_nari_board).iter() {
-				Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					p as u32,
@@ -1692,7 +1706,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			}
 
 			for p in (state.part.sente_kyou_board & state.part.sente_nari_board).iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SKyouN,
 					true,
 					0, 0,
@@ -1709,7 +1723,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					80 - p as u32,
@@ -1725,7 +1739,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban,state.part.gote_self_board,80 - p as u32,GKyouN,
 					true,
 					0,0,
@@ -1740,11 +1754,11 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_kei<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kei<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for p in (state.part.sente_kei_board & !state.part.sente_nari_board).iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SKei,
 					false,
 					SENTE_NARI_MASK, DENY_MOVE_SENTE_KEI_MASK,
@@ -1755,7 +1769,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			}
 
 			for p in (state.part.sente_kei_board & state.part.sente_nari_board).iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SKeiN,
 					true,
 					0, 0,
@@ -1772,7 +1786,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.gote_self_board, 80 - p as u32, GKei,
 					false,
 					GOTE_NARI_MASK, DENY_MOVE_GOTE_KEI_MASK,
@@ -1787,7 +1801,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban,state.part.gote_self_board,80 - p as u32,GKeiN,
 					true,
 					0,0,
@@ -1802,11 +1816,11 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_gin<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_gin<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for p in (state.part.sente_gin_board & !state.part.sente_nari_board).iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SGin,
 					false,
 					SENTE_NARI_MASK, 0,
@@ -1817,7 +1831,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			}
 
 			for p in (state.part.sente_gin_board & state.part.sente_nari_board).iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SGinN,
 					true,
 					0, 0,
@@ -1834,7 +1848,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.gote_self_board, 80 - p as u32, GGin,
 					false,
 					GOTE_NARI_MASK, 0,
@@ -1849,7 +1863,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban,state.part.gote_self_board,80 - p as u32,GGinN,
 					true,
 					0,0,
@@ -1864,11 +1878,11 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_kin<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kin<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for p in state.part.sente_kin_board.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SKin, false, 0,  0,
 					false,
 					move_builder,
@@ -1883,7 +1897,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			};
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.gote_self_board, 80 - p as u32, GKin,
 					false,
 					0, 0,
@@ -1898,11 +1912,11 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_kaku<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_kaku<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
-				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
@@ -1915,7 +1929,7 @@ impl GenerateStrategy for NonEvasionsAll {
 				);
 			}
 			for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
-				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
@@ -1935,7 +1949,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
@@ -1953,7 +1967,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
@@ -1971,11 +1985,11 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_hisha<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_hisha<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
-				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
@@ -1988,7 +2002,7 @@ impl GenerateStrategy for NonEvasionsAll {
 				);
 			}
 			for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
-				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
@@ -2008,7 +2022,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
@@ -2026,7 +2040,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
@@ -2044,7 +2058,7 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_ou<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+	fn generate_ou<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			let b = BitBoard { merged_bitboard: unsafe {
@@ -2052,7 +2066,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban, state.part.sente_self_board, p as u32, SOu,
 					false,
 					0, 0,
@@ -2067,7 +2081,7 @@ impl GenerateStrategy for NonEvasionsAll {
 			} };
 
 			for p in b.iter() {
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					teban,state.part.gote_self_board,80 - p as u32,GOu,
 					false,
 					0,0,
@@ -2261,6 +2275,7 @@ impl GenerateStrategy for NonEvasionsAll {
 }
 pub struct AppendAll;
 impl AppendStrategy for AppendAll {
+	#[inline]
 	fn apppend_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2272,7 +2287,32 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << ((80 - from) + 1))) != 0,
+				0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn apppend_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
+				SENTE_NARI_MASK,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn apppend_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << ((80 - from) + 1))) != 0,
@@ -2283,6 +2323,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_fu_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2294,6 +2335,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_fu_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2305,6 +2347,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_kyou_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2316,6 +2359,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_kyou_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2327,6 +2371,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_kei_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2338,6 +2383,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_kei_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2349,7 +2395,32 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_inverse_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << ((80 - from) + 1))) != 0,
+				0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn apppend_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
+				0,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn apppend_inverse_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << ((80 - from) + 1))) != 0,
@@ -2360,7 +2431,8 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
-	fn apppend_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+	#[inline]
+	fn apppend_inverse_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
@@ -2371,6 +2443,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_force_promotion_target_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2382,6 +2455,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_force_promotion_target_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2393,6 +2467,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_force_promotion_target_inverse_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2404,6 +2479,7 @@ impl AppendStrategy for AppendAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn apppend_force_promotion_target_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
@@ -2699,7 +2775,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
 		teban:Teban,
 		self_occupied:BitBoard,
 		from:u32,kind:KomaKind,
@@ -2733,7 +2809,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_once_with_point_and_kind_and_bitboard<F>(
+	pub fn legal_moves_once_with_point_and_kind_and_bitboard<F,AS: AppendStrategy>(
 		teban:Teban,
 		self_occupied:BitBoard,
 		from:u32,kind:KomaKind,
@@ -2746,7 +2822,7 @@ impl Rule {
 		let seed = Local::now().timestamp();
 		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
-		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<F,AS>(
 			teban,self_occupied,from,kind,nari,nari_mask,deny_move_mask,inverse_position,move_builder,&mut mvs);
 
 		mvs.into()
@@ -2862,7 +2938,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
@@ -2907,7 +2983,7 @@ impl Rule {
 		}
 
 		if kind == SKakuN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 				Teban::Sente,self_occupied,from,kind,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
@@ -2929,7 +3005,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
@@ -2974,7 +3050,7 @@ impl Rule {
 		}
 
 		if kind == GKakuN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 				Teban::Gote,self_occupied,from,kind,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
@@ -3093,7 +3169,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
@@ -3138,7 +3214,7 @@ impl Rule {
 		}
 
 		if kind == SHishaN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 				Teban::Sente,self_occupied,from,kind,nari,nari_mask,deny_move_mask,false,move_builder,mvs
 			);
 		}
@@ -3160,7 +3236,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
 		self_occupied:BitBoard,
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
@@ -3205,7 +3281,7 @@ impl Rule {
 		}
 
 		if kind == GHishaN {
-			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+			Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 				Teban::Gote,self_occupied,from,kind,nari,nari_mask,deny_move_mask,true,move_builder,mvs
 			);
 		}
@@ -3224,7 +3300,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,
@@ -3256,7 +3332,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer<F>(
+	pub fn legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
 		from:u32,
@@ -3387,7 +3463,7 @@ impl Rule {
 					_ => (),
 				}
 
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					t,self_bitboard,from,kind,
 					kind.is_nari(),nari_mask,deny_move_mask,
 					kind >= GFu && kind < Blank,
@@ -3396,7 +3472,7 @@ impl Rule {
 				);
 			},
 			SKyou if t == Teban::Sente => {
-				Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_kyou_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					from,
@@ -3407,7 +3483,7 @@ impl Rule {
 				);
 			}
 			SKaku | SKakuN if t == Teban::Sente => {
-				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
@@ -3420,7 +3496,7 @@ impl Rule {
 				);
 			},
 			SHisha | SHishaN if t == Teban::Sente => {
-				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 				state.part.sente_self_board,
 				state.part.sente_opponent_board,
 				state.part.gote_self_board,
@@ -3433,7 +3509,7 @@ impl Rule {
 				);
 			},
 			GKyou if t == Teban::Gote => {
-				Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_kyou_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					from,
@@ -3444,7 +3520,7 @@ impl Rule {
 				);
 			},
 			GKaku | GKakuN if t == Teban::Gote => {
-				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
@@ -3457,7 +3533,7 @@ impl Rule {
 				);
 			},
 			GHisha | GHishaN if t == Teban::Gote => {
-				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer(
+				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
