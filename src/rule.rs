@@ -1484,6 +1484,50 @@ pub trait GenerateStrategy {
 	fn generate_drop_hisha(teban:Teban,state:&State,count:usize, shared_candidatebits: &mut BitBoard,
 						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
 }
+pub trait AppendStrategy {
+	fn apppend_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+						   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+						   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+	   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_inverse_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+								  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+								  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+						   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_fu_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_kyou_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_kei_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_fu_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_kyou_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+								move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+								-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_kei_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_force_promotion_target_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+												  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+												  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_force_promotion_target_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+												 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_force_promotion_target_inverse_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+														  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+														  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	fn apppend_force_promotion_target_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+														 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+														 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+}
 pub struct NonEvasionsAll;
 impl GenerateStrategy for NonEvasionsAll {
 	type Environment = ();
@@ -2195,6 +2239,162 @@ impl GenerateStrategy for NonEvasionsAll {
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits, &mut (),mvs)
+	}
+}
+pub struct AppendAll;
+impl AppendStrategy for AppendAll {
+	fn apppend_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
+				SENTE_NARI_MASK,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << ((80 - from) + 1))) != 0,
+				GOTE_NARI_MASK,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_fu_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_fu_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_kyou_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_kyou_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_kei_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_kei_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_inverse_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << ((80 - from) + 1))) != 0,
+				SENTE_NARI_MASK,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
+				GOTE_NARI_MASK,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_force_promotion_target_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
+				SENTE_NARI_MASK,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_force_promotion_target_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << ((80 - from) + 1))) != 0,
+				GOTE_NARI_MASK,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_force_promotion_target_inverse_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << ((80 - from + 1)))) != 0,
+				SENTE_NARI_MASK,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	fn apppend_force_promotion_target_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
+				GOTE_NARI_MASK,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
 	}
 }
 /// オブジェクトの状態の検証用
