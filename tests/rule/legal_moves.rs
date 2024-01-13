@@ -8234,7 +8234,7 @@ fn test_legal_moves_all_gote() {
 }
 #[ignore]
 #[test]
-fn test_regal_moves_all_by_nonevasions_all_strategy() {
+fn test_legal_moves_all_by_nonevasions_all_strategy() {
 	let position_parser = PositionParser::new();
 
 	let mut rng = rand::thread_rng();
