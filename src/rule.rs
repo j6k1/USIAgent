@@ -1532,6 +1532,7 @@ pub struct NonEvasionsAll;
 impl GenerateStrategy for NonEvasionsAll {
 	type Environment = ();
 
+	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		let move_builder = 		if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, unsafe {
@@ -1557,6 +1558,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		let mc = match mc {
 			&MochigomaCollections::Pair(ref ms, ref mg) => {
@@ -1611,6 +1613,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_fu<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -1672,6 +1675,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_kyou<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -1735,6 +1739,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_kei<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -1796,6 +1801,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_gin<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -1857,6 +1863,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_kin<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -1890,6 +1897,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_kaku<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -1962,6 +1970,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_hisha<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -2034,6 +2043,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_ou<'a, B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
@@ -2071,6 +2081,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_drop_fu(teban: Teban, state: &State, count: usize,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
@@ -2118,6 +2129,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_drop_kyou(teban: Teban, state: &State, count: usize, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
@@ -2153,6 +2165,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_drop_kei(teban: Teban, state: &State, count: usize, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
@@ -2188,6 +2201,7 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
 							shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> {
@@ -2221,21 +2235,25 @@ impl GenerateStrategy for NonEvasionsAll {
 		Ok(())
 	}
 
+	#[inline]
 	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
 						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits, &mut (),mvs)
 	}
 
+	#[inline]
 	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits, &mut (),mvs)
 	}
 
+	#[inline]
 	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits, &mut (),mvs)
 	}
 
+	#[inline]
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits, &mut (),mvs)
