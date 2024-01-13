@@ -1434,7 +1434,7 @@ const DENY_MOVE_GOTE_KEI_MASK: u128 = 0b110000000_110000000_110000000_110000000_
 const BANMEN_MASK: u128 = 0b111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111_111111111_0;
 const NYUGYOKU_MASK:u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
 const DOUBLE_FU_CHECK_MASK:u128 = 0b100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
-const POSSIBLE_EVASIONS_BY_CAPTURE_MASK:u128 = 0b000001111_000001001_000001111;
+const POSSIBLE_EVASIONS_BY_FU_CAPTURE_MASK:u128 = 0b000001111_000001001_000001111;
 const POSSIBLE_OU_CAPTURES_MASK_OF_SENTE:u128 = 0b000111111_000111111_000111011_000111111_000111111;
 const POSSIBLE_OU_CAPTURES_MASK_OF_GOTE:u128 = 0b000111111_000111111_000110111_000111111_000111111;
 /// 左上を(0,0)とした平手初期局面
@@ -6088,15 +6088,11 @@ impl Rule {
 			return false;
 		}
 
-		/*
-		let filter = if p < 11 {
-			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_CAPTURE_MASK >> (11 - p + 1) }
+		let filter = if p < 10 {
+			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_FU_CAPTURE_MASK >> (10 - p) }
 		} else {
-			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_CAPTURE_MASK << (p - 11 + 1) }
+			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_FU_CAPTURE_MASK << (p - 10) }
 		};
-		*/
-
-		let filter = BitBoard { merged_bitboard: BANMEN_MASK };
 
 		for from in (state.part.gote_fu_board & state.part.gote_nari_board & filter).iter() {
 			let from = from as u32;
@@ -6256,15 +6252,11 @@ impl Rule {
 			)
 		}
 
-		/*
 		let filter = if p < 20 {
-			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_SENTE >> (20 - p + 1) }
+			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_SENTE >> (20 - p) }
 		} else {
-			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_SENTE << (p - 20 + 1) }
+			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_SENTE << (p - 20) }
 		};
-		*/
-
-		let filter = BitBoard { merged_bitboard: BANMEN_MASK };
 
 		for from in (state.part.sente_kyou_board & state.part.sente_nari_board & filter).iter() {
 			let from = from as u32;
@@ -6411,15 +6403,11 @@ impl Rule {
 			return false;
 		}
 
-		/*
 		let filter = if p < 9 {
-			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_CAPTURE_MASK >> (9 - p + 1) }
+			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_FU_CAPTURE_MASK >> (9 - p) }
 		} else {
-			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_CAPTURE_MASK << (p - 9 + 1) }
+			BitBoard { merged_bitboard: POSSIBLE_EVASIONS_BY_FU_CAPTURE_MASK << (p - 9) }
 		};
-		*/
-
-		let filter = BitBoard { merged_bitboard: BANMEN_MASK };
 
 		for from in (state.part.sente_fu_board & state.part.sente_nari_board & filter).iter() {
 			let from = from as u32;
@@ -6427,7 +6415,7 @@ impl Rule {
 
 			mask |= Rule::gen_candidate_bits(
 				Teban::Sente,state.part.sente_self_board,from,KomaKind::SFuN
-			) & arrow_mask
+			) & arrow_mask;
 		}
 
 		for from in (state.part.sente_kyou_board & state.part.sente_nari_board & filter).iter() {
@@ -6553,17 +6541,13 @@ impl Rule {
 			)
 		}
 
-		/*
 		let filter = if p < 19 {
-			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_GOTE >> (19 - p + 1) }
+			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_GOTE >> (19 - p) }
 		} else {
-			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_GOTE << (p - 19 + 1) }
+			BitBoard { merged_bitboard: POSSIBLE_OU_CAPTURES_MASK_OF_GOTE << (p - 19) }
 		};
 
-		 */
-		let filter = BitBoard { merged_bitboard: BANMEN_MASK };
-
-		for from in (state.part.gote_fu_board & !state.part.gote_nari_board).iter() {
+		for from in (state.part.gote_fu_board & !state.part.gote_nari_board & filter).iter() {
 			let from = from as u32;
 
 			mask |= Rule::gen_control_bits(
@@ -6571,7 +6555,7 @@ impl Rule {
 			).reverse()
 		}
 
-		for from in (state.part.gote_fu_board & state.part.gote_nari_board).iter() {
+		for from in (state.part.gote_fu_board & state.part.gote_nari_board & filter).iter() {
 			let from = from as u32;
 
 			mask |= Rule::gen_control_bits(
