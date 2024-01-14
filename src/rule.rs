@@ -2162,7 +2162,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
-				0,0,false,move_builder,mvs
+				0,0,false,false,move_builder,mvs
 			);
 		}
 
@@ -2174,7 +2174,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
-				0,0,true,move_builder,mvs
+				0,0,false,true,move_builder,mvs
 			);
 		}
 
@@ -2186,7 +2186,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,false,move_builder,mvs
+				SENTE_NARI_MASK,0,false,false,move_builder,mvs
 			);
 		}
 
@@ -2198,7 +2198,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,true,move_builder,mvs
+				GOTE_NARI_MASK,0,false,true,move_builder,mvs
 			);
 		}
 
@@ -2210,7 +2210,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,false,move_builder,mvs
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,false,false,move_builder,mvs
 			);
 		}
 
@@ -2222,7 +2222,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,true,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,false,true,move_builder,mvs
 			);
 		}
 
@@ -2234,7 +2234,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,true,move_builder,mvs
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,false,true,move_builder,mvs
 			);
 		}
 
@@ -2246,7 +2246,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,false,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,false,false,move_builder,mvs
 			);
 		}
 
@@ -2258,7 +2258,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,false,move_builder,mvs
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,false,false,move_builder,mvs
 			);
 		}
 
@@ -2270,7 +2270,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,true,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,false,true,move_builder,mvs
 			);
 		}
 
@@ -2282,7 +2282,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
-				0,0,true,move_builder,mvs
+				0,0,false,true,move_builder,mvs
 			);
 		}
 
@@ -2294,7 +2294,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
-				0,0,false,move_builder,mvs
+				0,0,false,false,move_builder,mvs
 			);
 		}
 
@@ -2306,7 +2306,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
-				SENTE_NARI_MASK,0,true,move_builder,mvs
+				SENTE_NARI_MASK,0,false,true,move_builder,mvs
 			);
 		}
 
@@ -2318,7 +2318,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
-				GOTE_NARI_MASK,0,false,move_builder,mvs
+				GOTE_NARI_MASK,0,false,false,move_builder,mvs
 			);
 		}
 
@@ -2330,7 +2330,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,false,move_builder,mvs
+				SENTE_NARI_MASK,0,false,false,move_builder,mvs
 			);
 		}
 
@@ -2342,7 +2342,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,true,move_builder,mvs
+				GOTE_NARI_MASK,0,false,true,move_builder,mvs
 			);
 		}
 
@@ -2354,7 +2354,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,true,move_builder,mvs
+				SENTE_NARI_MASK,0,false,true,move_builder,mvs
 			);
 		}
 
@@ -2366,7 +2366,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,false,move_builder,mvs
+				GOTE_NARI_MASK,0,false,false,move_builder,mvs
 			);
 		}
 
@@ -2577,6 +2577,7 @@ impl Rule {
 		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
+		force_promotion:bool,
 		inverse_position:bool,
 		move_builder:&F,
 		mvs:&mut impl MovePicker<LegalMove>
@@ -2590,9 +2591,11 @@ impl Rule {
 
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
 			mvs.push(move_builder(from, to, true)).unwrap();
-		}
 
-		if nari || deny_move_mask & to_mask == 0 {
+			if !force_promotion {
+				mvs.push(move_builder(from, to, false)).unwrap();
+			}
+		} else if nari || (!force_promotion && deny_move_mask & to_mask == 0) {
 			mvs.push(move_builder(from, to, false)).unwrap();
 		}
 	}
@@ -2658,7 +2661,7 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
 	#[inline]
-	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
+	pub fn legal_moves_once_with_point_and_kind_and_bitboard_and_buffer<F>(
 		teban:Teban,
 		self_occupied:BitBoard,
 		from:u32,kind:KomaKind,
@@ -2673,7 +2676,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,nari,nari_mask,deny_move_mask,inverse_position,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,false,inverse_position,move_builder,mvs
 			);
 		}
 	}
@@ -2705,7 +2708,7 @@ impl Rule {
 		let seed = Local::now().timestamp();
 		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
-		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<F,AS>(
+		Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 			teban,self_occupied,from,kind,nari,nari_mask,deny_move_mask,inverse_position,move_builder,&mut mvs);
 
 		mvs.into()
@@ -3327,7 +3330,7 @@ impl Rule {
 					_ => (),
 				}
 
-				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
+				Rule::legal_moves_once_with_point_and_kind_and_bitboard_and_buffer(
 					t,self_bitboard,from,kind,
 					kind.is_nari(),nari_mask,deny_move_mask,
 					kind >= GFu && kind < Blank,
