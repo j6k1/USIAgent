@@ -8244,10 +8244,10 @@ fn test_legal_moves_all_by_nonevasions_all_strategy() {
 
 	for (n,(sfen,answer)) in BufReader::new(
 		File::open(
-			Path::new("data").join("floodgate").join("legalmoves").join("kyokumen_sfen_uniq.txt")
+			Path::new("data").join("floodgate").join("generatemoves").join("kyokumen_sfen_uniq.txt")
 		).unwrap()).lines().zip(BufReader::new(
 		File::open(
-				Path::new("data").join("floodgate").join("legalmoves").join("answer_noevasions_all_uniq.txt")
+				Path::new("data").join("floodgate").join("generatemoves").join("answer_noevasions_all_uniq.txt")
 		).unwrap()).lines()).enumerate() {
 
 		let mut expected = answer.unwrap().split(' ').into_iter().map(|m| m.to_string()).collect::<Vec<String>>();
