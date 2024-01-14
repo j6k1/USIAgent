@@ -2595,7 +2595,7 @@ impl Rule {
 			if !force_promotion {
 				mvs.push(move_builder(from, to, false)).unwrap();
 			}
-		} else if nari || (!force_promotion && deny_move_mask & to_mask == 0) {
+		} else if nari || deny_move_mask & to_mask == 0 {
 			mvs.push(move_builder(from, to, false)).unwrap();
 		}
 	}
