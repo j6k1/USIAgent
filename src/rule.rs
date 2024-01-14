@@ -1437,6 +1437,8 @@ const DOUBLE_FU_CHECK_MASK:u128 = 0b100000000_100000000_100000000_100000000_1000
 const POSSIBLE_EVASIONS_BY_FU_CAPTURE_MASK:u128 = 0b000001111_000001001_000001111;
 const POSSIBLE_OU_CAPTURES_MASK_OF_SENTE:u128 = 0b000111111_000111111_000111011_000111111_000111111;
 const POSSIBLE_OU_CAPTURES_MASK_OF_GOTE:u128 = 0b000111111_000111111_000110111_000111111_000111111;
+const SENTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
+const GOTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
 /// 左上を(0,0)とした平手初期局面
 pub const BANMEN_START_POS:Banmen = Banmen([
 	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
@@ -2524,7 +2526,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
-				0,0,false,false,move_builder,mvs
+				0,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2536,7 +2538,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
-				0,0,false,true,move_builder,mvs
+				0,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -2548,7 +2550,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,false,false,move_builder,mvs
+				SENTE_NARI_MASK,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2560,7 +2562,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,false,true,move_builder,mvs
+				GOTE_NARI_MASK,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -2568,11 +2570,11 @@ impl AppendStrategy for AppendAll {
 	}
 
 	#[inline]
-	fn append_fu_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+	fn append_fu_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,false,false,move_builder,mvs
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,0,false,move_builder,mvs
 			);
 		}
 
@@ -2580,11 +2582,11 @@ impl AppendStrategy for AppendAll {
 	}
 
 	#[inline]
-	fn append_fu_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+	fn append_fu_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,false,true,move_builder,mvs
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,0,true,move_builder,mvs
 			);
 		}
 
@@ -2596,7 +2598,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,false,true,move_builder,mvs
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,0,true,move_builder,mvs
 			);
 		}
 
@@ -2608,7 +2610,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,false,false,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,0,false,move_builder,mvs
 			);
 		}
 
@@ -2620,7 +2622,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,false,false,move_builder,mvs
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,0,false,move_builder,mvs
 			);
 		}
 
@@ -2632,7 +2634,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,false,true,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,0,true,move_builder,mvs
 			);
 		}
 
@@ -2644,7 +2646,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
-				0,0,false,true,move_builder,mvs
+				0,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -2656,7 +2658,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
-				0,0,false,false,move_builder,mvs
+				0,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2668,7 +2670,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
-				SENTE_NARI_MASK,0,false,true,move_builder,mvs
+				SENTE_NARI_MASK,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -2680,7 +2682,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
-				GOTE_NARI_MASK,0,false,false,move_builder,mvs
+				GOTE_NARI_MASK,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2692,7 +2694,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,false,false,move_builder,mvs
+				SENTE_NARI_MASK,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2704,7 +2706,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,false,true,move_builder,mvs
+				GOTE_NARI_MASK,0,9,true,move_builder,mvs
 			);
 		}
 
@@ -2716,7 +2718,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,false,true,move_builder,mvs
+				SENTE_NARI_MASK,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -2728,7 +2730,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,false,false,move_builder,mvs
+				GOTE_NARI_MASK,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2762,7 +2764,7 @@ impl AppendStrategy for ForcePromotions {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,true,false,move_builder,mvs
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
 			);
 		}
 
@@ -2774,7 +2776,7 @@ impl AppendStrategy for ForcePromotions {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,true,true,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
 			);
 		}
 
@@ -2782,13 +2784,27 @@ impl AppendStrategy for ForcePromotions {
 	}
 
 	#[inline]
-	fn append_kyou_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
-		AppendAll::append_kyou_sente(state,from,candidatebits,move_builder,mvs)
+	fn append_kyou_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,SENTE_KYOU_FORCE_PROMOTION_MASK,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
 	}
 
 	#[inline]
-	fn append_kyou_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
-		AppendAll::append_kyou_gote(state,from,candidatebits,move_builder,mvs)
+	fn append_kyou_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,GOTE_KYOU_FORCE_PROMOTION_MASK,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
 	}
 
 	#[inline]
@@ -2826,7 +2842,7 @@ impl AppendStrategy for ForcePromotions {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,true,false,move_builder,mvs
+				SENTE_NARI_MASK,0,BANMEN_MASK >> 1,false,move_builder,mvs
 			);
 		}
 
@@ -2838,7 +2854,7 @@ impl AppendStrategy for ForcePromotions {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,true,true,move_builder,mvs
+				GOTE_NARI_MASK,0,BANMEN_MASK >> 1,true,move_builder,mvs
 			);
 		}
 
@@ -2850,7 +2866,7 @@ impl AppendStrategy for ForcePromotions {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,true,true,move_builder,mvs
+				SENTE_NARI_MASK,0,BANMEN_MASK >> 1,true,move_builder,mvs
 			);
 		}
 
@@ -2862,7 +2878,7 @@ impl AppendStrategy for ForcePromotions {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,true,false,move_builder,mvs
+				GOTE_NARI_MASK,0,BANMEN_MASK >> 1,false,move_builder,mvs
 			);
 		}
 
@@ -2876,7 +2892,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
-				0,0,false,false,move_builder,mvs
+				0,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2888,7 +2904,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.gote_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
-				0,0,false,true,move_builder,mvs
+				0,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -2900,7 +2916,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,false,false,move_builder,mvs
+				SENTE_NARI_MASK,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -2912,7 +2928,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.gote_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,false,true,move_builder,mvs
+				GOTE_NARI_MASK,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -2925,14 +2941,14 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 			for p in candidatebits.iter() {
 				Rule::append_legal_moves_from_banmen(
 					p,from,false,
-					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,true,false,move_builder,mvs
+					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
 				);
 			}
 		} else {
 			for p in ((candidatebits & state.part.sente_opponent_board) | (candidatebits & (SENTE_NARI_MASK << 1))).iter() {
 				Rule::append_legal_moves_from_banmen(
 					p,from,false,
-					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,true,false,move_builder,mvs
+					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
 				);
 			}
 		}
@@ -2946,7 +2962,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 			for p in candidatebits.iter() {
 				Rule::append_legal_moves_from_banmen(
 					p,from,false,
-					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,true,true,move_builder,mvs
+					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
 				);
 			}
 		} else {
@@ -2954,7 +2970,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 			for p in ((candidatebits & state.part.gote_opponent_board) | (candidatebits & (SENTE_NARI_MASK << 1))).iter() {
 				Rule::append_legal_moves_from_banmen(
 					p,from,false,
-					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,true,true,move_builder,mvs
+					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
 				);
 			}
 		}
@@ -2966,8 +2982,9 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 	fn append_kyou_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in (candidatebits & state.part.gote_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
-				80 - p,from,false,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,false,false,move_builder,mvs
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+				SENTE_KYOU_FORCE_PROMOTION_MASK,true,move_builder,mvs
 			);
 		}
 
@@ -2979,7 +2996,8 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,false,false,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
+				GOTE_KYOU_FORCE_PROMOTION_MASK,false,move_builder,mvs
 			);
 		}
 
@@ -2991,7 +3009,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,false,false,move_builder,mvs
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,0,false,move_builder,mvs
 			);
 		}
 
@@ -3003,7 +3021,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.gote_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,false,true,move_builder,mvs
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,0,true,move_builder,mvs
 			);
 		}
 
@@ -3015,7 +3033,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.gote_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
-				0,0,false,true,move_builder,mvs
+				0,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -3027,7 +3045,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
-				0,0,false,false,move_builder,mvs
+				0,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -3039,7 +3057,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.gote_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
-				SENTE_NARI_MASK,0,false,true,move_builder,mvs
+				SENTE_NARI_MASK,0,0,true,move_builder,mvs
 			);
 		}
 
@@ -3051,7 +3069,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
-				GOTE_NARI_MASK,0,false,false,move_builder,mvs
+				GOTE_NARI_MASK,0,0,false,move_builder,mvs
 			);
 		}
 
@@ -3063,7 +3081,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,true,false,move_builder,mvs
+				SENTE_NARI_MASK,0,BANMEN_MASK >> 1,false,move_builder,mvs
 			);
 		}
 
@@ -3075,7 +3093,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.gote_opponent_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,true,true,move_builder,mvs
+				GOTE_NARI_MASK,0,BANMEN_MASK >> 1,true,move_builder,mvs
 			);
 		}
 
@@ -3087,7 +3105,7 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.gote_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,0,true,true,move_builder,mvs
+				SENTE_NARI_MASK,0,BANMEN_MASK >> 1,true,move_builder,mvs
 			);
 		}
 
@@ -3099,7 +3117,232 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 		for p in (candidatebits & state.part.sente_self_board).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,true,false,move_builder,mvs
+				GOTE_NARI_MASK,0,BANMEN_MASK >> 1,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+}
+pub struct AppendQuietsWithoutPawnPromotions;
+impl AppendStrategy for AppendQuietsWithoutPawnPromotions {
+	#[inline]
+	fn append_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
+				0,0,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
+				0,0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,0,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_fu_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if (1u128 << from) & SENTE_NARI_MASK == 0 {
+			for p in ((candidatebits & !state.part.sente_opponent_board) & !(candidatebits & (SENTE_NARI_MASK << 1))).iter() {
+				Rule::append_legal_moves_from_banmen(
+					p,from,false,
+					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_fu_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if (1u128 << from) & GOTE_NARI_MASK == 0 {
+			// pの座標は後手視点になっているのでGOTE_NARI_MASKとandを取っても正しくマスクできない。そのため代わりにSENTE_NARI_MASKでマスクする。
+			for p in ((candidatebits & !state.part.gote_opponent_board) & !(candidatebits & (SENTE_NARI_MASK << 1))).iter() {
+				Rule::append_legal_moves_from_banmen(
+					p,from,false,
+					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kyou_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+				SENTE_KYOU_FORCE_PROMOTION_MASK,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kyou_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
+				GOTE_KYOU_FORCE_PROMOTION_MASK,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kei_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_KEI_MASK,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kei_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_KEI_MASK,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_inverse_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
+				0,0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
+				0,0,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_inverse_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
+				SENTE_NARI_MASK,0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn apppend_inverse_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
+				GOTE_NARI_MASK,0,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,0,BANMEN_MASK >> 1,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_opponent_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,0,BANMEN_MASK >> 1,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_inverse_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.gote_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,0,BANMEN_MASK >> 1,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in (candidatebits & !state.part.sente_self_board).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,0,BANMEN_MASK >> 1,false,move_builder,mvs
 			);
 		}
 
@@ -3310,7 +3553,7 @@ impl Rule {
 		nari:bool,
 		nari_mask:u128,
 		deny_move_mask:u128,
-		force_promotion:bool,
+		force_promotion_mask:u128,
 		inverse_position:bool,
 		move_builder:&F,
 		mvs:&mut impl MovePicker<LegalMove>
@@ -3325,7 +3568,7 @@ impl Rule {
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
 			mvs.push(move_builder(from, to, true)).unwrap();
 
-			if !force_promotion && deny_move_mask & to_mask == 0 {
+			if (force_promotion_mask & to_mask == 0) && deny_move_mask & to_mask == 0 {
 				mvs.push(move_builder(from, to, false)).unwrap();
 			}
 		} else if nari || deny_move_mask & to_mask == 0 {
@@ -3409,7 +3652,7 @@ impl Rule {
 
 		for p in board.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,nari,nari_mask,deny_move_mask,false,inverse_position,move_builder,mvs
+				p,from,nari,nari_mask,deny_move_mask,0,inverse_position,move_builder,mvs
 			);
 		}
 	}
