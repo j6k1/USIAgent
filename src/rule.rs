@@ -3341,7 +3341,7 @@ impl AppendStrategy for AppendQuietsWithoutPawnPromotions {
 
 	#[inline]
 	fn append_fu_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
-		for p in (candidatebits & !state.part.sente_opponent_board & !SENTE_NARI_MASK << 1).iter() {
+		for p in (candidatebits & !state.part.sente_opponent_board & !(SENTE_NARI_MASK << 1)).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
 				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
@@ -3354,7 +3354,7 @@ impl AppendStrategy for AppendQuietsWithoutPawnPromotions {
 	#[inline]
 	fn append_fu_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		// pの座標は後手視点になっているのでGOTE_NARI_MASKとandを取っても正しくマスクできない。そのため代わりにSENTE_NARI_MASKでマスクする。
-		for p in (candidatebits & !state.part.gote_opponent_board & !SENTE_NARI_MASK << 1).iter() {
+		for p in (candidatebits & !state.part.gote_opponent_board & !(SENTE_NARI_MASK << 1)).iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
 				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
