@@ -1802,7 +1802,7 @@ impl MoveGenerator {
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
-					p as u32, SKaku,
+					p as u32,
 					state,
 					move_builder,
 					mvs
@@ -1811,12 +1811,12 @@ impl MoveGenerator {
 			for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
 				let p = p as u32;
 
-				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+				Rule::legal_moves_sente_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
-					p as u32,SKakuN,
+					p as u32,
 					state,
 					move_builder,
 					mvs
@@ -1831,7 +1831,7 @@ impl MoveGenerator {
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
-					80 - p as u32, GKaku,
+					80 - p as u32,
 					state,
 					move_builder,
 					mvs
@@ -1841,12 +1841,12 @@ impl MoveGenerator {
 			for p in (state.part.gote_kaku_board & state.part.gote_nari_board).reverse().iter() {
 				let p = p as u32;
 
-				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+				Rule::legal_moves_gote_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
-					80 - p as u32,GKakuN,
+					80 - p as u32,
 					state,
 					move_builder,
 					mvs
@@ -1869,7 +1869,7 @@ impl MoveGenerator {
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
-					p as u32, SHisha,
+					p as u32,
 					state,
 					move_builder,
 					mvs
@@ -1878,12 +1878,12 @@ impl MoveGenerator {
 			for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
 				let p = p as u32;
 
-				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+				Rule::legal_moves_sente_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
-					p as u32,SHishaN,
+					p as u32,
 					state,
 					move_builder,
 					mvs
@@ -1898,7 +1898,7 @@ impl MoveGenerator {
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
-					80 - p as u32, GHisha,
+					80 - p as u32,
 					state,
 					move_builder,
 					mvs
@@ -1908,12 +1908,12 @@ impl MoveGenerator {
 			for p in (state.part.gote_hisha_board & state.part.gote_nari_board).reverse().iter() {
 				let p = p as u32;
 
-				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+				Rule::legal_moves_gote_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
-					80 - p as u32,GHishaN,
+					80 - p as u32,
 					state,
 					move_builder,
 					mvs
@@ -3102,20 +3102,13 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 
 	#[inline]
 	fn append_fu_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
-		if (1u128 << from) & SENTE_NARI_MASK != 0 {
-			for p in candidatebits.iter() {
-				Rule::append_legal_moves_from_banmen(
-					p,from,false,
-					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
-				);
-			}
-		} else {
-			for p in ((candidatebits & state.part.sente_opponent_board) | (candidatebits & (SENTE_NARI_MASK << 1))).iter() {
-				Rule::append_legal_moves_from_banmen(
-					p,from,false,
-					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
-				);
-			}
+		// fromの位置が敵陣内かを判定していたが、駒が成っていない歩であって敵陣内に既にある時、toも当然敵陣内にあるので分岐は冗長である。
+		// よって不要な分岐を除去した。
+		for p in ((candidatebits & state.part.sente_opponent_board) | (candidatebits & (SENTE_NARI_MASK << 1))).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
+			);
 		}
 
 		Ok(())
@@ -3123,21 +3116,14 @@ impl AppendStrategy for AppendCaptureOrPawnPromotions {
 
 	#[inline]
 	fn append_fu_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
-		if (1u128 << from) & GOTE_NARI_MASK != 0 {
-			for p in candidatebits.iter() {
-				Rule::append_legal_moves_from_banmen(
-					p,from,false,
-					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
-				);
-			}
-		} else {
-			// pの座標は後手視点になっているのでGOTE_NARI_MASKとandを取っても正しくマスクできない。そのため代わりにSENTE_NARI_MASKでマスクする。
-			for p in ((candidatebits & state.part.gote_opponent_board) | (candidatebits & (SENTE_NARI_MASK << 1))).iter() {
-				Rule::append_legal_moves_from_banmen(
-					p,from,false,
-					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
-				);
-			}
+		// fromの位置が敵陣内かを判定していたが、駒が成っていない歩であって敵陣内に既にある時、toも当然敵陣内にあるので分岐は冗長である。
+		// よって不要な分岐を除去した。
+		// pの座標は後手視点になっているのでGOTE_NARI_MASKとandを取っても正しくマスクできない。そのため代わりにSENTE_NARI_MASKでマスクする。
+		for p in ((candidatebits & state.part.gote_opponent_board) | (candidatebits & (SENTE_NARI_MASK << 1))).iter() {
+			Rule::append_legal_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
+			);
 		}
 
 		Ok(())
@@ -3953,7 +3939,6 @@ impl Rule {
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
@@ -3966,49 +3951,73 @@ impl Rule {
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
-		from:u32,kind:KomaKind,
+		from:u32,
 		state:&State,
 		move_builder:&F,
 		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		if kind == SKaku {
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,80 - from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-			AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,from);
 
-			AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,80 - from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-			AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,from);
 
-			AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
-		} else {
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,80 - from);
+		AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
+	}
 
-			AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+	/// 先手の馬の合法手を列挙してバッファに追加
+	///
+	/// # Arguments
+	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn legal_moves_sente_kaku_nari_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
+		self_occupied:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
+		from:u32,
+		state:&State,
+		move_builder:&F,
+		mvs:&mut impl MovePicker<LegalMove>
+	) where F: Fn(u32,u32,bool) -> LegalMove {
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,from);
+		AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_sente(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,from);
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,80 - from);
+		AS::append_sente(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,from);
+		AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_sente(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,from);
 
-			AS::append_sente(state, from,
-							 Rule::gen_candidate_bits(Teban::Sente,self_occupied,from,SKakuN),
-							 move_builder, mvs
-			).unwrap();
-		}
+		AS::append_sente(state, from, board, move_builder, mvs).unwrap();
+
+		AS::append_sente(state, from,
+						 Rule::gen_candidate_bits(Teban::Sente,self_occupied,from,SKakuN),
+						 move_builder, mvs
+		).unwrap();
 	}
 
 	/// 後手の角の合法手を列挙してバッファに追加
@@ -4019,7 +4028,6 @@ impl Rule {
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
@@ -4032,48 +4040,72 @@ impl Rule {
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
-		from:u32,kind:KomaKind,
+		from:u32,
 		state:&State,
 		move_builder:&F,
 		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		if kind == GKaku {
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,from);
 
-			AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,80 - from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,80 - from);
 
-			AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,from);
 
-			AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,80 - from);
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,80 - from);
 
-			AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
-		} else {
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,from);
+		AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
+	}
 
-			AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+	/// 後手の馬の合法手を列挙してバッファに追加
+	///
+	/// # Arguments
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn legal_moves_gote_kaku_nari_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
+		self_occupied:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
+		from:u32,
+		state:&State,
+		move_builder:&F,
+		mvs:&mut impl MovePicker<LegalMove>
+	) where F: Fn(u32,u32,bool) -> LegalMove {
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(flip_opponent_occupied,flip_self_occupied,from);
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,80 - from);
+		AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_gote(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(self_occupied,opponent_occupied,80 - from);
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,from);
+		AS::append_gote(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_top(flip_opponent_occupied,flip_self_occupied,from);
 
-			let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,80 - from);
+		AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_gote(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(self_occupied,opponent_occupied,80 - from);
 
-			AS::append_gote(state, from,
-							Rule::gen_candidate_bits(Teban::Gote,self_occupied,from,GKakuN),
-							move_builder, mvs).unwrap();
-		}
+		AS::append_gote(state, from, board, move_builder, mvs).unwrap();
+
+		AS::append_gote(state, from,
+						Rule::gen_candidate_bits(Teban::Gote,self_occupied,from,GKakuN),
+						move_builder, mvs).unwrap();
 	}
 
 	#[inline]
@@ -4181,7 +4213,6 @@ impl Rule {
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
@@ -4194,48 +4225,72 @@ impl Rule {
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
-		from:u32,kind:KomaKind,
+		from:u32,
 		state:&State,
 		move_builder:&F,
 		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		if kind == SHisha {
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
 
-			AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, from);
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, from);
 
-			AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,80 - from);
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-			AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,from);
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,from);
 
-			AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
-		} else {
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
+		AS::append_force_promotion_target_sente(state, from, board, move_builder, mvs).unwrap();
+	}
 
-			AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+	/// 先手の龍の合法手を列挙してバッファに追加
+	///
+	/// # Arguments
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn legal_moves_sente_hisha_nari_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
+		self_occupied:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
+		from:u32,
+		state:&State,
+		move_builder:&F,
+		mvs:&mut impl MovePicker<LegalMove>
+	) where F: Fn(u32,u32,bool) -> LegalMove {
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, 80 - from);
 
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, from);
+		AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_sente(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, from);
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,80 - from);
+		AS::append_sente(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,80 - from);
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,from);
+		AS::append_inverse_sente(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_sente(state,from,board,move_builder,mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,from);
 
-			AS::append_sente(state, from,
-							 Rule::gen_candidate_bits(Teban::Sente,self_occupied,from,SHishaN),
-							 move_builder, mvs).unwrap();
-		}
+		AS::append_sente(state,from,board,move_builder,mvs).unwrap();
+
+		AS::append_sente(state, from,
+						 Rule::gen_candidate_bits(Teban::Sente,self_occupied,from,SHishaN),
+						 move_builder, mvs).unwrap();
 	}
 
 	/// 後手の飛車の合法手を列挙してバッファに追加
@@ -4246,7 +4301,6 @@ impl Rule {
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `kind` - 駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
@@ -4259,48 +4313,72 @@ impl Rule {
 		opponent_occupied:BitBoard,
 		flip_self_occupied:BitBoard,
 		flip_opponent_occupied:BitBoard,
-		from:u32,kind:KomaKind,
+		from:u32,
 		state:&State,
 		move_builder:&F,
 		mvs:&mut impl MovePicker<LegalMove>
 	) where F: Fn(u32,u32,bool) -> LegalMove {
-		if kind == GHisha {
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
 
-			AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, 80 - from);
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, 80 - from);
 
-			AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,from);
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,from);
 
-			AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+		AS::append_force_promotion_target_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,80 - from);
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,80 - from);
 
-			AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
-		} else {
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
+		AS::append_force_promotion_target_gote(state, from, board, move_builder, mvs).unwrap();
+	}
 
-			AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+	/// 後手の龍の合法手を列挙してバッファに追加
+	///
+	/// # Arguments
+	/// * `self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn legal_moves_gote_hisha_nari_with_point_and_kind_and_bitboard_and_buffer<F,AS: AppendStrategy>(
+		self_occupied:BitBoard,
+		opponent_occupied:BitBoard,
+		flip_self_occupied:BitBoard,
+		flip_opponent_occupied:BitBoard,
+		from:u32,
+		state:&State,
+		move_builder:&F,
+		mvs:&mut impl MovePicker<LegalMove>
+	) where F: Fn(u32,u32,bool) -> LegalMove {
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(flip_opponent_occupied,flip_self_occupied, from);
 
-			let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, 80 - from);
+		AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_gote(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(self_occupied, opponent_occupied, 80 - from);
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,from);
+		AS::append_gote(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(flip_opponent_occupied,flip_self_occupied,from);
 
-			let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,80 - from);
+		AS::append_inverse_gote(state, from, board, move_builder, mvs).unwrap();
 
-			AS::append_gote(state, from, board, move_builder, mvs).unwrap();
+		let board = Rule::gen_candidate_bits_by_hisha_to_right(self_occupied,opponent_occupied,80 - from);
 
-			AS::append_gote(state, from,
-							Rule::gen_candidate_bits(Teban::Gote,self_occupied,from,GHishaN),
-							move_builder, mvs).unwrap();
-		}
+		AS::append_gote(state, from, board, move_builder, mvs).unwrap();
+
+		AS::append_gote(state, from,
+						Rule::gen_candidate_bits(Teban::Gote,self_occupied,from,GHishaN),
+						move_builder, mvs).unwrap();
 	}
 
 	/// 先手の香車の合法手を列挙してバッファに追加
@@ -4485,26 +4563,50 @@ impl Rule {
 					mvs
 				);
 			}
-			SKaku | SKakuN if t == Teban::Sente => {
+			SKaku if t == Teban::Sente => {
 				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
-					from,kind,
+					from,
 					state,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
 				);
 			},
-			SHisha | SHishaN if t == Teban::Sente => {
+			SKakuN if t == Teban::Sente => {
+				Rule::legal_moves_sente_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					from,
+					state,
+					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
+					mvs
+				);
+			},
+			SHisha if t == Teban::Sente => {
 				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 				state.part.sente_self_board,
 				state.part.sente_opponent_board,
 				state.part.gote_self_board,
 				state.part.gote_opponent_board,
-				from,kind,
+				from,
 				state,
+					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
+					mvs
+				);
+			},
+			SHishaN if t == Teban::Sente => {
+				Rule::legal_moves_sente_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					from,
+					state,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
 				);
@@ -4519,25 +4621,49 @@ impl Rule {
 					mvs
 				);
 			},
-			GKaku | GKakuN if t == Teban::Gote => {
+			GKaku if t == Teban::Gote => {
 				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
-					from,kind,
+					from,
 					state,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
 				);
 			},
-			GHisha | GHishaN if t == Teban::Gote => {
+			GKakuN if t == Teban::Gote => {
+				Rule::legal_moves_gote_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					from,
+					state,
+					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
+					mvs
+				);
+			},
+			GHisha if t == Teban::Gote => {
 				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
 					state.part.gote_self_board,
 					state.part.gote_opponent_board,
 					state.part.sente_self_board,
 					state.part.sente_opponent_board,
-					from,kind,
+					from,
+					state,
+					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
+					mvs
+				)
+			},
+			GHishaN if t == Teban::Gote => {
+				Rule::legal_moves_gote_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AppendAll>(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					from,
 					state,
 					&Rule::default_moveto_builder(&state.banmen,opponent_bitboard),
 					mvs
