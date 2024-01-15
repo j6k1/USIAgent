@@ -2556,7 +2556,41 @@ impl GenerateStrategy for QuietsWithoutPawnPromotions {
 	#[inline]
 	fn generate_fu<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
 						 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
-		MoveGenerator::generate_fu::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+		if teban == Teban::Sente {
+			for p in (state.part.sente_fu_board & !state.part.sente_nari_board & !(SENTE_NARI_MASK << 1)).iter() {
+				let p = p as u32;
+
+				Self::AppendStrategy::append_fu_sente(state, p,
+									Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SFu),
+									move_builder, mvs)?;
+			}
+
+			for p in (state.part.sente_fu_board & state.part.sente_nari_board).iter() {
+				let p = p as u32;
+
+				Self::AppendStrategy::append_sente(state, p,
+								 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SFuN),
+								 move_builder, mvs)?;
+			}
+		} else {
+			for p in (state.part.gote_fu_board & !state.part.gote_nari_board & !(GOTE_NARI_MASK << 1)).reverse().iter() {
+				let p = p as u32;
+
+				Self::AppendStrategy::append_fu_gote(state, 80 - p,
+								   Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GFu),
+								   move_builder, mvs)?;
+			}
+
+			for p in (state.part.gote_fu_board & state.part.gote_nari_board).reverse().iter() {
+				let p = p as u32;
+
+				Self::AppendStrategy::append_gote(state, 80 - p,
+								Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GFuN),
+								move_builder, mvs)?;
+			}
+		}
+
+		Ok(())
 	}
 
 	#[inline]
@@ -2891,10 +2925,10 @@ impl AppendStrategy for ForcePromotions {
 	}
 
 	#[inline]
-	fn append_fu_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+	fn append_fu_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,(state.part.sente_nari_board & (1u128 << (from) + 1)) != 0,
+				p,from,false,
 				SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
 			);
 		}
@@ -2903,10 +2937,10 @@ impl AppendStrategy for ForcePromotions {
 	}
 
 	#[inline]
-	fn append_fu_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+	fn append_fu_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
-				p,from,(state.part.gote_nari_board & (1u128 << (from) + 1)) != 0,
+				p,from,false,
 				GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
 			);
 		}
@@ -3308,7 +3342,7 @@ impl AppendStrategy for AppendQuietsWithoutPawnPromotions {
 	#[inline]
 	fn append_fu_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if (1u128 << from) & SENTE_NARI_MASK == 0 {
-			for p in ((candidatebits & !state.part.sente_opponent_board) & !(candidatebits & (SENTE_NARI_MASK << 1))).iter() {
+			for p in (candidatebits & !state.part.sente_opponent_board & !SENTE_NARI_MASK << 1).iter() {
 				Rule::append_legal_moves_from_banmen(
 					p,from,false,
 					SENTE_NARI_MASK,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,false,move_builder,mvs
@@ -3323,7 +3357,7 @@ impl AppendStrategy for AppendQuietsWithoutPawnPromotions {
 	fn append_fu_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if (1u128 << from) & GOTE_NARI_MASK == 0 {
 			// pの座標は後手視点になっているのでGOTE_NARI_MASKとandを取っても正しくマスクできない。そのため代わりにSENTE_NARI_MASKでマスクする。
-			for p in ((candidatebits & !state.part.gote_opponent_board) & !(candidatebits & (SENTE_NARI_MASK << 1))).iter() {
+			for p in (candidatebits & !state.part.gote_opponent_board & !SENTE_NARI_MASK << 1).iter() {
 				Rule::append_legal_moves_from_banmen(
 					p,from,false,
 					GOTE_NARI_MASK,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,BANMEN_MASK >> 1,true,move_builder,mvs
