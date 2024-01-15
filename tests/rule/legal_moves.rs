@@ -8,7 +8,7 @@ use usiagent::movepick::RandomPicker;
 use usiagent::shogi::*;
 use usiagent::shogi::MochigomaCollections;
 use usiagent::rule;
-use usiagent::rule::{CaptureOrPawnPromotions, NonEvasions, NonEvasionsAll, Rule};
+use usiagent::rule::{CaptureOrPawnPromotions, NonEvasions, NonEvasionsAll, QuietsWithoutPawnPromotions, Rule};
 use usiagent::rule::State;
 
 use super::*;
@@ -8357,6 +8357,53 @@ fn test_legal_moves_all_by_capture_or_pawn_promotions_strategy() {
 		let state = State::new(banmen);
 
 		Rule::legal_moves_all_by_strategy::<CaptureOrPawnPromotions>(teban, &state, &mc, &mut buffer).unwrap();
+
+		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
+
+		let mut mvs = mvs.into_iter().map(|m| m.to_move().to_sfen().unwrap()).collect::<Vec<String>>();
+
+		mvs.sort();
+
+		let mvs = mvs.join(" ");
+
+		if &expected != &mvs {
+			println!("line {}: {}",n, sfen);
+		}
+
+		assert_eq!(expected, mvs);
+	}
+}
+#[ignore]
+#[test]
+fn test_legal_moves_all_by_quiets_without_pawn_promotions_strategy() {
+	let position_parser = PositionParser::new();
+
+	let mut rng = rand::thread_rng();
+	let mut rng = XorShiftRng::from_seed(rng.gen());
+
+	let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
+
+	for (n,(sfen,answer)) in BufReader::new(
+		File::open(
+			Path::new("data").join("floodgate").join("generatemoves").join("kyokumen_sfen_uniq.txt")
+		).unwrap()).lines().zip(BufReader::new(
+		File::open(
+			Path::new("data").join("floodgate").join("generatemoves").join("answer_quiets_without_pawn_promotions_uniq.txt")
+		).unwrap()).lines()).enumerate() {
+
+		let mut expected = answer.unwrap().split(' ').into_iter().map(|m| m.to_string()).collect::<Vec<String>>();
+
+		expected.sort();
+
+		let expected = expected.join(" ");
+
+		let sfen = format!("sfen {}",sfen.unwrap());
+
+		let (teban, banmen, mc, _, _) = position_parser.parse(&sfen.split(' ').collect::<Vec<&str>>()).unwrap().extract();
+
+		let state = State::new(banmen);
+
+		Rule::legal_moves_all_by_strategy::<QuietsWithoutPawnPromotions>(teban, &state, &mc, &mut buffer).unwrap();
 
 		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
 
