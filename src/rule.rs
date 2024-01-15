@@ -2871,7 +2871,7 @@ impl AppendStrategy for AppendAll {
 		for p in candidatebits.iter() {
 			Rule::append_legal_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,0,9,true,move_builder,mvs
+				GOTE_NARI_MASK,0,0,true,move_builder,mvs
 			);
 		}
 
