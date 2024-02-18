@@ -1,14 +1,25 @@
+//! 指し手を取り出す機能の実装
 use std::mem::MaybeUninit;
 use error::LimitSizeError;
 use math::Prng;
 
 pub const MOVE_MAX:u16 = 593;
 
+/// 指し手を取り出す機能のインターフェースの定義
 pub trait MovePicker<T> : Iterator<Item =T> {
+    /// 列挙された指し手をバッファに追加する
+    ///
+    /// # Arguments
+    /// * `m` - 指し手の型
     fn push(&mut self,m:T) -> Result<u16,LimitSizeError>;
+    /// 指し手のバッファをリセットする
+    ///
     fn reset(&mut self);
+    /// 現在格納されている指し手の個数を返す
+    ///
     fn len(&self) -> usize;
 }
+/// バッファの中の指し手からランダムに選んで返すMovePickerの実装
 pub struct RandomPicker<T> {
     rnd:Prng,
     mvs:[MaybeUninit<T>; 593],
@@ -16,6 +27,10 @@ pub struct RandomPicker<T> {
     count:u16
 }
 impl<T> RandomPicker<T> where T: Copy {
+    /// RandomPickerのインスタンスを生成して返す
+    ///
+    /// # Arguments
+    /// * `r` - 乱数生成器
     pub fn new(r:Prng) -> RandomPicker<T> {
         RandomPicker {
             rnd:r,

@@ -653,6 +653,7 @@ pub struct PopLsbIterByCallback<F> {
 	callback:F
 }
 impl BitBoard {
+	/// ビットボード内の下位方向から見たビット位置を取り出して返すイテレータを生成する
 	#[inline]
 	pub fn iter(self) -> impl Iterator<Item = Square> {
 		let br = (unsafe { *self.bitboard.get_unchecked(0) } == 0) as usize;
@@ -683,6 +684,7 @@ impl BitBoard {
 		}
 	}
 
+	/// ビットボードのビット列を反転させ、下位から82bit分の範囲に収まるように位置を調整する
 	#[inline]
 	pub fn reverse(self) -> BitBoard {
 		BitBoard {
@@ -690,6 +692,7 @@ impl BitBoard {
 		}
 	}
 
+	/// ビットボード内の立っているビットの個数を返す
 	#[inline]
 	pub fn bitcount(self) -> usize {
 		unsafe {
@@ -913,6 +916,7 @@ impl PartialState {
 		}
 	}
 
+	/// pin駒（飛車、角、香から相手の王への利きの途中に効きを遮る駒が一つだけあるとき、その駒）のビットボードを更新する
 	#[inline]
 	fn update_pin(&mut self) {
 		let mut sente_pin_board = BitBoard { merged_bitboard: 0 };
@@ -1451,94 +1455,531 @@ pub const BANMEN_START_POS:Banmen = Banmen([
 	[Blank,SKaku,Blank,Blank,Blank,Blank,Blank,SHisha,Blank],
 	[SKyou,SKei,SGin,SKin,SOu,SKin,SGin,SKei,SKyou],
 ]);
+/// 指し手の列挙を定義するトレイト
 pub trait GenerateStrategy {
 	type Environment;
 	type AppendStrategy: AppendStrategy;
 
+	/// 盤面上の駒の指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_piece(teban:Teban,state:&State,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 持ち駒を置く指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError>;
+	/// 歩を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_fu<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 香車を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_kyou<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 桂馬を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_kei<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 銀を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_gin<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 金を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_kin<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 角を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_kaku<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 飛車を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_hisha<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 王を移動する指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - 生成された指し手をバッファに追加するクロージャ
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_ou<'a,B>(teban:Teban,state:&State,move_builder:&B, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(),LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 歩を置く指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 駒の枚数
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_fu(teban:Teban,state:&State,count:usize, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 香車を置く指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 駒の枚数
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_kyou(teban:Teban,state:&State,count:usize, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 桂馬を置く指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 駒の枚数
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_kei(teban:Teban,state:&State,count:usize, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 銀、金、角、飛を置く手の共通実装を定義する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `m` - 駒の種類
+	/// * `count` - 駒の枚数
+	/// * `shared_candidatebits` - 銀、金、角、飛の合法手列挙で共有されるビットボード
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_common(teban:Teban, state:&State, m:MochigomaKind, count: usize, shared_candidatebits:
 							&mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 銀を置く手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 駒の枚数
+	/// * `shared_candidatebits` - 銀、金、角、飛の合法手列挙で共有されるビットボード
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_gin(teban:Teban,state:&State,count:usize, shared_candidatebits: &mut BitBoard,
 						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 金を置く手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 駒の枚数
+	/// * `shared_candidatebits` - 銀、金、角、飛の合法手列挙で共有されるビットボード
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_kin(teban:Teban,state:&State,count:usize, shared_candidatebits: &mut BitBoard,
 						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 角を置く手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 駒の枚数
+	/// * `shared_candidatebits` - 銀、金、角、飛の合法手列挙で共有されるビットボード
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_kaku(teban:Teban,state:&State,count:usize, shared_candidatebits: &mut BitBoard,
 						  env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
+	/// 飛車を置く手の共通実装を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 駒の枚数
+	/// * `shared_candidatebits` - 銀、金、角、飛の合法手列挙で共有されるビットボード
+	/// * `env` - 指し手生成時に利用する環境
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_hisha(teban:Teban,state:&State,count:usize, shared_candidatebits: &mut BitBoard,
 						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
 }
+/// 手の生成時に利用されるバッファに追加される手を取捨選択する機能の実装を定義するトレイト
 pub trait AppendStrategy {
+	/// 先手の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 						  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 						  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 						 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 						 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_inverse_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 								  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 								  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 								 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 								 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の指し手を追加する(成れる可能性がある駒の場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 											 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 											 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する(成れる可能性がある駒の場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 											move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 											-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の指し手を追加する(成れる可能性がある駒の場合かつ逆向きのビットボードから追加する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_inverse_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 													 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 													 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する(成れる可能性がある駒の場合かつ逆向きのビットボードから追加する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn apppend_inverse_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 								  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 								  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の歩の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_fu_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 							 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の香車の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_kyou_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 							   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の桂馬の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_kei_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の歩の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_fu_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 							move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の香車の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_kyou_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の桂馬の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_kei_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 							 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の不成を生成しない駒の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_force_promotion_target_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 												 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の不成を生成しない駒の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_force_promotion_target_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 												move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の不成を生成しない駒の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_force_promotion_target_inverse_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 														 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 														 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の不成を生成しない駒の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
 	fn append_force_promotion_target_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
 														move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 														-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
@@ -3595,7 +4036,7 @@ impl Rule {
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合も逆さまにならない）
 	/// * `kind` - 移動する駒の種類
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_candidate_bits(
 		teban:Teban,self_occupied:BitBoard,from:u32,kind:KomaKind
@@ -3645,7 +4086,7 @@ impl Rule {
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合は逆さまの値を渡す）
 	/// * `kind` - 移動する駒の種類
 	///
-	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_control_bits(
 		from:u32,kind:KomaKind
@@ -3776,6 +4217,7 @@ impl Rule {
 	/// * `self_occupied` - 手番側から見た手番側の駒の配置を表すビットボード。(後手の場合は上下逆さになっている)
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 移動する駒の種類
+	/// * `nari` - 成る手か
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
 	/// * `inverse_position` - ビットボードを上下逆さにするか否か
@@ -3811,6 +4253,7 @@ impl Rule {
 	/// * `self_occupied` - 手番側から見た手番側の駒の配置を表すビットボード。(後手の場合は上下逆さになっている)
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 移動する駒の種類
+	/// * `nari` - 成る手か
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
 	/// * `inverse_position` - ビットボードを上下逆さにするか否か
@@ -3934,13 +4377,12 @@ impl Rule {
 	/// 先手の角の合法手を列挙してバッファに追加
 	///
 	/// # Arguments
-	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -3976,13 +4418,12 @@ impl Rule {
 	/// 先手の馬の合法手を列挙してバッファに追加
 	///
 	/// # Arguments
-	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4028,8 +4469,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4070,8 +4510,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4213,8 +4652,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4255,8 +4693,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4301,8 +4738,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4343,8 +4779,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4387,8 +4822,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -4413,8 +4847,7 @@ impl Rule {
 	/// * `flip_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
-	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
-	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `state` - 盤面の状態
 	/// * `move_builder` - LegalMoveを生成するためのコールバック
 	/// * `mvs` - 手を追加するバッファ
 	///
@@ -5040,7 +5473,7 @@ impl Rule {
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
 	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
@@ -5197,8 +5630,8 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `opponent_ou_bitboard` - 先手側から見た相手の王の配置を表すビットボード。
-	/// * `sente_self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
-	/// * `sente_opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
+	/// * `self_occupied` - 先手側から見た先手側の駒の配置を表すビットボード。
+	/// * `opponent_occupied` - 先手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_self_occupied` - 後手側から見た後手側の駒の配置を表すビットボード。
 	/// * `flip_opponent_occupied` - 後手側から見た先手側の駒の配置を表すビットボード。
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
