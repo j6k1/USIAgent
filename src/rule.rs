@@ -7768,6 +7768,139 @@ impl Rule {
 								}
 							}
 						}
+
+						let mut b = BitBoard { merged_bitboard: 0 };
+
+						match (t,m.kind()) {
+							(Teban::Sente,MochigomaKind::Fu) => {
+								b = Rule::gen_candidate_bits_of_check(
+									ps.sente_opponent_ou_position_board,
+									BitBoard { merged_bitboard: FU_CHECK_MASK },
+									BitBoard { merged_bitboard: to_mask }
+								);
+
+								ps.sente_checked_board |= b;
+							},
+							(Teban::Sente,MochigomaKind::Kyou) => {
+								b = Rule::gen_candidate_bits_of_check_by_kyou(
+									ps.sente_opponent_ou_position_board,
+									BitBoard { merged_bitboard: to_mask },
+									ps.sente_self_board,ps.sente_opponent_board
+								);
+
+								ps.sente_checked_board |= b;
+							},
+							(Teban::Sente,MochigomaKind::Kei) => {
+								b = Rule::gen_candidate_bits_of_check_by_kei(
+									ps.sente_opponent_ou_position_board,
+									BitBoard { merged_bitboard: to_mask }
+								);
+
+								ps.sente_checked_board |= b;
+							},
+							(Teban::Sente,MochigomaKind::Gin) => {
+								b = Rule::gen_candidate_bits_of_check(
+									ps.sente_opponent_ou_position_board,
+									BitBoard { merged_bitboard: GIN_CHECK_MASK },
+									BitBoard { merged_bitboard: to_mask }
+								);
+
+								ps.sente_checked_board |= b;
+							},
+							(Teban::Sente,MochigomaKind::Kin) => {
+								b = Rule::gen_candidate_bits_of_check(
+									ps.sente_opponent_ou_position_board,
+									BitBoard { merged_bitboard: KIN_CHECK_MASK },
+									BitBoard { merged_bitboard: to_mask }
+								);
+
+								ps.sente_checked_board |= b;
+							},
+							(Teban::Sente,MochigomaKind::Kaku) => {
+								b = Rule::gen_candidate_bits_of_check_by_kaku(
+									ps.sente_opponent_ou_position_board,
+									BitBoard { merged_bitboard: to_mask },
+									ps.sente_self_board,ps.sente_opponent_board,
+									ps.gote_opponent_board,ps.gote_self_board
+								);
+
+								ps.sente_checked_board |= b;
+							},
+							(Teban::Sente,MochigomaKind::Hisha) => {
+								b = Rule::gen_candidate_bits_of_check_by_hisha(
+									ps.sente_opponent_ou_position_board,
+									BitBoard { merged_bitboard: to_mask },
+									ps.sente_self_board,ps.sente_opponent_board,
+									ps.gote_opponent_board,ps.gote_self_board
+								);
+
+								ps.sente_checked_board |= b;
+							},
+							(Teban::Gote,MochigomaKind::Fu) => {
+								b = Rule::gen_candidate_bits_of_check(
+									ps.gote_opponent_ou_position_board,
+									BitBoard { merged_bitboard: FU_CHECK_MASK },
+									BitBoard { merged_bitboard: inverse_to_mask }
+								);
+
+								ps.gote_checked_board |= b;
+							},
+							(Teban::Gote,MochigomaKind::Kyou) => {
+								b = Rule::gen_candidate_bits_of_check_by_kyou(
+									ps.gote_opponent_ou_position_board,
+									BitBoard { merged_bitboard: inverse_to_mask },
+									ps.gote_opponent_board,ps.gote_self_board
+								);
+
+								ps.gote_checked_board |= b;
+							},
+							(Teban::Gote,MochigomaKind::Kei) => {
+								b = Rule::gen_candidate_bits_of_check_by_kei(
+									ps.gote_opponent_ou_position_board,
+									BitBoard { merged_bitboard: inverse_to_mask }
+								);
+
+								ps.gote_checked_board |= b;
+							},
+							(Teban::Gote,MochigomaKind::Gin) => {
+								b = Rule::gen_candidate_bits_of_check(
+									ps.gote_opponent_ou_position_board,
+									BitBoard { merged_bitboard: GIN_CHECK_MASK },
+									BitBoard { merged_bitboard: inverse_to_mask }
+								);
+
+								ps.gote_checked_board |= b;
+							},
+							(Teban::Gote,MochigomaKind::Kin) => {
+								b = Rule::gen_candidate_bits_of_check(
+									ps.gote_opponent_ou_position_board,
+									BitBoard { merged_bitboard: KIN_CHECK_MASK },
+									BitBoard { merged_bitboard: inverse_to_mask }
+								);
+
+								ps.gote_checked_board |= b;
+							},
+							(Teban::Gote,MochigomaKind::Kaku) => {
+								b = Rule::gen_candidate_bits_of_check_by_kaku(
+									ps.gote_opponent_ou_position_board,
+									BitBoard { merged_bitboard: inverse_to_mask },
+									ps.gote_self_board,ps.gote_opponent_board,
+									ps.sente_opponent_board,ps.sente_self_board
+								);
+
+								ps.gote_checked_board |= b;
+							},
+							(Teban::Gote,MochigomaKind::Hisha) => {
+								b = Rule::gen_candidate_bits_of_check_by_hisha(
+									ps.gote_opponent_ou_position_board,
+									BitBoard { merged_bitboard: inverse_to_mask },
+									ps.gote_self_board,ps.gote_opponent_board,
+									ps.sente_opponent_board,ps.sente_self_board
+								);
+
+								ps.gote_checked_board |= b;
+							}
+						}
 					}
 				}
 			}
