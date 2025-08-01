@@ -4357,6 +4357,127 @@ impl Rule {
 		BitBoard { merged_bitboard: board }
 	}
 
+	/// 駒の移動によって新たにpin駒となった場合、
+	/// それが原因で王手が無効化された駒のビットを立てたビットボードを返す
+	///
+	/// # Arguments
+	/// * `ou_position_board` - checked_board仁対応した手番の王の位置のビットボード
+	/// * `checked_board` - 王手をかけている駒のビットを立てたビットボード
+	/// * `self_occupied_board` - checked_boardと同じ手番側視点の自身の駒のビットボード
+	/// * `opponent_occupied_board` - checked_boardと同じ手番側視点の相手の駒のビットボード
+	/// * `flip_self_occupied_board` - checked_boardと逆の手番側視点の自身の駒のビットボード
+	/// * `flip_opponent_occupied_board` - checked_boardと逆の手番側視点の相手の駒のビットボード
+	/// * `to` - 移動しようとする先の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_unchecked_bit_because_pin(
+		ou_position_board:BitBoard,
+		checked_board:BitBoard,
+		self_occupied_board:BitBoard,
+		opponent_occupied_board:BitBoard,
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+		to:u32,
+		exclude_mask:BitBoard
+	) -> BitBoard {
+		if let Some(p) = ou_position_board.iter().next() {
+			let p = p as u32;
+
+			let (x,y) = p.square_to_point();
+
+			for c in checked_board.iter() {
+				let c = c as u32;
+
+				let (sx,sy) = c.square_to_point();
+
+				if sx == x && y > sy {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						80 - p
+					).reverse();
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				} else if sx == x {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+						self_occupied_board,
+						opponent_occupied_board,
+						p
+					);
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				} else if sy == y && x > sx {
+					let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						80 - p
+					).reverse();
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				} else if sy == y {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+						self_occupied_board,
+						opponent_occupied_board,
+						p
+					);
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				} else if sx < x && sy < y && x - sx == y - sy {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						80 - p
+					).reverse();
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				} else if sx < x && sy > y && x - sx == sy - y {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						80 - p
+					).reverse();
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				} else if sx > x && sy < y && sx - x == y - sy {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+						self_occupied_board,
+						opponent_occupied_board,
+						p
+					);
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				} else if sx > x && sy > y && sx - x == sy - y {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+						self_occupied_board,
+						opponent_occupied_board,
+						p
+					);
+
+					if b & 1 << (to + 1) != 0 {
+						return b & checked_board & exclude_mask;
+					}
+				}
+			}
+		}
+
+		BitBoard { merged_bitboard: 0 }
+	}
+
 	/// 盤面上で王手をかける合法手をビットボードに列挙
 	///
 	/// # Arguments
@@ -7769,11 +7890,9 @@ impl Rule {
 							}
 						}
 
-						let mut b = BitBoard { merged_bitboard: 0 };
-
 						match (t,m.kind()) {
 							(Teban::Sente,MochigomaKind::Fu) => {
-								b = Rule::gen_candidate_bits_of_check(
+								let b = Rule::gen_candidate_bits_of_check(
 									ps.sente_opponent_ou_position_board,
 									BitBoard { merged_bitboard: FU_CHECK_MASK },
 									BitBoard { merged_bitboard: to_mask }
@@ -7782,7 +7901,7 @@ impl Rule {
 								ps.sente_checked_board |= b;
 							},
 							(Teban::Sente,MochigomaKind::Kyou) => {
-								b = Rule::gen_candidate_bits_of_check_by_kyou(
+								let b = Rule::gen_candidate_bits_of_check_by_kyou(
 									ps.sente_opponent_ou_position_board,
 									BitBoard { merged_bitboard: to_mask },
 									ps.sente_self_board,ps.sente_opponent_board
@@ -7791,7 +7910,7 @@ impl Rule {
 								ps.sente_checked_board |= b;
 							},
 							(Teban::Sente,MochigomaKind::Kei) => {
-								b = Rule::gen_candidate_bits_of_check_by_kei(
+								let b = Rule::gen_candidate_bits_of_check_by_kei(
 									ps.sente_opponent_ou_position_board,
 									BitBoard { merged_bitboard: to_mask }
 								);
@@ -7799,7 +7918,7 @@ impl Rule {
 								ps.sente_checked_board |= b;
 							},
 							(Teban::Sente,MochigomaKind::Gin) => {
-								b = Rule::gen_candidate_bits_of_check(
+								let b = Rule::gen_candidate_bits_of_check(
 									ps.sente_opponent_ou_position_board,
 									BitBoard { merged_bitboard: GIN_CHECK_MASK },
 									BitBoard { merged_bitboard: to_mask }
@@ -7808,7 +7927,7 @@ impl Rule {
 								ps.sente_checked_board |= b;
 							},
 							(Teban::Sente,MochigomaKind::Kin) => {
-								b = Rule::gen_candidate_bits_of_check(
+								let b = Rule::gen_candidate_bits_of_check(
 									ps.sente_opponent_ou_position_board,
 									BitBoard { merged_bitboard: KIN_CHECK_MASK },
 									BitBoard { merged_bitboard: to_mask }
@@ -7817,7 +7936,7 @@ impl Rule {
 								ps.sente_checked_board |= b;
 							},
 							(Teban::Sente,MochigomaKind::Kaku) => {
-								b = Rule::gen_candidate_bits_of_check_by_kaku(
+								let b = Rule::gen_candidate_bits_of_check_by_kaku(
 									ps.sente_opponent_ou_position_board,
 									BitBoard { merged_bitboard: to_mask },
 									ps.sente_self_board,ps.sente_opponent_board,
@@ -7827,7 +7946,7 @@ impl Rule {
 								ps.sente_checked_board |= b;
 							},
 							(Teban::Sente,MochigomaKind::Hisha) => {
-								b = Rule::gen_candidate_bits_of_check_by_hisha(
+								let b = Rule::gen_candidate_bits_of_check_by_hisha(
 									ps.sente_opponent_ou_position_board,
 									BitBoard { merged_bitboard: to_mask },
 									ps.sente_self_board,ps.sente_opponent_board,
@@ -7837,7 +7956,7 @@ impl Rule {
 								ps.sente_checked_board |= b;
 							},
 							(Teban::Gote,MochigomaKind::Fu) => {
-								b = Rule::gen_candidate_bits_of_check(
+								let b = Rule::gen_candidate_bits_of_check(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: FU_CHECK_MASK },
 									BitBoard { merged_bitboard: inverse_to_mask }
@@ -7846,7 +7965,7 @@ impl Rule {
 								ps.gote_checked_board |= b;
 							},
 							(Teban::Gote,MochigomaKind::Kyou) => {
-								b = Rule::gen_candidate_bits_of_check_by_kyou(
+								let b = Rule::gen_candidate_bits_of_check_by_kyou(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: inverse_to_mask },
 									ps.gote_opponent_board,ps.gote_self_board
@@ -7855,7 +7974,7 @@ impl Rule {
 								ps.gote_checked_board |= b;
 							},
 							(Teban::Gote,MochigomaKind::Kei) => {
-								b = Rule::gen_candidate_bits_of_check_by_kei(
+								let b = Rule::gen_candidate_bits_of_check_by_kei(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: inverse_to_mask }
 								);
@@ -7863,7 +7982,7 @@ impl Rule {
 								ps.gote_checked_board |= b;
 							},
 							(Teban::Gote,MochigomaKind::Gin) => {
-								b = Rule::gen_candidate_bits_of_check(
+								let b = Rule::gen_candidate_bits_of_check(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: GIN_CHECK_MASK },
 									BitBoard { merged_bitboard: inverse_to_mask }
@@ -7872,7 +7991,7 @@ impl Rule {
 								ps.gote_checked_board |= b;
 							},
 							(Teban::Gote,MochigomaKind::Kin) => {
-								b = Rule::gen_candidate_bits_of_check(
+								let b = Rule::gen_candidate_bits_of_check(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: KIN_CHECK_MASK },
 									BitBoard { merged_bitboard: inverse_to_mask }
@@ -7881,7 +8000,7 @@ impl Rule {
 								ps.gote_checked_board |= b;
 							},
 							(Teban::Gote,MochigomaKind::Kaku) => {
-								b = Rule::gen_candidate_bits_of_check_by_kaku(
+								let b = Rule::gen_candidate_bits_of_check_by_kaku(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: inverse_to_mask },
 									ps.gote_self_board,ps.gote_opponent_board,
@@ -7891,7 +8010,7 @@ impl Rule {
 								ps.gote_checked_board |= b;
 							},
 							(Teban::Gote,MochigomaKind::Hisha) => {
-								b = Rule::gen_candidate_bits_of_check_by_hisha(
+								let b = Rule::gen_candidate_bits_of_check_by_hisha(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: inverse_to_mask },
 									ps.gote_self_board,ps.gote_opponent_board,
