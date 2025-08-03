@@ -1672,7 +1672,7 @@ const POSSIBLE_OU_CAPTURES_MASK_OF_SENTE:u128 = 0b000111111_000111111_000111011_
 const POSSIBLE_OU_CAPTURES_MASK_OF_GOTE:u128 = 0b000111111_000111111_000110111_000111111_000111111;
 const SENTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
 const GOTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
-const FU_REV_MASK:u128 = 0b000000001_000000001_000000001;
+const FU_REV_MASK:u128 = 0b000000000_000000001_000000000;
 const GIN_REV_MASK:u128 = 0b000000101_000000001_000000101;
 const KIN_REV_MASK:u128 = 0b000000011_000000101_000000011;
 const NARI_KAKU_REV_MASK:u128 = 0b000000010_000000101_000000010;
@@ -2882,7 +2882,9 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_fu_board & !state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_fu_board & !state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					AS::append_fu_sente(state, p,
@@ -2906,7 +2908,9 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_fu_board & state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_fu_board & state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					AS::append_sente(state, p,
@@ -2934,10 +2938,12 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
+				let mask = BitBoard { merged_bitboard: mask };
+
 				for p in (state.part.gote_fu_board & !state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
-					AS::append_fu_gote(state, 80 - p,
+					AS::append_fu_gote(state, p,
 									   BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									   move_builder, mvs)?;
 				}
@@ -2958,10 +2964,12 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
+				let mask = BitBoard { merged_bitboard: mask };
+
 				for p in (state.part.gote_fu_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
-					AS::append_gote(state, 80 - p,
+					AS::append_gote(state, p,
 									BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									move_builder, mvs)?;
 				}
@@ -2979,46 +2987,8 @@ impl EvasionsMoveGenerator {
 				for p in (state.part.sente_kyou_board & !state.part.sente_nari_board).iter() {
 					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p as u32);
 
-					if (1 << (80 - checked + 1)) & b != 0 {
-						AS::append_kyou_sente(state, 80 - p as u32,
-											BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
-											move_builder, mvs)?;
-					}
-				}
-
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
-				} else {
-					mask
-				};
-
-				for p in (state.part.sente_kyou_board & state.part.sente_nari_board & mask).iter() {
-					let p = p as u32;
-
-					AS::append_sente(state, p,
-										BitBoard { merged_bitboard: 1 << (checked + 1) },
-										move_builder, mvs)?;
-				}
-			}
-		} else {
-			for checked in state.part.sente_checked_board.iter() {
-				for p in (state.part.gote_kyou_board & !state.part.gote_nari_board).reverse().iter() {
-					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, p as u32);
-
 					if (1 << (checked + 1)) & b != 0 {
-						AS::append_kyou_gote(state, 80 - p as u32,
+						AS::append_kyou_sente(state, 80 - p as u32,
 											BitBoard { merged_bitboard: 1 << (checked + 1) },
 											move_builder, mvs)?;
 					}
@@ -3042,6 +3012,48 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_kyou_board & state.part.sente_nari_board & mask.reverse()).iter() {
+					let p = p as u32;
+
+					AS::append_sente(state, p,
+										BitBoard { merged_bitboard: 1 << (checked + 1) },
+										move_builder, mvs)?;
+				}
+			}
+		} else {
+			for checked in state.part.sente_checked_board.iter() {
+				for p in (state.part.gote_kyou_board & !state.part.gote_nari_board).iter() {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, p as u32);
+
+					if (1 << (checked + 1)) & b != 0 {
+						AS::append_kyou_gote(state, 80 - p as u32,
+											BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
+											move_builder, mvs)?;
+					}
+				}
+
+				let (_, ty) = checked.square_to_point();
+
+				let mask = if ty == 0 {
+					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
+				} else if ty == 8 {
+					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
+				} else {
+					KIN_REV_MASK
+				};
+
+				let mask = if checked < 10 {
+					mask >> (10 - checked as usize)
+				} else if checked > 10 {
+					mask << (checked as usize - 10)
+				} else {
+					mask
+				};
+
+				let mask = BitBoard { merged_bitboard: mask };
+
 				for p in (state.part.gote_kyou_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
@@ -3059,7 +3071,7 @@ impl EvasionsMoveGenerator {
 	pub fn generate_kei<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			for checked in state.part.sente_checked_board.iter() {
+			for checked in state.part.gote_checked_board.iter() {
 				let (_,ty) = checked.square_to_point();
 
 				let mask = if ty <= 1 {
@@ -3076,7 +3088,9 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_kei_board & !state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_kei_board & !state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					AS::append_fu_sente(state, p,
@@ -3100,7 +3114,9 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_fu_board & !state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_kei_board & !state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					AS::append_fu_sente(state, p,
@@ -3109,7 +3125,7 @@ impl EvasionsMoveGenerator {
 				}
 			}
 		} else {
-			for checked in state.part.gote_checked_board.iter() {
+			for checked in state.part.sente_checked_board.iter() {
 				let (_, ty) = checked.square_to_point();
 
 				let mask = if ty <= 1 {
@@ -3126,10 +3142,12 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
+				let mask = BitBoard { merged_bitboard: mask };
+
 				for p in (state.part.gote_kei_board & !state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
-					AS::append_fu_gote(state, 80 - p,
+					AS::append_fu_gote(state, p,
 									   BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									   move_builder, mvs)?;
 				}
@@ -3150,10 +3168,12 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.gote_fu_board & state.part.gote_nari_board & mask).reverse().iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.gote_kei_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
-					AS::append_gote(state, 80 - p,
+					AS::append_gote(state, p,
 									BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									move_builder, mvs)?;
 				}
@@ -3167,7 +3187,7 @@ impl EvasionsMoveGenerator {
 	pub fn generate_gin<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			for checked in state.part.sente_checked_board.iter() {
+			for checked in state.part.gote_checked_board.iter() {
 				let (_,ty) = checked.square_to_point();
 
 				let mask = if ty == 0 {
@@ -3186,11 +3206,13 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_gin_board & !state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_gin_board & !state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					AS::append_fu_sente(state, p,
-										BitBoard { merged_bitboard: 1 << (checked + 1) },
+										BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 										move_builder, mvs)?;
 				}
 
@@ -3210,16 +3232,18 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_fu_board & !state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_fu_board & !state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					AS::append_fu_sente(state, p,
-										BitBoard { merged_bitboard: 1 << (checked + 1) },
+										BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 										move_builder, mvs)?;
 				}
 			}
 		} else {
-			for checked in state.part.gote_checked_board.iter() {
+			for checked in state.part.sente_checked_board.iter() {
 				let (_, ty) = checked.square_to_point();
 
 				let mask = if ty == 0 {
@@ -3238,10 +3262,12 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
+				let mask = BitBoard { merged_bitboard: mask };
+
 				for p in (state.part.gote_gin_board & !state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
-					AS::append_fu_gote(state, 80 - p,
+					AS::append_fu_gote(state, p,
 									   BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									   move_builder, mvs)?;
 				}
@@ -3265,7 +3291,7 @@ impl EvasionsMoveGenerator {
 				for p in (state.part.gote_fu_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
-					AS::append_gote(state, 80 - p,
+					AS::append_gote(state, p,
 									BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									move_builder, mvs)?;
 				}
@@ -3279,7 +3305,7 @@ impl EvasionsMoveGenerator {
 	pub fn generate_kin<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												  -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			for checked in state.part.sente_checked_board.iter() {
+			for checked in state.part.gote_checked_board.iter() {
 				let (_,ty) = checked.square_to_point();
 
 				let mask = if ty == 0 {
@@ -3298,7 +3324,9 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_kin_board & !state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_kin_board & !state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					AS::append_fu_sente(state, p,
@@ -3307,7 +3335,7 @@ impl EvasionsMoveGenerator {
 				}
 			}
 		} else {
-			for checked in state.part.gote_checked_board.iter() {
+			for checked in state.part.sente_checked_board.iter() {
 				let (_, ty) = checked.square_to_point();
 
 				let mask = if ty == 0 {
@@ -3329,7 +3357,7 @@ impl EvasionsMoveGenerator {
 				for p in (state.part.gote_kin_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
-					AS::append_gote(state, 80 - p,
+					AS::append_gote(state, p,
 									BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									move_builder, mvs)?;
 				}
@@ -3350,9 +3378,9 @@ impl EvasionsMoveGenerator {
 							Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p as u32).reverse() |
 							Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p as u32).reverse();
 
-					if (1 << (checked + 1)) & b != 0 {
+					if (1 << (80 - checked + 1)) & b != 0 {
 						AS::append_sente(state, p as u32,
-											  BitBoard { merged_bitboard: 1 << (checked + 1) },
+											  BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 											  move_builder, mvs)?;
 					}
 				}
@@ -3375,16 +3403,18 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				for p in (state.part.sente_kaku_board & state.part.sente_nari_board & mask).iter() {
+				let mask = BitBoard { merged_bitboard: mask };
+
+				for p in (state.part.sente_kaku_board & state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
 
 					if 1 << (p + 1) & state.part.sente_nari_board != 0 {
 						AS::append_sente(state, p,
-										 BitBoard { merged_bitboard: 1 << (checked + 1) },
+										 BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 										 move_builder, mvs)?;
 					} else {
 						AS::append_sente_possible_promotion(state, p,
-															BitBoard { merged_bitboard: 1 << (checked + 1) },
+															BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 															move_builder, mvs)?;
 					}
 				}
@@ -3428,6 +3458,8 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
+				let mask = BitBoard { merged_bitboard: mask };
+
 				for p in (state.part.gote_kaku_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
@@ -3452,14 +3484,14 @@ impl EvasionsMoveGenerator {
 						Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p as u32) |
 						Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p as u32);
 
-					if (1 << (checked + 1)) & b != 0 {
+					if (1 << (80 - checked + 1)) & b != 0 {
 						if 1 << (1 + p) & state.part.sente_nari_board != 0 {
 							AS::append_sente(state, p as u32,
-											 BitBoard { merged_bitboard: 1 << (checked + 1) },
+											 BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 											 move_builder, mvs)?;
 						} else {
 							AS::append_sente_possible_promotion(state, p as u32,
-											 BitBoard { merged_bitboard: 1 << (checked + 1) },
+											 BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 											 move_builder, mvs)?;
 						}
 					}
@@ -3487,7 +3519,7 @@ impl EvasionsMoveGenerator {
 					let p = p as u32;
 
 					AS::append_sente(state, p as u32,
-									 BitBoard { merged_bitboard: 1 << (checked + 1) },
+									 BitBoard { merged_bitboard: 1 << (80 - checked + 1) },
 									 move_builder, mvs)?;
 				}
 			}
@@ -3501,11 +3533,11 @@ impl EvasionsMoveGenerator {
 
 					if (1 << (checked + 1)) & b != 0 {
 						if 1 << (80 - p + 1) & state.part.gote_nari_board != 0 {
-							AS::append_gote(state, p as u32,
+							AS::append_gote(state, 80 - p as u32,
 												  BitBoard { merged_bitboard: 1 << (checked + 1) },
 												  move_builder, mvs)?;
 						} else {
-							AS::append_gote_possible_promotion(state, p as u32,
+							AS::append_gote_possible_promotion(state, 80 - p as u32,
 												  BitBoard { merged_bitboard: 1 << (checked + 1) },
 												  move_builder, mvs)?;
 						}
@@ -3678,7 +3710,7 @@ impl EvasionsMoveGenerator {
 			for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
 				let p = p as u32;
 
-				AS::append_sente(state, p,
+				AS::append_gote(state, p,
 								 Rule::gen_candidate_bits(teban, state.part.gote_self_board, 80 - p, GOu).reverse() & !control,
 								 move_builder, mvs)?;
 			}
