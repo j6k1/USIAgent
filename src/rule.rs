@@ -2860,6 +2860,229 @@ impl EvasionsMoveGenerator {
 	}
 
 	#[inline]
+	pub fn gen_longcontrol_mask(teban: Teban, state: &State) -> BitBoard {
+		let mut mask = BitBoard { merged_bitboard: 0 };
+
+		if teban == Teban::Sente {
+			for checked in (state.part.gote_checked_board.reverse() & state.part.gote_kyou_board).iter() {
+				mask |= Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					80 - checked as u32).reverse();
+			}
+
+			for checked in (state.part.gote_checked_board.reverse() & state.part.gote_kaku_board).iter() {
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					checked as u32);
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+						state.part.sente_self_board,
+						state.part.sente_opponent_board,
+						state.part.sente_self_board,
+						checked as u32
+				);
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					80 - checked as u32
+				);
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					80 - checked as u32
+				);
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+			}
+
+			for checked in (state.part.gote_checked_board.reverse() & state.part.gote_hisha_board).iter() {
+				let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					80 - checked as u32
+				).reverse();
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					80 - checked as u32
+				).reverse();
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					checked as u32
+				);
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					checked as u32
+				);
+
+				if b & state.part.sente_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+			}
+		} else {
+			for checked in (state.part.sente_checked_board & state.part.gote_kyou_board).iter() {
+				mask |= Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					checked as u32);
+			}
+
+			for checked in (state.part.sente_checked_board & state.part.sente_kaku_board).iter() {
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					80 - checked as u32
+				).reverse();
+
+				if b & state.part.gote_opponent_ou_position_board != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					80 - checked as u32
+				).reverse();
+
+				if b & state.part.gote_opponent_ou_position_board != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					checked as u32
+				);
+
+				if b & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					checked as u32
+				);
+
+				if b & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+			}
+
+			for checked in (state.part.gote_checked_board.reverse() & state.part.gote_hisha_board).iter() {
+				let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					checked as u32
+				);
+
+				if b & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+					state.part.sente_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					checked as u32
+				);
+
+				if b & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					80 - checked as u32
+				).reverse();
+
+				if b & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+
+				let b = Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.gote_self_board,
+					80 - checked as u32
+				).reverse();
+
+				if b & state.part.gote_opponent_ou_position_board.reverse() != 0 {
+					mask |= b;
+					continue;
+				}
+			}
+		}
+
+		mask
+	}
+	#[inline]
 	pub fn generate_fu<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
