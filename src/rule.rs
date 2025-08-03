@@ -4915,6 +4915,7 @@ impl GenerateStrategy for EvasionsAll {
 				}
 			}
 		}
+
 		let move_builder = 		if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, unsafe {
 				state.part.sente_opponent_board.merged_bitboard
@@ -4939,6 +4940,19 @@ impl GenerateStrategy for EvasionsAll {
 
 	#[inline]
 	fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		match teban {
+			Teban::Sente => {
+				if state.part.gote_checked_board == 0 {
+					return Ok(());
+				}
+			},
+			Teban::Gote => {
+				if state.part.sente_checked_board == 0 {
+					return Ok(())
+				}
+			}
+		}
+
 		EvasionsMoveGenerator::generate_drop(teban,state,mc,mvs)
 	}
 
@@ -5046,6 +5060,19 @@ impl GenerateStrategy for Evasions {
 
 	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		match teban {
+			Teban::Sente => {
+				if state.part.gote_checked_board == 0 {
+					return Ok(());
+				}
+			},
+			Teban::Gote => {
+				if state.part.sente_checked_board == 0 {
+					return Ok(())
+				}
+			}
+		}
+
 		let move_builder = 		if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, unsafe {
 				state.part.sente_opponent_board.merged_bitboard
@@ -5070,6 +5097,19 @@ impl GenerateStrategy for Evasions {
 
 	#[inline]
 	fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		match teban {
+			Teban::Sente => {
+				if state.part.gote_checked_board == 0 {
+					return Ok(());
+				}
+			},
+			Teban::Gote => {
+				if state.part.sente_checked_board == 0 {
+					return Ok(())
+				}
+			}
+		}
+
 		EvasionsMoveGenerator::generate_drop(teban,state,mc,mvs)
 	}
 
