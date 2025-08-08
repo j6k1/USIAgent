@@ -1672,13 +1672,13 @@ const POSSIBLE_OU_CAPTURES_MASK_OF_SENTE:u128 = 0b000111111_000111111_000111011_
 const POSSIBLE_OU_CAPTURES_MASK_OF_GOTE:u128 = 0b000111111_000111111_000110111_000111111_000111111;
 const SENTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
 const GOTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
-const FU_REV_MASK:u128 = 0b000000000_000000001_000000000;
-const GIN_REV_MASK:u128 = 0b000000101_000000001_000000101;
-const KIN_REV_MASK:u128 = 0b000000011_000000101_000000011;
+const FU_REV_MASK:u128 = 0b000000000_000000100_000000000;
+const GIN_REV_MASK:u128 = 0b000000101_000000100_000000101;
+const KIN_REV_MASK:u128 = 0b000000110_000000101_000000110;
 const NARI_KAKU_REV_MASK:u128 = 0b000000010_000000101_000000010;
 const NARI_HISHA_REV_MASK:u128 = 0b000000101_000000000_000000101;
 const OU_REV_MASK:u128 = 0b000000111_000000101_000000111;
-const KEI_REV_MASK:u128 = 0b000000001_000000000_000000001;
+const KEI_REV_MASK:u128 = 0b000001000_000000000_000001000;
 const REV_MASK_EDGE_HIDE:u128 = 0b000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
 /// 左上を(0,0)とした平手初期局面
 pub const BANMEN_START_POS:Banmen = Banmen([
@@ -2873,15 +2873,15 @@ impl EvasionsMoveGenerator {
 					FU_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in ((state.part.sente_fu_board & !state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
@@ -2899,15 +2899,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in ((state.part.sente_fu_board & state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
@@ -2947,15 +2947,15 @@ impl EvasionsMoveGenerator {
 					FU_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.gote_fu_board & !state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
@@ -2973,15 +2973,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.gote_fu_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
@@ -3043,15 +3043,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in ((state.part.sente_kyou_board & state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
@@ -3095,15 +3095,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.gote_kyou_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
@@ -3148,7 +3148,7 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in ((state.part.sente_kei_board & !state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
@@ -3166,15 +3166,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in ((state.part.sente_kei_board & !state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
@@ -3220,7 +3220,7 @@ impl EvasionsMoveGenerator {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.gote_kei_board & !state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
@@ -3238,15 +3238,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.gote_kei_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
@@ -3294,15 +3294,15 @@ impl EvasionsMoveGenerator {
 					GIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in ((state.part.sente_gin_board & !state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
@@ -3320,15 +3320,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in ((state.part.sente_fu_board & !state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
@@ -3368,15 +3368,15 @@ impl EvasionsMoveGenerator {
 					GIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.gote_gin_board & !state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
@@ -3394,15 +3394,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				for p in (state.part.gote_fu_board & state.part.gote_nari_board & (mask << 1)).reverse().iter() {
+				for p in (state.part.gote_fu_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
 					AS::append_gote(state, 80 - p,
@@ -3448,15 +3448,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.sente_kin_board & mask.reverse()).iter() {
 					let p = p as u32;
@@ -3487,15 +3487,15 @@ impl EvasionsMoveGenerator {
 					KIN_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				for p in (state.part.gote_kin_board & state.part.gote_nari_board & (mask << 1)).reverse().iter() {
+				for p in (state.part.gote_kin_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
 					AS::append_gote(state, 80 - p,
@@ -3560,15 +3560,15 @@ impl EvasionsMoveGenerator {
 					NARI_KAKU_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.sente_kaku_board & state.part.sente_nari_board & mask.reverse()).iter() {
 					let p = p as u32;
@@ -3624,15 +3624,15 @@ impl EvasionsMoveGenerator {
 					NARI_KAKU_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				let mask = BitBoard { merged_bitboard: mask << 1 };
+				let mask = BitBoard { merged_bitboard: mask };
 
 				for p in (state.part.gote_kaku_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
@@ -3696,15 +3696,15 @@ impl EvasionsMoveGenerator {
 					NARI_HISHA_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				for p in ((state.part.sente_hisha_board & state.part.sente_nari_board).reverse() & (mask << 1)).reverse().iter() {
+				for p in ((state.part.sente_hisha_board & state.part.sente_nari_board).reverse() & mask).reverse().iter() {
 					let p = p as u32;
 
 					AS::append_sente(state, p as u32,
@@ -3758,15 +3758,15 @@ impl EvasionsMoveGenerator {
 					NARI_HISHA_REV_MASK
 				};
 
-				let mask = if checked < 10 {
-					mask >> (10 - checked as usize)
-				} else if checked > 10 {
-					mask << (checked as usize - 10)
+				let mask = if checked < 9 {
+					mask >> (9 - checked as usize)
+				} else if checked > 9 {
+					mask << (checked as usize - 9)
 				} else {
 					mask
 				};
 
-				for p in (state.part.gote_hisha_board & state.part.gote_nari_board & (mask << 1)).reverse().iter() {
+				for p in (state.part.gote_hisha_board & state.part.gote_nari_board & mask).reverse().iter() {
 					let p = p as u32;
 
 					AS::append_gote(state, 80 - p,
@@ -6359,13 +6359,13 @@ impl Rule {
 				check_mask_board
 			};
 
-			if p < 10 {
-				mask = mask >> (10 - p as u128);
-			} else if p > 10 {
-				mask = mask << (p as u128 - 10);
+			if p < 9 {
+				mask = mask >> (9 - p as u128);
+			} else if p > 9 {
+				mask = mask << (p as u128 - 9);
 			}
 
-			candidate_bits & (mask << 1)
+			candidate_bits & mask
 		} else {
 			BitBoard { merged_bitboard: 0 }
 		}
@@ -6387,18 +6387,19 @@ impl Rule {
 		if let Some(p) = ou_position_board.iter().next() {
 			let (_,y) = p.square_to_point();
 
-			let mut mask = if y <= 1 {
-				KEI_REV_MASK & !REV_MASK_EDGE_HIDE
+			let mut mask = if y >= 7 {
+				KEI_REV_MASK & !(REV_MASK_EDGE_HIDE << 2)
 			} else {
 				KEI_REV_MASK
 			};
 
-			if p < 11 {
-				mask = mask >> (11 - p as u128);
-			} else if p > 11 {
-				mask = mask << (p as u128 - 11);
+			if p < 9 {
+				mask = mask >> (9 - p as u128);
+			} else if p > 9 {
+				mask = mask << (p as u128 - 9);
 			}
-			candidate_bits & (mask << 1)
+
+			candidate_bits & mask
 		} else {
 			BitBoard { merged_bitboard: 0 }
 		}
