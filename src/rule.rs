@@ -6,7 +6,6 @@ use std::fmt::{Formatter};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Shl, Shr, Sub};
 use std::ops::Not;
 use std::convert::TryFrom;
-use std::ptr::replace;
 use chrono::Local;
 use bits::pop_lsb;
 
@@ -2864,25 +2863,7 @@ impl EvasionsMoveGenerator {
 												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for checked in state.part.gote_checked_board.reverse().iter() {
-				let (_,ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					FU_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					FU_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					FU_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: FU_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_fu_board & !state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -2901,23 +2882,7 @@ impl EvasionsMoveGenerator {
 									 move_builder, mvs)?;
 				}
 
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_fu_board & state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -2938,25 +2903,7 @@ impl EvasionsMoveGenerator {
 			}
 		} else {
 			for checked in state.part.sente_checked_board.reverse().iter() {
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					FU_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					FU_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					FU_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: FU_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_fu_board & !state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -2975,23 +2922,7 @@ impl EvasionsMoveGenerator {
 									move_builder, mvs)?;
 				}
 
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_fu_board & state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3035,25 +2966,7 @@ impl EvasionsMoveGenerator {
 										  move_builder, mvs)?;
 				}
 
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_kyou_board & state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -3087,25 +3000,7 @@ impl EvasionsMoveGenerator {
 										 move_builder, mvs)?;
 				}
 
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_kyou_board & state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3134,23 +3029,7 @@ impl EvasionsMoveGenerator {
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for checked in state.part.gote_checked_board.reverse().iter() {
-				let (_,ty) = checked.square_to_point();
-
-				let mask = if ty <= 1 {
-					KEI_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else {
-					KEI_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_kei_rev_mask(checked as u32);
 
 				for p in (state.part.sente_kei_board & !state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -3169,23 +3048,7 @@ impl EvasionsMoveGenerator {
 										 move_builder, mvs)?;
 				}
 
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_kei_board & state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -3206,23 +3069,7 @@ impl EvasionsMoveGenerator {
 			}
 		} else {
 			for checked in state.part.sente_checked_board.reverse().iter() {
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty <= 1 {
-					KEI_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else {
-					KEI_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_kei_rev_mask(checked as u32);
 
 				for p in (state.part.gote_kei_board & !state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3241,23 +3088,7 @@ impl EvasionsMoveGenerator {
 										move_builder, mvs)?;
 				}
 
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_kei_board & state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3286,25 +3117,7 @@ impl EvasionsMoveGenerator {
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for checked in state.part.gote_checked_board.reverse().iter() {
-				let (_,ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					GIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					GIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					GIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: GIN_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_gin_board & !state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -3323,23 +3136,7 @@ impl EvasionsMoveGenerator {
 									 move_builder, mvs)?;
 				}
 
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_gin_board & state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -3360,25 +3157,7 @@ impl EvasionsMoveGenerator {
 			}
 		} else {
 			for checked in state.part.sente_checked_board.reverse().iter() {
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					GIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					GIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					GIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: GIN_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_gin_board & !state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3397,23 +3176,7 @@ impl EvasionsMoveGenerator {
 									move_builder, mvs)?;
 				}
 
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_gin_board & state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3442,25 +3205,7 @@ impl EvasionsMoveGenerator {
 												  -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			for checked in state.part.gote_checked_board.reverse().iter() {
-				let (_,ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_kin_board & mask).iter() {
 					let p = p as u32;
@@ -3481,25 +3226,7 @@ impl EvasionsMoveGenerator {
 			}
 		} else {
 			for checked in state.part.sente_checked_board.reverse().iter() {
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					KIN_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					KIN_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: KIN_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_kin_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3559,25 +3286,7 @@ impl EvasionsMoveGenerator {
 					}
 				}
 
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					NARI_KAKU_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					NARI_KAKU_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					NARI_KAKU_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: NARI_KAKU_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_kaku_board & state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -3627,25 +3336,7 @@ impl EvasionsMoveGenerator {
 					}
 				}
 
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					NARI_KAKU_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					NARI_KAKU_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					NARI_KAKU_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: NARI_KAKU_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_kaku_board & state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -3703,23 +3394,7 @@ impl EvasionsMoveGenerator {
 					}
 				}
 
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					NARI_HISHA_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					NARI_HISHA_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					NARI_HISHA_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: NARI_HISHA_REV_MASK },checked as u32);
 
 				for p in (state.part.sente_hisha_board & state.part.sente_nari_board & mask).iter() {
 					let p = p as u32;
@@ -3769,25 +3444,7 @@ impl EvasionsMoveGenerator {
 					}
 				}
 
-				let (_, ty) = checked.square_to_point();
-
-				let mask = if ty == 0 {
-					NARI_HISHA_REV_MASK & !REV_MASK_EDGE_HIDE
-				} else if ty == 8 {
-					NARI_HISHA_REV_MASK & !REV_MASK_EDGE_HIDE << 2
-				} else {
-					NARI_HISHA_REV_MASK
-				};
-
-				let mask = if checked < 9 {
-					mask >> (9 - checked as usize)
-				} else if checked > 9 {
-					mask << (checked as usize - 9)
-				} else {
-					mask
-				};
-
-				let mask = BitBoard { merged_bitboard: mask };
+				let mask = Rule::adjust_rev_mask(BitBoard { merged_bitboard: NARI_HISHA_REV_MASK },checked as u32);
 
 				for p in (state.part.gote_hisha_board & state.part.gote_nari_board & mask.reverse()).reverse().iter() {
 					let p = p as u32;
@@ -6346,6 +6003,64 @@ impl Rule {
 		BitBoard { merged_bitboard: 0 }
 	}
 
+	/// 盤面上の逆向きの効きを現すビットボードの位置を調整
+	///
+	/// # Arguments
+	/// * `mask` - 逆向きの効きのマスク
+	/// * `p` - 逆向きの効きのかかる位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn adjust_rev_mask(
+		mask:BitBoard,
+		p:u32
+	) -> BitBoard {
+		let (_,y) = p.square_to_point();
+
+		let mut mask = if y == 0 {
+			mask & !REV_MASK_EDGE_HIDE
+		} else if y == 8 {
+			mask & !REV_MASK_EDGE_HIDE << 2
+		} else {
+			mask
+		};
+
+		if p < 9 {
+			mask = mask >> (9 - p as u128);
+		} else if p > 9 {
+			mask = mask << (p as u128 - 9);
+		}
+
+		mask
+	}
+
+	/// 盤面上の桂馬からの逆向きの効きを現すビットボードの位置を調整
+	///
+	/// # Arguments
+	/// * `p` - 逆向きの効きのかかる位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn adjust_kei_rev_mask(
+		p:u32
+	) -> BitBoard {
+		let (_,y) = p.square_to_point();
+
+		let mut mask = if y >= 7 {
+			KEI_REV_MASK & !(REV_MASK_EDGE_HIDE << 3)
+		} else {
+			KEI_REV_MASK
+		};
+
+		if p < 9 {
+			mask = mask >> (9 - p as u128);
+		} else if p > 9 {
+			mask = mask << (p as u128 - 9);
+		}
+
+		BitBoard { merged_bitboard: mask }
+	}
+
 	/// 盤面上で王手をかける合法手をビットボードに列挙
 	///
 	/// # Arguments
@@ -6362,21 +6077,7 @@ impl Rule {
 		candidate_bits:BitBoard,
 	) -> BitBoard {
 		if let Some(p) = ou_position_board.iter().next() {
-			let (_,y) = p.square_to_point();
-
-			let mut mask = if y == 0 {
-				check_mask_board & !REV_MASK_EDGE_HIDE
-			} else if y == 8 {
-				check_mask_board & !REV_MASK_EDGE_HIDE << 2
-			} else {
-				check_mask_board
-			};
-
-			if p < 9 {
-				mask = mask >> (9 - p as u128);
-			} else if p > 9 {
-				mask = mask << (p as u128 - 9);
-			}
+			let mask = Rule::adjust_rev_mask(check_mask_board,p as u32);
 
 			candidate_bits & mask
 		} else {
@@ -6398,19 +6099,7 @@ impl Rule {
 		candidate_bits:BitBoard,
 	) -> BitBoard {
 		if let Some(p) = ou_position_board.iter().next() {
-			let (_,y) = p.square_to_point();
-
-			let mut mask = if y >= 7 {
-				KEI_REV_MASK & !(REV_MASK_EDGE_HIDE << 2)
-			} else {
-				KEI_REV_MASK
-			};
-
-			if p < 9 {
-				mask = mask >> (9 - p as u128);
-			} else if p > 9 {
-				mask = mask << (p as u128 - 9);
-			}
+			let mask = Rule::adjust_kei_rev_mask(p as u32);
 
 			candidate_bits & mask
 		} else {
