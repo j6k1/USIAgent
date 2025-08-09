@@ -3946,8 +3946,7 @@ impl EvasionsMoveGenerator {
 				) &	BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1);
 
 				for p in (candidate_bitboard &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.gote_opponent_ou_position_board)).reverse().iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					if state.part.sente_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
 						!Rule::is_put_fu_and_mate_sente(state,p as u32) {
 						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
@@ -3968,8 +3967,7 @@ impl EvasionsMoveGenerator {
 				) & BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1);
 
 				for p in (candidate_bitboard &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.sente_opponent_ou_position_board).reverse()).iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					if state.part.gote_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
 						!Rule::is_put_fu_and_mate_gote(state,80 - p as u32) {
 						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, 80 - p as u32))).unwrap();
@@ -3994,8 +3992,7 @@ impl EvasionsMoveGenerator {
 				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
 
 				for p in (candidate_bitboard &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.gote_opponent_ou_position_board).reverse()).iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
 				}
 			}
@@ -4009,8 +4006,7 @@ impl EvasionsMoveGenerator {
 				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
 
 				for p in (candidate_bitboard &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.sente_opponent_ou_position_board).reverse()).iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					let p = 80 - p;
 
 					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
@@ -4034,8 +4030,7 @@ impl EvasionsMoveGenerator {
 				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
 
 				for p in (candidate_bitboard &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.gote_opponent_ou_position_board)).reverse().iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
 				}
 			}
@@ -4049,8 +4044,7 @@ impl EvasionsMoveGenerator {
 				let candidate_bitboard = BitBoard { merged_bitboard: candidate_bitboard };
 
 				for p in (candidate_bitboard &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.sente_opponent_ou_position_board).reverse()).iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					let p = 80 - p;
 
 					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
@@ -4074,8 +4068,7 @@ impl EvasionsMoveGenerator {
 				};
 
 				for p in ((*shared_candidatebits) &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.gote_opponent_ou_position_board)).reverse().iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
 				}
 			}
@@ -4088,8 +4081,7 @@ impl EvasionsMoveGenerator {
 				};
 
 				for p in ((*shared_candidatebits) &
-					(Rule::gen_longcontrol_mask(teban.opposite(),state) &
-					 !state.part.sente_opponent_ou_position_board).reverse()).iter() {
+					Rule::gen_longcontrol_mask(teban.opposite(),state).reverse()).iter() {
 					let p = 80 - p;
 					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
 				}
