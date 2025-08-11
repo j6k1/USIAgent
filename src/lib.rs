@@ -1110,8 +1110,6 @@ impl<T,E> UsiAgent<T,E>
 					String::from("Failed to acquire exclusive lock of player object."))))?;
 		let system_event_queue = Arc::clone(&system_event_queue_arc);
 
-		let delay = time::Duration::from_millis(50);
-
 		let quit_ready = quit_ready_arc.clone();
 
 		let on_error_handler = on_error_handler_arc.clone();
@@ -1123,7 +1121,6 @@ impl<T,E> UsiAgent<T,E>
 					on_error_handler.lock().map(|h| h.call(e)).is_err()
 				}
 			};
-			thread::sleep(delay);
 		}
 
 		Ok(())
