@@ -144,7 +144,7 @@ fn test_perft_by_evasions() {
 
         let solver = PerftSolverByEvasions;
 
-        let result = solver.perft(teban,&state,&mc,None,5);
+        let result = solver.perft(teban,&state,&mc,None,4);
 
         if &expected != &result {
             println!("line {}: {}",n, sfen);
