@@ -8234,7 +8234,7 @@ fn test_legal_moves_all_gote() {
 }
 #[ignore]
 #[test]
-fn test_legal_moves_all_by_nonevasions_all_strategy() {
+fn test_generate_moves_all_by_nonevasions_all_strategy() {
 	let position_parser = PositionParser::new();
 
 	let mut rng = rand::thread_rng();
@@ -8262,7 +8262,7 @@ fn test_legal_moves_all_by_nonevasions_all_strategy() {
 
 		let state = State::new(banmen);
 
-		Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(teban, &state, &mc, &mut buffer).unwrap();
+		Rule::generate_moves_all::<NonEvasionsAll>(teban, &state, &mc, &mut buffer).unwrap();
 
 		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
 
@@ -8281,7 +8281,7 @@ fn test_legal_moves_all_by_nonevasions_all_strategy() {
 }
 #[ignore]
 #[test]
-fn test_legal_moves_all_by_nonevasions_strategy() {
+fn test_generate_moves_all_by_nonevasions_strategy() {
 	let position_parser = PositionParser::new();
 
 	let mut rng = rand::thread_rng();
@@ -8309,7 +8309,7 @@ fn test_legal_moves_all_by_nonevasions_strategy() {
 
 		let state = State::new(banmen);
 
-		Rule::legal_moves_all_by_strategy::<NonEvasions>(teban, &state, &mc, &mut buffer).unwrap();
+		Rule::generate_moves_all::<NonEvasions>(teban, &state, &mc, &mut buffer).unwrap();
 
 		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
 
@@ -8328,7 +8328,7 @@ fn test_legal_moves_all_by_nonevasions_strategy() {
 }
 #[ignore]
 #[test]
-fn test_legal_moves_all_by_capture_or_pawn_promotions_strategy() {
+fn test_generate_moves_all_by_capture_or_pawn_promotions_strategy() {
 	let position_parser = PositionParser::new();
 
 	let mut rng = rand::thread_rng();
@@ -8356,7 +8356,7 @@ fn test_legal_moves_all_by_capture_or_pawn_promotions_strategy() {
 
 		let state = State::new(banmen);
 
-		Rule::legal_moves_all_by_strategy::<CaptureOrPawnPromotions>(teban, &state, &mc, &mut buffer).unwrap();
+		Rule::generate_moves_all::<CaptureOrPawnPromotions>(teban, &state, &mc, &mut buffer).unwrap();
 
 		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
 
@@ -8375,7 +8375,7 @@ fn test_legal_moves_all_by_capture_or_pawn_promotions_strategy() {
 }
 #[ignore]
 #[test]
-fn test_legal_moves_all_by_quiets_without_pawn_promotions_strategy() {
+fn test_generate_moves_all_by_quiets_without_pawn_promotions_strategy() {
 	let position_parser = PositionParser::new();
 
 	let mut rng = rand::thread_rng();
@@ -8403,7 +8403,7 @@ fn test_legal_moves_all_by_quiets_without_pawn_promotions_strategy() {
 
 		let state = State::new(banmen);
 
-		Rule::legal_moves_all_by_strategy::<QuietsWithoutPawnPromotions>(teban, &state, &mc, &mut buffer).unwrap();
+		Rule::generate_moves_all::<QuietsWithoutPawnPromotions>(teban, &state, &mc, &mut buffer).unwrap();
 
 		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
 
@@ -8422,7 +8422,7 @@ fn test_legal_moves_all_by_quiets_without_pawn_promotions_strategy() {
 }
 #[ignore]
 #[test]
-fn test_legal_moves_all_by_evasions_all_strategy() {
+fn test_generate_moves_all_by_evasions_all_strategy() {
 	let position_parser = PositionParser::new();
 
 	let mut rng = rand::thread_rng();
@@ -8450,7 +8450,7 @@ fn test_legal_moves_all_by_evasions_all_strategy() {
 
 		let state = State::new(banmen);
 
-		Rule::legal_moves_all_by_strategy::<EvasionsAll>(teban, &state, &mc, &mut buffer).unwrap();
+		Rule::generate_moves_all::<EvasionsAll>(teban, &state, &mc, &mut buffer).unwrap();
 
 		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
 
@@ -8469,7 +8469,7 @@ fn test_legal_moves_all_by_evasions_all_strategy() {
 }
 #[ignore]
 #[test]
-fn test_legal_moves_all_by_evasions_strategy() {
+fn test_generate_moves_all_by_evasions_strategy() {
 	let position_parser = PositionParser::new();
 
 	let mut rng = rand::thread_rng();
@@ -8497,7 +8497,7 @@ fn test_legal_moves_all_by_evasions_strategy() {
 
 		let state = State::new(banmen);
 
-		Rule::legal_moves_all_by_strategy::<Evasions>(teban, &state, &mc, &mut buffer).unwrap();
+		Rule::generate_moves_all::<Evasions>(teban, &state, &mc, &mut buffer).unwrap();
 
 		let mvs: Vec<usiagent::rule::LegalMove> = (&buffer).into();
 

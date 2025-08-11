@@ -74,7 +74,7 @@ fn test_is_mate_to_sente() {
 					}
 				}
 
-				assert!(Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+				assert!(Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 			}
 		}
 	}
@@ -130,7 +130,7 @@ fn test_is_mate_put_sente() {
 				}
 			}
 
-			assert!(Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -165,7 +165,7 @@ fn test_is_mate_with_kyou_sente() {
 		}
 	}
 
-	assert!(Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_kaku_2step_sente() {
@@ -227,7 +227,7 @@ fn test_is_mate_with_kaku_2step_sente() {
 				}
 			}
 
-			assert!(Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -291,7 +291,7 @@ fn test_is_mate_with_hisha_2step_sente() {
 				}
 			}
 
-			assert!(Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -364,7 +364,7 @@ fn test_is_mate_no_mate_to_sente() {
 					}
 				}
 
-				assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+				assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 			}
 		}
 	}
@@ -418,7 +418,7 @@ fn test_is_mate_no_mate_put_sente() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -444,7 +444,7 @@ fn test_is_mate_no_mate_with_kyou_occupied_self_sente() {
 		}
 	}
 
-	assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_no_mate_with_kaku_occupied_self_sente() {
@@ -494,7 +494,7 @@ fn test_is_mate_no_mate_with_kaku_occupied_self_sente() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -546,7 +546,7 @@ fn test_is_mate_no_mate_with_hisha_occupied_self_sente() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -572,7 +572,7 @@ fn test_is_mate_no_mate_with_kyou_occupied_opponent_sente() {
 		}
 	}
 
-	assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_no_mate_with_kaku_occupied_opponent_sente() {
@@ -622,7 +622,7 @@ fn test_is_mate_no_mate_with_kaku_occupied_opponent_sente() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -674,7 +674,7 @@ fn test_is_mate_no_mate_with_hisha_occupied_opponent_sente() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Sente,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Sente, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -747,7 +747,7 @@ fn test_is_mate_to_gote() {
 					}
 				}
 
-				assert!(Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+				assert!(Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 			}
 		}
 	}
@@ -803,7 +803,7 @@ fn test_is_mate_put_gote() {
 				}
 			}
 
-			assert!(Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -838,7 +838,7 @@ fn test_is_mate_with_kyou_gote() {
 		}
 	}
 
-	assert!(Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_kaku_2step_gote() {
@@ -900,7 +900,7 @@ fn test_is_mate_with_kaku_2step_gote() {
 				}
 			}
 
-			assert!(Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -964,7 +964,7 @@ fn test_is_mate_with_hisha_2step_gote() {
 				}
 			}
 
-			assert!(Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1037,7 +1037,7 @@ fn test_is_mate_no_mate_to_gote() {
 					}
 				}
 
-				assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+				assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 			}
 		}
 	}
@@ -1091,7 +1091,7 @@ fn test_is_mate_no_mate_put_gote() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1117,7 +1117,7 @@ fn test_is_mate_no_mate_with_kyou_occupied_self_gote() {
 		}
 	}
 
-	assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_no_mate_with_kaku_occupied_self_gote() {
@@ -1167,7 +1167,7 @@ fn test_is_mate_no_mate_with_kaku_occupied_self_gote() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1219,7 +1219,7 @@ fn test_is_mate_no_mate_with_hisha_occupied_self_gote() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1245,7 +1245,7 @@ fn test_is_mate_no_mate_with_kyou_occupied_opponent_gote() {
 		}
 	}
 
-	assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_no_mate_with_kaku_occupied_opponent_gote() {
@@ -1295,7 +1295,7 @@ fn test_is_mate_no_mate_with_kaku_occupied_opponent_gote() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1347,7 +1347,7 @@ fn test_is_mate_no_mate_with_hisha_occupied_opponent_gote() {
 				}
 			}
 
-			assert!(!Rule::is_mate(Teban::Gote,&state),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check(Teban::Gote, &state), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1386,8 +1386,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_with_kyou_sente() {
 
 	let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-	assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-						"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+			"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_partial_state_repeat_move_kinds_with_kaku_sente() {
@@ -1445,7 +1445,7 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_with_kaku_sente() {
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-			assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1505,7 +1505,7 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_with_hisha_sente() {
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-			assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1548,8 +1548,8 @@ fn test_is_mate_with_partial_state_repeat_move_put_sente() {
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-			assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1579,8 +1579,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kyou_occupied_
 
 	let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-	assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-						"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+			"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_self_sente() {
@@ -1626,8 +1626,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1675,8 +1675,8 @@ fn test_apply_move_to_partial_state_none_check_no_mate_with_hisha_occupied_self_
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1706,8 +1706,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kyou_occupied_
 
 	let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-	assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-						"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+			"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_opponent_sente() {
@@ -1753,8 +1753,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1802,8 +1802,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_hisha_occupied
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Sente,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Sente, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1842,8 +1842,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_with_kyou_gote() {
 
 	let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-	assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-						"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+			"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_partial_state_repeat_move_kinds_with_kaku_gote() {
@@ -1901,7 +1901,7 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_with_kaku_gote() {
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-			assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -1961,7 +1961,7 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_with_hisha_gote() {
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-			assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps), "assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -2004,8 +2004,8 @@ fn test_is_mate_with_partial_state_repeat_move_put_gote() {
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-			assert!(Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -2035,8 +2035,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kyou_occupied_
 
 	let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-	assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-						"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+			"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_self_gote() {
@@ -2082,8 +2082,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -2113,8 +2113,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kyou_occupied_
 
 	let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-	assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-						"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+	assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+			"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 }
 #[test]
 fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_opponent_gote() {
@@ -2160,8 +2160,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_kaku_occupied_
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -2209,8 +2209,8 @@ fn test_is_mate_with_partial_state_repeat_move_kinds_no_mate_with_hisha_occupied
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }
@@ -2263,7 +2263,7 @@ fn test_is_mate_with_partial_state_and_old_banmen_and_opponent_move_sente() {
 		let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,m.to_applied_move());
 
 		assert_eq!(*answer,
-					Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(
+					Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(
 						Teban::Sente,state.get_banmen(),&ps,m.to_applied_move()));
 	}
 }
@@ -2316,7 +2316,7 @@ fn test_is_mate_with_partial_state_and_old_banmen_and_opponent_move_gote() {
 		let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Sente,&mc,m.to_applied_move());
 
 		assert_eq!(*answer,
-					Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(
+					Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(
 						Teban::Gote,state.get_banmen(),&ps,m.to_applied_move()));
 	}
 }
@@ -2364,8 +2364,8 @@ fn test_apply_move_to_partial_state_none_check_no_mate_with_hisha_occupied_self_
 
 			let ps = Rule::apply_move_to_partial_state_none_check(&state,Teban::Gote,&mc,mv.to_applied_move());
 
-			assert!(!Rule::is_mate_with_partial_state_repeat_move_kinds(Teban::Gote,&ps),
-								"assertion failed, move = {:?}, {:?}",mv,state.get_banmen());
+			assert!(!Rule::in_check_with_partial_state_repeat_move_kinds(Teban::Gote, &ps),
+					"assertion failed, move = {:?}, {:?}", mv, state.get_banmen());
 		}
 	}
 }

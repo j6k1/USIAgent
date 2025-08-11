@@ -5790,6 +5790,13 @@ impl Rule {
 		BitBoard { merged_bitboard: board }
 	}
 
+	/// 盤面上の王に対する香車、飛車、角の駒の利きをビットボードに列挙
+	///
+	/// # Arguments
+	/// * `teban` - 手を列挙したい手番
+	/// * `state` - 盤面の状態
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_longcontrol_mask(teban: Teban, state: &State) -> BitBoard {
 		let mut mask = BitBoard { merged_bitboard: 0 };
@@ -7617,11 +7624,11 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::legal_moves_from_banmen_by_strategy::<NonEvasionsAll>(Teban::Sente,&state,&mut mvs).is_ok();
+	/// Rule::generate_moves_from_banmen::<NonEvasionsAll>(Teban::Sente,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	#[inline]
-	pub fn legal_moves_from_banmen_by_strategy<S: GenerateStrategy>(teban:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
+	pub fn generate_moves_from_banmen<S: GenerateStrategy>(teban:Teban, state:&State, mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
 		S::generate_piece(teban,state,mvs)
 	}
 	/// 手番と盤面の状態を元に合法手を生成してバッファに追加
@@ -7649,7 +7656,7 @@ impl Rule {
 	/// ```
 	#[inline]
 	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) {
-		Rule::legal_moves_from_banmen_by_strategy::<NonEvasionsAll>(t,state,mvs).unwrap();
+		Rule::generate_moves_from_banmen::<NonEvasionsAll>(t, state, mvs).unwrap();
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に駒を置く合法手を生成して返す
@@ -7699,11 +7706,11 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::legal_moves_from_mochigoma_by_strategy::<NonEvasionsAll>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
+	/// Rule::generate_moves_from_mochigoma::<NonEvasionsAll>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() == 0);
 	/// ```
 	#[inline]
-	pub fn legal_moves_from_mochigoma_by_strategy<S: GenerateStrategy>(
+	pub fn generate_moves_from_mochigoma<S: GenerateStrategy>(
 		teban:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) -> Result<(),LimitSizeError> {
 		S::generate_drop(teban,state,mc,mvs)
@@ -7734,7 +7741,7 @@ impl Rule {
 	pub fn legal_moves_from_mochigoma_with_buffer(
 		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) {
-		Rule::legal_moves_from_mochigoma_by_strategy::<NonEvasionsAll>(t,mc,state,mvs).unwrap();
+		Rule::generate_moves_from_mochigoma::<NonEvasionsAll>(t, mc, state, mvs).unwrap();
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に合法手を生成してMovePickerへ格納する
@@ -7760,17 +7767,17 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	///
-	/// Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
+	/// Rule::generate_moves_all::<NonEvasionsAll>(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	#[inline]
-	pub fn legal_moves_all_by_strategy<S: GenerateStrategy>(t:Teban,
-									   state:&State,
-									   mc:&MochigomaCollections,
-									   mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
+	pub fn generate_moves_all<S: GenerateStrategy>(t:Teban,
+												   state:&State,
+												   mc:&MochigomaCollections,
+												   mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
 		mvs.reset();
-		Rule::legal_moves_from_banmen_by_strategy::<S>(t, state, mvs)?;
-		Rule::legal_moves_from_mochigoma_by_strategy::<S>(t, mc, state, mvs)?;
+		Rule::generate_moves_from_banmen::<S>(t, state, mvs)?;
+		Rule::generate_moves_from_mochigoma::<S>(t, mc, state, mvs)?;
 
 		Ok(())
 	}
@@ -7796,7 +7803,7 @@ impl Rule {
 		let seed = Local::now().timestamp();
 		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
-		Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(t,state,mc,&mut mvs).unwrap();
+		Rule::generate_moves_all::<NonEvasionsAll>(t, state, mc, &mut mvs).unwrap();
 
 		mvs.into()
 	}
@@ -7832,7 +7839,7 @@ impl Rule {
 									   state:&State,
 									   mc:&MochigomaCollections,
 									   mvs:&mut impl MovePicker<LegalMove>) {
-		Rule::legal_moves_all_by_strategy::<NonEvasionsAll>(t,state,mc,mvs).unwrap()
+		Rule::generate_moves_all::<NonEvasionsAll>(t, state, mc, mvs).unwrap()
 	}
 
 	/// 王を取る手のうち一マスだけ駒を動かす手を返す
@@ -8558,11 +8565,11 @@ impl Rule {
 							kind
 						};
 
-						if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
+						if Rule::in_check_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
 							return true;
 						}
 
-						if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
+						if Rule::in_check_with_partial_state_repeat_move_kinds(t, &ps) {
 							return true;
 						}
 
@@ -8618,11 +8625,11 @@ impl Rule {
 
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
-						if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
+						if Rule::in_check_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
 							return true;
 						}
 
-						if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
+						if Rule::in_check_with_partial_state_repeat_move_kinds(t, &ps) {
 							return true;
 						}
 
@@ -8658,13 +8665,13 @@ impl Rule {
 					AppliedMove::Put(m) => {
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
-						if Rule::is_mate_with_partial_state_and_from_and_kind(
+						if Rule::in_check_with_partial_state_and_from_and_kind(
 							t, &ps, m.dst(), KomaKind::from((t,m.kind()))
 						) {
 							return true;
 						}
 
-						if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
+						if Rule::in_check_with_partial_state_repeat_move_kinds(t, &ps) {
 							return true;
 						}
 
@@ -8728,11 +8735,11 @@ impl Rule {
 
 				let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
-				if Rule::is_mate_with_partial_state_and_from_and_kind(t, &ps, dst, kind) {
+				if Rule::in_check_with_partial_state_and_from_and_kind(t, &ps, dst, kind) {
 					return true;
 				}
 
-				if Rule::is_mate_with_partial_state_repeat_move_kinds(t, &ps) {
+				if Rule::in_check_with_partial_state_repeat_move_kinds(t, &ps) {
 					return true;
 				}
 
@@ -8767,7 +8774,7 @@ impl Rule {
 					mv => {
 						let mv = mv.to_applied_move();
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
-						!Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(
+						!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(
 							t.opposite(),&state.banmen,&ps,mv
 						)
 					}
@@ -10306,7 +10313,7 @@ impl Rule {
 						}
 					}
 
-					if Rule::is_mate(teban,&next) {
+					if Rule::in_check(teban, &next) {
 						match oute_kyokumen_map.get(teban, &mhash,&shash) {
 							Some(&c) => {
 								oute_kyokumen_map.insert(teban,mhash,shash,c+1);
@@ -10375,7 +10382,7 @@ impl Rule {
 	/// `State`の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn is_nyugyoku_win(state:&State,t:Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
-		if Rule::is_mate(t.opposite(),state) {
+		if Rule::in_check(t.opposite(), state) {
 			return false
 		}
 
@@ -10558,7 +10565,7 @@ impl Rule {
 
 		let o = t.opposite();
 
-		if !Rule::is_mate(o, state) {
+		if !Rule::in_check(o, state) {
 			return Err(InvalidStateError(String::from(
 				"The argument m is not Move of oute."
 			)));
@@ -10566,7 +10573,7 @@ impl Rule {
 
 		let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, m);
 
-		Ok(!Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(o, &state.banmen, &ps, m))
+		Ok(!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(o, &state.banmen, &ps, m))
 	}
 
 	/// 先手の飛車、角、香車のいずれかの進路上にある駒が移動することで後手の王が飛車に取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
@@ -11331,7 +11338,7 @@ impl Rule {
 					}
 				}
 
-				let is_oute = Rule::is_mate_with_partial_state_and_point_and_kind(teban,&state.part,dx,dy,kind);
+				let is_oute = Rule::in_check_with_partial_state_and_point_and_kind(teban, &state.part, dx, dy, kind);
 
 				is_oute && Rule::legal_moves_all(teban.opposite(), state, &mc).into_iter().filter(|m| {
 					match *m {
@@ -11339,7 +11346,7 @@ impl Rule {
 						m @ _ => {
 							let m = m.to_applied_move();
 							let ps = Rule::apply_move_to_partial_state_none_check(state, teban.opposite(), mc, m);
-							!Rule::is_mate_with_partial_state_and_old_banmen_and_opponent_move(teban,&state.banmen,&ps,m)
+							!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(teban, &state.banmen, &ps, m)
 						},
 					}
 				}).count() == 0
@@ -11382,37 +11389,26 @@ impl Rule {
 		}
 	}
 
-	/// 相手が詰んでいるか否かを返す
+	/// 手番側から王手がかかっているかを返す
 	///
 	/// # Arguments
 	/// * `t` - 手を列挙したい手番
 	/// * `state` - 盤面の状態
 	/// `State`が不正な場合の動作は未定義
 	#[inline]
-	pub fn is_mate(t:Teban,state:&State)
-		-> bool {
-
-		match &state.banmen {
-			&Banmen(ref kinds) => {
-				for y in 0..kinds.len() {
-					for x in 0..kinds[y].len() {
-						let (x,y) = match t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8 - x, 8 - y),
-						};
-						if Rule::is_mate_with_partial_state_and_point_and_kind(
-							t, &state.part, x as u32, y as u32, kinds[y as usize][x as usize]
-						) {
-							return true;
-						}
-					}
-				}
+	pub fn in_check(t:Teban, state:&State)
+					-> bool {
+		match t {
+			Teban::Sente => {
+				state.part.sente_checked_board != 0
+			},
+			Teban::Gote => {
+				state.part.gote_checked_board != 0
 			}
 		}
-		false
 	}
 
-	/// 相手が詰んでいるか否かビットボードと移動元座標と駒の種類から返す
+	/// 相手に王手をかけているかどうかをビットボードと移動元座標と駒の種類から返す
 	///
 	/// # Arguments
 	/// * `t` - 手を列挙したい手番
@@ -11422,13 +11418,13 @@ impl Rule {
 	/// * `kind` - 駒の種類
 	/// 引数が不正な場合の動作は未定義
 	#[inline]
-	pub fn is_mate_with_partial_state_and_point_and_kind(t:Teban,ps:&PartialState,x:u32,y:u32,kind:KomaKind) -> bool {
+	pub fn in_check_with_partial_state_and_point_and_kind(t:Teban, ps:&PartialState, x:u32, y:u32, kind:KomaKind) -> bool {
 		let from = x * 9 + y;
 
-		Rule::is_mate_with_partial_state_and_from_and_kind(t,ps,from,kind)
+		Rule::in_check_with_partial_state_and_from_and_kind(t, ps, from, kind)
 	}
 
-	/// 相手が詰んでいるか否かビットボードと移動元座標(x*9+y)と駒の種類から返す
+	/// 相手に王をかけているか否かビットボードと移動元座標(x*9+y)と駒の種類から返す
 	///
 	/// # Arguments
 	/// * `t` - 手を列挙したい手番
@@ -11437,7 +11433,7 @@ impl Rule {
 	/// * `kind` - 駒の種類
 	/// 引数が不正な場合の動作は未定義
 	#[inline]
-	pub fn is_mate_with_partial_state_and_from_and_kind(t:Teban,ps:&PartialState,from:u32,kind:KomaKind) -> bool {
+	pub fn in_check_with_partial_state_and_from_and_kind(t:Teban, ps:&PartialState, from:u32, kind:KomaKind) -> bool {
 		let state = ps;
 
 		(match kind {
@@ -11511,20 +11507,20 @@ impl Rule {
 		}).is_some()
 	}
 
-	/// 相手が詰んでいるか否かビットボードから返す(香車、飛車、角のいずれかで詰むケースのみ)
+	/// 相手に王手をかけているか否かビットボードから返す(香車、飛車、角のいずれかで詰むケースのみ)
 	///
 	/// # Arguments
 	/// * `t` - 手を列挙したい手番
 	/// * `ps` - 盤面の状態を表すビットボード
 	/// `PartialState`が不正な場合の動作は未定義
 	#[inline]
-	pub fn is_mate_with_partial_state_repeat_move_kinds(t:Teban,ps:&PartialState) -> bool {
+	pub fn in_check_with_partial_state_repeat_move_kinds(t:Teban, ps:&PartialState) -> bool {
 		match t {
 			Teban::Sente => {
 				let bitboard = ps.sente_hisha_board;
 
 				for p in bitboard.iter() {
-					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, SHisha) {
+					if Rule::in_check_with_partial_state_and_from_and_kind(t, ps, p as u32, SHisha) {
 						return true;
 					}
 				}
@@ -11532,7 +11528,7 @@ impl Rule {
 				let bitboard = ps.sente_kaku_board;
 
 				for p in bitboard.iter() {
-					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, SKaku) {
+					if Rule::in_check_with_partial_state_and_from_and_kind(t, ps, p as u32, SKaku) {
 						return true;
 					}
 				}
@@ -11540,7 +11536,7 @@ impl Rule {
 				let bitboard = BitBoard { merged_bitboard: unsafe { ps.sente_kyou_board.merged_bitboard & !ps.sente_nari_board.merged_bitboard } };
 
 				for p in bitboard.iter() {
-					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, SKyou) {
+					if Rule::in_check_with_partial_state_and_from_and_kind(t, ps, p as u32, SKyou) {
 						return true;
 					}
 				}
@@ -11549,7 +11545,7 @@ impl Rule {
 				let bitboard = ps.gote_hisha_board;
 
 				for p in bitboard.iter() {
-					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, GHisha) {
+					if Rule::in_check_with_partial_state_and_from_and_kind(t, ps, p as u32, GHisha) {
 						return true;
 					}
 				}
@@ -11557,7 +11553,7 @@ impl Rule {
 				let bitboard = ps.gote_kaku_board;
 
 				for p in bitboard.iter() {
-					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, GKaku) {
+					if Rule::in_check_with_partial_state_and_from_and_kind(t, ps, p as u32, GKaku) {
 						return true;
 					}
 				}
@@ -11567,7 +11563,7 @@ impl Rule {
 				} };
 
 				for p in bitboard.iter() {
-					if Rule::is_mate_with_partial_state_and_from_and_kind(t, ps, p as u32, GKyou) {
+					if Rule::in_check_with_partial_state_and_from_and_kind(t, ps, p as u32, GKyou) {
 						return true;
 					}
 				}
@@ -11577,7 +11573,7 @@ impl Rule {
 		false
 	}
 
-	/// 相手の手番側が詰んでいるか否か手の適用後のビットボードと手の適用前の盤面と手番側の打った手から返す
+	/// 自分の手番が相手の手番に王手をかけているか否か手の適用後のビットボードと手の適用前の盤面と手番側の打った手から返す
 	///
 	/// # Arguments
 	/// * `t` - 手を列挙したい手番
@@ -11586,7 +11582,7 @@ impl Rule {
 	/// * `m` - 相手の手番側が打った手
 	/// 引数が不正な場合の動作は未定義
 	#[inline]
-	pub fn is_mate_with_partial_state_and_old_banmen_and_opponent_move(
+	pub fn in_check_with_partial_state_and_old_banmen_and_opponent_move(
 		t:Teban,banmen:&Banmen,ps:&PartialState,m:AppliedMove
 	) -> bool {
 		let from = match m {
@@ -11637,7 +11633,7 @@ impl Rule {
 							kinds[y as usize][x as usize]
 						};
 
-						if Rule::is_mate_with_partial_state_and_point_and_kind(
+						if Rule::in_check_with_partial_state_and_point_and_kind(
 							t, &ps, x as u32, y as u32, kind
 						) {
 							return true;
@@ -12357,7 +12353,7 @@ impl Rule {
 	pub fn update_sennichite_by_oute_map(state:&State,teban:Teban,mhash:u64,shash:u64,
 									oute_kyokumen_map:&mut KyokumenMap<u64,u32>) {
 
-		if Rule::is_mate(teban,state) {
+		if Rule::in_check(teban, state) {
 			let count = oute_kyokumen_map.get(teban, &mhash, &shash).map(|&c| c).unwrap_or(0);
 
 			oute_kyokumen_map.insert(teban, mhash, shash, count + 1);
@@ -12378,7 +12374,7 @@ impl Rule {
 									oute_kyokumen_map:&KyokumenMap<u64,u32>)
 		-> bool {
 
-		if Rule::is_mate(teban,state) {
+		if Rule::in_check(teban, state) {
 			let count = oute_kyokumen_map.get(teban, &mhash, &shash).map(|&c| c).unwrap_or(0);
 
 			count > 0

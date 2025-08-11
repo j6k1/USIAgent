@@ -773,8 +773,8 @@ impl<E> SelfMatchEngine<E>
 												break;
 											}
 
-											if Rule::is_mate(teban.opposite(),&state) {
-												if Rule::is_mate(teban.opposite(),&next) {
+											if Rule::in_check(teban.opposite(),&state) {
+												if Rule::in_check(teban.opposite(),&next) {
 													mvs.push(m);
 													kifu_writer(&sfen,&mvs.into_iter()
 																			.map(|m| m.to_move())
@@ -789,7 +789,7 @@ impl<E> SelfMatchEngine<E>
 													break;
 												}
 											} else {
-												if Rule::is_mate(teban.opposite(),&next) {
+												if Rule::in_check(teban.opposite(),&next) {
 													mvs.push(m);
 													kifu_writer(&sfen,&mvs.into_iter()
 																			.map(|m| m.to_move())
