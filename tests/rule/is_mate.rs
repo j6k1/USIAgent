@@ -204,7 +204,7 @@ fn test_is_mate_with_kaku_2step_sente() {
 
 			let mv = Move::To(KomaSrcPosition(9-4,3+1),KomaDstToPosition(9-4,4+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
 				(next,nmc,_) => {
 					state = next;
 					mc = nmc;
@@ -221,7 +221,7 @@ fn test_is_mate_with_kaku_2step_sente() {
 
 			let mv = Move::To(KomaSrcPosition(9-op.0,op.1+1),KomaDstToPosition(9-om.0,om.1+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
 				(next,_,_) => {
 					state = next;
 				}
@@ -268,7 +268,7 @@ fn test_is_mate_with_hisha_2step_sente() {
 
 			let mv = Move::To(KomaSrcPosition(9-4,3+1),KomaDstToPosition(9-4,4+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
 				(next,nmc,_) => {
 					state = next;
 					mc = nmc;
@@ -285,7 +285,7 @@ fn test_is_mate_with_hisha_2step_sente() {
 
 			let mv = Move::To(KomaSrcPosition(9-op.0,op.1+1),KomaDstToPosition(9-om.0,om.1+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
 				(next,_,_) => {
 					state = next;
 				}
@@ -877,7 +877,7 @@ fn test_is_mate_with_kaku_2step_gote() {
 
 			let mv = Move::To(KomaSrcPosition(9-(8-4),(8-3)+1),KomaDstToPosition(9-(8-4),(8-4)+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
 				(next,nmc,_) => {
 					state = next;
 					mc = nmc;
@@ -894,7 +894,7 @@ fn test_is_mate_with_kaku_2step_gote() {
 
 			let mv = Move::To(KomaSrcPosition(9-(8-op.0),(8-op.1)+1),KomaDstToPosition(9-(8-om.0),(8-om.1)+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
 				(next,_,_) => {
 					state = next;
 				}
@@ -941,7 +941,7 @@ fn test_is_mate_with_hisha_2step_gote() {
 
 			let mv = Move::To(KomaSrcPosition(9-(8-4),(8-3)+1),KomaDstToPosition(9-(8-4),(8-4)+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
 				(next,nmc,_) => {
 					state = next;
 					mc = nmc;
@@ -958,7 +958,7 @@ fn test_is_mate_with_hisha_2step_gote() {
 
 			let mv = Move::To(KomaSrcPosition(9-(8-op.0),(8-op.1)+1),KomaDstToPosition(9-(8-om.0),(8-om.1)+1,false));
 
-			match Rule::apply_move_none_check(&state,Teban::Gote,&mc,mv.to_applied_move()) {
+			match Rule::apply_move_none_check(&state,Teban::Sente,&mc,mv.to_applied_move()) {
 				(next,_,_) => {
 					state = next;
 				}
