@@ -15,6 +15,7 @@ mod is_oute_move;
 mod control;
 mod is_possible_nari;
 mod position;
+mod perft;
 
 use std::cmp;
 use std::collections::HashMap;
