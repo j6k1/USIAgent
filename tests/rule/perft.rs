@@ -183,10 +183,10 @@ fn test_perft() {
 
     for (n,(sfen,answer)) in BufReader::new(
         File::open(
-            Path::new("data").join("floodgate").join("generatemoves").join("kyokumen_sfen_uniq.txt")
+            Path::new("data").join("floodgate").join("generatemoves").join("perft_sfen.txt")
         ).unwrap()).lines().zip(BufReader::new(
         File::open(
-            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft_uniq.txt")
+            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft.txt")
         ).unwrap()).lines()).enumerate() {
 
         let expected = PerftResult::from(answer.unwrap());
@@ -215,10 +215,10 @@ fn test_perft_by_evasions() {
 
     for (n,(sfen,answer)) in BufReader::new(
         File::open(
-            Path::new("data").join("floodgate").join("generatemoves").join("kyokumen_sfen_uniq.txt")
+            Path::new("data").join("floodgate").join("generatemoves").join("perft_sfen.txt")
         ).unwrap()).lines().zip(BufReader::new(
         File::open(
-            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft_by_evasions_uniq.txt")
+            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft_by_evasions.txt")
         ).unwrap()).lines()).enumerate() {
 
         let expected = PerftResult::from(answer.unwrap());
