@@ -816,6 +816,15 @@ impl<'a,E> EventProvider<E> for &'a Receiver<E>
 		Ok(vec![self.recv()?].into_iter().chain(self.try_iter()).collect())
 	}
 }
+impl<'a,E> EventProvider<E> for &'a Arc<Receiver<E>>
+	where E: fmt::Debug + 'a {
+
+	type Error = RecvError;
+
+	fn provide(self) -> Result<Vec<E>, RecvError> {
+		self.deref().provide()
+	}
+}
 impl<'a,E,K> EventProvider<E> for &'a Arc<Mutex<EventQueue<E,K>>>
 	where E: MapEventKind<K> + fmt::Debug, K: fmt::Debug{
 

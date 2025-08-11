@@ -3,7 +3,7 @@ use std::error;
 use std::error::Error;
 use std::fmt;
 use std::io;
-use std::sync::MutexGuard;
+use std::sync::{mpsc, MutexGuard};
 use std::sync::PoisonError;
 use std::num::ParseIntError;
 
@@ -22,6 +22,8 @@ pub enum EventDispatchError<'a,T,K,E>
 	ErrorFromHandler(EventHandlerError<K,E>),
 	/// イベントキューの排他的ロックの取得に失敗した
 	MutexLockFailedError(PoisonError<MutexGuard<'a,T>>),
+	/// イベントの受信に失敗した
+	RecvError(mpsc::RecvError),
 	/// エラーが含まれる
 	ContainError,
 }
@@ -68,6 +70,7 @@ impl<'a,T,K,E> fmt::Display for EventDispatchError<'a,T,K,E>
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(_) => write!(f, "An error occurred while processing an event."),
 	 		EventDispatchError::MutexLockFailedError(_) => write!(f, "Could not get exclusive lock on object."),
+			EventDispatchError::RecvError(_) => write!(f, "An error occurred while receiving data."),
 	 		EventDispatchError::ContainError => write!(f, "One or more errors occurred while executing the event handler."),
 	 	}
 	 }
@@ -78,6 +81,7 @@ impl<'a,T,K,E> error::Error for EventDispatchError<'a,T,K,E>
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(_) => "An error occurred while processing an event.",
 	 		EventDispatchError::MutexLockFailedError(_) => "Could not get exclusive lock on object.",
+			EventDispatchError::RecvError(_) => "An error occurred while receiving data.",
 	 		EventDispatchError::ContainError => "Error executing event handler",
 	 	}
 	 }
@@ -86,6 +90,7 @@ impl<'a,T,K,E> error::Error for EventDispatchError<'a,T,K,E>
 	 	match *self {
 	 		EventDispatchError::ErrorFromHandler(ref e) => Some(e),
 	 		EventDispatchError::MutexLockFailedError(_) => None,
+			EventDispatchError::RecvError(ref e) => Some(e),
 	 		EventDispatchError::ContainError => None,
 	 	}
 	 }
@@ -100,6 +105,12 @@ impl<'a,T,K,E> From<EventHandlerError<K,E>> for EventDispatchError<'a,T,K,E>
 	where T: fmt::Debug, K: fmt::Debug, E: Error + fmt::Debug {
 	fn from(err: EventHandlerError<K,E>) -> EventDispatchError<'a,T,K,E> {
 		EventDispatchError::ErrorFromHandler(err)
+	}
+}
+impl<'a,T,K,E> From<mpsc::RecvError> for EventDispatchError<'a,T,K,E>
+	where T: fmt::Debug + 'a, K: fmt::Debug, E: Error + fmt::Debug {
+	fn from(err: mpsc::RecvError) -> EventDispatchError<'a,T,K,E> {
+		EventDispatchError::RecvError(err)
 	}
 }
 /// 状態不正

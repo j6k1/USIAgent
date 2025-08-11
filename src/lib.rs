@@ -37,6 +37,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::atomic::Ordering;
 use std::marker::Send;
 use std::marker::PhantomData;
+use std::sync::mpsc::{Receiver, Sender};
 
 use queuingtask::ThreadQueue;
 
@@ -130,16 +131,13 @@ impl OnAcceptMove {
 	/// * `system_event_queue` - システムイベントキュー
 	/// * `on_error_handler` - エラーハンドラー
 	pub fn notify<L>(&self,
-		system_event_queue:&Arc<Mutex<SystemEventQueue>>,
+		system_event_sender:Sender<SystemEvent>,
 		on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>) where L: Logger, Arc<Mutex<L>>: Send + 'static {
 		match *self {
 			OnAcceptMove::Some(m) => {
 				match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
-					Ok(cmd) => match system_event_queue.lock() {
-						Ok(mut system_event_queue) => {
-							system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-						},
-						Err(ref e) => {
+					Ok(cmd) => {
+						if let Err(ref e) = system_event_sender.send(SystemEvent::SendUsiCommand(cmd)) {
 							let _ = on_error_handler.lock().map(|h| h.call(e));
 						}
 					},
@@ -160,7 +158,8 @@ pub struct UsiAgent<T,E>
 			EventHandlerError<SystemEventKind, E>: From<E> {
 	player_error_type:PhantomData<E>,
 	player:Arc<Mutex<T>>,
-	system_event_queue:Arc<Mutex<SystemEventQueue>>,
+	system_event_sender:Sender<SystemEvent>,
+	system_event_queue:Arc<Receiver<SystemEvent>>,
 }
 impl<T,E> UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug + Send + 'static,
@@ -174,10 +173,12 @@ impl<T,E> UsiAgent<T,E>
 	where T: USIPlayer<E> + fmt::Debug,
 			Arc<Mutex<T>>: Send + 'static,
 			E: Error + fmt::Debug {
+		let (s,r) = mpsc::channel();
 		UsiAgent {
 			player_error_type:PhantomData::<E>,
 			player:Arc::new(Mutex::new(player)),
-			system_event_queue:Arc::new(Mutex::new(EventQueue::new())),
+			system_event_sender:s,
+			system_event_queue:Arc::new(r),
 		}
 	}
 
@@ -262,7 +263,7 @@ impl<T,E> UsiAgent<T,E>
 			OnAcceptMove: Send + 'static {
 		let writer_arc = Arc::new(Mutex::new(writer));
 
-		let system_event_queue_arc = self.system_event_queue.clone();
+		let system_event_queue_arc = Arc::clone(&self.system_event_queue);
 
 		let mut system_event_dispatcher:SystemEventDispatcher<UsiAgent<T,E>,E,L> = USIEventDispatcher::new(&on_error_handler_arc);
 
@@ -325,16 +326,11 @@ impl<T,E> UsiAgent<T,E>
 						outputs.push(UsiOutput::try_from(cmd)?);
 					}
 
-					match ctx.system_event_queue.lock() {
-						Ok(mut system_event_queue) => {
-							for cmd in outputs {
-								system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-							}
-						},
-						Err(ref e) => {
+					for cmd in outputs {
+						if let Err(ref e) = ctx.system_event_sender.send(SystemEvent::SendUsiCommand(cmd)) {
 							let _ = on_error_handler.lock().map(|h| h.call(e));
 						}
-					};
+					}
 					Ok(())
 				},
 				e => Err(EventHandlerError::InvalidState(e.event_kind())),
@@ -348,7 +344,7 @@ impl<T,E> UsiAgent<T,E>
 		system_event_dispatcher.add_handler(SystemEventKind::IsReady, move |ctx,e| {
 			match e {
 				&SystemEvent::IsReady => {
-					let system_event_queue = ctx.system_event_queue.clone();
+					let system_event_sender = ctx.system_event_sender.clone();
 					let on_error_handler_inner = on_error_handler.clone();
 					let player = ctx.player.clone();
 
@@ -368,14 +364,9 @@ impl<T,E> UsiAgent<T,E>
 										}
 										match UsiOutput::try_from(&UsiCommand::UsiReadyOk) {
 											Ok(cmd) => {
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => {
-														system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-													},
-													Err(ref e) => {
-														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-													}
-												};
+												if let Err(ref e) = system_event_sender.send(SystemEvent::SendUsiCommand(cmd)) {
+													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
+												}
 											},
 											Err(ref e) => {
 												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -577,7 +568,7 @@ impl<T,E> UsiAgent<T,E>
 					SystemEvent::Go(UsiGo::Go(ref opt @ UsiGoTimeLimit::Infinite)) => {
 
 					let player = ctx.player.clone();
-					let system_event_queue = ctx.system_event_queue.clone();
+					let system_event_sender = ctx.system_event_sender.clone();
 					let on_error_handler_inner = on_error_handler.clone();
 					let allow_immediate_move_inner = allow_immediate_move.clone();
 					let on_delay_move_handler_inner = on_delay_move_handler.clone();
@@ -646,13 +637,8 @@ impl<T,E> UsiAgent<T,E>
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(bm)) {
 											Ok(cmd) => {
 												if allow_immediate_move_inner.load(Ordering::Acquire) {
-													match system_event_queue.lock() {
-														Ok(mut system_event_queue) => {
-															system_event_queue.push(SystemEvent::SendUsiCommand(cmd));
-														},
-														Err(ref e) => {
-															let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-														}
+													if let Err(ref e) = system_event_sender.send(SystemEvent::SendUsiCommand(cmd)) {
+														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 													}
 												} else {
 													match on_delay_move_handler_inner.lock() {
@@ -693,7 +679,7 @@ impl<T,E> UsiAgent<T,E>
 					}
 				},
 				SystemEvent::Go(UsiGo::Go(ref opt)) => {
-					let system_event_queue = ctx.system_event_queue.clone();
+					let system_event_sender = ctx.system_event_sender.clone();
 					let on_error_handler_inner = on_error_handler.clone();
 					let player = ctx.player.clone();
 					let user_event_queue_inner = user_event_queue.clone();
@@ -745,12 +731,9 @@ impl<T,E> UsiAgent<T,E>
 
 										match UsiOutput::try_from(&UsiCommand::UsiBestMove(m)) {
 											Ok(cmd) => {
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
-													Err(ref e) => {
-														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-													}
-												};
+												if let Err(ref e) = system_event_sender.send(SystemEvent::SendUsiCommand(cmd)) {
+													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
+												}
 											},
 											Err(ref e) => {
 												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -780,7 +763,7 @@ impl<T,E> UsiAgent<T,E>
 					}
 				},
 				SystemEvent::Go(UsiGo::Mate(opt)) => {
-					let system_event_queue = ctx.system_event_queue.clone();
+					let system_event_sender = ctx.system_event_sender.clone();
 					let on_error_handler_inner = on_error_handler.clone();
 					let player = ctx.player.clone();
 					let user_event_queue_inner = user_event_queue.clone();
@@ -829,12 +812,9 @@ impl<T,E> UsiAgent<T,E>
 
 										match UsiOutput::try_from(&UsiCommand::UsiCheckMate(m)) {
 											Ok(cmd) => {
-												match system_event_queue.lock() {
-													Ok(mut system_event_queue) => system_event_queue.push(SystemEvent::SendUsiCommand(cmd)),
-													Err(ref e) => {
-														let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-													}
-												};
+												if let Err(ref e) = system_event_sender.send(SystemEvent::SendUsiCommand(cmd)) {
+													let _ = on_error_handler_inner.lock().map(|h| h.call(e));
+												}
 											},
 											Err(ref e) => {
 												let _ = on_error_handler_inner.lock().map(|h| h.call(e));
@@ -914,8 +894,8 @@ impl<T,E> UsiAgent<T,E>
 						mut g => {
 							match *g {
 								ref mut n @ OnAcceptMove::Some(_) => {
-									let system_event_queue = ctx.system_event_queue.clone();
-									n.notify(&system_event_queue,&on_error_handler);
+									let system_event_sender = ctx.system_event_sender.clone();
+									n.notify(system_event_sender,&on_error_handler);
 								},
 								OnAcceptMove::None => (),
 							};
@@ -958,8 +938,8 @@ impl<T,E> UsiAgent<T,E>
 						mut g => {
 							match *g {
 								ref mut n @ OnAcceptMove::Some(_) => {
-									let system_event_queue = ctx.system_event_queue.clone();
-									n.notify(&system_event_queue,&on_error_handler);
+									let system_event_sender = ctx.system_event_sender.clone();
+									n.notify(system_event_sender,&on_error_handler);
 								},
 								OnAcceptMove::None => (),
 							};
@@ -980,7 +960,7 @@ impl<T,E> UsiAgent<T,E>
 		system_event_dispatcher.add_handler(SystemEventKind::Quit, move |ctx,e| {
 			match e {
 				&SystemEvent::Quit => {
-					let system_event_queue = ctx.system_event_queue.clone();
+					let system_event_sender = ctx.system_event_sender.clone();
 					let on_error_handler_inner = on_error_handler.clone();
 					let player = ctx.player.clone();
 					let user_event_queue_inner = user_event_queue.clone();
@@ -1012,14 +992,9 @@ impl<T,E> UsiAgent<T,E>
 										let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 									}
 								};
-								match system_event_queue.lock() {
-									Ok(mut system_event_queue) => {
-										system_event_queue.push(SystemEvent::QuitReady);
-									},
-									Err(ref e) => {
-										let _ = on_error_handler_inner.lock().map(|h| h.call(e));
-									}
-								};
+								if let Err(ref e) = system_event_sender.send(SystemEvent::QuitReady) {
+									let _ = on_error_handler_inner.lock().map(|h| h.call(e));
+								}
 							}).map(|_| {
 								()
 							}).map_err(|_| {
@@ -1117,7 +1092,7 @@ impl<T,E> UsiAgent<T,E>
 
 		let player = self.player.clone();
 
-		let system_event_queue = system_event_queue_arc.clone();
+		let system_event_sender = self.system_event_sender.clone();
 
 		player.lock().map(|mut player| {
 			let option_kinds = match player.get_option_kinds() {
@@ -1127,13 +1102,13 @@ impl<T,E> UsiAgent<T,E>
 					return false;
 				}
 			};
-			interpreter.start(system_event_queue,reader,option_kinds,&logger);
+			interpreter.start(system_event_sender,reader,option_kinds,&logger);
 			true
 		}).or_else(|e| {
 			on_error_handler.lock().map(|h| h.call(&e))
 		}).or(Err(USIAgentStartupError::MutexLockFailedOtherError(
 					String::from("Failed to acquire exclusive lock of player object."))))?;
-		let system_event_queue = system_event_queue_arc.clone();
+		let system_event_queue = Arc::clone(&system_event_queue_arc);
 
 		let delay = time::Duration::from_millis(50);
 
@@ -1142,7 +1117,7 @@ impl<T,E> UsiAgent<T,E>
 		let on_error_handler = on_error_handler_arc.clone();
 
 		while !quit_ready.load(Ordering::Acquire) {
-			match system_event_dispatcher.dispatch_events(self, &*system_event_queue) {
+			match system_event_dispatcher.dispatch_events(self, &system_event_queue) {
 				Ok(_) => true,
 				Err(ref e) => {
 					on_error_handler.lock().map(|h| h.call(e)).is_err()
