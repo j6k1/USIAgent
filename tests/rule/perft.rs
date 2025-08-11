@@ -58,64 +58,7 @@ impl From<String> for PerftResult {
 trait PerftSolver {
     fn perft(&self,teban:Teban,state:&State,mc:&MochigomaCollections,m:Option<LegalMove>,depth:usize) -> PerftResult;
 }
-struct PerftSolverByNonEvasions;
 struct PerftSolverByEvasions;
-
-impl PerftSolver for PerftSolverByNonEvasions {
-    fn perft(&self,teban:Teban,state: &State, mc:&MochigomaCollections, m: Option<LegalMove>, depth: usize) -> PerftResult {
-        let mut result = PerftResult::default();
-
-        if depth == 0 {
-            result.nodes += 1;
-
-            match m {
-                Some(LegalMove::To(m)) => {
-                    if m.obtained().is_some() {
-                        result.captures += 1;
-                    }
-                    if m.is_nari() {
-                        result.promotions += 1;
-                    }
-                },
-                _ => ()
-            };
-
-            if Rule::in_check(teban.opposite(),state) {
-                result.checks += 1;
-
-                let mut rng = rand::thread_rng();
-                let mut rng = XorShiftRng::from_seed(rng.gen());
-
-                let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
-
-                Rule::generate_moves_all::<Evasions>(teban,state,mc,&mut buffer).unwrap();
-
-                if buffer.len() == 0 {
-                    result.mates += 1;
-                }
-            }
-        } else {
-            let mut rng = rand::thread_rng();
-            let mut rng = XorShiftRng::from_seed(rng.gen());
-
-            let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
-
-            Rule::generate_moves_all::<NonEvasionsAll>(teban,state,mc,&mut buffer).unwrap();
-
-            for m in buffer {
-                let next = Rule::apply_move_none_check(state, teban, mc, m.to_applied_move());
-
-                match next {
-                    (state, mc, _) => {
-                        result += self.perft(teban.opposite(),&state,&mc,Some(m),depth - 1);
-                    }
-                }
-            }
-        }
-
-        result
-    }
-}
 
 impl PerftSolver for PerftSolverByEvasions {
     fn perft(&self,teban:Teban,state: &State, mc:&MochigomaCollections, m: Option<LegalMove>, depth: usize) -> PerftResult {
@@ -167,45 +110,15 @@ impl PerftSolver for PerftSolverByEvasions {
 
                 match next {
                     (state, mc, _) => {
-                        result += self.perft(teban.opposite(),&state,&mc,Some(m),depth - 1);
+                        if !Rule::in_check(teban.opposite(),&state) {
+                            result += self.perft(teban.opposite(),&state,&mc,Some(m),depth - 1);
+                        }
                     }
                 }
             }
         }
 
         result
-    }
-}
-#[ignore]
-#[test]
-fn test_perft() {
-    let position_parser = PositionParser::new();
-
-    for (n,(sfen,answer)) in BufReader::new(
-        File::open(
-            Path::new("data").join("floodgate").join("generatemoves").join("perft_sfen.txt")
-        ).unwrap()).lines().zip(BufReader::new(
-        File::open(
-            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft.txt")
-        ).unwrap()).lines()).enumerate() {
-
-        let expected = PerftResult::from(answer.unwrap());
-
-        let sfen = format!("sfen {}",sfen.unwrap());
-
-        let (teban, banmen, mc, _, _) = position_parser.parse(&sfen.split(' ').collect::<Vec<&str>>()).unwrap().extract();
-
-        let state = State::new(banmen);
-
-        let solver = PerftSolverByNonEvasions;
-
-        let result = solver.perft(teban,&state,&mc,None,7);
-
-        if &expected != &result {
-            println!("line {}: {}",n, sfen);
-        }
-
-        assert_eq!(expected, result);
     }
 }
 #[ignore]
@@ -218,7 +131,7 @@ fn test_perft_by_evasions() {
             Path::new("data").join("floodgate").join("generatemoves").join("perft_sfen.txt")
         ).unwrap()).lines().zip(BufReader::new(
         File::open(
-            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft_by_evasions.txt")
+            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft.txt")
         ).unwrap()).lines()).enumerate() {
 
         let expected = PerftResult::from(answer.unwrap());
