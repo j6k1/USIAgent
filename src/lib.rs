@@ -28,7 +28,6 @@ pub mod bits;
 
 use std::error::Error;
 use std::fmt;
-use std::{thread,time};
 use std::convert::TryFrom;
 use std::time::Instant;
 use std::sync::{mpsc, Mutex};
