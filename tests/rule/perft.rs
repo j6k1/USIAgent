@@ -87,7 +87,7 @@ impl PerftSolver for PerftSolverByEvasions {
 
                 let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
 
-                Rule::generate_moves_all::<Evasions>(teban,state,mc,&mut buffer).unwrap();
+                Rule::generate_moves_all::<EvasionsAll>(teban,state,mc,&mut buffer).unwrap();
 
                 if buffer.len() == 0 {
                     result.mates += 1;
@@ -99,7 +99,7 @@ impl PerftSolver for PerftSolverByEvasions {
 
             let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
 
-            if Rule::in_check(teban,state) {
+            if Rule::in_check(teban.opposite(),state) {
                 Rule::generate_moves_all::<EvasionsAll>(teban,state,mc,&mut buffer).unwrap();
             } else {
                 Rule::generate_moves_all::<NonEvasionsAll>(teban,state,mc,&mut buffer).unwrap();
