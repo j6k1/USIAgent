@@ -6452,8 +6452,7 @@ impl Rule {
 		BitBoard { merged_bitboard: 0 }
 	}
 
-
-	/// pin駒の移動ににょってかかる角による王手のビットボードを生成
+	/// pin駒の移動にょってかかる角による王手のビットボードを生成
 	///
 	/// # Arguments
 	///
@@ -6536,7 +6535,7 @@ impl Rule {
 		BitBoard { merged_bitboard: 0 }
 	}
 
-	/// pin駒の移動ににょってかかる飛車による王手のビットボードを生成
+	/// pin駒の移動にょってかかる飛車による王手のビットボードを生成
 	///
 	/// # Arguments
 	///
@@ -6617,6 +6616,475 @@ impl Rule {
 		}
 
 		BitBoard { merged_bitboard: 0 }
+	}
+
+	/// pin駒の移動に伴って消滅する先手の香車の効きのビットボードを生成
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_check_removed_of_sente_kyou_by_new_pin(ps:&PartialState) -> BitBoard {
+		let mut r = BitBoard { merged_bitboard: 0 };
+
+		for p in (ps.sente_checked_board & ps.sente_kyou_board & !ps.sente_nari_board).iter() {
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				ps.gote_opponent_board,
+				ps.gote_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.sente_pin_board & b == 0 {
+				continue;
+			}
+
+			if let Some(pin) = (ps.sente_pin_board & b).iter().next() {
+				let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+					ps.gote_opponent_board,
+					ps.gote_self_board,
+					80 - pin as u32
+				).reverse();
+
+				if ps.sente_opponent_ou_position_board & b != 0 {
+					r |= 1 << (p + 1);
+				}
+			}
+		}
+
+		r
+	}
+
+
+	/// pin駒の移動に伴って消滅する先手の角の王に対する効きのビットボードを生成
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_check_removed_of_sente_kaku_by_new_pin(ps:&PartialState) -> BitBoard {
+		let mut r = BitBoard { merged_bitboard: 0 };
+
+		for p in (ps.sente_checked_board & ps.sente_kaku_board).iter() {
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+				ps.sente_self_board,
+				ps.sente_opponent_board,
+				p as u32
+			);
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = (ps.sente_pin_board).iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+						ps.sente_self_board,
+						ps.sente_opponent_board,
+						pin as u32
+					);
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+				ps.sente_self_board,
+				ps.sente_opponent_board,
+				p as u32
+			);
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+						ps.sente_self_board,
+						ps.sente_opponent_board,
+						pin as u32
+					);
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+				ps.gote_opponent_board,
+				ps.gote_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+						ps.gote_opponent_board,
+						ps.gote_self_board,
+						80 - pin as u32
+					).reverse();
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+				ps.gote_opponent_board,
+				ps.gote_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+						ps.gote_opponent_board,
+						ps.gote_self_board,
+						80 - pin as u32
+					).reverse();
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+		}
+
+		r
+	}
+
+
+	/// pin駒の移動に伴って消滅する先手の飛車の王に対する効きのビットボードを生成
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_check_removed_of_sente_hisha_by_new_pin(ps:&PartialState) -> BitBoard {
+		let mut r = BitBoard { merged_bitboard: 0 };
+
+		for p in (ps.sente_checked_board & ps.sente_hisha_board).iter() {
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				ps.sente_self_board,
+				ps.sente_opponent_board,
+				p as u32
+			);
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+						ps.sente_self_board,
+						ps.sente_opponent_board,
+						pin as u32
+					);
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+				ps.sente_self_board,
+				ps.sente_opponent_board,
+				p as u32
+			);
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+						ps.sente_self_board,
+						ps.sente_opponent_board,
+						pin as u32
+					);
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				ps.gote_opponent_board,
+				ps.gote_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+						ps.gote_opponent_board,
+						ps.gote_self_board,
+						80 - pin as u32
+					).reverse();
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+				ps.gote_opponent_board,
+				ps.gote_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.sente_pin_board & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+						ps.gote_opponent_board,
+						ps.gote_self_board,
+						80 - pin as u32
+					).reverse();
+
+					if ps.sente_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+		}
+
+		r
+	}
+
+
+	/// pin駒の移動に伴って消滅する先手の香車の後手の王に対する効きのビットボードを生成
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_check_removed_of_gote_kyou_by_new_pin(ps:&PartialState) -> BitBoard {
+		let mut r = BitBoard { merged_bitboard: 0 };
+
+		for p in (ps.gote_checked_board.reverse() & ps.gote_kyou_board & !ps.gote_nari_board).reverse().iter() {
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				ps.sente_opponent_board,
+				ps.sente_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.gote_pin_board.reverse() & b == 0 {
+				continue;
+			}
+
+			if let Some(pin) = (ps.gote_pin_board.reverse() & b).iter().next() {
+				let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+					ps.sente_opponent_board,
+					ps.sente_self_board,
+					80 - pin as u32
+				).reverse();
+
+				if ps.sente_opponent_ou_position_board & b != 0 {
+					r |= 1 << (p + 1);
+				}
+			}
+		}
+
+		r
+	}
+
+
+	/// pin駒の移動に伴って消滅する先手の角の王に対する効きのビットボードを生成
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_check_removed_of_gote_kaku_by_new_pin(ps:&PartialState) -> BitBoard {
+		let mut r = BitBoard { merged_bitboard: 0 };
+
+		for p in (ps.gote_checked_board.reverse() & ps.gote_kaku_board).reverse().iter() {
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+				ps.gote_self_board,
+				ps.gote_opponent_board,
+				p as u32
+			);
+
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.gote_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+						ps.gote_self_board,
+						ps.gote_opponent_board,
+						pin as u32
+					);
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+				ps.gote_self_board,
+				ps.gote_opponent_board,
+				p as u32
+			);
+
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.gote_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+						ps.gote_self_board,
+						ps.gote_opponent_board,
+						pin as u32
+					);
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+				ps.sente_opponent_board,
+				ps.sente_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.sente_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+						ps.sente_opponent_board,
+						ps.sente_self_board,
+						80 - pin as u32
+					).reverse();
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+				ps.sente_opponent_board,
+				ps.sente_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.sente_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.sente_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+						ps.sente_opponent_board,
+						ps.sente_self_board,
+						80 - pin as u32
+					).reverse();
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+		}
+
+		r
+	}
+
+
+	/// pin駒の移動に伴って消滅する先手の飛車の王に対する効きのビットボードを生成
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_check_removed_of_gote_hisha_by_new_pin(ps:&PartialState) -> BitBoard {
+		let mut r = BitBoard { merged_bitboard: 0 };
+
+		for p in (ps.gote_checked_board.reverse() & ps.gote_hisha_board).reverse().iter() {
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				ps.gote_self_board,
+				ps.gote_opponent_board,
+				p as u32
+			);
+
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.gote_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+						ps.gote_self_board,
+						ps.gote_opponent_board,
+						pin as u32
+					);
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+				ps.gote_self_board,
+				ps.gote_opponent_board,
+				p as u32
+			);
+
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.gote_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+						ps.gote_self_board,
+						ps.gote_opponent_board,
+						pin as u32
+					);
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				ps.sente_opponent_board,
+				ps.sente_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.gote_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+						ps.sente_opponent_board,
+						ps.sente_self_board,
+						80 - pin as u32
+					).reverse();
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+
+			let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+				ps.sente_opponent_board,
+				ps.sente_self_board,
+				80 - p as u32
+			).reverse();
+
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = ps.gote_pin_board.reverse().iter().next() {
+					let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
+						ps.sente_opponent_board,
+						ps.sente_self_board,
+						80 - pin as u32
+					);
+
+					if ps.gote_opponent_ou_position_board & b != 0 {
+						r |= 1 << (p + 1);
+						continue;
+					}
+				}
+			}
+		}
+
+		r
 	}
 
 	/// 合法手をバッファに追加
@@ -9086,6 +9554,8 @@ impl Rule {
 
 						if obtained {
 							let obtained_mask = !to_mask;
+							let inverse_obtained_mask = !inverse_to_mask;
+
 							let (ox,oy) = to.square_to_point();
 
 							let kind = kinds[oy as usize][ox as usize];
@@ -9098,7 +9568,7 @@ impl Rule {
 								};
 								ps.gote_opponent_board = BitBoard {
 									merged_bitboard: unsafe {
-										ps.gote_opponent_board.merged_bitboard & !inverse_to_mask
+										ps.gote_opponent_board.merged_bitboard & inverse_obtained_mask
 									}
 								};
 								ps.sente_nari_board = BitBoard {
@@ -9109,7 +9579,7 @@ impl Rule {
 							} else if kind < Blank {
 								ps.gote_self_board = BitBoard {
 									merged_bitboard: unsafe {
-										ps.gote_self_board.merged_bitboard & !inverse_to_mask
+										ps.gote_self_board.merged_bitboard & inverse_obtained_mask
 									}
 								};
 								ps.sente_opponent_board  = BitBoard {
@@ -9132,14 +9602,7 @@ impl Rule {
 										}
 									};
 								},
-								SKyou => {
-									ps.sente_kyou_board = unsafe {
-										BitBoard {
-											merged_bitboard: ps.sente_kyou_board.merged_bitboard & obtained_mask
-										}
-									};
-								},
-								SKyouN => {
+								SKyou | SKyouN => {
 									ps.sente_kyou_board = unsafe {
 										BitBoard {
 											merged_bitboard: ps.sente_kyou_board.merged_bitboard & obtained_mask
@@ -9184,7 +9647,7 @@ impl Rule {
 								SOu => {
 									ps.gote_opponent_ou_position_board = unsafe {
 										BitBoard {
-											merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & (inverse_from_mask | inverse_to_mask)
+											merged_bitboard: ps.gote_opponent_ou_position_board.merged_bitboard & inverse_obtained_mask
 										}
 									};
 								},
@@ -9195,14 +9658,7 @@ impl Rule {
 										}
 									};
 								},
-								GKyou => {
-									ps.gote_kyou_board = unsafe {
-										BitBoard {
-											merged_bitboard: ps.gote_kyou_board.merged_bitboard & obtained_mask
-										}
-									};
-								},
-								GKyouN => {
+								GKyou | GKyouN => {
 									ps.gote_kyou_board = unsafe {
 										BitBoard {
 											merged_bitboard: ps.gote_kyou_board.merged_bitboard & obtained_mask
@@ -9255,15 +9711,16 @@ impl Rule {
 							}
 						}
 
-						if from_mask & ps.sente_checked_board != 0 {
-							ps.sente_checked_board ^= BitBoard { merged_bitboard: from_mask };
-						}
-
-						if inverse_from_mask & ps.gote_checked_board != 0 {
-							ps.gote_checked_board ^= BitBoard { merged_bitboard: inverse_from_mask };
-						}
-
 						let mut b = BitBoard { merged_bitboard: 0 };
+
+						ps.sente_checked_board = ps.sente_checked_board & !from_mask;
+						ps.gote_checked_board = ps.gote_checked_board & !inverse_from_mask;
+
+						let kind = if nari {
+							kind.to_nari()
+						} else {
+							kind
+						};
 
 						match kind {
 							SFu => {
@@ -9364,10 +9821,10 @@ impl Rule {
 							},
 							SOu => {
 								b |= Rule::gen_candidate_bits_of_check(
-									ps.sente_opponent_ou_position_board,
+									ps.sente_opponent_ou_position_board.reverse(),
 									BitBoard { merged_bitboard: OU_REV_MASK },
-									BitBoard { merged_bitboard: to_mask }
-								);
+									BitBoard { merged_bitboard: inverse_to_mask }
+								).reverse();
 
 								ps.sente_checked_board |= b;
 								ps.init_gote_checked();
@@ -9385,7 +9842,7 @@ impl Rule {
 								b = Rule::gen_candidate_bits_of_check_by_kyou(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: inverse_to_mask },
-									ps.gote_opponent_board,ps.gote_self_board
+									ps.gote_self_board,ps.gote_opponent_board
 								);
 
 								ps.gote_checked_board |= b;
@@ -9470,10 +9927,10 @@ impl Rule {
 							},
 							GOu => {
 								b |= Rule::gen_candidate_bits_of_check(
-									ps.gote_opponent_ou_position_board,
+									ps.gote_opponent_ou_position_board.reverse(),
 									BitBoard { merged_bitboard: OU_REV_MASK },
-									BitBoard { merged_bitboard: inverse_to_mask }
-								);
+									BitBoard { merged_bitboard: to_mask }
+								).reverse();
 
 								ps.gote_checked_board |= b;
 								ps.init_sente_checked();
@@ -9878,7 +10335,7 @@ impl Rule {
 								let b = Rule::gen_candidate_bits_of_check_by_kyou(
 									ps.gote_opponent_ou_position_board,
 									BitBoard { merged_bitboard: inverse_to_mask },
-									ps.gote_opponent_board,ps.gote_self_board
+									ps.gote_self_board,ps.gote_opponent_board
 								);
 
 								ps.gote_checked_board |= b;
@@ -9936,6 +10393,14 @@ impl Rule {
 		}
 
 		ps.update_pin();
+		ps.sente_checked_board &= !(Rule::gen_check_removed_of_sente_kyou_by_new_pin(&ps) |
+									Rule::gen_check_removed_of_sente_kaku_by_new_pin(&ps) |
+									Rule::gen_check_removed_of_sente_hisha_by_new_pin(&ps));
+
+		ps.gote_checked_board &= !(Rule::gen_check_removed_of_gote_kyou_by_new_pin(&ps) |
+			Rule::gen_check_removed_of_gote_kaku_by_new_pin(&ps) |
+			Rule::gen_check_removed_of_gote_hisha_by_new_pin(&ps));
+
 		ps
 	}
 
