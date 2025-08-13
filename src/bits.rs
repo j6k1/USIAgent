@@ -1,9 +1,11 @@
 //! ビットボード操作のためのユーティリティ関数群
-#[cfg(target_feature = "bmi")]
+use std::arch::x86_64::_blsr_u64;
+#[cfg(target_feature = "bmi1")]
+#[inline(always)]
 pub fn blsr64(v:u64) -> u64 {
-    _blsr_u64(v)
+    unsafe { _blsr_u64(v) }
 }
-#[cfg(not(target_feature = "bmi"))]
+#[cfg(not(target_feature = "bmi1"))]
 #[inline(always)]
 /// 最下位ビットを0にリセットして返す
 ///
