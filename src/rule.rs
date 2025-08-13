@@ -6380,7 +6380,7 @@ impl Rule {
 			rb = rb ^ b.reverse();
 
 			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
-				opponent_occupied_board,self_occupied_board,p
+				self_occupied_board,opponent_occupied_board,p
 			);
 
 			rb = rb ^ b;
@@ -6862,7 +6862,7 @@ impl Rule {
 					80 - pin as u32
 				).reverse();
 
-				if ps.sente_opponent_ou_position_board & b != 0 {
+				if ps.gote_opponent_ou_position_board & b != 0 {
 					r |= 1 << (p + 1);
 				}
 			}
@@ -6930,8 +6930,8 @@ impl Rule {
 				80 - p as u32
 			).reverse();
 
-			if ps.sente_pin_board.reverse() & b != 0 {
-				if let Some(pin) = (ps.sente_pin_board.reverse() & b).iter().next() {
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = (ps.gote_pin_board.reverse() & b).iter().next() {
 					let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
 						ps.sente_opponent_board,
 						ps.sente_self_board,
@@ -6951,8 +6951,8 @@ impl Rule {
 				80 - p as u32
 			).reverse();
 
-			if ps.sente_pin_board.reverse() & b != 0 {
-				if let Some(pin) = (ps.sente_pin_board.reverse() & b).iter().next() {
+			if ps.gote_pin_board.reverse() & b != 0 {
+				if let Some(pin) = (ps.gote_pin_board.reverse() & b).iter().next() {
 					let b = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
 						ps.sente_opponent_board,
 						ps.sente_self_board,
@@ -7056,7 +7056,7 @@ impl Rule {
 						ps.sente_opponent_board,
 						ps.sente_self_board,
 						80 - pin as u32
-					);
+					).reverse();
 
 					if ps.gote_opponent_ou_position_board & b != 0 {
 						r |= 1 << (p + 1);
@@ -10250,7 +10250,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							(Teban::Sente,MochigomaKind::Kyou) => {
 								let b = Rule::gen_candidate_bits_of_check_by_kyou(
@@ -10260,7 +10259,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							(Teban::Sente,MochigomaKind::Kei) => {
 								let b = Rule::gen_candidate_bits_of_check_by_kei(
@@ -10269,7 +10267,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							(Teban::Sente,MochigomaKind::Gin) => {
 								let b = Rule::gen_candidate_bits_of_check(
@@ -10279,7 +10276,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							(Teban::Sente,MochigomaKind::Kin) => {
 								let b = Rule::gen_candidate_bits_of_check(
@@ -10289,7 +10285,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							(Teban::Sente,MochigomaKind::Kaku) => {
 								let b = Rule::gen_candidate_bits_of_check_by_kaku(
@@ -10300,7 +10295,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							(Teban::Sente,MochigomaKind::Hisha) => {
 								let b = Rule::gen_candidate_bits_of_check_by_hisha(
@@ -10311,7 +10305,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							(Teban::Gote,MochigomaKind::Fu) => {
 								let b = Rule::gen_candidate_bits_of_check(
@@ -10321,7 +10314,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							(Teban::Gote,MochigomaKind::Kyou) => {
 								let b = Rule::gen_candidate_bits_of_check_by_kyou(
@@ -10331,7 +10323,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							(Teban::Gote,MochigomaKind::Kei) => {
 								let b = Rule::gen_candidate_bits_of_check_by_kei(
@@ -10340,7 +10331,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							(Teban::Gote,MochigomaKind::Gin) => {
 								let b = Rule::gen_candidate_bits_of_check(
@@ -10350,7 +10340,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							(Teban::Gote,MochigomaKind::Kin) => {
 								let b = Rule::gen_candidate_bits_of_check(
@@ -10360,7 +10349,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							(Teban::Gote,MochigomaKind::Kaku) => {
 								let b = Rule::gen_candidate_bits_of_check_by_kaku(
@@ -10371,7 +10359,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							(Teban::Gote,MochigomaKind::Hisha) => {
 								let b = Rule::gen_candidate_bits_of_check_by_hisha(
@@ -10382,7 +10369,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							}
 						}
 					}
