@@ -1,4 +1,5 @@
 //! ビットボード操作のためのユーティリティ関数群
+#[cfg(target_feature = "bmi1")]
 use std::arch::x86_64::_blsr_u64;
 #[cfg(target_feature = "bmi1")]
 #[inline(always)]
