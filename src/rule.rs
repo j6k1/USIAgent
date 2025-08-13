@@ -9558,6 +9558,7 @@ impl Rule {
 										ps.sente_nari_board.merged_bitboard & obtained_mask
 									}
 								};
+								ps.sente_checked_board &= obtained_mask;
 							} else if kind < Blank {
 								ps.gote_self_board = BitBoard {
 									merged_bitboard: unsafe {
@@ -9574,6 +9575,7 @@ impl Rule {
 										ps.gote_nari_board.merged_bitboard & obtained_mask
 									}
 								};
+								ps.gote_checked_board &= inverse_obtained_mask;
 							}
 
 							match kind {
@@ -9713,7 +9715,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SKyou => {
 								b = Rule::gen_candidate_bits_of_check_by_kyou(
@@ -9723,7 +9724,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SKei => {
 								b = Rule::gen_candidate_bits_of_check_by_kei(
@@ -9732,7 +9732,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SGin => {
 								b = Rule::gen_candidate_bits_of_check(
@@ -9742,7 +9741,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SKin | SFuN | SKyouN | SKeiN | SGinN => {
 								b = Rule::gen_candidate_bits_of_check(
@@ -9752,7 +9750,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SKaku => {
 								b = Rule::gen_candidate_bits_of_check_by_kaku(
@@ -9763,7 +9760,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SHisha => {
 								b = Rule::gen_candidate_bits_of_check_by_hisha(
@@ -9774,7 +9770,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SKakuN => {
 								b = Rule::gen_candidate_bits_of_check_by_kaku(
@@ -9791,7 +9786,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SHishaN => {
 								b = Rule::gen_candidate_bits_of_check_by_hisha(
@@ -9808,7 +9802,6 @@ impl Rule {
 								);
 
 								ps.sente_checked_board |= b;
-								ps.init_gote_checked();
 							},
 							SOu => {
 								b |= Rule::gen_candidate_bits_of_check(
@@ -9828,7 +9821,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GKyou => {
 								b = Rule::gen_candidate_bits_of_check_by_kyou(
@@ -9838,7 +9830,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GKei => {
 								b = Rule::gen_candidate_bits_of_check_by_kei(
@@ -9847,7 +9838,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GGin => {
 								b = Rule::gen_candidate_bits_of_check(
@@ -9857,7 +9847,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GKin | GFuN | GKyouN | GKeiN | GGinN => {
 								b = Rule::gen_candidate_bits_of_check(
@@ -9867,7 +9856,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GKaku => {
 								b = Rule::gen_candidate_bits_of_check_by_kaku(
@@ -9878,7 +9866,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GHisha => {
 								b = Rule::gen_candidate_bits_of_check_by_hisha(
@@ -9889,7 +9876,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GKakuN => {
 								b = Rule::gen_candidate_bits_of_check_by_kaku(
@@ -9906,7 +9892,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GHishaN => {
 								b = Rule::gen_candidate_bits_of_check_by_hisha(
@@ -9923,7 +9908,6 @@ impl Rule {
 								);
 
 								ps.gote_checked_board |= b;
-								ps.init_sente_checked();
 							},
 							GOu => {
 								b |= Rule::gen_candidate_bits_of_check(
