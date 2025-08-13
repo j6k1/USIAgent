@@ -7,7 +7,7 @@ use rand_xorshift::XorShiftRng;
 use usiagent::math::Prng;
 use usiagent::movepick::{MovePicker, RandomPicker};
 use usiagent::protocol::{PositionParser};
-use usiagent::rule::{Evasions, EvasionsAll, LegalMove, NonEvasionsAll, Rule};
+use usiagent::rule::{EvasionsAll, LegalMove, NonEvasionsAll, Rule};
 use usiagent::rule::State;
 use usiagent::shogi::{MochigomaCollections, Teban};
 
@@ -87,7 +87,7 @@ impl PerftSolver for PerftSolverByEvasions {
 
                 let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
 
-                Rule::generate_moves_all::<EvasionsAll>(teban,state,mc,&mut buffer).unwrap();
+                Rule::generate_moves::<EvasionsAll>(teban, state, mc, &mut buffer).unwrap();
 
                 if buffer.len() == 0 {
                     result.mates += 1;
@@ -100,9 +100,9 @@ impl PerftSolver for PerftSolverByEvasions {
             let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
 
             if Rule::in_check(teban.opposite(),state) {
-                Rule::generate_moves_all::<EvasionsAll>(teban,state,mc,&mut buffer).unwrap();
+                Rule::generate_moves::<EvasionsAll>(teban, state, mc, &mut buffer).unwrap();
             } else {
-                Rule::generate_moves_all::<NonEvasionsAll>(teban,state,mc,&mut buffer).unwrap();
+                Rule::generate_moves::<NonEvasionsAll>(teban, state, mc, &mut buffer).unwrap();
             }
 
             for m in buffer {
@@ -145,6 +145,42 @@ fn test_perft_by_evasions() {
         let solver = PerftSolverByEvasions;
 
         let result = solver.perft(teban,&state,&mc,None,4);
+
+        println!("line {} done...",n);
+
+        if &expected != &result {
+            println!("line {}: {}",n, sfen);
+        }
+
+        assert_eq!(expected, result);
+    }
+}
+#[ignore]
+#[test]
+fn test_perft_by_evasions_lightweight() {
+    let position_parser = PositionParser::new();
+
+    for (n,(sfen,answer)) in BufReader::new(
+        File::open(
+            Path::new("data").join("floodgate").join("generatemoves").join("perft_sfen.txt")
+        ).unwrap()).lines().zip(BufReader::new(
+        File::open(
+            Path::new("data").join("floodgate").join("generatemoves").join("answer_perft.txt")
+        ).unwrap()).lines()).enumerate().take(10) {
+
+        let expected = PerftResult::from(answer.unwrap());
+
+        let sfen = format!("sfen {}",sfen.unwrap());
+
+        let (teban, banmen, mc, _, _) = position_parser.parse(&sfen.split(' ').collect::<Vec<&str>>()).unwrap().extract();
+
+        let state = State::new(banmen);
+
+        let solver = PerftSolverByEvasions;
+
+        let result = solver.perft(teban,&state,&mc,None,4);
+
+        println!("line {} done...",n);
 
         if &expected != &result {
             println!("line {}: {}",n, sfen);

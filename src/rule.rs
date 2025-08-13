@@ -8169,11 +8169,11 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::generate_moves_from_banmen::<NonEvasionsAll>(Teban::Sente,&state,&mut mvs).is_ok();
+	/// Rule::generate_moves_by_banmen::<NonEvasionsAll>(Teban::Sente,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	#[inline]
-	pub fn generate_moves_from_banmen<S: GenerateStrategy>(teban:Teban, state:&State, mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
+	pub fn generate_moves_by_banmen<S: GenerateStrategy>(teban:Teban, state:&State, mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
 		S::generate_piece(teban,state,mvs)
 	}
 	/// 手番と盤面の状態を元に合法手を生成してバッファに追加
@@ -8201,7 +8201,7 @@ impl Rule {
 	/// ```
 	#[inline]
 	pub fn legal_moves_from_banmen_with_buffer(t:Teban,state:&State,mvs:&mut impl MovePicker<LegalMove>) {
-		Rule::generate_moves_from_banmen::<NonEvasionsAll>(t, state, mvs).unwrap();
+		Rule::generate_moves_by_banmen::<NonEvasionsAll>(t, state, mvs).unwrap();
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に駒を置く合法手を生成して返す
@@ -8251,11 +8251,11 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	/// let state = State::new(BANMEN_START_POS.clone());
-	/// Rule::generate_moves_from_mochigoma::<NonEvasionsAll>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
+	/// Rule::generate_moves_by_mochigoma::<NonEvasionsAll>(Teban::Sente,&MochigomaCollections::Empty,&state,&mut mvs).is_ok();
 	/// assert!(mvs.len() == 0);
 	/// ```
 	#[inline]
-	pub fn generate_moves_from_mochigoma<S: GenerateStrategy>(
+	pub fn generate_moves_by_mochigoma<S: GenerateStrategy>(
 		teban:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) -> Result<(),LimitSizeError> {
 		S::generate_drop(teban,state,mc,mvs)
@@ -8286,7 +8286,7 @@ impl Rule {
 	pub fn legal_moves_from_mochigoma_with_buffer(
 		t:Teban,mc:&MochigomaCollections,state:&State,mvs:&mut impl MovePicker<LegalMove>
 	) {
-		Rule::generate_moves_from_mochigoma::<NonEvasionsAll>(t, mc, state, mvs).unwrap();
+		Rule::generate_moves_by_mochigoma::<NonEvasionsAll>(t, mc, state, mvs).unwrap();
 	}
 
 	/// 手番と盤面の状態と持ち駒を元に合法手を生成してMovePickerへ格納する
@@ -8312,17 +8312,17 @@ impl Rule {
 	/// let seed = Local::now().timestamp();
 	/// let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 	///
-	/// Rule::generate_moves_all::<NonEvasionsAll>(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
+	/// Rule::generate_moves::<NonEvasionsAll>(Teban::Sente,&state,&MochigomaCollections::Empty, &mut mvs).is_ok();
 	/// assert!(mvs.len() > 0);
 	/// ```
 	#[inline]
-	pub fn generate_moves_all<S: GenerateStrategy>(t:Teban,
-												   state:&State,
-												   mc:&MochigomaCollections,
-												   mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
+	pub fn generate_moves<S: GenerateStrategy>(t:Teban,
+											   state:&State,
+											   mc:&MochigomaCollections,
+											   mvs:&mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError> {
 		mvs.reset();
-		Rule::generate_moves_from_banmen::<S>(t, state, mvs)?;
-		Rule::generate_moves_from_mochigoma::<S>(t, mc, state, mvs)?;
+		Rule::generate_moves_by_banmen::<S>(t, state, mvs)?;
+		Rule::generate_moves_by_mochigoma::<S>(t, mc, state, mvs)?;
 
 		Ok(())
 	}
@@ -8348,7 +8348,7 @@ impl Rule {
 		let seed = Local::now().timestamp();
 		let mut mvs = RandomPicker::new(Prng::new(seed as u64));
 
-		Rule::generate_moves_all::<NonEvasionsAll>(t, state, mc, &mut mvs).unwrap();
+		Rule::generate_moves::<NonEvasionsAll>(t, state, mc, &mut mvs).unwrap();
 
 		mvs.into()
 	}
@@ -8384,7 +8384,7 @@ impl Rule {
 									   state:&State,
 									   mc:&MochigomaCollections,
 									   mvs:&mut impl MovePicker<LegalMove>) {
-		Rule::generate_moves_all::<NonEvasionsAll>(t, state, mc, mvs).unwrap()
+		Rule::generate_moves::<NonEvasionsAll>(t, state, mc, mvs).unwrap()
 	}
 
 	/// 王を取る手のうち一マスだけ駒を動かす手を返す
