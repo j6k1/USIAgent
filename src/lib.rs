@@ -25,6 +25,7 @@ pub mod rule;
 pub mod movepick;
 pub mod math;
 pub mod bits;
+pub mod bitboard;
 
 use std::error::Error;
 use std::fmt;
