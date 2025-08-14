@@ -12,6 +12,7 @@ pub union BitBoard {
     bitboard:[u64; 2]
 }
 impl From<u128> for BitBoard {
+    #[inline]
     fn from(bits: u128) -> Self {
         BitBoard {
             merged_bitboard: bits
@@ -19,6 +20,7 @@ impl From<u128> for BitBoard {
     }
 }
 impl From<(u64,u64)> for BitBoard {
+    #[inline]
     fn from((low,high): (u64, u64)) -> Self {
         BitBoard {
             bitboard: [low,high]
@@ -26,6 +28,7 @@ impl From<(u64,u64)> for BitBoard {
     }
 }
 impl Default for BitBoard {
+    #[inline]
     fn default() -> Self {
         BitBoard {
             merged_bitboard: 0
@@ -33,6 +36,7 @@ impl Default for BitBoard {
     }
 }
 impl From<BitBoard> for (u64,u64) {
+    #[inline]
     fn from(bitboard: BitBoard) -> Self {
         unsafe { (*bitboard.bitboard.get_unchecked(0), *bitboard.bitboard.get_unchecked(1)) }
     }
