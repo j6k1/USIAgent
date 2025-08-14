@@ -274,9 +274,9 @@ impl BitBoard {
 
     /// BitBoardに対するオーバーフローを許容する減算
     #[inline]
-    pub fn wrapping_sub(self,rhs: u32) -> BitBoard {
+    pub fn wrapping_sub(self,rhs: u128) -> BitBoard {
         BitBoard {
-            merged_bitboard: unsafe { self.merged_bitboard.wrapping_sub(rhs as u128) }
+            merged_bitboard: unsafe { self.merged_bitboard.wrapping_sub(rhs) }
         }
     }
 }
