@@ -54,6 +54,7 @@ impl BitAnd for BitBoard {
     }
 }
 impl BitAndAssign for BitBoard {
+    #[inline]
     fn bitand_assign(&mut self, rhs: Self) {
         *self = unsafe {
             BitBoard { merged_bitboard: self.merged_bitboard & rhs.merged_bitboard }
@@ -61,6 +62,7 @@ impl BitAndAssign for BitBoard {
     }
 }
 impl BitOrAssign for BitBoard {
+    #[inline]
     fn bitor_assign(&mut self, rhs: Self) {
         *self = unsafe {
             BitBoard { merged_bitboard: self.merged_bitboard | rhs.merged_bitboard }
@@ -133,6 +135,7 @@ impl BitAnd<u128> for BitBoard {
     }
 }
 impl BitAndAssign<u128> for BitBoard {
+    #[inline]
     fn bitand_assign(&mut self, rhs: u128) {
         *self = unsafe {
             BitBoard { merged_bitboard: self.merged_bitboard & rhs }
@@ -140,6 +143,7 @@ impl BitAndAssign<u128> for BitBoard {
     }
 }
 impl BitOrAssign<u128> for BitBoard {
+    #[inline]
     fn bitor_assign(&mut self, rhs: u128) {
         *self = unsafe {
             BitBoard { merged_bitboard: self.merged_bitboard | rhs }
@@ -178,6 +182,7 @@ impl Sub<u128> for BitBoard {
 impl Shl<u128> for BitBoard {
     type Output = Self;
 
+    #[inline]
     fn shl(self, rhs: u128) -> Self::Output {
         BitBoard { merged_bitboard: unsafe { self.merged_bitboard } << rhs }
     }
@@ -185,6 +190,7 @@ impl Shl<u128> for BitBoard {
 impl Shr<u128> for BitBoard {
     type Output = Self;
 
+    #[inline]
     fn shr(self, rhs: u128) -> Self::Output {
         BitBoard { merged_bitboard: unsafe { self.merged_bitboard } >> rhs }
     }
