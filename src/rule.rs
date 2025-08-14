@@ -2458,7 +2458,8 @@ impl MoveGenerator {
 		-> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
 			if count > 0 {
-				let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board);
+				let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board) &
+					BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1);
 
 				for p in candidate_bitboard.iter() {
 					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
@@ -9600,8 +9601,8 @@ impl Rule {
 					},
 					AppliedMove::Put(m) => {
 						let to = m.dst();
-						let to_mask = 1 << (to + 1);
-						let inverse_to_mask = 1 << (80 - to + 1);
+						let to_mask = 1u128 << (to as u128 + 1);
+						let inverse_to_mask = 1u128 << (80 - to as u128 + 1);
 
 						match t {
 							Teban::Sente => {
