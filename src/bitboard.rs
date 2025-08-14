@@ -19,14 +19,6 @@ impl From<u128> for BitBoard {
         }
     }
 }
-impl From<(u64,u64)> for BitBoard {
-    #[inline]
-    fn from((low,high): (u64, u64)) -> Self {
-        BitBoard {
-            bitboard: [low,high]
-        }
-    }
-}
 impl Default for BitBoard {
     #[inline]
     fn default() -> Self {
