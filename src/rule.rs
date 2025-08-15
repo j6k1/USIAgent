@@ -2782,6 +2782,7 @@ impl MoveGenerator {
 		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits, mvs)
 	}
 }
+/// 王手を回避する合法手のみを列挙する差し手生成器の実装
 pub struct EvasionsMoveGenerator;
 impl EvasionsMoveGenerator {
 	/// 持ち駒を置く指し手を生成する
