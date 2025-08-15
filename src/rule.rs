@@ -954,6 +954,7 @@ impl PartialState {
 		self.gote_pin_board = gote_pin_board;
 	}
 
+	/// 先手から王手をかけている駒の位置のビットを立てたビットボードを初期化する
 	#[inline]
 	fn init_sente_checked(&mut self) {
 		let mut b = BitBoard::default();
@@ -1051,6 +1052,7 @@ impl PartialState {
 		self.sente_checked_board = b;
 	}
 
+	/// 後手から王手をかけている駒の位置のビットを立てたビットボードを初期化する(後手視点のビットを立てる）
 	fn init_gote_checked(&mut self) {
 		let mut b = BitBoard::default();
 
@@ -1972,8 +1974,23 @@ pub trait AppendStrategy {
 														move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 														-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 }
+/// 合法手の列挙の実装（王手を回避する実装なし）
 pub struct MoveGenerator;
 impl MoveGenerator {
+	/// 持ち駒を置く指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		let mc = match mc {
@@ -2027,6 +2044,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 歩を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_fu<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2067,6 +2098,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 香車を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kyou<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2113,6 +2158,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 桂馬を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kei<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2153,6 +2212,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 銀を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_gin<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2193,6 +2266,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 金を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kin<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -2219,6 +2306,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 角を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kaku<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -2286,6 +2387,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 飛車を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_hisha<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -2353,6 +2468,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 王を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_ou<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -2377,6 +2506,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 歩を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 歩の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_fu(teban: Teban, state: &State, count: usize,mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> {
@@ -2425,6 +2568,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 香車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 香車の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kyou(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> {
@@ -2453,6 +2610,20 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 桂馬を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 桂馬の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kei(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
 		-> Result<(), LimitSizeError> {
@@ -2481,6 +2652,22 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 銀、金、角、飛車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `m` - 持ち駒の種類
+	/// * `count` - 歩の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
 							shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>)
@@ -2511,24 +2698,84 @@ impl MoveGenerator {
 		Ok(())
 	}
 
+	/// 銀を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 銀の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_gin(teban: Teban, state: &State, count: usize,
 						 shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
 	}
 
+	/// 金を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 金の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 						 mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
+	/// 角を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 角の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 						  mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits, mvs)
 	}
 
+	/// 飛車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 飛車の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 						   mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
@@ -2537,6 +2784,20 @@ impl MoveGenerator {
 }
 pub struct EvasionsMoveGenerator;
 impl EvasionsMoveGenerator {
+	/// 持ち駒を置く指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		let mc = match mc {
@@ -2589,6 +2850,20 @@ impl EvasionsMoveGenerator {
 
 		Ok(())
 	}
+	/// 歩を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_fu<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2685,6 +2960,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 香車を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kyou<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2775,6 +3064,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 桂馬を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kei<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2871,6 +3174,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 銀を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_gin<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
@@ -2967,6 +3284,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 金を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kin<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												  -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -3025,6 +3356,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 角を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_kaku<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												   -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -3155,6 +3500,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 飛車を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_hisha<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 													-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -3285,6 +3644,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 玉を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_ou<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
@@ -3436,6 +3809,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 歩を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 歩の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_fu(teban: Teban, state: &State, count: usize,mvs: &mut impl MovePicker<LegalMove>)
 							-> Result<(), LimitSizeError> {
@@ -3494,6 +3881,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 香車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 香車の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kyou(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
 							  -> Result<(), LimitSizeError> {
@@ -3532,6 +3933,20 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 桂馬を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 桂馬の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kei(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
 							 -> Result<(), LimitSizeError> {
@@ -3570,6 +3985,22 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 銀、金、角、飛車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `m` - 持ち駒の種類
+	/// * `count` - 歩の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
 								shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>)
@@ -3610,24 +4041,86 @@ impl EvasionsMoveGenerator {
 		Ok(())
 	}
 
+	/// 銀を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 銀の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_gin(teban: Teban, state: &State, count: usize,
 							 shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
 	}
 
+	/// 金を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 金の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 							 mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
+
+	/// 角を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 角の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 							  mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
 		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits, mvs)
 	}
 
+
+	/// 飛車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 飛車の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
 	pub fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 							   mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
@@ -3641,7 +4134,7 @@ impl GenerateStrategy for NonEvasionsAll {
 
 	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		let move_builder = 		if teban == Teban::Sente {
+		let move_builder = if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_opponent_board)
 		} else {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_self_board)
@@ -3768,7 +4261,7 @@ impl GenerateStrategy for NonEvasions {
 
 	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		let move_builder = 		if teban == Teban::Sente {
+		let move_builder = if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_opponent_board)
 		} else {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_self_board)
@@ -3895,7 +4388,7 @@ impl GenerateStrategy for CaptureOrPawnPromotions {
 
 	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		let move_builder = 		if teban == Teban::Sente {
+		let move_builder = if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_opponent_board)
 		} else {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_self_board)
@@ -4022,7 +4515,7 @@ impl GenerateStrategy for QuietsWithoutPawnPromotions {
 
 	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		let move_builder = 		if teban == Teban::Sente {
+		let move_builder = if teban == Teban::Sente {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_opponent_board)
 		} else {
 			Rule::default_moveto_builder(&state.banmen, state.part.sente_self_board)
