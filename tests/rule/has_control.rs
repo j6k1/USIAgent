@@ -545,3 +545,256 @@ fn has_control_bits_gote_hisha_nari_variants() {
     let s = State::new(b);
     assert_eq!(Rule::has_control_bits_gote_hisha_nari(&s, idx(4,4)), expect);
 }
+
+
+// ---------- Boolean has_control() tests moved from src/rule/has_control.rs ----------
+
+#[test]
+fn has_control_sente_fu_variants() {
+    let target = (4,4);
+    // empty
+    let mut b = blank(); set_piece(&mut b, 4,5, SFu);
+    assert!(Rule::has_control_sente_fu(&State::new(b), idx(target.0,target.1)));
+    // friendly on target -> false
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,5, SFu);
+    assert!(!Rule::has_control_sente_fu(&State::new(b), idx(target.0,target.1)));
+    // opponent on target -> true
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,5, SFu);
+    assert!(Rule::has_control_sente_fu(&State::new(b), idx(target.0,target.1)));
+}
+
+#[test]
+fn has_control_sente_kyou_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,8, SKyou);
+    assert!(Rule::has_control_sente_kyou(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,8, SKyou);
+    assert!(!Rule::has_control_sente_kyou(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,8, SKyou);
+    assert!(Rule::has_control_sente_kyou(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_kei_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 3,6, SKei); set_piece(&mut b, 5,6, SKei);
+    assert!(Rule::has_control_sente_kei(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 3,6, SKei); set_piece(&mut b, 5,6, SKei);
+    assert!(!Rule::has_control_sente_kei(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 3,6, SKei); set_piece(&mut b, 5,6, SKei);
+    assert!(Rule::has_control_sente_kei(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_gin_variants() {
+    let target = (4,4);
+    let mut b = blank(); for &(x,y) in [(4,5),(3,3),(5,3)].iter() { set_piece(&mut b,x,y, SGin); }
+    assert!(Rule::has_control_sente_gin(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); for &(x,y) in [(4,5),(3,3),(5,3)].iter(){ set_piece(&mut b,x,y, SGin);} 
+    assert!(!Rule::has_control_sente_gin(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); for &(x,y) in [(4,5),(3,3),(5,3)].iter(){ set_piece(&mut b,x,y, SGin);} 
+    assert!(Rule::has_control_sente_gin(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_kin_variants() {
+    let target = (4,4);
+    let mut b = blank(); for &(x,y) in [(4,5),(3,5),(5,5)].iter() { set_piece(&mut b,x,y, SKin);} 
+    assert!(Rule::has_control_sente_kin(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); for &(x,y) in [(4,5),(3,5),(5,5)].iter(){ set_piece(&mut b,x,y, SKin);} 
+    assert!(!Rule::has_control_sente_kin(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); for &(x,y) in [(4,5),(3,5),(5,5)].iter(){ set_piece(&mut b,x,y, SKin);} 
+    assert!(Rule::has_control_sente_kin(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_kaku_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 1,1, SKaku); set_piece(&mut b, 7,1, SKaku);
+    assert!(Rule::has_control_sente_kaku(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 1,1, SKaku); set_piece(&mut b, 7,1, SKaku);
+    assert!(!Rule::has_control_sente_kaku(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 1,1, SKaku); set_piece(&mut b, 7,1, SKaku);
+    assert!(Rule::has_control_sente_kaku(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_hisha_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,8, SHisha); set_piece(&mut b, 0,4, SHisha);
+    assert!(Rule::has_control_sente_hisha(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,8, SHisha); set_piece(&mut b, 0,4, SHisha);
+    assert!(!Rule::has_control_sente_hisha(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,8, SHisha); set_piece(&mut b, 0,4, SHisha);
+    assert!(Rule::has_control_sente_hisha(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_ou_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,5, SOu);
+    assert!(Rule::has_control_sente_ou(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,5, SOu);
+    assert!(!Rule::has_control_sente_ou(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,5, SOu);
+    assert!(Rule::has_control_sente_ou(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_nari_kin_variants() {
+    let target = (4,4);
+    for &k in [SFuN, SKyouN, SKeiN, SGinN].iter() {
+        let mut b = blank(); set_piece(&mut b, 4,5, k);
+        assert!(Rule::has_control_sente_nari_kin(&State::new(b), idx(target.0,target.1)));
+        let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,5, k);
+        assert!(!Rule::has_control_sente_nari_kin(&State::new(b), idx(4,4)));
+        let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,5, k);
+        assert!(Rule::has_control_sente_nari_kin(&State::new(b), idx(4,4)));
+    }
+}
+
+#[test]
+fn has_control_sente_kaku_nari_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 3,4, SKakuN);
+    assert!(Rule::has_control_sente_kaku_nari(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 3,4, SKakuN);
+    assert!(!Rule::has_control_sente_kaku_nari(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 3,4, SKakuN);
+    assert!(Rule::has_control_sente_kaku_nari(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_sente_hisha_nari_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,5, SHishaN);
+    assert!(Rule::has_control_sente_hisha_nari(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,5, SHishaN);
+    assert!(!Rule::has_control_sente_hisha_nari(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,5, SHishaN);
+    assert!(Rule::has_control_sente_hisha_nari(&State::new(b), idx(4,4)));
+}
+
+// ---------------- GOTE ----------------
+#[test]
+fn has_control_gote_fu_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,3, GFu);
+    assert!(Rule::has_control_gote_fu(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 4,3, GFu);
+    assert!(!Rule::has_control_gote_fu(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 4,3, GFu);
+    assert!(Rule::has_control_gote_fu(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_kyou_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,0, GKyou);
+    assert!(Rule::has_control_gote_kyou(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 4,0, GKyou);
+    assert!(!Rule::has_control_gote_kyou(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 4,0, GKyou);
+    assert!(Rule::has_control_gote_kyou(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_kei_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 3,2, GKei); set_piece(&mut b, 5,2, GKei);
+    assert!(Rule::has_control_gote_kei(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 3,2, GKei); set_piece(&mut b, 5,2, GKei);
+    assert!(!Rule::has_control_gote_kei(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 3,2, GKei); set_piece(&mut b, 5,2, GKei);
+    assert!(Rule::has_control_gote_kei(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_gin_variants() {
+    let target = (4,4);
+    let mut b = blank(); for &(x,y) in [(4,3),(3,5),(5,5)].iter() { set_piece(&mut b,x,y, GGin);} 
+    assert!(Rule::has_control_gote_gin(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); for &(x,y) in [(4,3),(3,5),(5,5)].iter(){ set_piece(&mut b,x,y, GGin);} 
+    assert!(!Rule::has_control_gote_gin(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); for &(x,y) in [(4,3),(3,5),(5,5)].iter(){ set_piece(&mut b,x,y, GGin);} 
+    assert!(Rule::has_control_gote_gin(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_kin_variants() {
+    let target = (4,4);
+    let mut b = blank(); for &(x,y) in [(4,3),(3,4),(5,4)].iter() { set_piece(&mut b,x,y, GKin);} 
+    assert!(Rule::has_control_gote_kin(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); for &(x,y) in [(4,3),(3,4),(5,4)].iter(){ set_piece(&mut b,x,y, GKin);} 
+    assert!(!Rule::has_control_gote_kin(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); for &(x,y) in [(4,3),(3,4),(5,4)].iter(){ set_piece(&mut b,x,y, GKin);} 
+    assert!(Rule::has_control_gote_kin(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_kaku_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 1,7, GKaku); set_piece(&mut b, 7,7, GKaku);
+    assert!(Rule::has_control_gote_kaku(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 1,7, GKaku); set_piece(&mut b, 7,7, GKaku);
+    assert!(!Rule::has_control_gote_kaku(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 1,7, GKaku); set_piece(&mut b, 7,7, GKaku);
+    assert!(Rule::has_control_gote_kaku(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_hisha_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,0, GHisha); set_piece(&mut b, 8,4, GHisha);
+    assert!(Rule::has_control_gote_hisha(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 4,0, GHisha); set_piece(&mut b, 8,4, GHisha);
+    assert!(!Rule::has_control_gote_hisha(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 4,0, GHisha); set_piece(&mut b, 8,4, GHisha);
+    assert!(Rule::has_control_gote_hisha(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_ou_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,3, GOu);
+    assert!(Rule::has_control_gote_ou(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 4,3, GOu);
+    assert!(!Rule::has_control_gote_ou(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 4,3, GOu);
+    assert!(Rule::has_control_gote_ou(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_nari_kin_variants() {
+    let target = (4,4);
+    for &k in [GFuN, GKyouN, GKeiN, GGinN].iter() {
+        let mut b = blank(); set_piece(&mut b, 4,3, k);
+        assert!(Rule::has_control_gote_nari_kin(&State::new(b), idx(target.0,target.1)));
+        let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 4,3, k);
+        assert!(!Rule::has_control_gote_nari_kin(&State::new(b), idx(4,4)));
+        let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 4,3, k);
+        assert!(Rule::has_control_gote_nari_kin(&State::new(b), idx(4,4)));
+    }
+}
+
+#[test]
+fn has_control_gote_kaku_nari_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 5,4, GKakuN);
+    assert!(Rule::has_control_gote_kaku_nari(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 5,4, GKakuN);
+    assert!(!Rule::has_control_gote_kaku_nari(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 5,4, GKakuN);
+    assert!(Rule::has_control_gote_kaku_nari(&State::new(b), idx(4,4)));
+}
+
+#[test]
+fn has_control_gote_hisha_nari_variants() {
+    let target = (4,4);
+    let mut b = blank(); set_piece(&mut b, 4,3, GHishaN);
+    assert!(Rule::has_control_gote_hisha_nari(&State::new(b), idx(target.0,target.1)));
+    let mut b = blank(); set_piece(&mut b, 4,4, GKin); set_piece(&mut b, 4,3, GHishaN);
+    assert!(!Rule::has_control_gote_hisha_nari(&State::new(b), idx(4,4)));
+    let mut b = blank(); set_piece(&mut b, 4,4, SFu); set_piece(&mut b, 4,3, GHishaN);
+    assert!(Rule::has_control_gote_hisha_nari(&State::new(b), idx(4,4)));
+}
