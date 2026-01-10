@@ -187,7 +187,7 @@ impl<T,E> UsiAgent<T,E>
 	/// # Arguments
 	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start_default<F>(&self,on_error:F) ->
-		Result<(),USIAgentRunningError<SystemEventQueue,E>>
+		Result<(),USIAgentRunningError<'_, SystemEventQueue,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&USIAgentRunningError<SystemEventQueue,E>) {
 		self.start_with_log_path(String::from("logs/log.txt"),on_error)
@@ -199,7 +199,7 @@ impl<T,E> UsiAgent<T,E>
 	/// * `path` - ログファイルのパス
 	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start_with_log_path<F>(&self,path:String,mut on_error:F) ->
-		Result<(),USIAgentRunningError<SystemEventQueue,E>>
+		Result<(),USIAgentRunningError<'_, SystemEventQueue,E>>
 		where F: FnMut(Option<Arc<Mutex<OnErrorHandler<FileLogger>>>>,
 					&USIAgentRunningError<SystemEventQueue,E>) {
 
@@ -229,7 +229,7 @@ impl<T,E> UsiAgent<T,E>
 	/// * `logger` - ログを書き込むためのオブジェクト。実装によってファイル以外に書き込むものを指定することも可能。
 	/// * `on_error` - エラー発生時に呼ばれるコールバック関数。エラーオブジェクトへの参照とロガーが渡される。
 	pub fn start<R,W,L,F>(&self,reader:R,writer:W,logger:L,mut on_error:F) ->
-		Result<(),USIAgentRunningError<SystemEventQueue,E>>
+		Result<(),USIAgentRunningError<'_, SystemEventQueue,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
 			F: FnMut(Option<Arc<Mutex<OnErrorHandler<L>>>>,
 					&USIAgentRunningError<SystemEventQueue,E>),
@@ -254,7 +254,7 @@ impl<T,E> UsiAgent<T,E>
 
 	fn run<R,W,L>(&self,reader:R,writer:W,logger_arc:Arc<Mutex<L>>,
 								on_error_handler_arc:Arc<Mutex<OnErrorHandler<L>>>) ->
-		Result<(),USIAgentRunningError<SystemEventQueue,E>>
+		Result<(),USIAgentRunningError<'_, SystemEventQueue,E>>
 		where R: USIInputReader, W: USIOutputWriter, L: Logger + fmt::Debug,
 			EventHandlerError<SystemEventKind, E>: From<E>,
 			R: Send + 'static,

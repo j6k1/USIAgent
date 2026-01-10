@@ -16,6 +16,7 @@ mod control;
 mod is_possible_nari;
 mod position;
 mod perft;
+mod has_control;
 
 use std::cmp;
 use std::collections::HashMap;

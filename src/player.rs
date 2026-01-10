@@ -495,7 +495,6 @@ impl<W,L> KeepAliveSender for OnKeepAlive<W,L> where W: USIOutputWriter + Send +
 		};
 	}
 
-	#[must_use]
 	fn auto(&self,sec:u64) -> AutoKeepAlive {
 		AutoKeepAlive::new(sec,self.clone())
 	}
@@ -620,7 +619,6 @@ impl<W> USIPeriodicallyInfo<W>
 impl<W> PeriodicallyInfo for USIPeriodicallyInfo<W>
 	where W: USIOutputWriter + Send + 'static {
 
-	#[must_use]
 	fn start<F,L>(self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 			  L: Logger + Send + 'static {
@@ -694,7 +692,6 @@ impl ConsolePeriodicallyInfo {
 	}
 }
 impl PeriodicallyInfo for ConsolePeriodicallyInfo {
-	#[must_use]
 	fn start<F,L>(self,interval:u64,info_generator:F,on_error_handler:&Arc<Mutex<OnErrorHandler<L>>>)
 		-> PeriodicallyInfoSender where F: FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static,
 											  L: Logger + Send + 'static {

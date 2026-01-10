@@ -12771,6 +12771,812 @@ impl Rule {
 		count
 	}
 
+	/// 指定したマスに先手の歩の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_fu(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		for p in state.part.sente_fu_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SFu);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の香の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_kyou(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		for p in (state.part.sente_kyou_board & !state.part.sente_nari_board).iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				state.part.sente_self_board, state.part.sente_opponent_board, p);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の桂の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_kei(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		for p in state.part.sente_kei_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKei);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の銀の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_gin(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		for p in state.part.sente_gin_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SGin);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の金の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_kin(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		for p in state.part.sente_kin_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の角の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_kaku(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		for p in state.part.sente_kaku_board.iter() {
+			let p = p as u32;
+			let cand =
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
+				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse() |
+				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse();
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の飛車の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_hisha(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		for p in state.part.sente_hisha_board.iter() {
+			let p = p as u32;
+			let cand =
+				// vertical (down from sente perspective)
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
+				// vertical (up from sente perspective)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p)
+				// horizontal left
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
+				// horizontal right
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の玉の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_ou(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		// 先手玉の位置を盤面から探索
+		for (y,row) in state.banmen.0.iter().enumerate() {
+			for (x,&k) in row.iter().enumerate() {
+				if k == SOu {
+					let from = (x as u32) * 9 + (y as u32);
+					let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, from, SOu);
+					if (cand & to_bb) != 0 { return true; }
+				}
+			}
+		}
+		false
+	}
+	/// 指定したマスに先手の成り駒（金相当: と金、成香、成桂、成銀）の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_nari_kin(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let board = state.part.sente_nari_board & (state.part.sente_fu_board | state.part.sente_kyou_board | state.part.sente_kei_board | state.part.sente_gin_board);
+		for p in board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の馬（角成）の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_kaku_nari(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let board = state.part.sente_kaku_board & state.part.sente_nari_board;
+		for p in board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKakuN);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに先手の龍（飛成）の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_sente_hisha_nari(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let board = state.part.sente_hisha_board & state.part.sente_nari_board;
+		for p in board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SHishaN);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+
+	/// 指定したマスに後手の歩の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_fu(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		for p in state.part.gote_fu_board.reverse().iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GFu);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の香の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_kyou(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		for p in (state.part.gote_kyou_board & !state.part.gote_nari_board).reverse().iter() {
+			let fp = p as u32;
+			let from_idx = 80 - fp;
+			let cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				state.part.sente_opponent_board, state.part.sente_self_board, from_idx);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の桂の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_kei(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		for p in state.part.gote_kei_board.reverse().iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKei);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の銀の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_gin(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		for p in state.part.gote_gin_board.reverse().iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GGin);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の金の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_kin(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		for p in state.part.gote_kin_board.reverse().iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の角の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_kaku(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		for p in state.part.gote_kaku_board.reverse().iter() {
+			let fp = p as u32;
+			let from_idx = 80 - fp;
+			let cand =
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の飛車の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_hisha(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		for p in state.part.gote_hisha_board.reverse().iter() {
+			let fp = p as u32;
+			let from_idx = 80 - fp;
+			let cand =
+				// vertical in both directions via flip/original boards
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
+				// horizontal in both directions
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の玉の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_ou(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		// 後手玉の位置を盤面から探索
+		for (y,row) in state.banmen.0.iter().enumerate() {
+			for (x,&k) in row.iter().enumerate() {
+				if k == GOu {
+					let from = (x as u32) * 9 + (y as u32);
+					let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from, GOu);
+					if (cand & to_bb) != 0 { return true; }
+				}
+			}
+		}
+		false
+	}
+	/// 指定したマスに後手の成り駒（金相当: と金、成香、成桂、成銀）の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_nari_kin(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let board = state.part.gote_nari_board & (state.part.gote_fu_board | state.part.gote_kyou_board | state.part.gote_kei_board | state.part.gote_gin_board);
+		for p in board.reverse().iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の馬（角成）の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_kaku_nari(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let board = state.part.gote_kaku_board & state.part.gote_nari_board;
+		for p in board.reverse().iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKakuN);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+	/// 指定したマスに後手の龍（飛成）の効きがあるか判定する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_gote_hisha_nari(state:&State,to:Square) -> bool {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let board = state.part.gote_hisha_board & state.part.gote_nari_board;
+		for p in board.reverse().iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GHishaN);
+			if (cand & to_bb) != 0 { return true; }
+		}
+		false
+	}
+
+	/// 指定したマスに先手の歩の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_fu(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.sente_fu_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SFu);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の香の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_kyou(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for p in (state.part.sente_kyou_board & !state.part.sente_nari_board).iter() {
+			let p = p as u32;
+			// 香車は先手視点で前方向（上方向）へのみスライド。to_top は盤面を反転して使う実装に合わせる。
+			let mut cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				state.part.gote_opponent_board, // flip: 相手（後手）側から見た相手駒 = 先手視点の相手駒
+				state.part.gote_self_board,     // flip: 相手（後手）側から見た自駒 = 先手視点の自駒
+				80 - p
+			).reverse();
+			// 自駒があるマスは効きとして数えない
+			cand &= !state.part.sente_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の桂の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_kei(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.sente_kei_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKei);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の銀の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_gin(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.sente_gin_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SGin);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の金の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_kin(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.sente_kin_board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の角の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_kaku(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.sente_kaku_board.iter() {
+			let p = p as u32;
+			let mut cand =
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
+				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse() |
+				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse();
+			// 自駒があるマスは効きとして数えない
+			cand &= !state.part.sente_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の飛車の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_hisha(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.sente_hisha_board.iter() {
+			let p = p as u32;
+			let mut cand =
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p);
+			// 自駒があるマスは効きとして数えない
+			cand &= !state.part.sente_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の玉の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_ou(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		for (y,row) in state.banmen.0.iter().enumerate() {
+			for (x,&k) in row.iter().enumerate() {
+				if k == SOu {
+					let from = (x as u32) * 9 + (y as u32);
+					let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, from, SOu);
+					if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (from + 1)); }
+				}
+			}
+		}
+		res
+	}
+	/// 指定したマスに先手の成り金相当の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_nari_kin(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		let board = state.part.sente_nari_board & (state.part.sente_fu_board | state.part.sente_kyou_board | state.part.sente_kei_board | state.part.sente_gin_board);
+		for p in board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の馬（角成）の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_kaku_nari(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		let board = state.part.sente_kaku_board & state.part.sente_nari_board;
+		for p in board.iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKakuN);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに先手の龍（飛成）の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_sente_hisha_nari(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (to + 1));
+		let mut res = BitBoard::default();
+		let board = state.part.sente_hisha_board & state.part.sente_nari_board;
+		for p in board.iter() {
+			let p = p as u32;
+			// 竜は飛車のスライド + 斜め一歩
+			let mut cand =
+				// rook sliding four directions (use include gens)
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p);
+			// add diagonal king-like moves for dragon
+			cand |= Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SHishaN);
+			// exclude own occupied squares
+			cand &= !state.part.sente_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+		}
+		res
+	}
+
+	/// 指定したマスに後手の歩の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_fu(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.gote_fu_board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GFu);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の香の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_kyou(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for p in (state.part.gote_kyou_board & !state.part.gote_nari_board).reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let mut cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				state.part.sente_opponent_board, state.part.sente_self_board, from_idx);
+			// 自駒があるマスは効きとして数えない（後手視点の自駒 = gote_self_board）
+			cand &= !state.part.gote_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の桂の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_kei(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.gote_kei_board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKei);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の銀の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_gin(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.gote_gin_board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GGin);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の金の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_kin(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.gote_kin_board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の角の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_kaku(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.gote_kaku_board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let mut cand =
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+			// 自駒があるマスは効きとして数えない（後手）
+			cand &= !state.part.gote_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の飛車の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_hisha(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for p in state.part.gote_hisha_board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let mut cand =
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+			// 自駒があるマスは効きとして数えない（後手）
+			cand &= !state.part.gote_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の玉の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_ou(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		for (y,row) in state.banmen.0.iter().enumerate() {
+			for (x,&k) in row.iter().enumerate() {
+				if k == GOu {
+					let from = (x as u32) * 9 + (y as u32);
+					let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from, GOu);
+					if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (from + 1)); }
+				}
+			}
+		}
+		res
+	}
+	/// 指定したマスに後手の成り金相当の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_nari_kin(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		let board = state.part.gote_nari_board & (state.part.gote_fu_board | state.part.gote_kyou_board | state.part.gote_kei_board | state.part.gote_gin_board);
+		for p in board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の馬（角成）の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_kaku_nari(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		let board = state.part.gote_kaku_board & state.part.gote_nari_board;
+		for p in board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKakuN);
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+	/// 指定したマスに後手の龍（飛成）の効きを持つ駒の位置ビットボードを返す
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `to` - 効きを調べたい位置
+	#[inline]
+	pub fn has_control_bits_gote_hisha_nari(state:&State,to:Square) -> BitBoard {
+		let to_bb = BitBoard::from(1 << (80 - to + 1));
+		let mut res = BitBoard::default();
+		let board = state.part.gote_hisha_board & state.part.gote_nari_board;
+		for p in board.reverse().iter() {
+			let p = p as u32;
+			let from_idx = 80 - p;
+			// 竜は飛車のスライド + 斜め一歩（後手視点）
+			let mut cand =
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+			// add diagonal steps for dragon (GHishaN)
+			cand |= Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GHishaN);
+			// exclude own occupied squares（後手）
+			cand &= !state.part.gote_self_board;
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+		}
+		res
+	}
+
 	/// 駒が成れる手か判定する
 	///
 	/// # Arguments
