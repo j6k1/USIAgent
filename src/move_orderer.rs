@@ -110,12 +110,20 @@ impl MoveOrderer {
                     let (x,y) = m.src().square_to_point();
                     let kind = state.get_banmen().0[y as usize][x as usize];
 
-                    kind as usize
+                    kind as usize + if m.is_nari() {
+                        8
+                    } else {
+                        0
+                    }
                 } else {
                     let (x,y) = m.src().square_to_point();
                     let kind = state.get_banmen().0[y as usize][x as usize];
 
-                    kind as usize - KomaKind::GFu as usize
+                    kind as usize - KomaKind::GFu as usize + if m.is_nari() {
+                        8
+                    } else {
+                        0
+                    }
                 }
             },
             LegalMove::Put(m) => {
