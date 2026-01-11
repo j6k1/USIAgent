@@ -25,7 +25,7 @@ pub trait Logger {
 
 		messages.push(format!("{}", e).add_indent(indent*2));
 
-		let mut e:&(dyn Error) = e;
+		let mut e:&dyn Error = e;
 
 		while let Some(cause) = e.source() {
 			indent += 1;
