@@ -1,3 +1,4 @@
+//! 探索の最適化に用いるSEEの計算を実装する
 use rule::{LegalMove, Rule, Square, SquareToPoint, State};
 use shogi::{Teban};
 

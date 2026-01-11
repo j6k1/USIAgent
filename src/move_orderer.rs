@@ -1,3 +1,4 @@
+//! 探索時の手の並び替えの機能を実装する
 use rule::{LegalMove, SquareToPoint, State};
 use see::calc_see;
 use shogi::{KomaKind, Teban};
