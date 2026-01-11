@@ -173,6 +173,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
     let mut current_score = score;
 
+    #[inline]
     fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, next_score:i32) {
         let g = gain.last().unwrap();
         gain.push(*current_score - g);
