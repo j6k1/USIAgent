@@ -44,6 +44,10 @@ impl MoveOrderer {
         } else if self.usage_killer_moves[ply] == 0 {
             self.killer_moves[ply][0] = Some(m);
         }
+
+        if self.usage_killer_moves[ply] < 2 {
+            self.usage_killer_moves[ply] += 1;
+        }
     }
 
     /// Historyの更新
