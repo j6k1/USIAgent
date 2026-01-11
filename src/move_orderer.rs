@@ -52,7 +52,7 @@ impl MoveOrderer {
     /// * `teban` - 手番
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
-    /// * `depth` - 現在の探索深さ
+    /// * `depth` - 現在の残り探索深さ
     #[inline]
     pub fn update_improve_history(
         &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
@@ -75,7 +75,7 @@ impl MoveOrderer {
     /// * `teban` - 手番
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
-    /// * `depth` - 現在の探索深さ
+    /// * `depth` - 現在の残り探索深さ
     #[inline]
     pub fn update_degrade_history(
         &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
