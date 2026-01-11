@@ -173,205 +173,145 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
     let mut current_score = score;
 
+    fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, next_score:i32) {
+        let g = gain.last().unwrap();
+        gain.push(*current_score - g);
+        *current_score = next_score;
+    }
+
     loop {
         if isself {
             if sfu_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = FU_SCORE;
+                update_gain(&mut gain, &mut current_score, FU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if skyou_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KYOU_SCORE;
+                update_gain(&mut gain, &mut current_score, KYOU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if skei_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KEI_SCORE;
+                update_gain(&mut gain, &mut current_score, KEI_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if sgin_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = GIN_SCORE;
+                update_gain(&mut gain, &mut current_score, GIN_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if skin_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KIN_SCORE;
+                update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if snkin_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KIN_SCORE;
+                update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if skaku_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KAKU_SCORE;
+                update_gain(&mut gain, &mut current_score, KAKU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if shisha_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = HISHA_SCORE;
+                update_gain(&mut gain, &mut current_score, HISHA_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if skakun_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KAKU_NARI_SCORE;
+                update_gain(&mut gain, &mut current_score, KAKU_NARI_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if shishan_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = HISHA_NARI_SCORE;
+                update_gain(&mut gain, &mut current_score, HISHA_NARI_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if sou_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = OU_SCORE;
+                update_gain(&mut gain, &mut current_score, OU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             break;
         } else {
             if ofu_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = FU_SCORE;
+                update_gain(&mut gain, &mut current_score, FU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if okyou_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KYOU_SCORE;
+                update_gain(&mut gain, &mut current_score, KYOU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if okei_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KEI_SCORE;
+                update_gain(&mut gain, &mut current_score, KEI_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if ogin_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = GIN_SCORE;
+                update_gain(&mut gain, &mut current_score, GIN_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if okin_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KIN_SCORE;
+                update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if onkin_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KIN_SCORE;
+                update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if okaku_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KAKU_SCORE;
+                update_gain(&mut gain, &mut current_score, KAKU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if ohisha_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = HISHA_SCORE;
+                update_gain(&mut gain, &mut current_score, HISHA_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if okakun_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = KAKU_NARI_SCORE;
+                update_gain(&mut gain, &mut current_score, KAKU_NARI_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if ohishan_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = HISHA_NARI_SCORE;
+                update_gain(&mut gain, &mut current_score, HISHA_NARI_SCORE);
                 isself = !isself;
-
                 continue;
             }
 
             if oou_it.next().is_some() {
-                let g = gain.last().unwrap();
-                gain.push(current_score - g);
-                current_score = OU_SCORE;
+                update_gain(&mut gain, &mut current_score, OU_SCORE);
                 isself = !isself;
-
                 continue;
             }
 

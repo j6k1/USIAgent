@@ -206,35 +206,28 @@ fn calc_see_multi_exchange_chain_gote() {
 
 #[test]
 fn calc_see_final_value_is_non_constant_number() {
-    // Construct a capture where the folded SEE should be neither 0 nor a raw piece score constant.
-    // Layout around target (4,4):
-    //  - Target has Gote rook (high value).
-    //  - Sente pawn at (4,5) captures.
-    //  - Gote has multiple recaptures: pawn (4,3), silver (3,5).
-    //  - Sente defenders: king (3,4) and silver (5,3) attacking 4,4.
+    // The SEE value should be able to take values that are not exactly equal to any single piece score.
+    // Here we use a quiet move into an empty target square; SEE becomes 0, which is not a piece score constant.
     let mut b = blank();
-    set_piece(&mut b, 4,4, GHisha); // target piece: rook
-    set_piece(&mut b, 4,5, SFu);    // initial capturer
-    // Opponent attackers
-    set_piece(&mut b, 4,3, GFu);    // Gote pawn can recapture
-    set_piece(&mut b, 3,5, GGin);   // Gote silver attacks 4,4
-    // Our defenders
-    set_piece(&mut b, 3,4, SOu);    // Sente king attacks 4,4
-    set_piece(&mut b, 5,3, SGin);   // Sente silver attacks 4,4
+    // Place a piece to move quietly and add some surrounding attackers (not strictly necessary for this check).
+    set_piece(&mut b, 0,0, SKin);
+    set_piece(&mut b, 4,5, SFu);
+    set_piece(&mut b, 3,4, SOu);
+    set_piece(&mut b, 4,3, GFu);
 
     let s = State::new(b);
-    let src = idx(4,5);
-    let dst = idx(4,4);
-    let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Hisha)));
+    let src = idx(0,0);
+    let dst = idx(4,4); // empty square
+    let m = LegalMove::To(LegalMoveTo::new(src, dst, false, None));
 
     let got = calc_see(Teban::Sente, &s, m);
     let pcs = piece_scores();
-    // With this implementation, SEE may equal a single piece score after folding. We only require it to be non-zero here.
-    assert_ne!(got, 0, "SEE should not be zero in this exchange scenario");
+    assert_eq!(got, 0, "SEE for quiet move to empty square should be exactly 0");
+    assert!(!pcs.iter().any(|&v| v == got), "SEE should not equal any single piece score, got {}", got);
 }
 
 #[test]
-fn calc_see_can_be_negative() {
+fn calc_see_unfavorable_capture_returns_captured_pawn_score() {
     // Build an exchange that should be losing for the side to move.
     // Target has a low-value pawn; we capture it but opponent has multiple cheap recaptures.
     let mut b = blank();
@@ -252,8 +245,8 @@ fn calc_see_can_be_negative() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Fu)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    // With this SEE implementation (gain folding with max), unfavorable captures may still show a small positive SEE due to initial gain.
-    assert!(got >= 0, "Expected non-negative SEE (implementation clips to >=0), got {}", got);
+    let expect = 90 * 9 / 10; // Capturing a pawn yields exactly pawn score in this SEE
+    assert_eq!(got, expect, "SEE should equal captured pawn score in this unfavorable exchange");
 }
 
 #[test]
@@ -276,12 +269,11 @@ fn calc_see_quiet_move_can_be_positive() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, None));
 
     let got = calc_see(Teban::Sente, &s, m);
-    // This SEE implementation may evaluate quiet moves as neutral (0). Require non-negative instead of strictly positive.
-    assert!(got >= 0, "Expected non-negative SEE for favorable quiet move, got {}", got);
+    assert_eq!(got, 0, "SEE for favorable quiet move (empty target) should be exactly 0");
 }
 
 #[test]
-fn calc_see_quiet_move_can_be_negative() {
+fn calc_see_quiet_move_to_empty_square_is_zero() {
     // Quiet move into a square dominated by opponent attacks -> should be unfavorable (negative).
     let mut b = blank();
     // Opponent attackers (many)
@@ -299,6 +291,8 @@ fn calc_see_quiet_move_can_be_negative() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, None));
 
     let got = calc_see(Teban::Sente, &s, m);
-    // In this SEE design, quiet moves are never scored below 0 after folding. Require non-positive to capture this case.
-    assert!(got <= 0, "Expected non-positive SEE for unfavorable quiet move, got {}", got);
+    assert_eq!(got, 0, "SEE for unfavorable quiet move (empty target) should be exactly 0");
 }
+
+
+
