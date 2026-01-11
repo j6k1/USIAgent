@@ -1,20 +1,26 @@
-use rule::{LegalMove, Square, SquareToPoint, State};
+use rule::{LegalMove, SquareToPoint, State};
 use see::calc_see;
 use shogi::{KomaKind, Teban};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-// 降順に並び変えるので優先度の低い物から列挙する
+/// 指し手の並び替え順
+/// ※降順に並び変えるので優先度の低い物から列挙する
 pub enum MoveOrder {
     History(i64),
     KillerMoves,
     GoodCaptures(i32),
 }
+/// 指し手並び変え機の実装
 pub struct MoveOrderer {
     killer_moves:Vec<[Option<LegalMove>; 2]>,
     usage_killer_moves:Vec<u8>,
     history:[[[i64;81]; 21]; 2],
 }
 impl MoveOrderer {
+    /// MoveOrdererのインスタンスを生成するコンストラクタ
+    ///
+    /// # Arguments
+    /// * `max_ply` - 現在の最大探索深さ
     #[inline]
     pub fn new(max_ply: usize) -> MoveOrderer {
         MoveOrderer {
@@ -24,6 +30,11 @@ impl MoveOrderer {
         }
     }
 
+    /// Killer Moveの更新
+    ///
+    /// # Arguments
+    /// * `ply` - 現在の探索深さ
+    /// * `m` - 登録する候補手
     #[inline]
     pub fn update_killer(&mut self, ply: usize, m: LegalMove) {
         if self.usage_killer_moves[ply] >= 1 {
@@ -34,20 +45,58 @@ impl MoveOrderer {
         }
     }
 
+    /// Historyの更新
+    ///
+    /// # Arguments
+    /// * `teban` - 手番
+    /// * `state` - 盤面の状態
+    /// * `m` - 候補手
+    /// * `depth` - 現在の探索深さ
     #[inline]
     pub fn update_improve_history(
-        &mut self, teban: Teban, state: &State, m: LegalMove, to: Square, depth: u32
+        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
     ) {
+        let to = match m {
+            LegalMove::To(m) => {
+                m.dst()
+            },
+            LegalMove::Put(m) => {
+                m.dst()
+            }
+        };
+
         self.history[teban as usize][self.calc_piece_index(teban,state,m)][to as usize] += (depth * depth) as i64;
     }
 
+    /// Historyの更新
+    ///
+    /// # Arguments
+    /// * `teban` - 手番
+    /// * `state` - 盤面の状態
+    /// * `m` - 候補手
+    /// * `depth` - 現在の探索深さ
     #[inline]
     pub fn update_degrade_history(
-        &mut self, teban: Teban, state: &State, m: LegalMove, to: Square, depth: u32
+        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
     ) {
+        let to = match m {
+            LegalMove::To(m) => {
+                m.dst()
+            },
+            LegalMove::Put(m) => {
+                m.dst()
+            }
+        };
+
         self.history[teban as usize][self.calc_piece_index(teban,state,m)][to as usize] -= depth as i64;
     }
 
+    /// 駒の種類をMoveOrdererで使う内部インデックスに変換する
+    ///
+    /// # Arguments
+    /// * `teban` - 手番
+    /// * `state` - 盤面の状態
+    /// * `m` - 候補手
     #[inline]
     fn calc_piece_index(&self, teban: Teban, state: &State, m: LegalMove) -> usize {
         match m {
@@ -71,6 +120,13 @@ impl MoveOrderer {
             }
         }
     }
+    /// 指し手を並び変える関数
+    ///
+    /// # Arguments
+    /// * `it` - 候補手を列挙するイテレータ
+    /// * `ply` - 現在の探索深さ
+    /// * `teban` - 手番
+    /// * `state` - 盤面の状態
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(&self, it: I, ply: u32, teban: Teban, state: &State) -> impl Iterator<Item=LegalMove> {
         let mut mvs = vec![];
