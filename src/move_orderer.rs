@@ -11,6 +11,7 @@ pub enum MoveOrder {
     GoodCaptures(i32),
 }
 /// 指し手並び変え機の実装
+#[derive(Debug,Clone)]
 pub struct MoveOrderer {
     killer_moves:Vec<[Option<LegalMove>; 2]>,
     usage_killer_moves:Vec<u8>,
