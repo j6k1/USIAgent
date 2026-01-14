@@ -311,6 +311,14 @@ impl LegalMove {
 	pub fn to_move(self) -> Move {
 		Move::from(self)
 	}
+	/// 獲った駒
+	#[inline]
+	pub fn obtained(&self) -> Option<ObtainKind> {
+		match self {
+			&LegalMove::To(ref m) => m.obtained(),
+			_ => None,
+		}
+	}
 }
 impl From<LegalMove> for Move {
 	#[inline]
