@@ -18,6 +18,7 @@ mod position;
 mod perft;
 mod has_control;
 mod see;
+mod see_xray;
 
 use std::cmp;
 use std::collections::HashMap;

@@ -45,6 +45,12 @@ const PIECE_SCORE_MAP:[i32; 29] = [
     0
 ];
 
+/// SEEを計算する
+///
+/// # Arguments
+/// * `teban` - 手番
+/// * `state` - 局面
+/// * `m` - 手
 pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     let mut score = 0;
 
