@@ -1,4 +1,6 @@
 //! 探索の最適化に用いるSEEの計算を実装する
+
+use bitboard::BitBoard;
 use rule::{LegalMove, Rule, Square, SquareToPoint, State};
 use shogi::{Teban};
 
@@ -52,6 +54,8 @@ const PIECE_SCORE_MAP:[i32; 29] = [
 /// * `state` - 局面
 /// * `m` - 手
 pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
+    let mut state = state.clone();
+
     let mut score = 0;
 
     let target = match m {
@@ -59,120 +63,126 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         LegalMove::Put(m) => m.dst(),
     };
 
-    if let LegalMove::To(m) = m {
-        if m.obtained().is_some() {
-            let (x,y) = target.square_to_point();
+    if m.obtained().is_some() {
+        let (x,y) = target.square_to_point();
 
-            let kind = state.get_banmen().0[y as usize][x as usize];
+        let kind = state.get_banmen().0[y as usize][x as usize];
 
-            score += PIECE_SCORE_MAP[kind as usize];
-        }
+        // 初手で取った駒のスコアを設定
+        score += PIECE_SCORE_MAP[kind as usize];
     }
 
     let (
-        sfu_bb,skyou_bb,skei_bb,sgin_bb,skin_bb,snkin_bb,
-        skaku_bb,shisha_bb,
-        skakun_bb,shishan_bb,sou_bb,
-        ofu_bb,okyou_bb,okei_bb,ogin_bb,okin_bb,onkin_bb,
-        okaku_bb,ohisha_bb,
-        okakun_bb,ohishan_bb,oou_bb
+        self_fu_bb, mut self_kyou_bb, self_kei_bb,
+        self_gin_bb, self_kin_bb, self_nari_kin_bb,
+        mut self_kaku_bb, mut self_hisha_bb,
+        mut self_kaku_nari_bb, mut self_hisha_nari_bb, self_ou_bb,
+        opponent_fu_bb, mut opponent_kyou_bb, opponent_kei_bb,
+        opponent_gin_bb, opponent_kin_bb, opponent_nari_kin_bb,
+        mut opponent_kaku_bb, mut opponent_hisha_bb,
+        mut opponent_kaku_nari_bb, mut opponent_hisha_nari_bb,
+        opponent_ou_bb
     ) = if teban == Teban::Sente {
-        let ofu_bb = Rule::has_control_bits_gote_fu(state, target as Square);
-        let okyou_bb = Rule::has_control_bits_gote_kyou(state, target as Square);
-        let okei_bb = Rule::has_control_bits_gote_kei(state, target as Square);
-        let ogin_bb = Rule::has_control_bits_gote_gin(state, target as Square);
-        let okin_bb = Rule::has_control_bits_gote_kin(state, target as Square);
-        let onkin_bb = Rule::has_control_bits_gote_nari_kin(state, target as Square);
-        let okaku_bb = Rule::has_control_bits_gote_kaku(state, target as Square);
-        let ohisha_bb = Rule::has_control_bits_gote_hisha(state, target as Square);
-        let okakun_bb = Rule::has_control_bits_gote_kaku_nari(state, target as Square);
-        let ohishan_bb = Rule::has_control_bits_gote_hisha_nari(state, target as Square);
-        let oou_bb = Rule::has_control_bits_gote_ou(state, target as Square);
+        let opponent_fu_bb = Rule::has_control_bits_gote_fu(&state, target as Square);
+        let opponent_kyou_bb = Rule::has_control_bits_gote_kyou(&state, target as Square);
+        let opponent_kei_bb = Rule::has_control_bits_gote_kei(&state, target as Square);
+        let opponent_gin_bb = Rule::has_control_bits_gote_gin(&state, target as Square);
+        let opponent_kin_bb = Rule::has_control_bits_gote_kin(&state, target as Square);
+        let opponent_nari_kin_bb = Rule::has_control_bits_gote_nari_kin(&state, target as Square);
+        let opponent_kaku_bb = Rule::has_control_bits_gote_kaku(&state, target as Square);
+        let opponent_hisha_bb = Rule::has_control_bits_gote_hisha(&state, target as Square);
+        let opponent_kaku_nari_bb = Rule::has_control_bits_gote_kaku_nari(&state, target as Square);
+        let opponent_hisha_nari_bb = Rule::has_control_bits_gote_hisha_nari(&state, target as Square);
+        let opponent_ou_bb = Rule::has_control_bits_gote_ou(&state, target as Square);
 
-        if ofu_bb == 0 && okyou_bb == 0 && okei_bb == 0 && ogin_bb == 0 && okin_bb == 0 &&
-            onkin_bb == 0 && okaku_bb == 0 && ohisha_bb == 0 && okakun_bb == 0 && ohishan_bb == 0 && oou_bb == 0 {
+        // 相手が取り返せないならここで終了
+        if opponent_fu_bb == 0 && opponent_kyou_bb == 0 && opponent_kei_bb == 0 && opponent_gin_bb == 0 && opponent_kin_bb == 0 &&
+            opponent_nari_kin_bb == 0 && opponent_kaku_bb == 0 && opponent_hisha_bb == 0 && opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 && opponent_ou_bb == 0 {
             return score;
         }
 
-        let sfu_bb = Rule::has_control_bits_sente_fu(state, target as Square);
-        let skyou_bb = Rule::has_control_bits_sente_kyou(state, target as Square);
-        let skei_bb = Rule::has_control_bits_sente_kei(state, target as Square);
-        let sgin_bb = Rule::has_control_bits_sente_gin(state, target as Square);
-        let skin_bb = Rule::has_control_bits_sente_kin(state, target as Square);
-        let snkin_bb = Rule::has_control_bits_sente_nari_kin(state, target as Square);
-        let skaku_bb = Rule::has_control_bits_sente_kaku(state, target as Square);
-        let shisha_bb = Rule::has_control_bits_sente_hisha(state, target as Square);
-        let skakun_bb = Rule::has_control_bits_sente_kaku_nari(state, target as Square);
-        let shishan_bb = Rule::has_control_bits_sente_hisha_nari(state, target as Square);
-        let sou_bb = Rule::has_control_bits_sente_ou(state, target as Square);
+        let self_fu_bb = Rule::has_control_bits_sente_fu(&state, target as Square);
+        let self_kyou_bb = Rule::has_control_bits_sente_kyou(&state, target as Square);
+        let self_kei_bb = Rule::has_control_bits_sente_kei(&state, target as Square);
+        let self_gin_bb = Rule::has_control_bits_sente_gin(&state, target as Square);
+        let self_kin_bb = Rule::has_control_bits_sente_kin(&state, target as Square);
+        let self_nari_kin_bb = Rule::has_control_bits_sente_nari_kin(&state, target as Square);
+        let self_kaku_bb = Rule::has_control_bits_sente_kaku(&state, target as Square);
+        let self_hisha_bb = Rule::has_control_bits_sente_hisha(&state, target as Square);
+        let self_kaku_nari_bb = Rule::has_control_bits_sente_kaku_nari(&state, target as Square);
+        let self_hisha_nari_bb = Rule::has_control_bits_sente_hisha_nari(&state, target as Square);
+        let self_ou_bb = Rule::has_control_bits_sente_ou(&state, target as Square);
 
         (
-            sfu_bb,skyou_bb,skei_bb,sgin_bb,skin_bb,snkin_bb,skaku_bb,shisha_bb,
-            skakun_bb,shishan_bb,sou_bb,
-            ofu_bb,okyou_bb,okei_bb,ogin_bb,okin_bb,onkin_bb,okaku_bb,ohisha_bb,
-            okakun_bb,ohishan_bb,oou_bb
+            self_fu_bb, self_kyou_bb, self_kei_bb, self_gin_bb, self_kin_bb, self_nari_kin_bb, self_kaku_bb, self_hisha_bb,
+            self_kaku_nari_bb, self_hisha_nari_bb, self_ou_bb,
+            opponent_fu_bb, opponent_kyou_bb, opponent_kei_bb, opponent_gin_bb, opponent_kin_bb, opponent_nari_kin_bb, opponent_kaku_bb, opponent_hisha_bb,
+            opponent_kaku_nari_bb, opponent_hisha_nari_bb, opponent_ou_bb
         )
     } else {
-        let ofu_bb = Rule::has_control_bits_sente_fu(state, target as Square);
-        let okyou_bb = Rule::has_control_bits_sente_kyou(state, target as Square);
-        let okei_bb = Rule::has_control_bits_sente_kei(state, target as Square);
-        let ogin_bb = Rule::has_control_bits_sente_gin(state, target as Square);
-        let okin_bb = Rule::has_control_bits_sente_kin(state, target as Square);
-        let onkin_bb = Rule::has_control_bits_sente_nari_kin(state, target as Square);
-        let okaku_bb = Rule::has_control_bits_sente_kaku(state, target as Square);
-        let ohisha_bb = Rule::has_control_bits_sente_hisha(state, target as Square);
-        let okakun_bb = Rule::has_control_bits_sente_kaku_nari(state, target as Square);
-        let ohishan_bb = Rule::has_control_bits_sente_hisha_nari(state, target as Square);
-        let oou_bb = Rule::has_control_bits_sente_ou(state, target as Square);
+        let opponent_fu_bb = Rule::has_control_bits_sente_fu(&state, target as Square);
+        let opponent_kyou_bb = Rule::has_control_bits_sente_kyou(&state, target as Square);
+        let opponent_kei_bb = Rule::has_control_bits_sente_kei(&state, target as Square);
+        let opponent_gin_bb = Rule::has_control_bits_sente_gin(&state, target as Square);
+        let opponent_kin_bb = Rule::has_control_bits_sente_kin(&state, target as Square);
+        let opponent_nari_kin_bb = Rule::has_control_bits_sente_nari_kin(&state, target as Square);
+        let opponent_kaku_bb = Rule::has_control_bits_sente_kaku(&state, target as Square);
+        let opponent_hisha_bb = Rule::has_control_bits_sente_hisha(&state, target as Square);
+        let opponent_kaku_nari_bb = Rule::has_control_bits_sente_kaku_nari(&state, target as Square);
+        let opponent_hisha_nari_bb = Rule::has_control_bits_sente_hisha_nari(&state, target as Square);
+        let opponent_ou_bb = Rule::has_control_bits_sente_ou(&state, target as Square);
 
-        if ofu_bb == 0 && okyou_bb == 0 && okei_bb == 0 && ogin_bb == 0 && okin_bb == 0 &&
-            onkin_bb == 0 && okaku_bb == 0 && ohisha_bb == 0 && okakun_bb == 0 && ohishan_bb == 0 && oou_bb == 0 {
+        // 相手が取り返せないならここで終了
+        if opponent_fu_bb == 0 && opponent_kyou_bb == 0 && opponent_kei_bb == 0 && opponent_gin_bb == 0 && opponent_kin_bb == 0 &&
+            opponent_nari_kin_bb == 0 && opponent_kaku_bb == 0 && opponent_hisha_bb == 0 && opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 && opponent_ou_bb == 0 {
             return score;
         }
 
-        let sfu_bb = Rule::has_control_bits_gote_fu(state, target as Square);
-        let skyou_bb = Rule::has_control_bits_gote_kyou(state, target as Square);
-        let skei_bb = Rule::has_control_bits_gote_kei(state, target as Square);
-        let sgin_bb = Rule::has_control_bits_gote_gin(state, target as Square);
-        let skin_bb = Rule::has_control_bits_gote_kin(state, target as Square);
-        let snkin_bb = Rule::has_control_bits_gote_nari_kin(state, target as Square);
-        let skaku_bb = Rule::has_control_bits_gote_kaku(state, target as Square);
-        let shisha_bb = Rule::has_control_bits_gote_hisha(state, target as Square);
-        let skakun_bb = Rule::has_control_bits_gote_kaku_nari(state, target as Square);
-        let shishan_bb = Rule::has_control_bits_gote_hisha_nari(state, target as Square);
-        let sou_bb = Rule::has_control_bits_gote_ou(state, target as Square);
+        let self_fu_bb = Rule::has_control_bits_gote_fu(&state, target as Square);
+        let self_kyou_bb = Rule::has_control_bits_gote_kyou(&state, target as Square);
+        let self_kei_bb = Rule::has_control_bits_gote_kei(&state, target as Square);
+        let self_gin_bb = Rule::has_control_bits_gote_gin(&state, target as Square);
+        let self_kin_bb = Rule::has_control_bits_gote_kin(&state, target as Square);
+        let self_nari_kin_bb = Rule::has_control_bits_gote_nari_kin(&state, target as Square);
+        let self_kaku_bb = Rule::has_control_bits_gote_kaku(&state, target as Square);
+        let self_hisha_bb = Rule::has_control_bits_gote_hisha(&state, target as Square);
+        let self_kaku_nari_bb = Rule::has_control_bits_gote_kaku_nari(&state, target as Square);
+        let self_hisha_nari_bb = Rule::has_control_bits_gote_hisha_nari(&state, target as Square);
+        let self_ou_bb = Rule::has_control_bits_gote_ou(&state, target as Square);
 
         (
-            sfu_bb,skyou_bb,skei_bb,sgin_bb,skin_bb,snkin_bb,skaku_bb,shisha_bb,
-            skakun_bb,shishan_bb,sou_bb,
-            ofu_bb,okyou_bb,okei_bb,ogin_bb,okin_bb,onkin_bb,okaku_bb,ohisha_bb,
-            okakun_bb,ohishan_bb,oou_bb
+            self_fu_bb, self_kyou_bb, self_kei_bb, self_gin_bb, self_kin_bb, self_nari_kin_bb, self_kaku_bb, self_hisha_bb,
+            self_kaku_nari_bb, self_hisha_nari_bb, self_ou_bb,
+            opponent_fu_bb, opponent_kyou_bb, opponent_kei_bb, opponent_gin_bb, opponent_kin_bb, opponent_nari_kin_bb, opponent_kaku_bb, opponent_hisha_bb,
+            opponent_kaku_nari_bb, opponent_hisha_nari_bb, opponent_ou_bb
         )
     };
 
-    let mut sfu_it = sfu_bb.iter();
-    let mut skyou_it = skyou_bb.iter();
-    let mut skei_it = skei_bb.iter();
-    let mut sgin_it = sgin_bb.iter();
-    let mut skin_it = skin_bb.iter();
-    let mut snkin_it = snkin_bb.iter();
-    let mut skaku_it = skaku_bb.iter();
-    let mut shisha_it = shisha_bb.iter();
-    let mut skakun_it = skakun_bb.iter();
-    let mut shishan_it = shishan_bb.iter();
-    let mut sou_it = sou_bb.iter();
+    // 飛車、角、香車以外は取り合い中に効きが増えることはないし効きが消えることもないので
+    // イテレータを一度取ったらあとは読み出すだけ
+    let mut self_fu_it = self_fu_bb.iter();
+    let mut self_kyou_it = self_kyou_bb.iter();
+    let mut self_kei_it = self_kei_bb.iter();
+    let mut self_gin_it = self_gin_bb.iter();
+    let mut self_kin_it = self_kin_bb.iter();
+    let mut self_nari_kin_it = self_nari_kin_bb.iter();
+    let mut self_kaku_it = self_kaku_bb.iter();
+    let mut self_hisha_it = self_hisha_bb.iter();
+    let mut self_kaku_nari_it = self_kaku_nari_bb.iter();
+    let mut self_hisha_nari_it = self_hisha_nari_bb.iter();
+    let mut self_ou_it = self_ou_bb.iter();
 
-    let mut ofu_it = ofu_bb.iter();
-    let mut okyou_it = okyou_bb.iter();
-    let mut okei_it = okei_bb.iter();
-    let mut ogin_it = ogin_bb.iter();
-    let mut okin_it = okin_bb.iter();
-    let mut onkin_it = onkin_bb.iter();
-    let mut okaku_it = okaku_bb.iter();
-    let mut ohisha_it = ohisha_bb.iter();
-    let mut okakun_it = okakun_bb.iter();
-    let mut ohishan_it = ohishan_bb.iter();
-    let mut oou_it = oou_bb.iter();
+    let mut opponent_fu_it = opponent_fu_bb.iter();
+    let mut opponent_kyou_it = opponent_kyou_bb.iter();
+    let mut opponent_kei_it = opponent_kei_bb.iter();
+    let mut opponent_gin_it = opponent_gin_bb.iter();
+    let mut opponent_kin_it = opponent_kin_bb.iter();
+    let mut opponent_nari_kin_it = opponent_nari_kin_bb.iter();
+    let mut opponent_kaku_it = opponent_kaku_bb.iter();
+    let mut opponent_hisha_it = opponent_hisha_bb.iter();
+    let mut opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
+    let mut opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
+    let mut opponent_ou_it = opponent_ou_bb.iter();
 
     let mut gain = vec![score];
 
@@ -180,6 +190,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
     let mut current_score = score;
 
+    // 逆伝播
     #[inline]
     fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, next_score:i32) {
         let g = gain.last().unwrap();
@@ -187,69 +198,262 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         *current_score = next_score;
     }
 
+    // 動かした駒をoccupiedから取り除く。そのうえで飛車、角、香車の効きを手番側相手番側ともに再列挙
+    #[inline]
+    fn pull_occupied(state:&mut State, teban: Teban, target: Square, p:Square,
+        self_kyou_bb: &mut BitBoard, self_hisha_bb: &mut BitBoard, self_kaku_bb: &mut BitBoard,
+        self_kaku_nari_bb: &mut BitBoard, self_hisha_nari_bb: &mut BitBoard,
+        opponent_kyou_bb: &mut BitBoard, opponent_hisha_bb: &mut BitBoard, opponent_kaku_bb: &mut BitBoard,
+        opponent_kaku_nari_bb: &mut BitBoard, opponent_hisha_nari_bb: &mut BitBoard,
+    ) {
+        match teban {
+            Teban::Sente => {
+                // ビットボードからターゲットのマスへ動かした駒のビットを取り除く
+                state.part.sente_self_board ^= 1 << (p + 1);
+                state.part.gote_opponent_board ^= 1 << (80 - p + 1);
+
+                // 手番側の飛車、角、香車の効きを再計算
+                *self_kyou_bb = Rule::has_control_bits_sente_kyou(state, target as Square);
+                *self_kaku_bb = Rule::has_control_bits_sente_kaku(state, target as Square);
+                *self_hisha_bb = Rule::has_control_bits_sente_hisha(state, target as Square);
+                *self_kaku_nari_bb = Rule::has_control_bits_sente_kaku_nari(state, target as Square);
+                *self_hisha_nari_bb = Rule::has_control_bits_sente_hisha_nari(state, target as Square);
+
+                // 非手番側の飛車、角、香車の効きを再計算
+                *opponent_kyou_bb = Rule::has_control_bits_gote_kyou(state, target as Square);
+                *opponent_kaku_bb = Rule::has_control_bits_gote_kaku(state, target as Square);
+                *opponent_hisha_bb = Rule::has_control_bits_gote_hisha(state, target as Square);
+                *opponent_kaku_nari_bb = Rule::has_control_bits_gote_kaku_nari(state, target as Square);
+                *opponent_hisha_nari_bb = Rule::has_control_bits_gote_hisha_nari(state, target as Square);
+            },
+            Teban::Gote => {
+                // ビットボードからターゲットのマスへ動かした駒のビットを取り除く
+                state.part.gote_self_board ^= 1 << (80 - p + 1);
+                state.part.sente_opponent_board ^= 1 << (p + 1);
+
+                // 手番側の飛車、角、香車の効きを再計算
+                *self_kyou_bb = Rule::has_control_bits_gote_kyou(state, target as Square);
+                *self_kaku_bb = Rule::has_control_bits_gote_kaku(state, target as Square);
+                *self_hisha_bb = Rule::has_control_bits_gote_hisha(state, target as Square);
+                *self_kaku_nari_bb = Rule::has_control_bits_gote_kaku_nari(state, target as Square);
+                *self_hisha_nari_bb = Rule::has_control_bits_gote_hisha_nari(state, target as Square);
+
+                // 非手番側の飛車、角、香車の効きを再計算
+                *opponent_kyou_bb = Rule::has_control_bits_sente_kyou(state, target as Square);
+                *opponent_kaku_bb = Rule::has_control_bits_sente_kaku(state, target as Square);
+                *opponent_hisha_bb = Rule::has_control_bits_sente_hisha(state, target as Square);
+                *opponent_kaku_nari_bb = Rule::has_control_bits_sente_kaku_nari(state, target as Square);
+                *opponent_hisha_nari_bb = Rule::has_control_bits_sente_hisha_nari(state, target as Square);
+            }
+        }
+    }
+
     loop {
         if isself {
-            if sfu_it.next().is_some() {
+            if let Some(p) =self_fu_it.next() {
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, FU_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if skyou_it.next().is_some() {
+            if let Some(p) = self_kyou_it.next() {
+                self_kyou_bb ^= 1 << (p + 1);
+
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
+                self_kyou_it = self_kyou_bb.iter();
                 update_gain(&mut gain, &mut current_score, KYOU_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if skei_it.next().is_some() {
+            if let Some(p) = self_kei_it.next() {
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, KEI_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if sgin_it.next().is_some() {
+            if let Some(p) = self_gin_it.next() {
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, GIN_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if skin_it.next().is_some() {
+            if let Some(p) = self_kin_it.next() {
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if snkin_it.next().is_some() {
+            if let Some(p) = self_nari_kin_it.next() {
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if skaku_it.next().is_some() {
+            if let Some(p) = self_kaku_it.next() {
+                self_kaku_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
+                self_kaku_it = self_kaku_bb.iter();
                 update_gain(&mut gain, &mut current_score, KAKU_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if shisha_it.next().is_some() {
+            if let Some(p) = self_hisha_it.next() {
+                self_hisha_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
+                self_hisha_it = self_hisha_bb.iter();
                 update_gain(&mut gain, &mut current_score, HISHA_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if skakun_it.next().is_some() {
+            if let Some(p) = self_kaku_nari_it.next() {
+                self_kaku_nari_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
+                self_kaku_nari_it = self_kaku_nari_bb.iter();
                 update_gain(&mut gain, &mut current_score, KAKU_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if shishan_it.next().is_some() {
+            if let Some(p) = self_hisha_nari_it.next() {
+                self_hisha_nari_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
+                self_hisha_nari_it = self_hisha_nari_bb.iter();
                 update_gain(&mut gain, &mut current_score, HISHA_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if sou_it.next().is_some() {
+            if let Some(p) = self_ou_it.next() {
+                pull_occupied(&mut state,teban,target as Square,
+                              p as Square,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, OU_SCORE);
                 isself = !isself;
                 continue;
@@ -257,67 +461,209 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             break;
         } else {
-            if ofu_it.next().is_some() {
+            if let Some(p) = opponent_fu_it.next() {
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, FU_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if okyou_it.next().is_some() {
+            if let Some(p) = opponent_kyou_it.next() {
+                opponent_kyou_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
+                opponent_kyou_it = opponent_kyou_bb.iter();
                 update_gain(&mut gain, &mut current_score, KYOU_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if okei_it.next().is_some() {
+            if let Some(p) = opponent_kei_it.next() {
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, KEI_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if ogin_it.next().is_some() {
+            if let Some(p) = opponent_gin_it.next() {
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, GIN_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if okin_it.next().is_some() {
+            if let Some(p) = opponent_kin_it.next() {
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if onkin_it.next().is_some() {
+            if let Some(p) = opponent_nari_kin_it.next() {
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if okaku_it.next().is_some() {
+            if let Some(p) = opponent_kaku_it.next() {
+                opponent_kaku_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
+                opponent_kaku_it = opponent_kaku_bb.iter();
                 update_gain(&mut gain, &mut current_score, KAKU_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if ohisha_it.next().is_some() {
+            if let Some(p) = opponent_hisha_it.next() {
+                opponent_hisha_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
+                opponent_hisha_it = opponent_hisha_bb.iter();
                 update_gain(&mut gain, &mut current_score, HISHA_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if okakun_it.next().is_some() {
+            if let Some(p) = opponent_kaku_nari_it.next() {
+                opponent_kaku_nari_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
+                opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 update_gain(&mut gain, &mut current_score, KAKU_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if ohishan_it.next().is_some() {
+            if let Some(p) = opponent_hisha_nari_it.next() {
+                opponent_hisha_nari_bb ^= 1 << (p + 1);
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
+                opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
                 update_gain(&mut gain, &mut current_score, HISHA_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
 
-            if oou_it.next().is_some() {
+            if let Some(p) = opponent_ou_it.next() {
+                pull_occupied(&mut state,teban.opposite(),target as Square,
+                              p as Square,
+                              &mut opponent_kyou_bb,
+                              &mut opponent_kaku_bb,
+                              &mut opponent_hisha_bb,
+                              &mut opponent_kaku_nari_bb,
+                              &mut opponent_hisha_nari_bb,
+                              &mut self_kyou_bb,
+                              &mut self_kaku_bb,
+                              &mut self_hisha_bb,
+                              &mut self_kaku_nari_bb,
+                              &mut self_hisha_nari_bb);
                 update_gain(&mut gain, &mut current_score, OU_SCORE);
                 isself = !isself;
                 continue;
