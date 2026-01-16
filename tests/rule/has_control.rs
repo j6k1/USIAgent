@@ -492,7 +492,7 @@ fn has_control_bits_gote_nari_kin_variants() {
         set_piece(&mut b, 4,4, GKin);
         set_piece(&mut b, 4,3, kind);
         let s = State::new(b);
-        assert_eq!(Rule::has_control_bits_gote_nari_kin(&s, idx(4,4)), 0);
+        assert_eq!(Rule::has_control_bits_gote_nari_kin(&s, idx(4,4)), expect);
 
         let mut b = blank();
         set_piece(&mut b, 4,4, SFu);
@@ -515,7 +515,7 @@ fn has_control_bits_gote_kaku_nari_variants() {
     set_piece(&mut b, 4,4, GKin);
     set_piece(&mut b, 5,4, GKakuN);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_kaku_nari(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_kaku_nari(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -537,7 +537,7 @@ fn has_control_bits_gote_hisha_nari_variants() {
     set_piece(&mut b, 4,4, GKin);
     set_piece(&mut b, 4,3, GHishaN);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_hisha_nari(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_hisha_nari(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);

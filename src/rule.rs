@@ -13398,7 +13398,7 @@ impl Rule {
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GFu);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の香の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13414,7 +13414,7 @@ impl Rule {
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
 				state.part.sente_opponent_board, state.part.sente_self_board, from_idx);
-			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
 	}
@@ -13433,7 +13433,7 @@ impl Rule {
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKei);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の銀の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13450,7 +13450,7 @@ impl Rule {
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GGin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の金の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13467,7 +13467,7 @@ impl Rule {
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の角の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13488,7 +13488,7 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の飛車の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13509,7 +13509,7 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の玉の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13520,13 +13520,13 @@ impl Rule {
 	pub fn has_control_bits_gote_ou(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.sente_opponent_board.reverse().iter() {
+ 	for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GOu);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の成り金相当の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13542,9 +13542,9 @@ impl Rule {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
-			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の馬（角成）の効きを持つ駒の位置ビットボードを返す
 	///
@@ -13567,7 +13567,7 @@ impl Rule {
 			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKakuN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 	/// 指定したマスに後手の龍（飛成）の効きを持つ駒の位置ビットボードを返す
 	///
