@@ -13542,7 +13542,7 @@ impl Rule {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
-			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
+			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
 	}
@@ -13592,7 +13592,7 @@ impl Rule {
 			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GHishaN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
-		res.reverse()
+		res
 	}
 
 	/// 駒が成れる手か判定する
