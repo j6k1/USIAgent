@@ -182,7 +182,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     #[inline]
     fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, next_score:i32) {
         let g = *gain.last().unwrap_or(&0);
-        gain.push(*current_score - g);
+        gain.push(-(*current_score - g));
         *current_score = next_score;
     }
 
@@ -803,11 +803,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     if gain.is_empty() {
         return 0;
     }
-    
+
     let mut i = gain.len() - 1;
 
     while i > 0 {
-        gain[i-1] = (-gain[i]).max(gain[i-1]);
+        gain[i-1] = (gain[i-1]).min(-gain[i]);
         i -= 1;
     }
 
