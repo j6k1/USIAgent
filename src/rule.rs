@@ -12791,7 +12791,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		for p in state.part.sente_fu_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SFu);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SFu);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12809,8 +12809,6 @@ impl Rule {
 			// 先手香の前方向（上方向）のみを調べるため、盤面を反転して to_top を用いる
 			let mut cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
 				state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse();
-			// 自駒で占有されているマスは効きに含めない
-			cand &= !state.part.sente_self_board;
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12825,7 +12823,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		for p in state.part.sente_kei_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKei);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKei);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12840,7 +12838,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		for p in state.part.sente_gin_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SGin);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SGin);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12855,7 +12853,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		for p in state.part.sente_kin_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKin);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12875,8 +12873,6 @@ impl Rule {
 				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
 				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse() |
 				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse();
-			// 自駒があるマスは効きとして数えない
-			cand &= !state.part.sente_self_board;
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12900,8 +12896,6 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
 				// horizontal right
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p);
-			// 自駒があるマスは効きとして数えない
-			cand &= !state.part.sente_self_board;
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12919,7 +12913,7 @@ impl Rule {
 			for (x,&k) in row.iter().enumerate() {
 				if k == SOu {
 					let from = (x as u32) * 9 + (y as u32);
-					let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, from, SOu);
+					let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), from, SOu);
 					if (cand & to_bb) != 0 { return true; }
 				}
 			}
@@ -12937,7 +12931,7 @@ impl Rule {
 		let board = state.part.sente_nari_board & (state.part.sente_fu_board | state.part.sente_kyou_board | state.part.sente_kei_board | state.part.sente_gin_board);
 		for p in board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKin);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12953,7 +12947,12 @@ impl Rule {
 		let board = state.part.sente_kaku_board & state.part.sente_nari_board;
 		for p in board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKakuN);
+			let mut cand =
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
+					Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
+					Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse() |
+					Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse();
+			cand |= Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKakuN);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12976,9 +12975,7 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p);
 			// add diagonal steps for dragon
-			cand |= Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SHishaN);
-			// exclude own occupied squares
-			cand &= !state.part.sente_self_board;
+			cand |= Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SHishaN);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -12994,7 +12991,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		for p in state.part.gote_fu_board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GFu);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GFu);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13012,8 +13009,6 @@ impl Rule {
 			let from_idx = 80 - fp;
 			let mut cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
 				state.part.sente_opponent_board, state.part.sente_self_board, from_idx);
-			// 自駒で占有されているマスは効きに含めない（後手）
-			cand &= !state.part.gote_self_board;
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13028,7 +13023,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		for p in state.part.gote_kei_board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKei);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKei);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13043,7 +13038,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		for p in state.part.gote_gin_board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GGin);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GGin);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13058,7 +13053,7 @@ impl Rule {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		for p in state.part.gote_kin_board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13079,8 +13074,6 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
 				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
 				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
-			// 自駒があるマスは効きとして数えない（後手）
-			cand &= !state.part.gote_self_board;
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13103,8 +13096,6 @@ impl Rule {
 				// horizontal in both directions
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
-			// 自駒があるマスは効きとして数えない（後手）
-			cand &= !state.part.gote_self_board;
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13122,7 +13113,7 @@ impl Rule {
 			for (x,&k) in row.iter().enumerate() {
 				if k == GOu {
 					let from = (x as u32) * 9 + (y as u32);
-					let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from, GOu);
+					let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from, GOu);
 					if (cand & to_bb) != 0 { return true; }
 				}
 			}
@@ -13140,7 +13131,7 @@ impl Rule {
 		let board = state.part.gote_nari_board & (state.part.gote_fu_board | state.part.gote_kyou_board | state.part.gote_kei_board | state.part.gote_gin_board);
 		for p in board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13156,7 +13147,7 @@ impl Rule {
 		let board = state.part.gote_kaku_board & state.part.gote_nari_board;
 		for p in board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKakuN);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKakuN);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13179,9 +13170,7 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
 			// add diagonal steps for dragon
-			cand |= Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GHishaN);
-			// exclude own occupied squares (gote)
-			cand &= !state.part.gote_self_board;
+			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GHishaN);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13198,7 +13187,7 @@ impl Rule {
 		let mut res = BitBoard::default();
 		for p in state.part.sente_fu_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SFu);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SFu);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13220,8 +13209,6 @@ impl Rule {
 				state.part.gote_self_board,     // flip: 相手（後手）側から見た自駒 = 先手視点の自駒
 				80 - p
 			).reverse();
-			// 自駒があるマスは効きとして数えない
-			cand &= !state.part.sente_self_board;
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13237,7 +13224,7 @@ impl Rule {
 		let mut res = BitBoard::default();
 		for p in state.part.sente_kei_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKei);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKei);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13253,7 +13240,7 @@ impl Rule {
 		let mut res = BitBoard::default();
 		for p in state.part.sente_gin_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SGin);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SGin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13269,7 +13256,7 @@ impl Rule {
 		let mut res = BitBoard::default();
 		for p in state.part.sente_kin_board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13290,8 +13277,6 @@ impl Rule {
 				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
 				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse() |
 				Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse();
-			// 自駒があるマスは効きとして数えない
-			cand &= !state.part.sente_self_board;
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13312,8 +13297,6 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p)
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p);
-			// 自駒があるマスは効きとして数えない
-			cand &= !state.part.sente_self_board;
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13331,7 +13314,7 @@ impl Rule {
 			for (x,&k) in row.iter().enumerate() {
 				if k == SOu {
 					let from = (x as u32) * 9 + (y as u32);
-					let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, from, SOu);
+					let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), from, SOu);
 					if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (from + 1)); }
 				}
 			}
@@ -13350,7 +13333,7 @@ impl Rule {
 		let board = state.part.sente_nari_board & (state.part.sente_fu_board | state.part.sente_kyou_board | state.part.sente_kei_board | state.part.sente_gin_board);
 		for p in board.iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKin);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13372,9 +13355,7 @@ impl Rule {
 					Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
 					Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse() |
 					Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse();
-			cand |= Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SKakuN);
-			// 自駒があるマスは効きとして数えない
-			cand &= !state.part.sente_self_board;
+			cand |= Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKakuN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13399,9 +13380,7 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_opponent_board, state.part.gote_self_board, 80 - p).reverse()
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_self_board, state.part.sente_opponent_board, p);
 			// add diagonal king-like moves for dragon
-			cand |= Rule::gen_candidate_bits(Teban::Sente, state.part.sente_self_board, p, SHishaN);
-			// exclude own occupied squares
-			cand &= !state.part.sente_self_board;
+			cand |= Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SHishaN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
 		}
 		res
@@ -13419,7 +13398,7 @@ impl Rule {
 		for p in state.part.gote_fu_board.reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GFu);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GFu);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13438,8 +13417,6 @@ impl Rule {
 			let from_idx = 80 - p;
 			let mut cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
 				state.part.sente_opponent_board, state.part.sente_self_board, from_idx);
-			// 自駒があるマスは効きとして数えない（後手視点の自駒 = gote_self_board）
-			cand &= !state.part.gote_self_board;
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13456,7 +13433,7 @@ impl Rule {
 		for p in state.part.gote_kei_board.reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKei);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKei);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13473,7 +13450,7 @@ impl Rule {
 		for p in state.part.gote_gin_board.reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GGin);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GGin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13490,7 +13467,7 @@ impl Rule {
 		for p in state.part.gote_kin_board.reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13512,8 +13489,6 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
 				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
 				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
-			// 自駒があるマスは効きとして数えない（後手）
-			cand &= !state.part.gote_self_board;
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13535,8 +13510,6 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
-			// 自駒があるマスは効きとして数えない（後手）
-			cand &= !state.part.gote_self_board;
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13554,7 +13527,7 @@ impl Rule {
 			for (x,&k) in row.iter().enumerate() {
 				if k == GOu {
 					let from = (x as u32) * 9 + (y as u32);
-					let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from, GOu);
+					let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from, GOu);
 					if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (from + 1)); }
 				}
 			}
@@ -13574,7 +13547,7 @@ impl Rule {
 		for p in board.reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKin);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13597,9 +13570,7 @@ impl Rule {
 					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
 					| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
 					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
-			// 自駒があるマスは効きとして数えない（後手）
-			cand |= Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GKakuN);
-			cand &= !state.part.gote_self_board;
+			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKakuN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13624,9 +13595,7 @@ impl Rule {
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
 				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
 			// add diagonal steps for dragon (GHishaN)
-			cand |= Rule::gen_candidate_bits(Teban::Gote, state.part.gote_self_board, from_idx, GHishaN);
-			// exclude own occupied squares（後手）
-			cand &= !state.part.gote_self_board;
+			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GHishaN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
