@@ -12851,7 +12851,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_sente_kin(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (to + 1));
-		for p in state.part.sente_kin_board.iter() {
+		for p in (state.part.sente_kin_board & !state.part.sente_nari_board).iter() {
 			let p = p as u32;
 			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKin);
 			if (cand & to_bb) != 0 { return true; }
@@ -12866,7 +12866,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_sente_kaku(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (to + 1));
-		for p in state.part.sente_kaku_board.iter() {
+		for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
 			let p = p as u32;
 			let cand =
 				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_self_board, state.part.sente_opponent_board, p) |
@@ -12885,7 +12885,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_sente_hisha(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (to + 1));
-		for p in state.part.sente_hisha_board.iter() {
+		for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
 			let p = p as u32;
 			let cand =
 				// vertical (down from sente perspective)
@@ -12909,14 +12909,10 @@ impl Rule {
 	pub fn has_control_sente_ou(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		// 先手玉の位置を盤面から探索
-		for (y,row) in state.banmen.0.iter().enumerate() {
-			for (x,&k) in row.iter().enumerate() {
-				if k == SOu {
-					let from = (x as u32) * 9 + (y as u32);
-					let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), from, SOu);
-					if (cand & to_bb) != 0 { return true; }
-				}
-			}
+		for p in state.part.gote_opponent_ou_position_board.reverse().iter() {
+			let p = p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKin);
+			if (cand & to_bb) != 0 { return true; }
 		}
 		false
 	}
@@ -12989,7 +12985,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_gote_fu(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
-		for p in state.part.gote_fu_board.reverse().iter() {
+		for p in (state.part.gote_fu_board & !state.part.gote_nari_board).reverse().iter() {
 			let from_idx = 80 - p as u32;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GFu);
 			if (cand & to_bb) != 0 { return true; }
@@ -13021,7 +13017,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_gote_kei(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
-		for p in state.part.gote_kei_board.reverse().iter() {
+		for p in (state.part.gote_kei_board & !state.part.gote_nari_board).reverse().iter() {
 			let from_idx = 80 - p as u32;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKei);
 			if (cand & to_bb) != 0 { return true; }
@@ -13036,7 +13032,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_gote_gin(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
-		for p in state.part.gote_gin_board.reverse().iter() {
+		for p in (state.part.gote_gin_board & !state.part.gote_nari_board).reverse().iter() {
 			let from_idx = 80 - p as u32;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GGin);
 			if (cand & to_bb) != 0 { return true; }
@@ -13066,7 +13062,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_gote_kaku(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
-		for p in state.part.gote_kaku_board.reverse().iter() {
+		for p in (state.part.gote_kaku_board & !state.part.gote_nari_board).reverse().iter() {
 			let fp = p as u32;
 			let from_idx = 80 - fp;
 			let cand =
@@ -13086,7 +13082,7 @@ impl Rule {
 	#[inline]
 	pub fn has_control_gote_hisha(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
-		for p in state.part.gote_hisha_board.reverse().iter() {
+		for p in (state.part.gote_hisha_board & !state.part.gote_nari_board).reverse().iter() {
 			let fp = p as u32;
 			let from_idx = 80 - fp;
 			let cand =
@@ -13108,15 +13104,10 @@ impl Rule {
 	#[inline]
 	pub fn has_control_gote_ou(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
-		// 後手玉の位置を盤面から探索
-		for (y,row) in state.banmen.0.iter().enumerate() {
-			for (x,&k) in row.iter().enumerate() {
-				if k == GOu {
-					let from = (x as u32) * 9 + (y as u32);
-					let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from, GOu);
-					if (cand & to_bb) != 0 { return true; }
-				}
-			}
+		for p in state.part.sente_opponent_ou_position_board.iter() {
+			let from_idx = 80 - p as u32;
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
+			if (cand & to_bb) != 0 { return true; }
 		}
 		false
 	}
@@ -13185,7 +13176,7 @@ impl Rule {
 	pub fn has_control_bits_sente_fu(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.sente_fu_board.iter() {
+		for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
 			let p = p as u32;
 			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SFu);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
@@ -13222,7 +13213,7 @@ impl Rule {
 	pub fn has_control_bits_sente_kei(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.sente_kei_board.iter() {
+		for p in (state.part.sente_kei_board & !state.part.sente_nari_board).iter() {
 			let p = p as u32;
 			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKei);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
@@ -13238,7 +13229,7 @@ impl Rule {
 	pub fn has_control_bits_sente_gin(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.sente_gin_board.iter() {
+		for p in (state.part.sente_gin_board & !state.part.sente_nari_board).iter() {
 			let p = p as u32;
 			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SGin);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (p + 1)); }
@@ -13392,7 +13383,7 @@ impl Rule {
 	pub fn has_control_bits_gote_fu(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.gote_fu_board.reverse().iter() {
+		for p in (state.part.gote_fu_board & !state.part.gote_nari_board).reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GFu);
@@ -13427,7 +13418,7 @@ impl Rule {
 	pub fn has_control_bits_gote_kei(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.gote_kei_board.reverse().iter() {
+		for p in (state.part.gote_kei_board & !state.part.gote_nari_board).reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKei);
@@ -13444,7 +13435,7 @@ impl Rule {
 	pub fn has_control_bits_gote_gin(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.gote_gin_board.reverse().iter() {
+		for p in (state.part.gote_gin_board & !state.part.gote_nari_board).reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GGin);
@@ -13478,7 +13469,7 @@ impl Rule {
 	pub fn has_control_bits_gote_kaku(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		let mut res = BitBoard::default();
-		for p in (state.part.gote_kaku_board.reverse() & !state.part.gote_nari_board.reverse()).iter() {
+		for p in (state.part.gote_kaku_board & !state.part.gote_nari_board).reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand =
@@ -13499,7 +13490,7 @@ impl Rule {
 	pub fn has_control_bits_gote_hisha(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		let mut res = BitBoard::default();
-		for p in state.part.gote_hisha_board.reverse().iter() {
+		for p in (state.part.gote_hisha_board & !state.part.gote_nari_board).reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand =
@@ -13520,7 +13511,7 @@ impl Rule {
 	pub fn has_control_bits_gote_ou(state:&State,to:Square) -> BitBoard {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
 		let mut res = BitBoard::default();
- 	for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
+ 		for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GOu);
