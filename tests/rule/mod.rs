@@ -19,6 +19,7 @@ mod perft;
 mod has_control;
 mod see;
 mod see_xray;
+mod has_control_bug;
 
 use std::cmp;
 use std::collections::HashMap;
