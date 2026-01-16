@@ -800,6 +800,10 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         }
     }
 
+    if gain.is_empty() {
+        return 0;
+    }
+    
     let mut i = gain.len() - 1;
 
     while i > 0 {
