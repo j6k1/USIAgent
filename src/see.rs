@@ -56,7 +56,7 @@ const PIECE_SCORE_MAP:[i32; 29] = [
 pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     let mut state = state.clone();
 
-    let mut score = 0;
+    let mut current_score = 0;
 
     let target = match m {
         LegalMove::To(m) => m.dst(),
@@ -69,7 +69,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         let kind = state.get_banmen().0[y as usize][x as usize];
 
         // 初手で取った駒のスコアを設定
-        score += PIECE_SCORE_MAP[kind as usize];
+        current_score += PIECE_SCORE_MAP[kind as usize];
     }
 
     let (
@@ -95,12 +95,6 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         let opponent_hisha_nari_bb = Rule::has_control_bits_gote_hisha_nari(&state, target as Square);
         let opponent_ou_bb = Rule::has_control_bits_gote_ou(&state, target as Square);
 
-        // 相手が取り返せないならここで終了
-        if opponent_fu_bb == 0 && opponent_kyou_bb == 0 && opponent_kei_bb == 0 && opponent_gin_bb == 0 && opponent_kin_bb == 0 &&
-            opponent_nari_kin_bb == 0 && opponent_kaku_bb == 0 && opponent_hisha_bb == 0 && opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 && opponent_ou_bb == 0 {
-            return score;
-        }
-
         let self_fu_bb = Rule::has_control_bits_sente_fu(&state, target as Square);
         let self_kyou_bb = Rule::has_control_bits_sente_kyou(&state, target as Square);
         let self_kei_bb = Rule::has_control_bits_sente_kei(&state, target as Square);
@@ -116,7 +110,8 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         (
             self_fu_bb, self_kyou_bb, self_kei_bb, self_gin_bb, self_kin_bb, self_nari_kin_bb, self_kaku_bb, self_hisha_bb,
             self_kaku_nari_bb, self_hisha_nari_bb, self_ou_bb,
-            opponent_fu_bb, opponent_kyou_bb, opponent_kei_bb, opponent_gin_bb, opponent_kin_bb, opponent_nari_kin_bb, opponent_kaku_bb, opponent_hisha_bb,
+            opponent_fu_bb, opponent_kyou_bb, opponent_kei_bb, opponent_gin_bb, opponent_kin_bb, opponent_nari_kin_bb,
+            opponent_kaku_bb, opponent_hisha_bb,
             opponent_kaku_nari_bb, opponent_hisha_nari_bb, opponent_ou_bb
         )
     } else {
@@ -131,12 +126,6 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         let opponent_kaku_nari_bb = Rule::has_control_bits_sente_kaku_nari(&state, target as Square);
         let opponent_hisha_nari_bb = Rule::has_control_bits_sente_hisha_nari(&state, target as Square);
         let opponent_ou_bb = Rule::has_control_bits_sente_ou(&state, target as Square);
-
-        // 相手が取り返せないならここで終了
-        if opponent_fu_bb == 0 && opponent_kyou_bb == 0 && opponent_kei_bb == 0 && opponent_gin_bb == 0 && opponent_kin_bb == 0 &&
-            opponent_nari_kin_bb == 0 && opponent_kaku_bb == 0 && opponent_hisha_bb == 0 && opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 && opponent_ou_bb == 0 {
-            return score;
-        }
 
         let self_fu_bb = Rule::has_control_bits_gote_fu(&state, target as Square);
         let self_kyou_bb = Rule::has_control_bits_gote_kyou(&state, target as Square);
@@ -153,7 +142,8 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         (
             self_fu_bb, self_kyou_bb, self_kei_bb, self_gin_bb, self_kin_bb, self_nari_kin_bb, self_kaku_bb, self_hisha_bb,
             self_kaku_nari_bb, self_hisha_nari_bb, self_ou_bb,
-            opponent_fu_bb, opponent_kyou_bb, opponent_kei_bb, opponent_gin_bb, opponent_kin_bb, opponent_nari_kin_bb, opponent_kaku_bb, opponent_hisha_bb,
+            opponent_fu_bb, opponent_kyou_bb, opponent_kei_bb, opponent_gin_bb, opponent_kin_bb, opponent_nari_kin_bb,
+            opponent_kaku_bb, opponent_hisha_bb,
             opponent_kaku_nari_bb, opponent_hisha_nari_bb, opponent_ou_bb
         )
     };
@@ -184,16 +174,14 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     let mut opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
     let mut opponent_ou_it = opponent_ou_bb.iter();
 
-    let mut gain = vec![score];
+    let mut gain = vec![];
 
-    let mut isself = false;
-
-    let mut current_score = score;
+    let mut isself = true;
 
     // 逆伝播
     #[inline]
     fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, next_score:i32) {
-        let g = gain.last().unwrap();
+        let g = *gain.last().unwrap_or(&0);
         gain.push(*current_score - g);
         *current_score = next_score;
     }
@@ -201,13 +189,17 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     // 動かした駒をoccupiedから取り除く。そのうえで飛車、角、香車の効きを手番側相手番側ともに再列挙
     #[inline]
     fn pull_occupied(state:&mut State, teban: Teban, target: Square, p:Square,
-        self_kyou_bb: &mut BitBoard, self_hisha_bb: &mut BitBoard, self_kaku_bb: &mut BitBoard,
+        self_kyou_bb: &mut BitBoard, self_kaku_bb: &mut BitBoard, self_hisha_bb: &mut BitBoard,
         self_kaku_nari_bb: &mut BitBoard, self_hisha_nari_bb: &mut BitBoard,
-        opponent_kyou_bb: &mut BitBoard, opponent_hisha_bb: &mut BitBoard, opponent_kaku_bb: &mut BitBoard,
+        opponent_kyou_bb: &mut BitBoard, opponent_kaku_bb: &mut BitBoard, opponent_hisha_bb: &mut BitBoard,
         opponent_kaku_nari_bb: &mut BitBoard, opponent_hisha_nari_bb: &mut BitBoard,
     ) {
         match teban {
             Teban::Sente => {
+                // ビットボードからターゲットのマスの駒のビットを取り除く
+                state.part.sente_opponent_board ^= 1 << (target + 1);
+                state.part.gote_self_board ^= 1 << (80 - target + 1);
+
                 // ビットボードからターゲットのマスへ動かした駒のビットを取り除く
                 state.part.sente_self_board ^= 1 << (p + 1);
                 state.part.gote_opponent_board ^= 1 << (80 - p + 1);
@@ -227,6 +219,10 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 *opponent_hisha_nari_bb = Rule::has_control_bits_gote_hisha_nari(state, target as Square);
             },
             Teban::Gote => {
+                // ビットボードからターゲットのマスの駒のビットを取り除く
+                state.part.gote_opponent_board ^= 1 << (80 - target + 1);
+                state.part.sente_self_board ^= 1 << (target + 1);
+
                 // ビットボードからターゲットのマスへ動かした駒のビットを取り除く
                 state.part.gote_self_board ^= 1 << (80 - p + 1);
                 state.part.sente_opponent_board ^= 1 << (p + 1);
@@ -398,6 +394,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = self_kaku_it.next() {
                 self_kaku_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
                               &mut self_kyou_bb,
@@ -423,6 +420,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = self_hisha_it.next() {
                 self_hisha_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
                               &mut self_kyou_bb,
@@ -448,6 +446,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = self_kaku_nari_it.next() {
                 self_kaku_nari_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
                               &mut self_kyou_bb,
@@ -473,6 +472,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = self_hisha_nari_it.next() {
                 self_hisha_nari_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
                               &mut self_kyou_bb,
@@ -548,6 +548,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = opponent_kyou_it.next() {
                 opponent_kyou_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
                               &mut opponent_kyou_bb,
@@ -669,6 +670,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = opponent_kaku_it.next() {
                 opponent_kaku_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
                               &mut opponent_kyou_bb,
@@ -694,6 +696,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = opponent_hisha_it.next() {
                 opponent_hisha_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
                               &mut opponent_kyou_bb,
@@ -719,6 +722,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = opponent_kaku_nari_it.next() {
                 opponent_kaku_nari_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
                               &mut opponent_kyou_bb,
@@ -744,6 +748,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             if let Some(p) = opponent_hisha_nari_it.next() {
                 opponent_hisha_nari_bb ^= 1 << (p + 1);
+
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
                               &mut opponent_kyou_bb,
