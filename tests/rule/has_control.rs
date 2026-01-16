@@ -47,7 +47,7 @@ fn has_control_bits_sente_fu_variants() {
     set_piece(&mut b, 4,5, SFu);
     let s = State::new(b);
     let got = Rule::has_control_bits_sente_fu(&s, idx(target.0,target.1));
-    assert_eq!(got, 0, "friendly occupied");
+    assert_eq!(got, expect, "friendly occupied");
 
     // opponent on target
     let mut b = blank();
@@ -72,7 +72,7 @@ fn has_control_bits_sente_kyou_variants() {
     set_piece(&mut b, 4,4, SKin);
     set_piece(&mut b, 4,8, SKyou);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_kyou(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_kyou(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -96,7 +96,7 @@ fn has_control_bits_sente_kei_variants() {
     set_piece(&mut b, 3,6, SKei);
     set_piece(&mut b, 5,6, SKei);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_kei(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_kei(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -119,7 +119,7 @@ fn has_control_bits_sente_gin_variants() {
     set_piece(&mut b, 4,4, SKin);
     for &(x,y) in [(4,5),(3,3),(5,3)].iter() { set_piece(&mut b, x,y, SGin); }
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_gin(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_gin(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -141,7 +141,7 @@ fn has_control_bits_sente_kin_variants() {
     set_piece(&mut b, 4,4, SKin);
     for &(x,y) in [(4,5),(3,5),(5,5)].iter() { set_piece(&mut b, x,y, SKin); }
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_kin(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_kin(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -165,7 +165,7 @@ fn has_control_bits_sente_kaku_variants() {
     set_piece(&mut b, 1,1, SKaku);
     set_piece(&mut b, 7,1, SKaku);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_kaku(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_kaku(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -190,7 +190,7 @@ fn has_control_bits_sente_hisha_variants() {
     set_piece(&mut b, 4,8, SHisha);
     set_piece(&mut b, 0,4, SHisha);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_hisha(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_hisha(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -213,7 +213,7 @@ fn has_control_bits_sente_ou_variants() {
     set_piece(&mut b, 4,4, SKin);
     set_piece(&mut b, 4,5, SOu);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_ou(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_ou(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -237,7 +237,7 @@ fn has_control_bits_sente_nari_kin_variants() {
         set_piece(&mut b, 4,4, SKin);
         set_piece(&mut b, 4,5, kind);
         let s = State::new(b);
-        assert_eq!(Rule::has_control_bits_sente_nari_kin(&s, idx(4,4)), 0);
+        assert_eq!(Rule::has_control_bits_sente_nari_kin(&s, idx(4,4)), expect);
         // opponent
         let mut b = blank();
         set_piece(&mut b, 4,4, GFu);
@@ -261,7 +261,7 @@ fn has_control_bits_sente_kaku_nari_variants() {
     set_piece(&mut b, 4,4, SKin);
     set_piece(&mut b, 3,4, SKakuN);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_kaku_nari(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_kaku_nari(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -283,7 +283,7 @@ fn has_control_bits_sente_hisha_nari_variants() {
     set_piece(&mut b, 4,4, SKin);
     set_piece(&mut b, 4,5, SHishaN);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_sente_hisha_nari(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_sente_hisha_nari(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);
@@ -306,7 +306,7 @@ fn has_control_bits_gote_fu_variants() {
     set_piece(&mut b, 4,4, GKin);
     set_piece(&mut b, 4,3, GFu);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_fu(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_fu(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -328,7 +328,7 @@ fn has_control_bits_gote_kyou_variants() {
     set_piece(&mut b, 4,4, GKin);
     set_piece(&mut b, 4,0, GKyou);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_kyou(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_kyou(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -352,7 +352,7 @@ fn has_control_bits_gote_kei_variants() {
     set_piece(&mut b, 3,2, GKei);
     set_piece(&mut b, 5,2, GKei);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_kei(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_kei(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -375,7 +375,7 @@ fn has_control_bits_gote_gin_variants() {
     set_piece(&mut b, 4,4, GKin);
     for &(x,y) in [(4,3),(3,5),(5,5)].iter() { set_piece(&mut b, x,y, GGin); }
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_gin(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_gin(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -397,7 +397,7 @@ fn has_control_bits_gote_kin_variants() {
     set_piece(&mut b, 4,4, GKin);
     for &(x,y) in [(4,3),(3,4),(5,4)].iter() { set_piece(&mut b, x,y, GKin); }
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_kin(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_kin(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -421,7 +421,7 @@ fn has_control_bits_gote_kaku_variants() {
     set_piece(&mut b, 1,7, GKaku);
     set_piece(&mut b, 7,7, GKaku);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_kaku(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_kaku(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -446,7 +446,7 @@ fn has_control_bits_gote_hisha_variants() {
     set_piece(&mut b, 4,0, GHisha);
     set_piece(&mut b, 8,4, GHisha);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_hisha(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_hisha(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -469,7 +469,7 @@ fn has_control_bits_gote_ou_variants() {
     set_piece(&mut b, 4,4, GKin);
     set_piece(&mut b, 4,3, GOu);
     let s = State::new(b);
-    assert_eq!(Rule::has_control_bits_gote_ou(&s, idx(4,4)), 0);
+    assert_eq!(Rule::has_control_bits_gote_ou(&s, idx(4,4)), expect);
 
     let mut b = blank();
     set_piece(&mut b, 4,4, SFu);
@@ -546,6 +546,50 @@ fn has_control_bits_gote_hisha_nari_variants() {
     assert_eq!(Rule::has_control_bits_gote_hisha_nari(&s, idx(4,4)), expect);
 }
 
+// Additional coverage: promoted rook (dragon) diagonal one-step should control target.
+#[test]
+fn has_control_bits_sente_hisha_nari_diagonal() {
+    let target = (4,4);
+    let mut b = blank();
+    // Dragon placed diagonally adjacent so only the diagonal king-like step applies
+    set_piece(&mut b, 3,3, SHishaN);
+    let s = State::new(b);
+    let expect = bb_from_positions(&[(3,3)]);
+    assert_eq!(Rule::has_control_bits_sente_hisha_nari(&s, idx(target.0,target.1)), expect);
+}
+
+#[test]
+fn has_control_bits_gote_hisha_nari_diagonal() {
+    let target = (4,4);
+    let mut b = blank();
+    set_piece(&mut b, 5,5, GHishaN);
+    let s = State::new(b);
+    let expect = bb_from_positions(&[(5,5)]);
+    assert_eq!(Rule::has_control_bits_gote_hisha_nari(&s, idx(target.0,target.1)), expect);
+}
+
+// Additional coverage: promoted bishop (horse) must retain diagonal sliding control.
+#[test]
+fn has_control_bits_sente_kaku_nari_diagonal_slide() {
+    let target = (4,4);
+    let mut b = blank();
+    // Place horse on clear diagonal; it should slide like a bishop
+    set_piece(&mut b, 2,2, SKakuN);
+    let s = State::new(b);
+    let expect = bb_from_positions(&[(2,2)]);
+    assert_eq!(Rule::has_control_bits_sente_kaku_nari(&s, idx(target.0,target.1)), expect);
+}
+
+#[test]
+fn has_control_bits_gote_kaku_nari_diagonal_slide() {
+    let target = (4,4);
+    let mut b = blank();
+    set_piece(&mut b, 6,6, GKakuN);
+    let s = State::new(b);
+    let expect = bb_from_positions(&[(6,6)]);
+    assert_eq!(Rule::has_control_bits_gote_kaku_nari(&s, idx(target.0,target.1)), expect);
+}
+
 
 // ---------- Boolean has_control() tests moved from src/rule/has_control.rs ----------
 
@@ -557,7 +601,7 @@ fn has_control_sente_fu_variants() {
     assert!(Rule::has_control_sente_fu(&State::new(b), idx(target.0,target.1)));
     // friendly on target -> false
     let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,5, SFu);
-    assert!(!Rule::has_control_sente_fu(&State::new(b), idx(target.0,target.1)));
+    assert!(Rule::has_control_sente_fu(&State::new(b), idx(target.0,target.1)));
     // opponent on target -> true
     let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,5, SFu);
     assert!(Rule::has_control_sente_fu(&State::new(b), idx(target.0,target.1)));
@@ -569,7 +613,7 @@ fn has_control_sente_kyou_variants() {
     let mut b = blank(); set_piece(&mut b, 4,8, SKyou);
     assert!(Rule::has_control_sente_kyou(&State::new(b), idx(target.0,target.1)));
     let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 4,8, SKyou);
-    assert!(!Rule::has_control_sente_kyou(&State::new(b), idx(4,4)));
+    assert!(Rule::has_control_sente_kyou(&State::new(b), idx(4,4)));
     let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 4,8, SKyou);
     assert!(Rule::has_control_sente_kyou(&State::new(b), idx(4,4)));
 }
@@ -580,7 +624,7 @@ fn has_control_sente_kei_variants() {
     let mut b = blank(); set_piece(&mut b, 3,6, SKei); set_piece(&mut b, 5,6, SKei);
     assert!(Rule::has_control_sente_kei(&State::new(b), idx(target.0,target.1)));
     let mut b = blank(); set_piece(&mut b, 4,4, SKin); set_piece(&mut b, 3,6, SKei); set_piece(&mut b, 5,6, SKei);
-    assert!(!Rule::has_control_sente_kei(&State::new(b), idx(4,4)));
+    assert!(Rule::has_control_sente_kei(&State::new(b), idx(4,4)));
     let mut b = blank(); set_piece(&mut b, 4,4, GFu); set_piece(&mut b, 3,6, SKei); set_piece(&mut b, 5,6, SKei);
     assert!(Rule::has_control_sente_kei(&State::new(b), idx(4,4)));
 }
