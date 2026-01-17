@@ -51,17 +51,18 @@ fn bug_sente_narikei_should_not_control_knight_jump() {
 }
 
 #[test]
-fn bug_sente_narigin_should_not_control_backward_diagonals() {
+fn bug_sente_narigin_should_control_forward_diagonals() {
     // Target: (4,4)
-    // Place a promoted silver at squares that would attack 4,4 only as an unpromoted silver
-    // (backward diagonals for Sente are (3,5) and (5,5)). Gold cannot move to those squares.
+    // For Sente, the squares (3,5) and (5,5) are forward-diagonals to the target (4,4).
+    // Promoted silver (gold move set) DOES control 4,4 from these squares.
     for &(x,y) in &[(3u32,5u32), (5,5)] {
         let mut b = blank();
         set_piece(&mut b, x,y, SGinN);
         let s = State::new(b);
         let bb = Rule::has_control_bits_sente_nari_kin(&s, idx(4,4));
-        assert_eq!(<(u64,u64)>::from(bb), (0u64, 0u64), "promoted silver at ({},{}) must not control 4,4 via silver backward-diagonal", x, y);
-        assert!(!Rule::has_control_sente_nari_kin(&s, idx(4,4)), "promoted silver at ({},{}) must not control 4,4", x, y);
+        // Bitboard should be non-zero (function returns Sente-perspective bitboard of attackers)
+        assert_ne!(<(u64,u64)>::from(bb), (0u64, 0u64), "Sente promoted silver at ({},{}) should control 4,4 (forward-diagonal)", x, y);
+        assert!(Rule::has_control_sente_nari_kin(&s, idx(4,4)), "Sente promoted silver at ({},{}) should control 4,4", x, y);
     }
 }
 
@@ -93,14 +94,16 @@ fn bug_gote_narikei_should_not_control_knight_jump() {
 }
 
 #[test]
-fn bug_gote_narigin_should_not_control_backward_diagonals() {
-    // For Gote, backward diagonals relative to target (4,4) are (3,3) and (5,3).
+fn bug_gote_narigin_should_control_forward_diagonals() {
+    // For Gote, the squares (3,3) and (5,3) are forward-diagonals to the target (4,4).
+    // Promoted silver (gold move set) DOES control 4,4 from these squares.
     for &(x,y) in &[(3u32,3u32), (5,3)] {
         let mut b = blank();
         set_piece(&mut b, x,y, GGinN);
         let s = State::new(b);
         let bb = Rule::has_control_bits_gote_nari_kin(&s, idx(4,4));
-        assert_eq!(<(u64,u64)>::from(bb), (0u64, 0u64), "Gote promoted silver at ({},{}) must not control 4,4 via silver backward-diagonal", x, y);
-        assert!(!Rule::has_control_gote_nari_kin(&s, idx(4,4)));
+        // Bitboard should be non-zero (function returns Sente-perspective bitboard of attackers)
+        assert_ne!(<(u64,u64)>::from(bb), (0u64, 0u64), "Gote promoted silver at ({},{}) should control 4,4 (forward-diagonal)", x, y);
+        assert!(Rule::has_control_gote_nari_kin(&s, idx(4,4)), "Gote promoted silver at ({},{}) should control 4,4", x, y);
     }
 }
