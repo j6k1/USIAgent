@@ -20,6 +20,7 @@ mod has_control;
 mod see;
 mod see_xray;
 mod has_control_bug;
+mod has_control_gote_sliders_exhaustive;
 
 use std::cmp;
 use std::collections::HashMap;
