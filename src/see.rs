@@ -942,7 +942,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     }
 
     if scores.is_empty() {
-        return 0;
+        return current_score;
     }
 
     let mut i = scores.len() - 1;
@@ -952,5 +952,5 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         i -= 1;
     }
 
-    -scores[0]
+    scores[0]
 }

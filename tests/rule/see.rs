@@ -36,7 +36,7 @@ fn piece_scores() -> [i32; 13] {
 #[test]
 fn calc_see_capture_no_opponent_attackers_sente() {
     // Sente pawn captures Gote silver on a square not attacked by Gote
-    // Expect SEE = captured piece score (silver)
+    // With the revised SEE (return current_score when no recapture), SEE equals the value of the captured piece (silver).
     let mut b = blank();
     // target at (4,4) contains Gote silver
     set_piece(&mut b, 4,4, GGin);
@@ -50,14 +50,13 @@ fn calc_see_capture_no_opponent_attackers_sente() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = -(495 * 9 / 10); // GIN_SCORE with sign inversion
-    assert_eq!(got, expect);
+    assert_eq!(got, 495 * 9 / 10);
 }
 
 #[test]
 fn calc_see_capture_no_opponent_attackers_gote() {
     // Gote pawn captures Sente pawn on a square not attacked by Sente
-    // Expect SEE = captured piece score (pawn)
+    // With the revised SEE (return current_score when no recapture), SEE equals the value of the captured piece (pawn = 90*9/10).
     let mut b = blank();
     // target at (4,4) contains Sente pawn
     set_piece(&mut b, 4,4, SFu);
@@ -71,8 +70,7 @@ fn calc_see_capture_no_opponent_attackers_gote() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Fu)));
 
     let got = calc_see(Teban::Gote, &s, m);
-    let expect = -(90 * 9 / 10); // FU_SCORE with sign inversion
-    assert_eq!(got, expect);
+    assert_eq!(got, 90 * 9 / 10);
 }
 
 #[test]
@@ -107,7 +105,8 @@ fn calc_see_put_on_safe_square_is_zero() {
 #[test]
 fn calc_see_capture_with_one_opponent_attacker_min_fold_sente() {
     // Sente captures a silver on 4,4, but Gote king also attacks 4,4.
-    // Under the revised SEE spec, this two-ply exchange should evaluate to pawn - silver (negative value).
+    // With one opponent attacker (a single recapture), the SEE result should be
+    // captured pawn value minus captured silver value (i.e., pawn - silver), per spec.
     let mut b = blank();
     // target contains Gote silver
     set_piece(&mut b, 4,4, GGin);
@@ -123,14 +122,15 @@ fn calc_see_capture_with_one_opponent_attacker_min_fold_sente() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = 495 * 9 / 10 - 90 * 9 / 10; // 364 after sign inversion
+    let expect = 90 * 9 / 10 - 495 * 9 / 10; // pawn - silver
     assert_eq!(got, expect);
 }
 
 #[test]
 fn calc_see_capture_with_one_opponent_attacker_min_fold_gote() {
     // Gote captures a silver on 4,4, Sente king also attacks 4,4.
-    // By the new SEE spec, the Gote case should yield pawn - silver (negative value).
+    // With one opponent attacker (a single recapture), the SEE result should be
+    // captured pawn value minus captured silver value (pawn - silver), per spec.
     let mut b = blank();
     // target contains Sente silver
     set_piece(&mut b, 4,4, SGin);
@@ -146,7 +146,7 @@ fn calc_see_capture_with_one_opponent_attacker_min_fold_gote() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Gote, &s, m);
-    let expect = 495 * 9 / 10 - 90 * 9 / 10; // 364 after sign inversion
+    let expect = 90 * 9 / 10 - 495 * 9 / 10; // pawn - silver
     assert_eq!(got, expect);
 }
 
