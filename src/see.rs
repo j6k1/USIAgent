@@ -72,6 +72,8 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         current_score += PIECE_SCORE_MAP[kind as usize];
     }
 
+    let mut score = current_score;
+
     let (
         self_fu_bb, mut self_kyou_bb, self_kei_bb,
         self_gin_bb, self_kin_bb, self_nari_kin_bb,
@@ -180,10 +182,17 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
     // 逆伝播
     #[inline]
-    fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, next_score:i32) {
-        let g = *gain.last().unwrap_or(&0);
-        gain.push(-(*current_score - g));
+    fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, mut score:i32, next_score:i32) -> i32 {
+        if gain.len() == 0 {
+            score =*current_score;
+            gain.push(score);
+        } else {
+            score = *current_score - score;
+            gain.push(-score);
+        }
         *current_score = next_score;
+
+        score
     }
 
     // 動かした駒をoccupiedから取り除く。そのうえで飛車、角、香車の効きを手番側相手番側ともに再列挙
@@ -265,7 +274,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, FU_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, FU_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -291,7 +300,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KYOU_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KYOU_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -315,7 +324,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KEI_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KEI_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -339,7 +348,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, GIN_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, GIN_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -363,7 +372,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KIN_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -387,7 +396,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KIN_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -413,7 +422,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KAKU_SCORE);
+                update_gain(&mut gain, &mut current_score, score, KAKU_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -439,7 +448,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, HISHA_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, HISHA_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -465,7 +474,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KAKU_NARI_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KAKU_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -491,7 +500,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, HISHA_NARI_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, HISHA_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -515,7 +524,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 self_kaku_nari_it = self_kaku_nari_bb.iter();
                 self_hisha_nari_it = self_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, OU_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, OU_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -541,7 +550,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, FU_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, FU_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -567,7 +576,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KYOU_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KYOU_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -591,7 +600,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KEI_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KEI_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -615,7 +624,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, GIN_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, GIN_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -639,7 +648,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KIN_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -663,7 +672,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KIN_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KIN_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -689,7 +698,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KAKU_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KAKU_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -715,7 +724,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, HISHA_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, HISHA_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -741,7 +750,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, KAKU_NARI_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, KAKU_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -767,7 +776,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, HISHA_NARI_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, HISHA_NARI_SCORE);
                 isself = !isself;
                 continue;
             }
@@ -791,7 +800,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
                 opponent_kaku_nari_it = opponent_kaku_nari_bb.iter();
                 opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
 
-                update_gain(&mut gain, &mut current_score, OU_SCORE);
+                score = update_gain(&mut gain, &mut current_score, score, OU_SCORE);
                 isself = !isself;
                 continue;
             }

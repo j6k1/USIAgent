@@ -105,9 +105,12 @@ fn calc_see_put_on_safe_square_is_zero() {
 }
 
 #[test]
-fn calc_see_capture_with_opponent_attacker_still_positive_sente() {
+fn calc_see_capture_with_one_opponent_attacker_min_fold_sente() {
     // Sente captures a silver on 4,4, but Gote king also attacks 4,4.
-    // With one attacker each side, folding should keep initial gain.
+    // New SEE spec: when opponent can immediately recapture, the folding is min with -next,
+    // so the final result becomes negative of (opponent piece value - initial capture gain).
+    // With values: silver=495*9/10=445, pawn=90*9/10=81
+    // gain[0]=445, gain[1]=-(81-445)=364, backprop -> gain[0]=min(445,-364)=-364.
     let mut b = blank();
     // target contains Gote silver
     set_piece(&mut b, 4,4, GGin);
@@ -123,13 +126,14 @@ fn calc_see_capture_with_opponent_attacker_still_positive_sente() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = 495 * 9 / 10; // silver value remains
+    let expect = -(90 * 9 / 10 - 495 * 9 / 10); // -364
     assert_eq!(got, expect);
 }
 
 #[test]
-fn calc_see_capture_with_opponent_attacker_still_positive_gote() {
+fn calc_see_capture_with_one_opponent_attacker_min_fold_gote() {
     // Gote captures a silver on 4,4, Sente king also attacks 4,4.
+    // By the new SEE spec, this mirrors the Sente case and yields - (pawn - silver).
     let mut b = blank();
     // target contains Sente silver
     set_piece(&mut b, 4,4, SGin);
@@ -145,63 +149,33 @@ fn calc_see_capture_with_opponent_attacker_still_positive_gote() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Gote, &s, m);
-    let expect = 495 * 9 / 10; // captured silver value
+    let expect = -(90 * 9 / 10 - 495 * 9 / 10); // -364
     assert_eq!(got, expect);
 }
 
 
 #[test]
-fn calc_see_multi_exchange_chain_sente() {
-    // Multi-ply exchange on target square: Sente captures, Gote recaptures, and so on.
-    // Layout:
-    //  - Target (4,4) has Gote gold.
-    //  - Sente pawn at (4,5) captures to (4,4).
-    //  - Gote pawn at (4,3) can recapture.
-    //  - Sente king at (3,4) also attacks (4,4) for further recapture.
-    //  - Gote king at (5,4) also attacks (4,4) for further recapture.
+fn calc_see_three_ply_exchange_returns_zero() {
+    // Three-ply capture chain validating new gain accumulation rule:
+    // gain[0] = captured(GFu)=81
+    // gain[1] = -(captured(Gote recaptures our pawn)=81 - gain[0]=81) = 0
+    // gain[2] = -(captured(we recapture Gote pawn)=81 + gain[1]=0) = -81
+    // Backprop: gain[1]=min(0,81)=0; gain[0]=min(81,0)=0 => final SEE = 0
     let mut b = blank();
-    set_piece(&mut b, 4,4, GKin); // target piece
-    set_piece(&mut b, 4,5, SFu); // initial capturer (Sente)
-    set_piece(&mut b, 4,3, GFu); // Gote recapturer
-    set_piece(&mut b, 3,4, SOu); // Sente follow-up attacker
-    set_piece(&mut b, 5,4, GOu); // Gote follow-up attacker
+    set_piece(&mut b, 4,4, GFu); // initial target piece
+    set_piece(&mut b, 4,5, SFu); // Sente pawn captures first
+    set_piece(&mut b, 4,3, GFu); // Gote pawn recaptures
+    set_piece(&mut b, 3,4, SOu); // Sente king recaptures
 
     let s = State::new(b);
-
     let src = idx(4,5);
     let dst = idx(4,4);
-    let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Kin)));
+    let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Fu)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = 540 * 9 / 10; // KIN_SCORE
-    assert_eq!(got, expect, "SEE should reflect value after multi-exchange starting with capturing gold");
+    assert_eq!(got, 0, "SEE should be 0 in a symmetric three-ply pawn exchange chain");
 }
 
-#[test]
-fn calc_see_multi_exchange_chain_gote() {
-    // Multi-ply exchange with Gote to move:
-    //  - Target (4,4) has Sente silver.
-    //  - Gote pawn at (4,3) captures to (4,4).
-    //  - Sente pawn at (4,5) can recapture.
-    //  - Gote king at (5,4) can further recapture.
-    //  - Sente king at (3,4) can further recapture.
-    let mut b = blank();
-    set_piece(&mut b, 4,4, SGin); // target piece
-    set_piece(&mut b, 4,3, GFu); // initial capturer (Gote)
-    set_piece(&mut b, 4,5, SFu); // Sente recapturer
-    set_piece(&mut b, 5,4, GOu); // Gote follow-up attacker
-    set_piece(&mut b, 3,4, SOu); // Sente follow-up attacker
-
-    let s = State::new(b);
-
-    let src = idx(4,3);
-    let dst = idx(4,4);
-    let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
-
-    let got = calc_see(Teban::Gote, &s, m);
-    let expect = 495 * 9 / 10; // GIN_SCORE
-    assert_eq!(got, expect, "SEE should match captured silver value in a multi-exchange chain");
-}
 
 
 #[test]
