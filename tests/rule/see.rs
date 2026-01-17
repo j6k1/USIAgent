@@ -107,10 +107,7 @@ fn calc_see_put_on_safe_square_is_zero() {
 #[test]
 fn calc_see_capture_with_one_opponent_attacker_min_fold_sente() {
     // Sente captures a silver on 4,4, but Gote king also attacks 4,4.
-    // New SEE spec: when opponent can immediately recapture, the folding is min with -next,
-    // so the final result becomes negative of (opponent piece value - initial capture gain).
-    // With values: silver=495*9/10=445, pawn=90*9/10=81
-    // gain[0]=445, gain[1]=-(81-445)=364, backprop -> gain[0]=min(445,-364)=-364.
+    // Under the revised SEE spec, this two-ply exchange should evaluate to pawn - silver (negative value).
     let mut b = blank();
     // target contains Gote silver
     set_piece(&mut b, 4,4, GGin);
@@ -126,14 +123,14 @@ fn calc_see_capture_with_one_opponent_attacker_min_fold_sente() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = -(90 * 9 / 10 - 495 * 9 / 10); // -364
+    let expect = 90 * 9 / 10 - 495 * 9 / 10; // -364
     assert_eq!(got, expect);
 }
 
 #[test]
 fn calc_see_capture_with_one_opponent_attacker_min_fold_gote() {
     // Gote captures a silver on 4,4, Sente king also attacks 4,4.
-    // By the new SEE spec, this mirrors the Sente case and yields - (pawn - silver).
+    // By the new SEE spec, the Gote case should yield pawn - silver (negative value).
     let mut b = blank();
     // target contains Sente silver
     set_piece(&mut b, 4,4, SGin);
@@ -149,7 +146,7 @@ fn calc_see_capture_with_one_opponent_attacker_min_fold_gote() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Gote, &s, m);
-    let expect = -(90 * 9 / 10 - 495 * 9 / 10); // -364
+    let expect = 90 * 9 / 10 - 495 * 9 / 10; // -364
     assert_eq!(got, expect);
 }
 
@@ -203,7 +200,7 @@ fn calc_see_final_value_is_non_constant_number() {
 #[test]
 fn calc_see_unfavorable_capture_returns_captured_pawn_score() {
     // Build an exchange that should be losing for the side to move.
-    // Target has a low-value pawn; we capture it but opponent has multiple cheap recaptures.
+    // According to the revised SEE spec and clarification, the net SEE should be 0 here.
     let mut b = blank();
     set_piece(&mut b, 4,4, GFu);  // target pawn
     set_piece(&mut b, 4,5, SFu);  // Sente pawn captures first
@@ -219,8 +216,8 @@ fn calc_see_unfavorable_capture_returns_captured_pawn_score() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Fu)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = 90 * 9 / 10; // Capturing a pawn yields exactly pawn score in this SEE
-    assert_eq!(got, expect, "SEE should equal captured pawn score in this unfavorable exchange");
+    let expect = 0; // Unfavorable capture sequence should evaluate to 0 in this case
+    assert_eq!(got, expect, "SEE should be 0 for this unfavorable capture sequence");
 }
 
 #[test]

@@ -184,7 +184,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     #[inline]
     fn update_gain(gain:&mut Vec<i32>, current_score:&mut i32, mut score:i32, next_score:i32) -> i32 {
         if gain.len() == 0 {
-            score =*current_score;
+            score = *current_score;
             gain.push(score);
         } else {
             score = *current_score - score;
@@ -820,5 +820,5 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         i -= 1;
     }
 
-    gain[0]
+    -gain[0]
 }
