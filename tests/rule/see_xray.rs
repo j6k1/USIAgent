@@ -218,3 +218,88 @@ fn see_xray_lance_activation_changes_see() {
 
     assert_eq!(v_b, v_a, "Hidden lance joining later yields same SEE under current implementation");
 }
+
+// --- New tests: cases where x-ray activation changes SEE starting from Gote pawn capturing ---
+#[test]
+fn see_xray_bishop_line_opens_changes_result_from_gote_capture() {
+    // Coordinates (0-based):
+    // Sente bishop at (6,6) = 7七
+    // Sente pawn at (5,5) = 6六 (blocks the bishop)
+    // Gote pawn at (5,4) = 6五 (can capture the Sente pawn)
+    // Gote silver at (4,3) = 5四 (attacks the target 5,5)
+    // Start from Gote pawn capturing Sente pawn on (5,5).
+
+    // Case A: without hidden Sente bishop
+    let mut b_a = blank();
+    set_piece(&mut b_a, 5,5, SFu); // blocker and initial target occupant
+    set_piece(&mut b_a, 5,4, GFu); // Gote pawn to capture
+    set_piece(&mut b_a, 4,3, GGin); // Gote silver attacking target (5,5)
+    let s_a = State::new(b_a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,5), false, Some(ObtainKind::Fu)));
+    let v_a = calc_see(Teban::Gote, &s_a, m);
+
+    // Case B: with hidden Sente bishop at 7七 which becomes an attacker after the blocker moves onto target
+    let mut b_b = blank();
+    set_piece(&mut b_b, 6,6, SKaku); // hidden x-ray attacker
+    set_piece(&mut b_b, 5,5, SFu);
+    set_piece(&mut b_b, 5,4, GFu);
+    set_piece(&mut b_b, 4,3, GGin);
+    let s_b = State::new(b_b);
+    let v_b = calc_see(Teban::Gote, &s_b, m);
+
+    // The presence of the hidden bishop should change the capture chain and SEE result.
+    assert_ne!(v_a, v_b, "SEE should change when bishop x-ray becomes active after the capture");
+}
+
+#[test]
+fn see_xray_rook_line_opens_changes_result_from_gote_capture() {
+    // Sente rook at (5,8), Sente pawn at (5,5) blocks, Gote pawn at (5,4) captures to (5,5).
+    // After capture, the rook gains a line to recapture on (5,5).
+
+    // Case A: without hidden Sente rook
+    let mut b_a = blank();
+    set_piece(&mut b_a, 5,5, SFu);
+    set_piece(&mut b_a, 5,4, GFu);
+    // Add a Gote silver to ensure further participation
+    set_piece(&mut b_a, 4,5, GGin); // attacks (5,5)
+    let s_a = State::new(b_a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,5), false, Some(ObtainKind::Fu)));
+    let v_a = calc_see(Teban::Gote, &s_a, m);
+
+    // Case B: with hidden rook
+    let mut b_b = blank();
+    set_piece(&mut b_b, 5,8, SHisha);
+    set_piece(&mut b_b, 5,5, SFu);
+    set_piece(&mut b_b, 5,4, GFu);
+    set_piece(&mut b_b, 4,5, GGin);
+    let s_b = State::new(b_b);
+    let v_b = calc_see(Teban::Gote, &s_b, m);
+
+    assert_ne!(v_a, v_b, "SEE should change when rook x-ray becomes active after the capture");
+}
+
+#[test]
+fn see_xray_lance_line_opens_changes_result_from_gote_capture() {
+    // Sente lance at (5,8), Sente pawn at (5,5) blocks, Gote pawn at (5,4) captures to (5,5).
+    // After capture, lance can recapture along the file.
+
+    // Case A: without hidden Sente lance
+    let mut b_a = blank();
+    set_piece(&mut b_a, 5,5, SFu);
+    set_piece(&mut b_a, 5,4, GFu);
+    set_piece(&mut b_a, 4,5, GGin); // Gote silver attacking target
+    let s_a = State::new(b_a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,5), false, Some(ObtainKind::Fu)));
+    let v_a = calc_see(Teban::Gote, &s_a, m);
+
+    // Case B: with hidden Sente lance
+    let mut b_b = blank();
+    set_piece(&mut b_b, 5,8, SKyou);
+    set_piece(&mut b_b, 5,5, SFu);
+    set_piece(&mut b_b, 5,4, GFu);
+    set_piece(&mut b_b, 4,5, GGin);
+    let s_b = State::new(b_b);
+    let v_b = calc_see(Teban::Gote, &s_b, m);
+
+    assert_ne!(v_a, v_b, "SEE should change when lance x-ray becomes active after the capture");
+}
