@@ -19,6 +19,7 @@ mod perft;
 mod has_control;
 mod see;
 mod see_xray;
+mod see_infinite;
 mod has_control_bug;
 mod has_control_gote_sliders_exhaustive;
 
