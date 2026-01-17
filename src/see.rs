@@ -286,7 +286,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = self_kyou_it.next() {
-                self_kyou_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.sente_kyou_board ^= 1 << (p + 1);
+                } else {
+                    state.part.gote_kyou_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
@@ -438,7 +442,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = self_kaku_it.next() {
-                self_kaku_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.sente_kaku_board ^= 1 << (p + 1);
+                } else {
+                    state.part.gote_kaku_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
@@ -470,7 +478,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = self_hisha_it.next() {
-                self_hisha_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.sente_hisha_board ^= 1 << (p + 1);
+                } else {
+                    state.part.gote_hisha_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
@@ -502,7 +514,13 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = self_kaku_nari_it.next() {
-                self_kaku_nari_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.sente_kaku_board ^= 1 << (p + 1);
+                    state.part.sente_nari_board ^= 1 << (p + 1);
+                } else {
+                    state.part.gote_kaku_board ^= 1 << (p + 1);
+                    state.part.gote_nari_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
@@ -534,7 +552,13 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = self_hisha_nari_it.next() {
-                self_hisha_nari_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.sente_hisha_board ^= 1 << (p + 1);
+                    state.part.sente_nari_board ^= 1 << (p + 1);
+                } else {
+                    state.part.gote_hisha_board ^= 1 << (p + 1);
+                    state.part.gote_nari_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
@@ -628,7 +652,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = opponent_kyou_it.next() {
-                opponent_kyou_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.gote_kyou_board ^= 1 << (p + 1);
+                } else {
+                    state.part.sente_kyou_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
@@ -780,7 +808,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = opponent_kaku_it.next() {
-                opponent_kaku_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.gote_kaku_board ^= 1 << (p + 1);
+                } else {
+                    state.part.sente_kaku_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
@@ -812,7 +844,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = opponent_hisha_it.next() {
-                opponent_hisha_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.gote_hisha_board ^= 1 << (p + 1);
+                } else {
+                    state.part.sente_hisha_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
@@ -844,7 +880,13 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = opponent_kaku_nari_it.next() {
-                opponent_kaku_nari_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.gote_kaku_board ^= 1 << (p + 1);
+                    state.part.gote_nari_board ^= 1 << (p + 1);
+                } else {
+                    state.part.sente_kaku_board ^= 1 << (p + 1);
+                    state.part.sente_nari_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
@@ -876,7 +918,13 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             }
 
             if let Some(p) = opponent_hisha_nari_it.next() {
-                opponent_hisha_nari_bb ^= 1 << (p + 1);
+                if teban == Teban::Sente {
+                    state.part.gote_hisha_board ^= 1 << (p + 1);
+                    state.part.gote_nari_board ^= 1 << (p + 1);
+                } else {
+                    state.part.sente_hisha_board ^= 1 << (p + 1);
+                    state.part.sente_nari_board ^= 1 << (p + 1);
+                }
 
                 pull_occupied(&mut state,teban.opposite(),target as Square,
                               p as Square,
