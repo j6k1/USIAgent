@@ -13004,7 +13004,7 @@ impl Rule {
 			let fp = p as u32;
 			let from_idx = 80 - fp;
 			let cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
-				state.part.sente_opponent_board, state.part.sente_self_board, from_idx);
+				state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13066,10 +13066,10 @@ impl Rule {
 			let fp = p as u32;
 			let from_idx = 80 - fp;
 			let cand =
-				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
-				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13087,11 +13087,11 @@ impl Rule {
 			let from_idx = 80 - fp;
 			let cand =
 				// vertical in both directions via flip/original boards
-				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
 				// horizontal in both directions
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13138,7 +13138,12 @@ impl Rule {
 		let board = state.part.gote_kaku_board & state.part.gote_nari_board;
 		for p in board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKakuN);
+			let mut cand =
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+					| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
+					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
+			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKakuN);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13156,10 +13161,10 @@ impl Rule {
 			let fp = p as u32;
 			let from_idx = 80 - fp;
 			let mut cand =
-				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			// add diagonal steps for dragon
 			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GHishaN);
 			if (cand & to_bb) != 0 { return true; }
@@ -13404,7 +13409,7 @@ impl Rule {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
-				state.part.sente_opponent_board, state.part.sente_self_board, from_idx);
+				state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13473,10 +13478,10 @@ impl Rule {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand =
-				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
-				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
+				| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13494,10 +13499,10 @@ impl Rule {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let cand =
-				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
 		res
@@ -13551,10 +13556,10 @@ impl Rule {
 			let p = p as u32;
 			let from_idx = 80 - p;
 			let mut cand =
-				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-					| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
-					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+				Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+					| Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
+					| Rule::gen_candidate_bits_by_kaku_to_right_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKakuN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }
 		}
@@ -13575,10 +13580,10 @@ impl Rule {
 			let from_idx = 80 - p;
 			// 竜は飛車のスライド + 斜め一歩（後手視点）
 			let mut cand =
-				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse()
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, from_idx)
-				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, 80 - from_idx).reverse();
+				Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse()
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.gote_self_board, state.part.gote_opponent_board, 80 - from_idx)
+				| Rule::gen_candidate_bits_by_hisha_to_right_include(state.part.sente_opponent_board, state.part.sente_self_board, from_idx).reverse();
 			// add diagonal steps for dragon (GHishaN)
 			cand |= Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GHishaN);
 			if (cand & to_bb) != 0 { res |= BitBoard::from(1 << (80 - p + 1)); }

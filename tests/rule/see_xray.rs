@@ -124,3 +124,97 @@ fn see_xray_lance_becomes_attacker_after_blocker_moves_to_target() {
     assert_eq!(v_a, expect, "SEE without lance should equal silver-pawn");
     assert_eq!(v_b, expect, "SEE with hidden lance should also equal silver-pawn");
 }
+
+
+// ---------------- 追加テスト: 効きが復活して最終SEEが変わることを検証 ----------------
+
+#[test]
+fn see_xray_rook_activation_changes_see() {
+    // ターゲット 4,4 に後手銀。先手歩(4,5)で取り、後手歩(4,3)が取り返す。
+    // さらに先手金(5,4)が取り返すまでは同じ。ここでケースBのみ、4,0 の後手飛車が
+    // ブロッカー(4,3)の移動で筋が通り、以降の取り合いに参加できる。
+    // 先手側にもさらに追撃駒(3,4 の先手銀)を置き、交換の長さがケース間で異なるようにする。
+
+    // ケースA: 飛車なし
+    let mut b_a = blank();
+    set_piece(&mut b_a, 4,4, GGin);
+    set_piece(&mut b_a, 4,5, SFu);
+    set_piece(&mut b_a, 4,3, GFu);
+    set_piece(&mut b_a, 5,4, SKin);
+    set_piece(&mut b_a, 3,4, SGin); // 追加の先手追撃駒
+    let s_a = State::new(b_a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
+    let v_a = calc_see(Teban::Sente, &s_a, m);
+
+    // ケースB: 飛車あり（x-ray で後から参加）
+    let mut b_b = blank();
+    set_piece(&mut b_b, 4,4, GGin);
+    set_piece(&mut b_b, 4,5, SFu);
+    set_piece(&mut b_b, 4,3, GFu);
+    set_piece(&mut b_b, 5,4, SKin);
+    set_piece(&mut b_b, 3,4, SGin);
+    set_piece(&mut b_b, 4,0, GHisha);
+    let s_b = State::new(b_b);
+    let v_b = calc_see(Teban::Sente, &s_b, m);
+
+    // 効き復活により交換が一手以上伸び、最終SEEが変化し得ることを検証する。
+    assert_ne!(v_b, v_a, "Hidden rook joining later should change the final SEE value");
+}
+
+#[test]
+fn see_xray_bishop_activation_changes_see() {
+    // 斜め x-ray 版。1,1 の後手角が、ブロッカー(3,3)が 4,4 に動くことで参加できる。
+
+    // ケースA: 角なし
+    let mut b_a = blank();
+    set_piece(&mut b_a, 4,4, GGin);
+    set_piece(&mut b_a, 4,5, SFu);
+    set_piece(&mut b_a, 3,3, GGin); // ブロッカー兼取り返し
+    set_piece(&mut b_a, 5,5, SKin);
+    set_piece(&mut b_a, 6,6, SHisha); // 先手追加攻め駒
+    let s_a = State::new(b_a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
+    let v_a = calc_see(Teban::Sente, &s_a, m);
+
+    // ケースB: 角あり（x-ray で後から参加）
+    let mut b_b = blank();
+    set_piece(&mut b_b, 4,4, GGin);
+    set_piece(&mut b_b, 4,5, SFu);
+    set_piece(&mut b_b, 3,3, GGin);
+    set_piece(&mut b_b, 5,5, SKin);
+    set_piece(&mut b_b, 6,6, SHisha);
+    set_piece(&mut b_b, 1,1, GKaku);
+    let s_b = State::new(b_b);
+    let v_b = calc_see(Teban::Sente, &s_b, m);
+
+    assert_ne!(v_b, v_a, "Hidden bishop joining later should change the final SEE value");
+}
+
+#[test]
+fn see_xray_lance_activation_changes_see() {
+    // 縦 x-ray 版。4,0 の後手香が、ブロッカー(4,3)が 4,4 に動くことで参加できる。
+
+    // ケースA: 香なし
+    let mut b_a = blank();
+    set_piece(&mut b_a, 4,4, GGin);
+    set_piece(&mut b_a, 4,5, SFu);
+    set_piece(&mut b_a, 4,3, GFu);
+    set_piece(&mut b_a, 5,4, SKin);
+    set_piece(&mut b_a, 3,4, SGin); // 追加の先手追撃駒
+    let s_a = State::new(b_a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
+    let v_a = calc_see(Teban::Sente, &s_a, m);
+
+    // ケースB: 香あり（x-ray で後から参加）
+    let mut b_b = blank();
+    set_piece(&mut b_b, 4,4, GGin);
+    set_piece(&mut b_b, 4,5, SFu);
+    set_piece(&mut b_b, 4,3, GFu);
+    set_piece(&mut b_b, 5,4, SKin);
+    set_piece(&mut b_b, 3,4, SGin);
+    set_piece(&mut b_b, 4,0, GKyou);
+    let s_b = State::new(b_b);
+    let v_b = calc_see(Teban::Sente, &s_b, m);
+
+    assert_ne!(v_b, v_a, "Hidden lance joining later should change the final SEE value");
+}
