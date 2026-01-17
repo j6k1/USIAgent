@@ -36,6 +36,8 @@ fn see_xray_rook_becomes_attacker_after_blocker_moves_to_target() {
     let s_a = State::new(b_a);
     let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
     let v_a = calc_see(Teban::Sente, &s_a, m);
+    let silver_val = 495 * 9 / 10 -  90 * 9 / 10;
+    assert_eq!(v_a, silver_val, "SEE with hidden rook should equal -silver value under sign-inverted SEE. got={}, expected={}", v_a, -silver_val);
 
     // ケースB: 飛車あり（4,0）→ ブロッカーが動くと筋が通る
     let mut b_b = blank();
@@ -46,9 +48,9 @@ fn see_xray_rook_becomes_attacker_after_blocker_moves_to_target() {
     let s_b = State::new(b_b);
     let v_b = calc_see(Teban::Sente, &s_b, m);
 
-    // バックプロパゲーションの仕様により、この局面では結果は「銀の価値」に収束する。
-    let silver_val = 495 * 9 / 10;
-    assert_eq!(v_b, silver_val, "SEE with hidden rook should equal silver value. got={}, expected={}", v_b, silver_val);
+    // バックプロパゲーションの仕様により、この局面では結果は「銀の価値 -  歩の価値」に収束する。
+    let silver_val = 495 * 9 / 10 -  90 * 9 / 10;
+    assert_eq!(v_b, silver_val, "SEE with hidden rook should equal -silver value under sign-inverted SEE. got={}, expected={}", v_b, -silver_val);
 }
 
 #[test]

@@ -50,7 +50,7 @@ fn calc_see_capture_no_opponent_attackers_sente() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = 495 * 9 / 10; // GIN_SCORE
+    let expect = -(495 * 9 / 10); // GIN_SCORE with sign inversion
     assert_eq!(got, expect);
 }
 
@@ -71,7 +71,7 @@ fn calc_see_capture_no_opponent_attackers_gote() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Fu)));
 
     let got = calc_see(Teban::Gote, &s, m);
-    let expect = 90 * 9 / 10; // FU_SCORE
+    let expect = -(90 * 9 / 10); // FU_SCORE with sign inversion
     assert_eq!(got, expect);
 }
 
@@ -123,7 +123,7 @@ fn calc_see_capture_with_one_opponent_attacker_min_fold_sente() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = 90 * 9 / 10 - 495 * 9 / 10; // -364
+    let expect = 495 * 9 / 10 - 90 * 9 / 10; // 364 after sign inversion
     assert_eq!(got, expect);
 }
 
@@ -146,7 +146,7 @@ fn calc_see_capture_with_one_opponent_attacker_min_fold_gote() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Gin)));
 
     let got = calc_see(Teban::Gote, &s, m);
-    let expect = 90 * 9 / 10 - 495 * 9 / 10; // -364
+    let expect = 495 * 9 / 10 - 90 * 9 / 10; // 364 after sign inversion
     assert_eq!(got, expect);
 }
 
