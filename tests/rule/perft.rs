@@ -6,7 +6,7 @@ use rand::{Rng, SeedableRng};
 use rand_xorshift::XorShiftRng;
 use usiagent::math::Prng;
 use usiagent::movepick::{MovePicker, RandomPicker};
-use usiagent::protocol::{PositionParser};
+use usiagent::protocol::{ParsePosition, PositionParser};
 use usiagent::rule::{EvasionsAll, LegalMove, NonEvasionsAll, Rule};
 use usiagent::rule::State;
 use usiagent::shogi::{MochigomaCollections, Teban};
