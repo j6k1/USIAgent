@@ -255,7 +255,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
     loop {
         if isself {
-            if let Some(p) =self_fu_it.next() {
+            if let Some(p) = self_fu_it.next() {
                 pull_occupied(&mut state,teban,target as Square,
                               p as Square,
                               &mut self_kyou_bb,

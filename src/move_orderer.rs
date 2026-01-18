@@ -7,6 +7,7 @@ use shogi::{KomaKind, Teban};
 /// 指し手の並び替え順
 /// ※降順に並び変えるので優先度の低い物から列挙する
 pub enum MoveOrder {
+    BadCaptures(i32),
     History(i64),
     KillerMoves,
     GoodCaptures(i32),
@@ -150,7 +151,11 @@ impl MoveOrderer {
                 LegalMove::To(mv) if mv.obtained().is_some() => {
                     let see = calc_see(teban,state,m);
 
-                    mvs.push((MoveOrder::GoodCaptures(see),m));
+                    if see >= 0 {
+                        mvs.push((MoveOrder::GoodCaptures(see),m));
+                    } else {
+                        mvs.push((MoveOrder::BadCaptures(see),m));
+                    }
                 },
                 _ => {
                     if self.usage_killer_moves[ply as usize] > 0 &&
