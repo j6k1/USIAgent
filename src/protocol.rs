@@ -546,8 +546,37 @@ impl PositionParseResult {
 		}
 	}
 }
+pub trait ParserPosition<T> {
+	/// sfen文字列をパースした局面を返す
+	fn parse(&self,params:T) -> Result<PositionParseResult,TypeConvertError<String>>;
+}
 /// 局面を表すsfen文字列のパーサ
 pub struct PositionParser {
+}
+impl ParserPosition<&[&str]> for PositionParser {
+	fn parse(&self, params: &[&str]) -> Result<PositionParseResult, TypeConvertError<String>> {
+		self.parse_impl(params)
+	}
+}
+impl ParserPosition<&Vec<&str>> for PositionParser {
+	fn parse(&self, params: &Vec<&str>) -> Result<PositionParseResult, TypeConvertError<String>> {
+		self.parse_impl(params)
+	}
+}
+impl ParserPosition<&str> for PositionParser {
+	fn parse(&self, params: &str) -> Result<PositionParseResult, TypeConvertError<String>> {
+		self.parse_impl(&params.split(" ").collect::<Vec<&str>>())
+	}
+}
+impl ParserPosition<String> for PositionParser {
+	fn parse(&self, params: String) -> Result<PositionParseResult, TypeConvertError<String>> {
+		self.parse_impl(&params.split(" ").collect::<Vec<&str>>())
+	}
+}
+impl ParserPosition<&String> for PositionParser {
+	fn parse(&self, params: &String) -> Result<PositionParseResult, TypeConvertError<String>> {
+		self.parse_impl(&params.split(" ").collect::<Vec<&str>>())
+	}
 }
 impl PositionParser {
 	/// `PositionParser`の生成
@@ -556,7 +585,7 @@ impl PositionParser {
 	}
 
 	/// スペースで分割された局面のsfen文字列をパースした結果を返す
-	pub fn parse<'a>(&self,params:&'a [&'a str]) -> Result<PositionParseResult,TypeConvertError<String>> {
+	fn parse_impl(&self,params:&[&str]) -> Result<PositionParseResult,TypeConvertError<String>> {
 		let p = match params.len() {
 			0 => {
 				return Err(TypeConvertError::SyntaxError(String::from(
