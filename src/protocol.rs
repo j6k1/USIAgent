@@ -546,34 +546,34 @@ impl PositionParseResult {
 		}
 	}
 }
-pub trait ParserPosition<T> {
+pub trait ParsePosition<T> {
 	/// sfen文字列をパースした局面を返す
 	fn parse(&self,params:T) -> Result<PositionParseResult,TypeConvertError<String>>;
 }
 /// 局面を表すsfen文字列のパーサ
 pub struct PositionParser {
 }
-impl ParserPosition<&[&str]> for PositionParser {
+impl ParsePosition<&[&str]> for PositionParser {
 	fn parse(&self, params: &[&str]) -> Result<PositionParseResult, TypeConvertError<String>> {
 		self.parse_impl(params)
 	}
 }
-impl ParserPosition<&Vec<&str>> for PositionParser {
+impl ParsePosition<&Vec<&str>> for PositionParser {
 	fn parse(&self, params: &Vec<&str>) -> Result<PositionParseResult, TypeConvertError<String>> {
 		self.parse_impl(params)
 	}
 }
-impl ParserPosition<&str> for PositionParser {
+impl ParsePosition<&str> for PositionParser {
 	fn parse(&self, params: &str) -> Result<PositionParseResult, TypeConvertError<String>> {
 		self.parse_impl(&params.split(" ").collect::<Vec<&str>>())
 	}
 }
-impl ParserPosition<String> for PositionParser {
+impl ParsePosition<String> for PositionParser {
 	fn parse(&self, params: String) -> Result<PositionParseResult, TypeConvertError<String>> {
 		self.parse_impl(&params.split(" ").collect::<Vec<&str>>())
 	}
 }
-impl ParserPosition<&String> for PositionParser {
+impl ParsePosition<&String> for PositionParser {
 	fn parse(&self, params: &String) -> Result<PositionParseResult, TypeConvertError<String>> {
 		self.parse_impl(&params.split(" ").collect::<Vec<&str>>())
 	}
