@@ -274,9 +274,9 @@ fn calc_see_first_capture_by_non_weakest_attacker() {
     // 初手で複数の攻め駒があるが、最弱の駒(歩)ではなく銀で取るケース。
     // 対象マス(4,4)に後手の歩があり、先手は歩(4,5)と銀(3,5)の両方で取れる。
     // ここで銀で取る手を指定する。直後に後手玉(5,4)で取り返される形にする。
-    // 期待値: 取った駒の価値(歩=81)
+    // 期待値: 取った駒の価値(歩=81)。
     let mut b = blank();
-    // targetdd
+    // target
     set_piece(&mut b, 4,4, GFu);
     // our attackers: pawn and silver (silver is not the weakest)
     set_piece(&mut b, 4,5, SFu);
@@ -300,7 +300,7 @@ fn calc_see_first_capture_by_non_weakest_attacker() {
 fn calc_see_put_immediate_recapture_is_negative() {
     // 初手が駒を置く(打つ)手で、その直後に相手に取り返されるケース。
     // (4,4)に歩を打つ。後手玉(5,4)が(4,4)を攻撃しているので直後に取り返せる。
-    // 期待値: - 打った駒の価値(歩=81)。
+    // 期待値: 0
     let mut b = blank();
     set_piece(&mut b, 5,4, GOu); // opponent attacker to 4,4
 
@@ -312,4 +312,47 @@ fn calc_see_put_immediate_recapture_is_negative() {
     let got = calc_see(Teban::Sente, &s, m);
     let expect = 0;
     assert_eq!(got, expect);
+}
+
+
+#[test]
+fn calc_see_scores_differ_between_weakest_and_non_weakest_first_capture() {
+    // 指定の局面:
+    //  - 先手歩: 6五 (ターゲット)
+    //  - 後手歩: 6六 (歩で取れる)
+    //  - 後手桂: 7七 (桂でも取れる)
+    //  - 先手角: 8八 (6六に利いている)
+    // エンジン座標系では以下の通りに配置する:
+    //  ターゲット(6,5) -> (5,4) の先手歩 SFu
+    //  後手歩(6,6) -> (5,5) の GFu (ここから(5,4)を取れるとする)
+    //  後手桂(7,7) -> (6,6) の GKei (ここから(5,4)を取れる)
+    //  先手角(8,8) -> (7,7) の SKaku
+    //  さらに取り合いを成立させるため先手玉を(5,3)に置き、(5,4)を取り返せるようにする。
+    let mut b = blank();
+    // target: Sente pawn at 6五 -> (5,4)
+    set_piece(&mut b, 5,4, SFu);
+    // Gote attackers: pawn at 6六 -> (5,5), knight at 7七 -> (6,6)
+    set_piece(&mut b, 5,5, GFu);
+    set_piece(&mut b, 6,6, GKei);
+    // Sente bishop at 8八 -> (7,7)
+    set_piece(&mut b, 7,7, SKaku);
+    // Sente king to allow immediate recapture on (5,4)
+    set_piece(&mut b, 5,3, SOu);
+
+    let s = State::new(b);
+
+    let dst = idx(5,4);
+
+    // 後手 歩取り: (5,5)->(5,4)
+    let pawn_src = idx(5,5);
+    let m_pawn = LegalMove::To(LegalMoveTo::new(pawn_src, dst, false, Some(ObtainKind::Fu)));
+    let see_pawn = calc_see(Teban::Gote, &s, m_pawn);
+
+    // 後手 桂取り: (6,6)->(5,4)
+    let knight_src = idx(6,6);
+    let m_knight = LegalMove::To(LegalMoveTo::new(knight_src, dst, false, Some(ObtainKind::Fu)));
+    let see_knight = calc_see(Teban::Gote, &s, m_knight);
+
+    // この局面では桂で取り始めるとスコアが変化するはず
+    assert_ne!(see_pawn, see_knight, "SEE must differ when starting with Gote knight vs pawn in this setup");
 }
