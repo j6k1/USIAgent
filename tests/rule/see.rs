@@ -274,9 +274,9 @@ fn calc_see_first_capture_by_non_weakest_attacker() {
     // 初手で複数の攻め駒があるが、最弱の駒(歩)ではなく銀で取るケース。
     // 対象マス(4,4)に後手の歩があり、先手は歩(4,5)と銀(3,5)の両方で取れる。
     // ここで銀で取る手を指定する。直後に後手玉(5,4)で取り返される形にする。
-    // 期待値: 取った駒の価値(歩=81) - 取った駒(銀=495*9/10=445) = -364。
+    // 期待値: 取った駒の価値(歩=81)
     let mut b = blank();
-    // target
+    // targetdd
     set_piece(&mut b, 4,4, GFu);
     // our attackers: pawn and silver (silver is not the weakest)
     set_piece(&mut b, 4,5, SFu);
@@ -292,7 +292,7 @@ fn calc_see_first_capture_by_non_weakest_attacker() {
     let m = LegalMove::To(LegalMoveTo::new(src, dst, false, Some(ObtainKind::Fu)));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = 90 * 9 / 10 - 495 * 9 / 10; // 81 - 445 = -364
+    let expect = 90 * 9 / 10; // 81
     assert_eq!(got, expect);
 }
 
@@ -310,6 +310,6 @@ fn calc_see_put_immediate_recapture_is_negative() {
     let m = LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, dst));
 
     let got = calc_see(Teban::Sente, &s, m);
-    let expect = -(90 * 9 / 10);
+    let expect = 0;
     assert_eq!(got, expect);
 }

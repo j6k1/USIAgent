@@ -2,7 +2,7 @@
 
 use bitboard::BitBoard;
 use rule::{LegalMove, Rule, Square, SquareToPoint, State};
-use shogi::{Teban};
+use shogi::{KomaKind, Teban};
 
 const FU_SCORE:i32 = 90 * 9 / 10;
 const KYOU_SCORE:i32 = 315 * 9 / 10;
@@ -70,9 +70,130 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
         // 初手で取った駒のスコアを設定
         current_score += PIECE_SCORE_MAP[kind as usize];
+
+        match kind {
+            KomaKind::SFu => {
+                state.part.gote_fu_board ^= 1 << (80 - target + 1);
+            },
+            KomaKind::SKyou => {
+                state.part.sente_kyou_board ^= 1 << (target + 1);
+            },
+            KomaKind::SKei => {
+                state.part.sente_kei_board ^= 1 << (target + 1);
+            },
+            KomaKind::SGin => {
+                state.part.sente_gin_board ^= 1 << (target + 1);
+            },
+            KomaKind::SKin => {
+                state.part.sente_kin_board ^= 1 << (target + 1);
+            },
+            KomaKind::SKaku => {
+                state.part.sente_kaku_board ^= 1 << (target + 1);
+            },
+            KomaKind::SHisha => {
+                state.part.sente_hisha_board ^= 1 << (target + 1);
+            },
+            KomaKind::SOu => {
+                state.part.gote_opponent_ou_position_board ^= 1 << (80 - target + 1);
+            },
+            KomaKind::SFuN => {
+                state.part.sente_fu_board ^= 1 << (target + 1);
+                state.part.sente_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::SKyouN => {
+                state.part.sente_kyou_board ^= 1 << (target + 1);
+                state.part.sente_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::SKeiN => {
+                state.part.sente_kei_board ^= 1 << (target + 1);
+                state.part.sente_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::SGinN => {
+                state.part.sente_gin_board ^= 1 << (target + 1);
+                state.part.sente_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::SKakuN => {
+                state.part.sente_kaku_board ^= 1 << (target + 1);
+                state.part.sente_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::SHishaN => {
+                state.part.sente_hisha_board ^= 1 << (target + 1);
+                state.part.sente_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::GFu => {
+                state.part.gote_fu_board ^= 1 << (target + 1);
+            },
+            KomaKind::GKyou => {
+                state.part.gote_kyou_board ^= 1 << (target + 1);
+            },
+            KomaKind::GKei => {
+                state.part.gote_kei_board ^= 1 << (target + 1);
+            },
+            KomaKind::GGin => {
+                state.part.gote_gin_board ^= 1 << (target + 1);
+            },
+            KomaKind::GKin => {
+                state.part.gote_kin_board ^= 1 << (target + 1);
+            },
+            KomaKind::GKaku => {
+                state.part.gote_kaku_board ^= 1 << (target + 1);
+            },
+            KomaKind::GHisha => {
+                state.part.gote_hisha_board ^= 1 << (target + 1);
+            },
+            KomaKind::GOu => {
+                state.part.sente_opponent_ou_position_board ^= 1 << (target + 1);
+            },
+            KomaKind::GFuN => {
+                state.part.gote_fu_board ^= 1 << (target + 1);
+                state.part.gote_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::GKyouN => {
+                state.part.gote_kyou_board ^= 1 << (target + 1);
+                state.part.gote_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::GKeiN => {
+                state.part.gote_kei_board ^= 1 << (target + 1);
+                state.part.gote_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::GGinN => {
+                state.part.gote_gin_board ^= 1 << (target + 1);
+                state.part.gote_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::GKakuN => {
+                state.part.gote_kaku_board ^= 1 << (target + 1);
+                state.part.gote_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::GHishaN => {
+                state.part.gote_hisha_board ^= 1 << (target + 1);
+                state.part.gote_nari_board ^= 1 << (target + 1);
+            },
+            KomaKind::Blank => ()
+        };
+
+        if teban == Teban::Sente {
+            state.part.sente_self_board ^= 1 << (target + 1);
+            state.part.gote_opponent_board ^= 1 << (80 - target + 1);
+        } else {
+            state.part.gote_self_board ^= 1 << (80 - target + 1);
+            state.part.sente_opponent_board ^= 1 << (target + 1);
+        }
     }
 
     let mut score = current_score;
+
+    let mut scores = vec![score];
+
+    match m {
+        LegalMove::To(m) => {
+            let (x,y) = m.src().square_to_point();
+
+            current_score = PIECE_SCORE_MAP[state.get_banmen().0[y as usize][x as usize] as usize];
+        },
+        LegalMove::Put(m) => {
+            current_score = PIECE_SCORE_MAP[KomaKind::from((teban,m.kind())) as usize]
+        }
+    }
 
     let (
         self_fu_bb, mut self_kyou_bb, self_kei_bb,
@@ -96,6 +217,16 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         let opponent_kaku_nari_bb = Rule::has_control_bits_gote_kaku_nari(&state, target as Square);
         let opponent_hisha_nari_bb = Rule::has_control_bits_gote_hisha_nari(&state, target as Square);
         let opponent_ou_bb = Rule::has_control_bits_gote_ou(&state, target as Square);
+
+        // 取り返せる駒がない
+        if opponent_fu_bb == 0 && opponent_kyou_bb == 0 &&opponent_kei_bb == 0 &&
+            opponent_gin_bb == 0 && opponent_kin_bb == 0 && opponent_nari_kin_bb == 0 &&
+            opponent_kaku_bb == 0 && opponent_hisha_bb == 0 &&
+            opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 &&
+            opponent_ou_bb == 0 {
+
+            return scores[0];
+        }
 
         let self_fu_bb = Rule::has_control_bits_sente_fu(&state, target as Square);
         let self_kyou_bb = Rule::has_control_bits_sente_kyou(&state, target as Square);
@@ -128,6 +259,16 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         let opponent_kaku_nari_bb = Rule::has_control_bits_sente_kaku_nari(&state, target as Square);
         let opponent_hisha_nari_bb = Rule::has_control_bits_sente_hisha_nari(&state, target as Square);
         let opponent_ou_bb = Rule::has_control_bits_sente_ou(&state, target as Square);
+
+        // 取り返せる駒がない
+        if opponent_fu_bb == 0 && opponent_kyou_bb == 0 &&opponent_kei_bb == 0 &&
+           opponent_gin_bb == 0 && opponent_kin_bb == 0 && opponent_nari_kin_bb == 0 &&
+           opponent_kaku_bb == 0 && opponent_hisha_bb == 0 &&
+           opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 &&
+           opponent_ou_bb == 0 {
+
+           return scores[0];
+        }
 
         let self_fu_bb = Rule::has_control_bits_gote_fu(&state, target as Square);
         let self_kyou_bb = Rule::has_control_bits_gote_kyou(&state, target as Square);
@@ -176,20 +317,13 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     let mut opponent_hisha_nari_it = opponent_hisha_nari_bb.iter();
     let mut opponent_ou_it = opponent_ou_bb.iter();
 
-    let mut scores = vec![];
-
-    let mut isself = true;
+    let mut isself = false;
 
     // 逆伝播
     #[inline]
     fn update_scores(scores:&mut Vec<i32>, current_score:&mut i32, mut score:i32, next_score:i32) -> i32 {
-        if scores.len() == 0 {
-            score = *current_score;
-            scores.push(score);
-        } else {
-            score = *current_score - score;
-            scores.push(-score);
-        }
+        score = *current_score - score;
+        scores.push(-score);
         *current_score = next_score;
 
         score
@@ -987,10 +1121,6 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
             break;
         }
-    }
-
-    if scores.is_empty() {
-        return current_score;
     }
 
     let mut i = scores.len() - 1;
