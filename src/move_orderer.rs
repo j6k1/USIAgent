@@ -8,7 +8,7 @@ use shogi::{KomaKind, Teban};
 /// ※降順に並び変えるので優先度の低い物から列挙する
 pub enum MoveOrder {
     BadCaptures(i32),
-    History(i64),
+    Quiet(i64),
     KillerMoves,
     GoodCaptures(i32),
 }
@@ -17,7 +17,8 @@ pub enum MoveOrder {
 pub struct MoveOrderer {
     killer_moves:Vec<[Option<LegalMove>; 2]>,
     usage_killer_moves:Vec<u8>,
-    history:[[[i64;81]; 21]; 2],
+    history:[[[i64;81]; 22]; 2],
+    counter_moves: [[[Option<LegalMove>;81]; 22]; 2]
 }
 impl MoveOrderer {
     /// MoveOrdererのインスタンスを生成するコンストラクタ
@@ -29,7 +30,8 @@ impl MoveOrderer {
         MoveOrderer {
             killer_moves: vec![[None; 2]; max_ply+1],
             usage_killer_moves: vec![0; max_ply+1],
-            history: [[[0;81]; 21]; 2],
+            history: [[[0;81]; 22]; 2],
+            counter_moves: [[[None;81]; 22]; 2]
         }
     }
 
@@ -98,6 +100,40 @@ impl MoveOrderer {
         self.history[teban as usize][self.calc_piece_index(teban,state,m)][to as usize] -= depth as i64;
     }
 
+    /// Counter Moveの更新
+    ///
+    /// # Arguments
+    /// *
+    /// * `m` - 登録する候補手
+    /// * `teban` - 手の手番
+    /// * `kind` - 駒の種類（LegalMove::Putの場合はKomaKind::Blankを渡す）
+    #[inline]
+    pub fn update_counter_move(&mut self, m: LegalMove, teban: Teban, kind: KomaKind) {
+        match m {
+            LegalMove::To(mv) if teban == Teban::Sente => {
+                let index = if kind == KomaKind::Blank {
+                    21
+                } else {
+                    kind as usize
+                };
+
+                self.counter_moves[teban as usize][index][mv.dst() as usize] = Some(m);
+            },
+            LegalMove::To(mv) => {
+                let index = if kind == KomaKind::Blank {
+                    21
+                } else {
+                    kind as usize - KomaKind::GFu as usize
+                };
+
+                self.counter_moves[teban as usize][index][mv.dst() as usize] = Some(m);
+            },
+            LegalMove::Put(mv) => {
+                self.counter_moves[teban as usize][mv.kind() as usize][mv.dst() as usize] = Some(m);
+            }
+        }
+    }
+
     /// 駒の種類をMoveOrdererで使う内部インデックスに変換する
     ///
     /// # Arguments
@@ -112,19 +148,27 @@ impl MoveOrderer {
                     let (x,y) = m.src().square_to_point();
                     let kind = state.get_banmen().0[y as usize][x as usize];
 
-                    kind as usize + if m.is_nari() {
-                        8
+                    if kind == KomaKind::Blank {
+                        21
                     } else {
-                        0
+                        kind as usize + if m.is_nari() {
+                            8
+                        } else {
+                            0
+                        }
                     }
                 } else {
                     let (x,y) = m.src().square_to_point();
                     let kind = state.get_banmen().0[y as usize][x as usize];
 
-                    kind as usize - KomaKind::GFu as usize + if m.is_nari() {
-                        8
+                    if kind == KomaKind::Blank {
+                        21
                     } else {
-                        0
+                        kind as usize - KomaKind::GFu as usize + if m.is_nari() {
+                            8
+                        } else {
+                            0
+                        }
                     }
                 }
             },
@@ -142,8 +186,12 @@ impl MoveOrderer {
     /// * `ply` - 現在の探索深さ
     /// * `teban` - 手番
     /// * `state` - 盤面の状態
+    /// * `prev_move` - 直前に差された手
+    /// * `prev_kind` - 直前に差された手の駒種（LegaLMove::Putの場合はKomaKind::Blank）
     #[inline]
-    pub fn ordering<I: Iterator<Item=LegalMove>>(&self, it: I, ply: u32, teban: Teban, state: &State) -> impl Iterator<Item=LegalMove> {
+    pub fn ordering<I: Iterator<Item=LegalMove>>(
+        &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
+    ) -> impl Iterator<Item=LegalMove> {
         let mut mvs = vec![];
 
         for m in it {
@@ -172,8 +220,43 @@ impl MoveOrderer {
                             }
                         };
 
+                        let bonus = {
+                            let index = if teban == Teban::Sente {
+                                if prev_kind == KomaKind::Blank {
+                                    21
+                                } else {
+                                    prev_kind as usize
+                                }
+                            } else {
+                                if prev_kind == KomaKind::Blank {
+                                    21
+                                } else {
+                                    prev_kind as usize - KomaKind::GFu as usize
+                                }
+                            };
+
+                            prev_move.map(|prev_move| {
+                                let dst = match prev_move {
+                                    LegalMove::To(m) => {
+                                        m.dst()
+                                    },
+                                    LegalMove::Put(m) => {
+                                        m.dst()
+                                    }
+                                };
+
+                                if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
+                                    m == cm
+                                }).unwrap_or(false) {
+                                    8000
+                                } else {
+                                    0
+                                }
+                            }).unwrap_or(0)
+                        };
+
                         mvs.push((
-                            MoveOrder::History(self.history[teban as usize][self.calc_piece_index(teban,state,m)][to as usize]),
+                            MoveOrder::Quiet(self.history[teban as usize][self.calc_piece_index(teban, state, m)][to as usize] + bonus),
                             m
                         ))
                     }
