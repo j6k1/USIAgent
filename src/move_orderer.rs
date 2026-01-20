@@ -222,7 +222,7 @@ impl MoveOrderer {
                         };
 
                         let bonus = {
-                            let index = if teban == Teban::Sente {
+                            let index = if teban.opposite() == Teban::Sente {
                                 if prev_kind == KomaKind::Blank {
                                     21
                                 } else {
