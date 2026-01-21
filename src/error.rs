@@ -740,3 +740,26 @@ impl error::Error for LimitSizeError {
 		None
 	}
 }
+/// 入力値不正
+#[derive(Debug,Eq,PartialEq)]
+pub struct InvalidInputError(pub String);
+impl fmt::Display for InvalidInputError {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			InvalidInputError(ref s) => write!(f, "{}",s)
+		}
+	}
+}
+impl error::Error for InvalidInputError {
+	fn description(&self) -> &str {
+		match *self {
+			InvalidInputError(_) => "invalid state."
+		}
+	}
+
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+		match *self {
+			InvalidInputError(_) => None
+		}
+	}
+}

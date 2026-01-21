@@ -1,7 +1,13 @@
 //! 探索時の手の並び替えの機能を実装する
+
+use error::InvalidInputError;
 use rule::{LegalMove, SquareToPoint, State};
 use see::calc_see;
 use shogi::{KomaKind, Teban};
+use shogi::KomaKind::GFu;
+use shogi::Teban::{Gote, Sente};
+
+const CM_BONUS:i64 = 8000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// 指し手の並び替え順
@@ -18,7 +24,8 @@ pub struct MoveOrderer {
     killer_moves:Vec<[Option<LegalMove>; 2]>,
     usage_killer_moves:Vec<u8>,
     history:[[[i64;81]; 22]; 2],
-    counter_moves: [[[Option<LegalMove>;81]; 22]; 2]
+    counter_moves: [[[Option<LegalMove>;81]; 22]; 2],
+    max_ply: usize
 }
 impl MoveOrderer {
     /// MoveOrdererのインスタンスを生成するコンストラクタ
@@ -31,7 +38,8 @@ impl MoveOrderer {
             killer_moves: vec![[None; 2]; max_ply+1],
             usage_killer_moves: vec![0; max_ply+1],
             history: [[[0;81]; 22]; 2],
-            counter_moves: [[[None;81]; 22]; 2]
+            counter_moves: [[[None;81]; 22]; 2],
+            max_ply: max_ply
         }
     }
 
@@ -41,7 +49,19 @@ impl MoveOrderer {
     /// * `ply` - 現在の探索深さ
     /// * `m` - 登録する候補手
     #[inline]
-    pub fn update_killer(&mut self, ply: usize, m: LegalMove) {
+    pub fn update_killer(&mut self, ply: usize, m: LegalMove) -> Result<(),InvalidInputError> {
+        if ply > self.max_ply {
+            return Err(InvalidInputError(String::from("ply value exceeds max_ply.")));
+        } else if m.obtained().is_some() {
+            return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the Killer Move.")));
+        }
+
+        if let LegalMove::To(mv) = m {
+            if mv.is_nari() {
+                return Err(InvalidInputError(String::from("Promotion move is not included in the killer moves.")));
+            }
+        }
+
         if self.usage_killer_moves[ply] >= 1 {
             self.killer_moves[ply][1] = self.killer_moves[ply][0];
             self.killer_moves[ply][0] = Some(m);
@@ -52,6 +72,8 @@ impl MoveOrderer {
         if self.usage_killer_moves[ply] < 2 {
             self.usage_killer_moves[ply] += 1;
         }
+
+        Ok(())
     }
 
     /// Historyの更新
@@ -64,7 +86,11 @@ impl MoveOrderer {
     #[inline]
     pub fn update_improve_history(
         &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
-    ) {
+    ) -> Result<(),InvalidInputError> {
+        if m.obtained().is_some() {
+            return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the history.")));
+        }
+
         let to = match m {
             LegalMove::To(m) => {
                 m.dst()
@@ -74,7 +100,9 @@ impl MoveOrderer {
             }
         };
 
-        self.history[teban as usize][self.calc_piece_index(teban,state,m)][to as usize] += (depth * depth) as i64;
+        self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize] += (depth * depth) as i64;
+
+        Ok(())
     }
 
     /// Historyの更新
@@ -87,7 +115,11 @@ impl MoveOrderer {
     #[inline]
     pub fn update_degrade_history(
         &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
-    ) {
+    ) -> Result<(),InvalidInputError> {
+        if m.obtained().is_some() {
+            return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the history.")));
+        }
+
         let to = match m {
             LegalMove::To(m) => {
                 m.dst()
@@ -97,7 +129,9 @@ impl MoveOrderer {
             }
         };
 
-        self.history[teban as usize][self.calc_piece_index(teban,state,m)][to as usize] -= depth as i64;
+        self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize] -= depth as i64;
+
+        Ok(())
     }
 
     /// Counter Moveの更新
@@ -109,7 +143,18 @@ impl MoveOrderer {
     /// * `prev_move` - 直前に差された手
     /// * `prev_kind` - 直前に差された手の駒の種類（LegalMove::Putの場合はKomaKind::Blankを渡す）
     #[inline]
-    pub fn update_counter_move(&mut self, m: LegalMove, teban: Teban, prev_move: LegalMove, prev_kind: KomaKind) {
+    pub fn update_counter_move(&mut self, m: LegalMove, teban: Teban, prev_move: LegalMove, prev_kind: KomaKind)
+        -> Result<(),InvalidInputError> {
+        if m.obtained().is_some() {
+            return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the Counter Move.")));
+        }
+
+        if let LegalMove::To(mv) = m {
+            if mv.is_nari() {
+                return Err(InvalidInputError(String::from("Promotion move is not included in the counter moves.")));
+            }
+        }
+
         match prev_move {
             LegalMove::To(mv) if teban == Teban::Sente => {
                 let index = if prev_kind == KomaKind::Blank {
@@ -133,6 +178,8 @@ impl MoveOrderer {
                 self.counter_moves[teban as usize][mv.kind() as usize][mv.dst() as usize] = Some(m);
             }
         }
+
+        Ok(())
     }
 
     /// 駒の種類をMoveOrdererで使う内部インデックスに変換する
@@ -142,41 +189,49 @@ impl MoveOrderer {
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
     #[inline]
-    fn calc_piece_index(&self, teban: Teban, state: &State, m: LegalMove) -> usize {
+    fn calc_piece_index(&self, teban: Teban, state: &State, m: LegalMove) -> Result<usize,InvalidInputError> {
         match m {
             LegalMove::To(m) => {
                 if teban == Teban::Sente {
                     let (x,y) = m.src().square_to_point();
                     let kind = state.get_banmen().0[y as usize][x as usize];
 
-                    if kind == KomaKind::Blank {
-                        21
-                    } else {
-                        kind as usize + if m.is_nari() {
-                            8
-                        } else {
-                            0
-                        }
+                    if kind >= GFu {
+                        return Err(InvalidInputError(String::from(
+                            "The piece type of the piece moved during Sente's turn is Gote."
+                        )));
+                    } else if kind == KomaKind::Blank {
+                        return Err(InvalidInputError(String::from("There are no pieces on the move origin.")));
                     }
+
+                    Ok(kind as usize + if m.is_nari() {
+                        8
+                    } else {
+                        0
+                    })
                 } else {
                     let (x,y) = m.src().square_to_point();
                     let kind = state.get_banmen().0[y as usize][x as usize];
 
-                    if kind == KomaKind::Blank {
-                        21
-                    } else {
-                        kind as usize - KomaKind::GFu as usize + if m.is_nari() {
-                            8
-                        } else {
-                            0
-                        }
+                    if kind < GFu {
+                        return Err(InvalidInputError(String::from(
+                            "The piece type of the piece moved during Gote's turn is Sente."
+                        )));
+                    } else if kind == KomaKind::Blank {
+                        return Err(InvalidInputError(String::from("There are no pieces on the move origin.")));
                     }
+
+                    Ok(kind as usize - KomaKind::GFu as usize + if m.is_nari() {
+                        8
+                    } else {
+                        0
+                    })
                 }
             },
             LegalMove::Put(m) => {
                 let kind = m.kind();
 
-                kind as usize + 14
+                Ok(kind as usize + 14)
             }
         }
     }
@@ -192,7 +247,19 @@ impl MoveOrderer {
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(
         &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
-    ) -> impl Iterator<Item=LegalMove> {
+    ) -> Result<impl Iterator<Item=LegalMove>,InvalidInputError> {
+        if prev_kind == KomaKind::Blank {
+            return Err(InvalidInputError(String::from("The value for prev_kind was passed as KomaKind::Blank.")));
+        } else if teban.opposite() == Sente && prev_kind >= KomaKind::GFu {
+            return Err(InvalidInputError(String::from(
+                "The move specified for the Sente player's turn was designated as the Gote player's move."
+            )));
+        } else if teban.opposite() == Gote && prev_kind < KomaKind::GFu {
+            return Err(InvalidInputError(String::from(
+                "The move specified for the Gote player's turn was designated as the Sente player's move."
+            )))
+        }
+
         let mut mvs = vec![];
 
         for m in it {
@@ -223,17 +290,9 @@ impl MoveOrderer {
 
                         let bonus = {
                             let index = if teban.opposite() == Teban::Sente {
-                                if prev_kind == KomaKind::Blank {
-                                    21
-                                } else {
-                                    prev_kind as usize
-                                }
+                                prev_kind as usize
                             } else {
-                                if prev_kind == KomaKind::Blank {
-                                    21
-                                } else {
-                                    prev_kind as usize - KomaKind::GFu as usize
-                                }
+                                prev_kind as usize - KomaKind::GFu as usize
                             };
 
                             prev_move.map(|prev_move| {
@@ -249,7 +308,7 @@ impl MoveOrderer {
                                 if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
                                     m == cm
                                 }).unwrap_or(false) {
-                                    8000
+                                    CM_BONUS
                                 } else {
                                     0
                                 }
@@ -257,7 +316,7 @@ impl MoveOrderer {
                         };
 
                         mvs.push((
-                            MoveOrder::Quiet(self.history[teban as usize][self.calc_piece_index(teban, state, m)][to as usize] + bonus),
+                            MoveOrder::Quiet(self.history[teban as usize][self.calc_piece_index(teban, state, m)?][to as usize] + bonus),
                             m
                         ))
                     }
@@ -267,6 +326,6 @@ impl MoveOrderer {
 
         mvs.sort_by(|a,b| b.0.cmp(&a.0));
 
-        mvs.into_iter().map(|(_,m)| m)
+        Ok(mvs.into_iter().map(|(_,m)| m))
     }
 }
