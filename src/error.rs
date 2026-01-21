@@ -753,7 +753,7 @@ impl fmt::Display for InvalidInputError {
 impl error::Error for InvalidInputError {
 	fn description(&self) -> &str {
 		match *self {
-			InvalidInputError(_) => "invalid state."
+			InvalidInputError(_) => "invalid input."
 		}
 	}
 
