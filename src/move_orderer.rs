@@ -293,17 +293,14 @@ impl MoveOrderer {
     /// # Errors
     ///
     /// この関数は以下のエラーを返すケースがあります。
-    /// * [`InvalidInputError`] prev_kindがKomaKind::Blankである
-    ///                         prev_kindとteban.opposite()の駒種が一致していない
+    /// * [`InvalidInputError`] prev_kindとteban.opposite()の駒種が一致していない
     ///
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(
         &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
     ) -> Result<impl Iterator<Item=LegalMove>,InvalidInputError> {
-        if prev_kind == KomaKind::Blank {
-            return Err(InvalidInputError(String::from("The value for prev_kind was passed as KomaKind::Blank.")));
-        } else if teban.opposite() == Sente && prev_kind >= KomaKind::GFu {
+        if teban.opposite() == Sente && prev_kind >= KomaKind::GFu {
             return Err(InvalidInputError(String::from(
                 "The move specified for the Sente player's turn was designated as the Gote player's move."
             )));
