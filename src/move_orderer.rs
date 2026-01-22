@@ -191,24 +191,32 @@ impl MoveOrderer {
 
         match prev_move {
             LegalMove::To(mv) if teban == Teban::Sente => {
+                if prev_kind == KomaKind::Blank {
+                    return Ok(());
+                }
+
                 if prev_kind < KomaKind::GFu {
                     return Err(InvalidInputError(String::from(
                         "The previous move was made by the Gote player, but the piece type in prev_kind belongs to the Sente player."
                     )));
                 }
 
-                let index = prev_kind as usize;
+                let index = prev_kind as usize - KomaKind::GFu as usize;
 
                 self.counter_moves[teban.opposite() as usize][index][mv.dst() as usize] = Some(m);
             },
             LegalMove::To(mv) => {
+                if prev_kind == KomaKind::Blank {
+                    return Ok(());
+                }
+
                 if prev_kind >= KomaKind::GFu {
                     return Err(InvalidInputError(String::from(
                         "The previous move was made by the Sente player, but the piece type in prev_kind belongs to the Gote player."
                     )));
                 }
 
-                let index = prev_kind as usize - KomaKind::GFu as usize;
+                let index = prev_kind as usize;
 
                 self.counter_moves[teban.opposite() as usize][index][mv.dst() as usize] = Some(m);
             },
@@ -300,7 +308,7 @@ impl MoveOrderer {
     pub fn ordering<I: Iterator<Item=LegalMove>>(
         &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
     ) -> Result<impl Iterator<Item=LegalMove>,InvalidInputError> {
-        if teban.opposite() == Sente && prev_kind >= KomaKind::GFu {
+        if teban.opposite() == Sente && prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
             return Err(InvalidInputError(String::from(
                 "The move specified for the Sente player's turn was designated as the Gote player's move."
             )));
@@ -341,28 +349,34 @@ impl MoveOrderer {
                         let bonus = {
                             let index = if teban.opposite() == Teban::Sente {
                                 prev_kind as usize
-                            } else {
+                            } else if prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
                                 prev_kind as usize - KomaKind::GFu as usize
+                            } else {
+                                21
                             };
 
-                            prev_move.map(|prev_move| {
-                                let dst = match prev_move {
-                                    LegalMove::To(m) => {
-                                        m.dst()
-                                    },
-                                    LegalMove::Put(m) => {
-                                        m.dst()
-                                    }
-                                };
+                            if prev_kind != KomaKind::Blank {
+                                prev_move.map(|prev_move| {
+                                    let dst = match prev_move {
+                                        LegalMove::To(m) => {
+                                            m.dst()
+                                        },
+                                        LegalMove::Put(m) => {
+                                            m.dst()
+                                        }
+                                    };
 
-                                if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
-                                    m == cm
-                                }).unwrap_or(false) {
-                                    CM_BONUS
-                                } else {
-                                    0
-                                }
-                            }).unwrap_or(0)
+                                    if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
+                                        m == cm
+                                    }).unwrap_or(false) {
+                                        CM_BONUS
+                                    } else {
+                                        0
+                                    }
+                                }).unwrap_or(0)
+                            } else {
+                                0
+                            }
                         };
 
                         mvs.push((
