@@ -23,8 +23,8 @@ pub enum MoveOrder {
 pub struct MoveOrderer {
     killer_moves:Vec<[Option<LegalMove>; 2]>,
     usage_killer_moves:Vec<u8>,
-    history:[[[i64;81]; 22]; 2],
-    counter_moves: [[[Option<LegalMove>;81]; 22]; 2],
+    history:[[[i64;81]; 21]; 2],
+    counter_moves: [[[Option<LegalMove>;81]; 21]; 2],
     max_ply: usize
 }
 impl MoveOrderer {
@@ -37,8 +37,8 @@ impl MoveOrderer {
         MoveOrderer {
             killer_moves: vec![[None; 2]; max_ply+1],
             usage_killer_moves: vec![0; max_ply+1],
-            history: [[[0;81]; 22]; 2],
-            counter_moves: [[[None;81]; 22]; 2],
+            history: [[[0;81]; 21]; 2],
+            counter_moves: [[[None;81]; 21]; 2],
             max_ply: max_ply
         }
     }
@@ -48,6 +48,15 @@ impl MoveOrderer {
     /// # Arguments
     /// * `ply` - 現在の探索深さ
     /// * `m` - 登録する候補手
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] plyがコンストラクタで指定したmax_plyの値を超えている
+    ///                         mが駒を取る手
+    ///                         mが成る手
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_killer(&mut self, ply: usize, m: LegalMove) -> Result<(),InvalidInputError> {
         if ply > self.max_ply {
@@ -83,6 +92,14 @@ impl MoveOrderer {
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
     /// * `depth` - 現在の残り探索深さ
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] mが駒を取る手
+    ///                         mの移動元に駒がない、mの移動元の駒種がteban側の駒種でない
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_improve_history(
         &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
@@ -112,6 +129,14 @@ impl MoveOrderer {
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
     /// * `depth` - 現在の残り探索深さ
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] mが駒を取る手
+    ///                         mの移動元に駒がない、mの移動元の駒種がteban側の駒種でない
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_degrade_history(
         &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
@@ -142,6 +167,16 @@ impl MoveOrderer {
     /// * `teban` - 手の手番
     /// * `prev_move` - 直前に差された手
     /// * `prev_kind` - 直前に差された手の駒の種類（LegalMove::Putの場合はKomaKind::Blankを渡す）
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] mが駒を取る手
+    ///                         mが成る手である
+    ///                         prev_kindがKomaKind::Blankである
+    ///                         prev_kindとteban.opposite()の駒種が一致していない
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_counter_move(&mut self, m: LegalMove, teban: Teban, prev_move: LegalMove, prev_kind: KomaKind)
         -> Result<(),InvalidInputError> {
@@ -157,20 +192,28 @@ impl MoveOrderer {
 
         match prev_move {
             LegalMove::To(mv) if teban == Teban::Sente => {
-                let index = if prev_kind == KomaKind::Blank {
-                    21
-                } else {
-                    prev_kind as usize
-                };
+                if prev_kind == KomaKind::Blank {
+                    return Err(InvalidInputError(String::from("The value for prev_kind was passed as KomaKind::Blank.")));
+                } else if prev_kind < KomaKind::GFu {
+                    return Err(InvalidInputError(String::from(
+                        "The previous move was made by the Gote player, but the piece type in prev_kind belongs to the Sente player."
+                    )));
+                }
+
+                let index = prev_kind as usize;
 
                 self.counter_moves[teban as usize][index][mv.dst() as usize] = Some(m);
             },
             LegalMove::To(mv) => {
-                let index = if prev_kind == KomaKind::Blank {
-                    21
-                } else {
-                    prev_kind as usize - KomaKind::GFu as usize
-                };
+                if prev_kind == KomaKind::Blank {
+                    return Err(InvalidInputError(String::from("The value for prev_kind was passed as KomaKind::Blank.")));
+                } else if prev_kind >= KomaKind::GFu {
+                    return Err(InvalidInputError(String::from(
+                        "The previous move was made by the Sente player, but the piece type in prev_kind belongs to the Gote player."
+                    )));
+                }
+
+                let index = prev_kind as usize - KomaKind::GFu as usize;
 
                 self.counter_moves[teban as usize][index][mv.dst() as usize] = Some(m);
             },
@@ -188,6 +231,13 @@ impl MoveOrderer {
     /// * `teban` - 手番
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] mとtebanの駒種が一致していない
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     fn calc_piece_index(&self, teban: Teban, state: &State, m: LegalMove) -> Result<usize,InvalidInputError> {
         match m {
@@ -244,6 +294,14 @@ impl MoveOrderer {
     /// * `state` - 盤面の状態
     /// * `prev_move` - 直前に差された手
     /// * `prev_kind` - 直前に差された手の駒種（LegaLMove::Putの場合はKomaKind::Blank）
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] prev_kindがKomaKind::Blankである
+    ///                         prev_kindとteban.opposite()の駒種が一致していない
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(
         &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
