@@ -173,7 +173,6 @@ impl MoveOrderer {
     /// この関数は以下のエラーを返すケースがあります。
     /// * [`InvalidInputError`] mが駒を取る手
     ///                         mが成る手である
-    ///                         prev_kindがKomaKind::Blankである
     ///                         prev_kindとteban.opposite()の駒種が一致していない
     ///
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
@@ -192,9 +191,7 @@ impl MoveOrderer {
 
         match prev_move {
             LegalMove::To(mv) if teban == Teban::Sente => {
-                if prev_kind == KomaKind::Blank {
-                    return Err(InvalidInputError(String::from("The value for prev_kind was passed as KomaKind::Blank.")));
-                } else if prev_kind < KomaKind::GFu {
+                if prev_kind < KomaKind::GFu {
                     return Err(InvalidInputError(String::from(
                         "The previous move was made by the Gote player, but the piece type in prev_kind belongs to the Sente player."
                     )));
@@ -205,9 +202,7 @@ impl MoveOrderer {
                 self.counter_moves[teban as usize][index][mv.dst() as usize] = Some(m);
             },
             LegalMove::To(mv) => {
-                if prev_kind == KomaKind::Blank {
-                    return Err(InvalidInputError(String::from("The value for prev_kind was passed as KomaKind::Blank.")));
-                } else if prev_kind >= KomaKind::GFu {
+                if prev_kind >= KomaKind::GFu {
                     return Err(InvalidInputError(String::from(
                         "The previous move was made by the Sente player, but the piece type in prev_kind belongs to the Gote player."
                     )));
