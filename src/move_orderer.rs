@@ -164,7 +164,7 @@ impl MoveOrderer {
     /// # Arguments
     /// *
     /// * `m` - 登録する候補手
-    /// * `teban` - 手の手番
+    /// * `teban` - mの手番
     /// * `prev_move` - 直前に差された手
     /// * `prev_kind` - 直前に差された手の駒の種類（LegalMove::Putの場合はKomaKind::Blankを渡す）
     ///
@@ -199,7 +199,7 @@ impl MoveOrderer {
 
                 let index = prev_kind as usize;
 
-                self.counter_moves[teban as usize][index][mv.dst() as usize] = Some(m);
+                self.counter_moves[teban.opposite() as usize][index][mv.dst() as usize] = Some(m);
             },
             LegalMove::To(mv) => {
                 if prev_kind >= KomaKind::GFu {
@@ -210,10 +210,10 @@ impl MoveOrderer {
 
                 let index = prev_kind as usize - KomaKind::GFu as usize;
 
-                self.counter_moves[teban as usize][index][mv.dst() as usize] = Some(m);
+                self.counter_moves[teban.opposite() as usize][index][mv.dst() as usize] = Some(m);
             },
             LegalMove::Put(mv) => {
-                self.counter_moves[teban as usize][mv.kind() as usize][mv.dst() as usize] = Some(m);
+                self.counter_moves[teban.opposite() as usize][mv.kind() as usize][mv.dst() as usize] = Some(m);
             }
         }
 
