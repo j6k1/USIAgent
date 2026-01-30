@@ -316,6 +316,10 @@ impl MoveOrderer {
             return Err(InvalidInputError(String::from(
                 "The move specified for the Gote player's turn was designated as the Sente player's move."
             )))
+        } else if ply as usize > self.max_ply {
+            return Err(InvalidInputError(String::from(
+                "ply value exceeds max_ply."
+            )));
         }
 
         let mut mvs = vec![];

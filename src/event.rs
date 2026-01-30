@@ -634,10 +634,10 @@ pub trait EventProvider<E> {
 }
 /// イベントディスパッチャ
 pub trait EventDispatcher<'b,K,E,T,UE> where K: MaxIndex + fmt::Debug,
-											E: MapEventKind<K> + fmt::Debug,
-											UE: PlayerError,
-											EventHandlerError<K,UE>: From<UE>,
-											usize: From<K> {
+											 E: MapEventKind<K> + fmt::Debug,
+											 UE: PlayerError,
+											 EventHandlerError<K,UE>: From<UE>,
+											 usize: From<K> {
 	/// イベントハンドラの追加
 	///
 	/// # Arguments
