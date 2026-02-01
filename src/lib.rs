@@ -274,7 +274,6 @@ impl<T,E> UsiAgent<T,E>
 		let thread_queue_arc = Arc::new(Mutex::new(ThreadQueue::new()));
 
 		let quit_ready_arc = Arc::new(AtomicBool::new(false));
-		let think_start_time_arc = Arc::new(Mutex::new(None));
 
 		let writer = writer_arc.clone();
 
@@ -415,21 +414,9 @@ impl<T,E> UsiAgent<T,E>
 			}
 		});
 
-		let think_start_time = think_start_time_arc.clone();
-
 		system_event_dispatcher.add_handler(SystemEventKind::UsiNewGame, move |ctx,e| {
 			match e {
 				&SystemEvent::UsiNewGame => {
-					match think_start_time.lock() {
-						Ok(mut think_start_time) => {
-							*think_start_time = None;
-						},
-						Err(_) => {
-							return Err(EventHandlerError::Fail(String::from(
-								"Could not get exclusive lock on think_start_time object"
-							)));
-						}
-					};
 					match ctx.player.lock() {
 						Ok(mut player) => {
 							player.newgame()?;
@@ -528,8 +515,6 @@ impl<T,E> UsiAgent<T,E>
 
 		let writer = writer_arc.clone();
 
-		let think_start_time = think_start_time_arc.clone();
-
 		let in_ponder = in_ponder_arc.clone();
 
 		system_event_dispatcher.add_handler(SystemEventKind::Go, move |ctx,e| {
@@ -545,17 +530,6 @@ impl<T,E> UsiAgent<T,E>
 					)));
 				}
 			}
-
-			let think_start_time = match think_start_time.lock() {
-				Ok(mut think_start_time) => {
-					think_start_time.take().unwrap_or(Instant::now())
-				},
-				Err(_) => {
-					return Err(EventHandlerError::Fail(String::from(
-						"Could not get exclusive lock on think_start_time object"
-					)));
-				}
-			};
 
 			let is_ponder = if let SystemEvent::Go(UsiGo::Ponder(_)) = *e {
 				true
@@ -709,7 +683,7 @@ impl<T,E> UsiAgent<T,E>
 							thread_queue.submit(move || {
 								match player.lock() {
 									Ok(mut player) => {
-										let m = match player.think(think_start_time,
+										let m = match player.think(Instant::now(),
 														&*opt,
 														user_event_queue_inner.clone(),
 														info_sender,
@@ -854,27 +828,10 @@ impl<T,E> UsiAgent<T,E>
 		let allow_immediate_move = allow_immediate_move_arc.clone();
 		let on_delay_move_handler = on_delay_move_handler_arc.clone();
 		let on_error_handler = on_error_handler_arc.clone();
-		let in_ponder = in_ponder_arc.clone();
-		let think_start_time = think_start_time_arc.clone();
 
 		system_event_dispatcher.add_handler(SystemEventKind::Stop, move |ctx,e| {
 			match e {
 				&SystemEvent::Stop => {
-					if in_ponder.load(Ordering::Acquire) {
-						match think_start_time.lock() {
-							Ok(mut think_start_time) => {
-								*think_start_time = Some(Instant::now());
-							},
-							Err(_) => {
-								return Err(EventHandlerError::Fail(String::from(
-									"Could not get exclusive lock on think_start_time object"
-								)));
-							}
-						}
-					}
-
-					in_ponder.store(false,Ordering::Release);
-
 					if busy.load(Ordering::Acquire) {
 						match user_event_queue.lock() {
 							Ok(mut user_event_queue) => {
