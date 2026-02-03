@@ -954,11 +954,17 @@ impl<T,E> UsiAgent<T,E>
 								if let Err(ref e) = system_event_sender.send(SystemEvent::QuitReady) {
 									let _ = on_error_handler_inner.lock().map(|h| h.call(e));
 								}
-							}).map(|_| {
-								()
 							}).map_err(|_| {
 								EventHandlerError::Fail(
 									String::from("An error occurred while starting the user thread."))
+							}).and_then(|h| {
+								if let Err(_) = h.join() {
+									Err(EventHandlerError::Fail(String::from(
+										"An error occurred while waiting for the thread handling the quit event."
+									)))
+								} else {
+									Ok(())
+								}
 							})
 						},
 						Err(_) => {
