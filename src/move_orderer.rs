@@ -1,7 +1,7 @@
 //! 探索時の手の並び替えの機能を実装する
 
 use error::InvalidInputError;
-use rule::{LegalMove, SquareToPoint, State};
+use rule::{LegalMove, Rule, SquareToPoint, State};
 use see::calc_see;
 use shogi::{KomaKind, Teban};
 use shogi::KomaKind::GFu;
@@ -16,6 +16,7 @@ pub enum MoveOrder {
     BadCaptures(i32),
     Quiet(i64),
     KillerMoves,
+    Checks(i32),
     GoodCaptures(i32),
 }
 /// 指し手並び変え機の実装
@@ -336,7 +337,11 @@ impl MoveOrderer {
                     }
                 },
                 _ => {
-                    if self.usage_killer_moves[ply as usize] > 0 &&
+                    if Rule::is_oute_move(state,teban,m) {
+                        let see = calc_see(teban,state,m);
+
+                        mvs.push((MoveOrder::Checks(see),m));
+                    } else if self.usage_killer_moves[ply as usize] > 0 &&
                         (self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) ||
                             self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false)) {
                         mvs.push((MoveOrder::KillerMoves,m));

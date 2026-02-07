@@ -12213,341 +12213,257 @@ impl Rule {
 	/// 引数が不正な場合の動作は未定義
 	#[inline]
 	pub fn is_oute_move(state:&State,teban:Teban,m:LegalMove) -> bool {
-		let (self_board,
-			opponent_board,
-			flip_self_board,
-			flip_opponent_board,
-			kaku_board,
-			hisha_board,
-			kyou_board,
-			opponent_ou_position_board,start,sign) = if teban == Teban::Sente {
+		let mut state = state.clone();
 
-			(state.part.sente_self_board,
-			 state.part.sente_opponent_board,
-			 state.part.gote_opponent_board,
-			 state.part.gote_self_board,
-			 state.part.sente_kaku_board,
-			 state.part.sente_hisha_board,
-			 state.part.sente_kyou_board & !state.part.sente_nari_board,
-			 state.part.sente_opponent_ou_position_board,0,-1)
-		} else {
+		let mask = match m {
+			LegalMove::To(mv) => {
+				let (sx,sy) = mv.src().square_to_point();
 
-			(state.part.gote_self_board,
-			 state.part.gote_opponent_board,
-			 state.part.sente_opponent_board,
-			 state.part.sente_self_board,
-			 state.part.gote_kaku_board,
-			 state.part.gote_hisha_board,
-			 state.part.gote_kyou_board & !state.part.gote_nari_board,
-			 state.part.gote_opponent_ou_position_board,80,1)
+				match state.get_banmen().0[sy as usize][sx as usize] {
+					KomaKind::SFu if mv.is_nari() => {
+						state.part.sente_fu_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::SFu => {
+						state.part.sente_fu_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SKyou if mv.is_nari() => {
+						state.part.sente_kyou_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::SKyou => {
+						state.part.sente_kyou_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SKei if mv.is_nari() => {
+						state.part.sente_kei_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::SKei => {
+						state.part.sente_kei_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SGin if mv.is_nari() => {
+						state.part.sente_gin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::SGin => {
+						state.part.sente_gin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SKin => {
+						state.part.sente_kin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SKaku if mv.is_nari() => {
+						state.part.sente_kaku_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::SKaku => {
+						state.part.sente_kaku_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SHisha if mv.is_nari() => {
+						state.part.sente_hisha_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::SHisha => {
+						state.part.sente_hisha_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SFuN => {
+						state.part.sente_fu_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SKyouN => {
+						state.part.sente_kyou_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SKeiN => {
+						state.part.sente_kei_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SGinN => {
+						state.part.sente_gin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SKakuN => {
+						state.part.sente_kaku_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SHishaN => {
+						state.part.sente_hisha_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.sente_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::SOu => {
+						state.part.gote_opponent_ou_position_board ^= BitBoard::from(
+							(1 << (mv.src() + 1)) | (1 << (mv.dst() + 1)))
+							.reverse();
+					},
+					KomaKind::GFu if mv.is_nari() => {
+						state.part.gote_fu_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::GFu => {
+						state.part.gote_fu_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GKyou if mv.is_nari() => {
+						state.part.gote_kyou_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::GKyou => {
+						state.part.gote_kyou_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GKei if mv.is_nari() => {
+						state.part.gote_kei_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::GKei => {
+						state.part.gote_kei_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GGin if mv.is_nari() => {
+						state.part.gote_gin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::GGin => {
+						state.part.gote_gin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GKin => {
+						state.part.gote_kin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GKaku if mv.is_nari() => {
+						state.part.gote_kaku_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::GKaku => {
+						state.part.gote_kaku_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GHisha if mv.is_nari() => {
+						state.part.gote_hisha_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= 1 << (mv.dst() + 1);
+					},
+					KomaKind::GHisha => {
+						state.part.gote_hisha_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GFuN => {
+						state.part.gote_fu_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GKyouN => {
+						state.part.gote_kyou_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GKeiN => {
+						state.part.gote_kei_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GGinN => {
+						state.part.gote_gin_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GKakuN => {
+						state.part.gote_kaku_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GHishaN => {
+						state.part.gote_hisha_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+						state.part.gote_nari_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::GOu => {
+						state.part.sente_opponent_ou_position_board ^= (1 << (mv.src() + 1)) | (1 << (mv.dst() + 1));
+					},
+					KomaKind::Blank => ()
+				};
+
+				(1 << (mv.src() + 1)) | (1 << (mv.dst() + 1))
+			},
+			LegalMove::Put(mv) => {
+				match teban {
+					Teban::Sente => {
+						match mv.kind() {
+							MochigomaKind::Fu => {
+								state.part.sente_fu_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kyou => {
+								state.part.sente_kyou_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kei => {
+								state.part.sente_kei_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Gin => {
+								state.part.sente_gin_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kin => {
+								state.part.sente_kin_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kaku => {
+								state.part.sente_kaku_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Hisha => {
+								state.part.sente_hisha_board ^= 1 << (mv.dst() + 1);
+							},
+						}
+					},
+					Teban::Gote => {
+						match mv.kind() {
+							MochigomaKind::Fu => {
+								state.part.gote_fu_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kyou => {
+								state.part.gote_kyou_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kei => {
+								state.part.gote_kei_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Gin => {
+								state.part.gote_gin_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kin => {
+								state.part.gote_kin_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Kaku => {
+								state.part.gote_kaku_board ^= 1 << (mv.dst() + 1);
+							},
+							MochigomaKind::Hisha => {
+								state.part.gote_hisha_board ^= 1 << (mv.dst() + 1);
+							},
+						}
+					}
+				}
+				1 << (mv.dst() + 1)
+			}
 		};
 
-		match m {
-			LegalMove::To(m) => {
-				let from = m.src();
-				let kind = state.banmen.0[from as usize % 9][from as usize * 114 / 1024];
-				let board = Rule::gen_candidate_bits(teban, self_board,m.dst(),kind);
+		let mask = BitBoard::from(mask);
 
-				if (opponent_ou_position_board & board) != 0 {
-					return true;
-				}
+		let ou_square = Rule::ou_square(teban.opposite(),&state);
 
-				let mut kaku_board = kaku_board;
-				let mut hisha_board = hisha_board;
-				let mut kyou_board = kyou_board;
+		match teban {
+			Teban::Sente => {
+				state.part.sente_self_board ^= mask;
+				state.part.gote_opponent_board ^= mask.reverse();
 
-				match kind {
-					KomaKind::SKaku | KomaKind::SKakuN | KomaKind::GKaku | KomaKind::GKakuN => {
-						kaku_board = kaku_board & !(2 << from);
-						kaku_board = kaku_board | (2 << m.dst());
-					},
-					KomaKind::SHisha | KomaKind::SHishaN | KomaKind::GHisha | KomaKind::GHishaN => {
-						hisha_board = hisha_board & !(2 << from);
-						hisha_board = hisha_board | (2 << m.dst());
-					},
-					KomaKind::SKyou | KomaKind::GKyou => {
-						kyou_board = kyou_board & !(2 << from);
-						kyou_board = kyou_board | (2 << m.dst());
-					},
-					_ => ()
-				}
-
-				let from = ((start - from as i32) * sign) as u32;
-
-				let self_board = self_board & !(2 << from);
-				let flip_self_board = flip_self_board & !(2 << (80 - from));
-
-				for from in kaku_board.iter() {
-					let from = ((start - from as i32) * sign) as u32;
-
-					let occ = self_board;
-
-					let ou_bitboard = opponent_ou_position_board;
-
-					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-						occ,
-						opponent_board,
-						from
-					) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-						occ,
-						opponent_board,
-						from
-					);
-
-					if (board & ou_bitboard) != 0 {
-						return true;
-					}
-
-					let occ = flip_self_board;
-
-					let ou_bitboard = opponent_ou_position_board;
-
-					let p = ou_bitboard.iter().next();
-
-					let p = if let Some(p) = p {
-						p
-					} else {
-						return false;
-					};
-
-					let ou_bitboard = BitBoard::from(2 << (80 - p));
-
-					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-						occ,
-						flip_opponent_board,
-						80 - from
-					) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-						occ,
-						flip_opponent_board,
-						80 - from
-					);
-
-					if (board & ou_bitboard) != 0 {
-						return true;
-					}
-				}
-
-				for from in hisha_board.iter() {
-					let from = ((start - from as i32) * sign) as u32;
-
-					let occ = flip_self_board;
-
-					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-						occ,
-						flip_opponent_board,
-						80 - from
-					) | Rule::gen_candidate_bits_by_hisha_to_right(
-						occ,
-						flip_opponent_board,
-						80 - from
-					);
-
-					let ou_bitboard = opponent_ou_position_board;
-
-					let p = ou_bitboard.iter().next();
-
-					let p = if let Some(p) = p {
-						p
-					} else {
-						return false;
-					};
-
-					let ou_bitboard = BitBoard::from(2 << (80 - p));
-
-					if (board & ou_bitboard) != 0 {
-						return true;
-					}
-
-					let ou_bitboard = opponent_ou_position_board;
-
-					let occ = self_board;
-
-					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-						occ,
-						opponent_board,
-						from
-					) | Rule::gen_candidate_bits_by_hisha_to_right(
-						occ,
-						opponent_board,
-						from
-					);
-
-					if (board & ou_bitboard) != 0 {
-						return true;
-					}
-				}
-
-				for from in kyou_board.iter() {
-					let from = ((start - from as i32) * sign) as u32;
-
-					let occ = flip_self_board;
-
-					let ou_bitboard = opponent_ou_position_board;
-
-					let p = ou_bitboard.iter().next();
-
-					let p = if let Some(p) = p {
-						p
-					} else {
-						return false;
-					};
-
-					let ou_bitboard = BitBoard::from(2 << (80 - p));
-
-					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-						occ,
-						flip_opponent_board,
-						80 - from
-					);
-
-					if board & ou_bitboard != 0 {
-						return true;
-					}
-				}
-
-				false
+				Rule::has_control_sente_fu(&state,ou_square as Square) ||
+				Rule::has_control_sente_kyou(&state,ou_square as Square) ||
+				Rule::has_control_sente_kei(&state,ou_square as Square) ||
+				Rule::has_control_sente_gin(&state,ou_square as Square) ||
+				Rule::has_control_sente_kin(&state,ou_square as Square) ||
+				Rule::has_control_sente_kaku(&state,ou_square as Square) ||
+				Rule::has_control_sente_hisha(&state,ou_square as Square) ||
+				Rule::has_control_sente_nari_kin(&state,ou_square as Square) ||
+				Rule::has_control_sente_kaku_nari(&state,ou_square as Square) ||
+				Rule::has_control_sente_hisha_nari(&state,ou_square as Square) ||
+				Rule::has_control_sente_ou(&state,ou_square as Square)
 			},
-			LegalMove::Put(m) => {
-				let kind = From::from((teban,m.kind()));
-				let board = Rule::gen_candidate_bits(teban, self_board,m.dst(),kind);
+			Teban::Gote => {
+				state.part.gote_self_board ^= mask.reverse();
+				state.part.sente_opponent_board ^= mask;
 
-				if (opponent_ou_position_board & board) != 0 {
-					return true;
-				}
-
-				let kind = m.kind();
-				let from = ((start - m.dst() as i32) * sign) as u32;
-
-				match kind {
-					MochigomaKind::Hisha => {
-						let occ = flip_self_board;
-
-						let ou_bitboard = opponent_ou_position_board;
-
-						let p = ou_bitboard.iter().next();
-
-						let p = if let Some(p) = p {
-							p
-						} else {
-							return false;
-						};
-
-						let ou_bitboard = BitBoard::from(2 << (80 - p));
-
-						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-							occ,
-							flip_opponent_board,
-							80 - from
-						) | Rule::gen_candidate_bits_by_hisha_to_right(
-							occ,
-							flip_opponent_board,
-							80 - from
-						);
-
-						if (board & ou_bitboard) != 0 {
-							return true;
-						}
-
-						let ou_bitboard = opponent_ou_position_board;
-
-						let occ = self_board;
-
-						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-							occ,
-							opponent_board,
-							from
-						) | Rule::gen_candidate_bits_by_hisha_to_right(
-							occ,
-							opponent_board,
-							from
-						);
-
-						if (board & ou_bitboard) != 0 {
-							true
-						} else {
-							false
-						}
-					}
-					MochigomaKind::Kaku => {
-						let occ = self_board;
-
-						let ou_bitboard = opponent_ou_position_board;
-
-						let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-							occ,
-							opponent_board,
-							from
-						) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-							occ,
-							opponent_board,
-							from
-						);
-
-						if (board & ou_bitboard) != 0 {
-							return true;
-						}
-
-						let occ = flip_self_board;
-
-						let ou_bitboard = opponent_ou_position_board;
-
-
-						let p = ou_bitboard.iter().next();
-
-						let p = if let Some(p) = p {
-							p
-						} else {
-							return false;
-						};
-
-						let ou_bitboard = BitBoard::from(2 << (80 - p));
-
-						let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
-							occ,
-							flip_opponent_board,
-							80 - from
-						) | Rule::gen_candidate_bits_by_kaku_to_right_top(
-							occ,
-							flip_opponent_board,
-							80 - from
-						);
-
-						if (board & ou_bitboard) != 0 {
-							true
-						} else {
-							false
-						}
-					},
-					MochigomaKind::Kyou => {
-						let occ = flip_self_board;
-
-						let ou_bitboard = opponent_ou_position_board;
-
-
-						let p = ou_bitboard.iter().next();
-
-						let p = if let Some(p) = p {
-							p
-						} else {
-							return false;
-						};
-
-						let ou_bitboard = BitBoard::from(2 << (80 - p));
-
-						let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
-							occ,
-							flip_opponent_board,
-							80 - from
-						);
-
-						if (board & ou_bitboard) != 0 {
-							true
-						} else {
-							false
-						}
-					}
-					_ => false
-				}
+				Rule::has_control_gote_fu(&state,ou_square as Square) ||
+				Rule::has_control_gote_kyou(&state,ou_square as Square) ||
+				Rule::has_control_gote_kei(&state,ou_square as Square) ||
+				Rule::has_control_gote_gin(&state,ou_square as Square) ||
+				Rule::has_control_gote_kin(&state,ou_square as Square) ||
+				Rule::has_control_gote_kaku(&state,ou_square as Square) ||
+				Rule::has_control_gote_hisha(&state,ou_square as Square) ||
+				Rule::has_control_gote_nari_kin(&state,ou_square as Square) ||
+				Rule::has_control_gote_kaku_nari(&state,ou_square as Square) ||
+				Rule::has_control_gote_hisha_nari(&state,ou_square as Square) ||
+				Rule::has_control_gote_ou(&state,ou_square as Square)
 			}
 		}
 	}
@@ -12911,7 +12827,7 @@ impl Rule {
 		// 先手玉の位置を盤面から探索
 		for p in state.part.gote_opponent_ou_position_board.reverse().iter() {
 			let p = p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SKin);
+			let cand = Rule::gen_candidate_bits(Teban::Sente, BitBoard::default(), p, SOu);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
@@ -13104,9 +13020,9 @@ impl Rule {
 	#[inline]
 	pub fn has_control_gote_ou(state:&State,to:Square) -> bool {
 		let to_bb = BitBoard::from(1 << (80 - to + 1));
-		for p in state.part.sente_opponent_ou_position_board.iter() {
+		for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
 			let from_idx = 80 - p as u32;
-			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GKin);
+			let cand = Rule::gen_candidate_bits(Teban::Gote, BitBoard::default(), from_idx, GOu);
 			if (cand & to_bb) != 0 { return true; }
 		}
 		false
