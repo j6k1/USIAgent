@@ -1,5 +1,7 @@
 //! 探索時の手の並び替えの機能を実装する
 
+use std::fmt::Debug;
+use std::marker::PhantomData;
 use error::InvalidInputError;
 use rule::{LegalMove, Rule, SquareToPoint, State};
 use see::calc_see;
@@ -7,7 +9,7 @@ use shogi::{KomaKind, Teban};
 use shogi::KomaKind::GFu;
 use shogi::Teban::{Gote, Sente};
 
-const CM_BONUS:i64 = 8000;
+const CM_BONUS:i64 = 4800;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// 指し手の並び替え順
@@ -15,32 +17,72 @@ const CM_BONUS:i64 = 8000;
 pub enum MoveOrder {
     BadCaptures(i32),
     Quiet(i64),
-    KillerMoves,
-    Checks(i32),
+    KillerMoves(i32),
+    Checks,
     GoodCaptures(i32),
+}
+pub(crate) mod private {
+    use rule::{LegalMove, State};
+    use shogi::Teban;
+
+    pub trait QuietSeeEffectBase {
+        fn effect(teban: Teban, state: &State, m:LegalMove, score:i64) -> i64;
+        fn see(teban: Teban, state: &State, m:LegalMove) -> i32;
+    }
+}
+/// QuietSeeがスコアに与える作用の実装
+pub trait QuietSeeEffect: private::QuietSeeEffectBase {
+}
+impl<T> QuietSeeEffect for T where T: private::QuietSeeEffectBase {
+}
+/// QuietSeeを使わない
+#[derive(Debug, Clone, Copy)]
+pub struct UnusedQuietSee;
+impl private::QuietSeeEffectBase for UnusedQuietSee {
+    fn effect(_: Teban, _: &State, _: LegalMove, score:i64) -> i64 {
+        score
+    }
+
+    fn see(_: Teban, _: &State, _: LegalMove) -> i32 {
+        0
+    }
+}
+/// QuietSeeをFACTORの値で割る
+#[derive(Debug, Clone, Copy)]
+pub struct DivideFactor<const FACTOR:usize>;
+impl<const FACTOR:usize> private::QuietSeeEffectBase for DivideFactor<FACTOR> {
+    fn effect(teban: Teban, state: &State, m: LegalMove, score: i64) -> i64 {
+        (score * FACTOR as i64 + calc_see(teban, state, m) as i64) / FACTOR as i64
+    }
+
+    fn see(teban: Teban, state: &State, m: LegalMove) -> i32 {
+        calc_see(teban,state,m)
+    }
 }
 /// 指し手並び変え機の実装
 #[derive(Debug,Clone)]
-pub struct MoveOrderer {
+pub struct MoveOrderer<E: QuietSeeEffect + Clone + Debug> {
     killer_moves:Vec<[Option<LegalMove>; 2]>,
     usage_killer_moves:Vec<u8>,
     history:[[[i64;81]; 21]; 2],
     counter_moves: [[[Option<LegalMove>;81]; 21]; 2],
-    max_ply: usize
+    max_ply: usize,
+    effect:PhantomData<E>,
 }
-impl MoveOrderer {
+impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// MoveOrdererのインスタンスを生成するコンストラクタ
     ///
     /// # Arguments
     /// * `max_ply` - 現在の最大探索深さ
     #[inline]
-    pub fn new(max_ply: usize) -> MoveOrderer {
+    pub fn new(max_ply: usize) -> MoveOrderer<E> {
         MoveOrderer {
             killer_moves: vec![[None; 2]; max_ply+1],
             usage_killer_moves: vec![0; max_ply+1],
             history: [[[0;81]; 21]; 2],
             counter_moves: [[[None;81]; 21]; 2],
-            max_ply: max_ply
+            max_ply: max_ply,
+            effect:PhantomData::<E>,
         }
     }
 
@@ -338,13 +380,13 @@ impl MoveOrderer {
                 },
                 _ => {
                     if Rule::is_oute_move(state,teban,m) {
-                        let see = calc_see(teban,state,m);
-
-                        mvs.push((MoveOrder::Checks(see),m));
+                        mvs.push((MoveOrder::Checks,m));
                     } else if self.usage_killer_moves[ply as usize] > 0 &&
                         (self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) ||
                             self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false)) {
-                        mvs.push((MoveOrder::KillerMoves,m));
+                        let see = E::see(teban,state,m);
+
+                        mvs.push((MoveOrder::KillerMoves(see),m));
                     } else {
                         let to = match m {
                             LegalMove::To(m) => {
@@ -388,8 +430,10 @@ impl MoveOrderer {
                             }
                         };
 
+                        let s = self.history[teban as usize][self.calc_piece_index(teban, state, m)?][to as usize] + bonus;
+                        let s = E::effect(teban,state,m,s);
                         mvs.push((
-                            MoveOrder::Quiet(self.history[teban as usize][self.calc_piece_index(teban, state, m)?][to as usize] + bonus),
+                            MoveOrder::Quiet(s),
                             m
                         ))
                     }

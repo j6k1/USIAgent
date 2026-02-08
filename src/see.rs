@@ -63,7 +63,9 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         LegalMove::Put(m) => m.dst(),
     };
 
-    if m.obtained().is_some() {
+    let captured = m.obtained().is_some();
+
+    if captured {
         let (x,y) = target.square_to_point();
 
         let kind = state.get_banmen().0[y as usize][x as usize];
@@ -1130,5 +1132,9 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         i -= 1;
     }
 
-    scores[0]
+    if !captured && scores.len() > 1 {
+        scores[1]
+    } else {
+        scores[0]
+    }
 }
