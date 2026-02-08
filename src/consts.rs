@@ -40,3 +40,7 @@ pub const PIECE_SCORE_MAP:[i32; 29] = [
     1395 * 9 / 10,
     0
 ];
+pub const HAND_SCORE_MAP: [i32; 7] = [
+    90,315,405,405,540,855,990
+];
+
