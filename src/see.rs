@@ -1,51 +1,9 @@
 //! 探索の最適化に用いるSEEの計算を実装する
 
 use bitboard::BitBoard;
+use consts::{FU_SCORE, GIN_SCORE, HISHA_NARI_SCORE, HISHA_SCORE, KAKU_NARI_SCORE, KAKU_SCORE, KEI_SCORE, KIN_SCORE, KYOU_SCORE, OU_SCORE, PIECE_SCORE_MAP};
 use rule::{LegalMove, Rule, Square, SquareToPoint, State};
 use shogi::{KomaKind, Teban};
-
-const FU_SCORE:i32 = 90 * 9 / 10;
-const KYOU_SCORE:i32 = 315 * 9 / 10;
-const KEI_SCORE:i32 = 405 * 9 / 10;
-const GIN_SCORE:i32 = 495 * 9 / 10;
-const KIN_SCORE:i32 = 540 * 9 / 10;
-const KAKU_SCORE:i32 = 855 * 9 / 10;
-const HISHA_SCORE:i32 = 990 * 9 / 10;
-const KAKU_NARI_SCORE:i32 = 945 * 9 / 10;
-const HISHA_NARI_SCORE:i32 = 1395 * 9 / 10;
-const OU_SCORE:i32 = 15000 * 9 / 10;
-
-const PIECE_SCORE_MAP:[i32; 29] = [
-    90 * 9 / 10,
-    315 * 9 / 10,
-    405 * 9 / 10,
-    495 * 9 / 10,
-    540 * 9 / 10,
-    855 * 9 / 10,
-    990 * 9 / 10,
-    15000 * 9 / 10,
-    540 * 9 / 10,
-    540 * 9 / 10,
-    540 * 9 / 10,
-    540 * 9 / 10,
-    945 * 9 / 10,
-    1395 * 9 / 10,
-    90 * 9 / 10,
-    315 * 9 / 10,
-    405 * 9 / 10,
-    495 * 9 / 10,
-    540 * 9 / 10,
-    855 * 9 / 10,
-    990 * 9 / 10,
-    15000 * 9 / 10,
-    540 * 9 / 10,
-    540 * 9 / 10,
-    540 * 9 / 10,
-    540 * 9 / 10,
-    945 * 9 / 10,
-    1395 * 9 / 10,
-    0
-];
 
 /// SEEを計算する
 ///
