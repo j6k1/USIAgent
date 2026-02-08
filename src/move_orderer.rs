@@ -49,8 +49,8 @@ impl private::QuietSeeEffectBase for UnusedQuietSee {
 }
 /// QuietSeeをFACTORの値で割る
 #[derive(Debug, Clone, Copy)]
-pub struct DivideFactor<const FACTOR:usize>;
-impl<const FACTOR:usize> private::QuietSeeEffectBase for DivideFactor<FACTOR> {
+pub struct UseQuietSeeWithDivideFactor<const FACTOR:usize>;
+impl<const FACTOR:usize> private::QuietSeeEffectBase for UseQuietSeeWithDivideFactor<FACTOR> {
     fn effect(teban: Teban, state: &State, m: LegalMove, score: i64) -> i64 {
         (score * FACTOR as i64 + calc_see(teban, state, m) as i64) / FACTOR as i64
     }
