@@ -49,8 +49,8 @@ impl private::QuietSeeEffectBase for UnusedQuietSee {
 }
 /// QuietSeeをFACTORの値で割る
 #[derive(Debug, Clone, Copy)]
-pub struct UseQuietSeeWithDivideFactor<const FACTOR:usize>;
-impl<const FACTOR:usize> private::QuietSeeEffectBase for UseQuietSeeWithDivideFactor<FACTOR> {
+pub struct DivideFactor<const FACTOR:usize>;
+impl<const FACTOR:usize> private::QuietSeeEffectBase for DivideFactor<FACTOR> {
     fn effect(teban: Teban, state: &State, m: LegalMove, score: i64) -> i64 {
         (score * FACTOR as i64 + calc_see(teban, state, m) as i64) / FACTOR as i64
     }
@@ -350,7 +350,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(
         &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
-    ) -> Result<impl Iterator<Item=LegalMove>,InvalidInputError> {
+    ) -> Result<impl Iterator<Item=(LegalMove,i32)>,InvalidInputError> {
         if teban.opposite() == Sente && prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
             return Err(InvalidInputError(String::from(
                 "The move specified for the Sente player's turn was designated as the Gote player's move."
@@ -368,25 +368,27 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         let mut mvs = vec![];
 
         for m in it {
+            let mut see = 0;
+
             match m {
                 LegalMove::To(mv) if mv.obtained().is_some() => {
-                    let see = calc_see(teban,state,m);
+                    see = calc_see(teban,state,m);
 
                     if see >= 0 {
-                        mvs.push((MoveOrder::GoodCaptures(see),m));
+                        mvs.push((MoveOrder::GoodCaptures(see),m,see));
                     } else {
-                        mvs.push((MoveOrder::BadCaptures(see),m));
+                        mvs.push((MoveOrder::BadCaptures(see),m,see));
                     }
                 },
                 _ => {
                     if Rule::is_oute_move(state,teban,m) {
-                        mvs.push((MoveOrder::Checks,m));
+                        mvs.push((MoveOrder::Checks,m,see));
                     } else if self.usage_killer_moves[ply as usize] > 0 &&
                         (self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) ||
                             self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false)) {
                         let see = E::see(teban,state,m);
 
-                        mvs.push((MoveOrder::KillerMoves(see),m));
+                        mvs.push((MoveOrder::KillerMoves(see),m,see));
                     } else {
                         let to = match m {
                             LegalMove::To(m) => {
@@ -434,7 +436,8 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                         let s = E::effect(teban,state,m,s);
                         mvs.push((
                             MoveOrder::Quiet(s),
-                            m
+                            m,
+                            see
                         ))
                     }
                 }
@@ -443,6 +446,6 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
 
         mvs.sort_by(|a,b| b.0.cmp(&a.0));
 
-        Ok(mvs.into_iter().map(|(_,m)| m))
+        Ok(mvs.into_iter().map(|(_,m,see)| (m,see)))
     }
 }
