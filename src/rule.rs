@@ -13662,12 +13662,12 @@ impl Rule {
 			}
 
 			let mask = if p < 10 {
-				mask >> 10 - p
+				mask >> (10 - p)
 			} else {
-				mask << p - 10
+				mask << (p - 10)
 			};
 
-			(ps.gote_self_board & mask).bitcount()
+			(ps.gote_self_board & (mask << 1)).bitcount()
 		} else {
 			0
 		}
@@ -13691,12 +13691,12 @@ impl Rule {
 			}
 
 			let mask = if p < 10 {
-				mask >> 10 - p
+				mask >> (10 - p)
 			} else {
-				mask << p - 10
+				mask << (p - 10)
 			};
 
-			(ps.sente_self_board & mask).bitcount()
+			(ps.sente_self_board & (mask << 1)).bitcount()
 		} else {
 			0
 		}
