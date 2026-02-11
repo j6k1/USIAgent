@@ -13610,7 +13610,7 @@ impl Rule {
 	pub fn update_sennichite_by_oute_map(state:&State,teban:Teban,mhash:u64,shash:u64,
 									oute_kyokumen_map:&mut KyokumenMap<u64,u32>) {
 
-		if Rule::in_check(teban, state) {
+		if Rule::in_check(teban.opposite(), state) {
 			let count = oute_kyokumen_map.get(teban, &mhash, &shash).map(|&c| c).unwrap_or(0);
 
 			oute_kyokumen_map.insert(teban, mhash, shash, count + 1);
