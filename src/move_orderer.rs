@@ -17,7 +17,7 @@ const CM_BONUS:i64 = 4800;
 pub enum MoveOrder {
     BadCaptures(i32),
     Quiet(i64),
-    KillerMoves(i32),
+    KillerMoves(usize),
     Checks,
     GoodCaptures(i32),
 }
@@ -62,11 +62,12 @@ impl<const FACTOR:usize> private::QuietSeeEffectBase for DivideFactor<FACTOR> {
 /// 指し手並び変え機の実装
 #[derive(Debug,Clone)]
 pub struct MoveOrderer<E: QuietSeeEffect + Clone + Debug> {
-    killer_moves:Vec<[Option<LegalMove>; 2]>,
-    usage_killer_moves:Vec<u8>,
+    killer_moves:Vec<Vec<[Option<LegalMove>; 2]>>,
+    usage_killer_moves:Vec<Vec<u8>>,
     history:[[[i64;81]; 21]; 2],
     counter_moves: [[[Option<LegalMove>;81]; 21]; 2],
     max_ply: usize,
+    initial_ply: usize,
     effect:PhantomData<E>,
 }
 impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
@@ -75,13 +76,14 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// # Arguments
     /// * `max_ply` - 現在の最大探索深さ
     #[inline]
-    pub fn new(max_ply: usize) -> MoveOrderer<E> {
+    pub fn new(max_ply: usize,initial_ply: usize) -> MoveOrderer<E> {
         MoveOrderer {
-            killer_moves: vec![[None; 2]; max_ply+1],
-            usage_killer_moves: vec![0; max_ply+1],
+            killer_moves: vec![vec![[None; 2]; max_ply+1]; max_ply+1],
+            usage_killer_moves: vec![vec![0; max_ply+1]; max_ply+1],
             history: [[[0;81]; 21]; 2],
             counter_moves: [[[None;81]; 21]; 2],
             max_ply: max_ply,
+            initial_ply: initial_ply,
             effect:PhantomData::<E>,
         }
     }
@@ -101,7 +103,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     ///
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
-    pub fn update_killer(&mut self, ply: usize, m: LegalMove) -> Result<(),InvalidInputError> {
+    pub fn update_killer(&mut self, ply: usize, max_ply: usize, m: LegalMove) -> Result<(),InvalidInputError> {
         if ply > self.max_ply {
             return Err(InvalidInputError(String::from("ply value exceeds max_ply.")));
         } else if m.obtained().is_some() {
@@ -114,15 +116,15 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         }
 
-        if self.usage_killer_moves[ply] >= 1 {
-            self.killer_moves[ply][1] = self.killer_moves[ply][0];
-            self.killer_moves[ply][0] = Some(m);
-        } else if self.usage_killer_moves[ply] == 0 {
-            self.killer_moves[ply][0] = Some(m);
+        if self.usage_killer_moves[max_ply][ply] >= 1 {
+            self.killer_moves[max_ply][ply][1] = self.killer_moves[max_ply][ply][0];
+            self.killer_moves[max_ply][ply][0] = Some(m);
+        } else if self.usage_killer_moves[max_ply][ply] == 0 {
+            self.killer_moves[max_ply][ply][0] = Some(m);
         }
 
-        if self.usage_killer_moves[ply] < 2 {
-            self.usage_killer_moves[ply] += 1;
+        if self.usage_killer_moves[max_ply][ply] < 2 {
+            self.usage_killer_moves[max_ply][ply] += 1;
         }
 
         Ok(())
@@ -349,7 +351,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(
-        &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
+        &self, it: I, ply: u32, max_ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
     ) -> Result<impl Iterator<Item=(LegalMove,i32)>,InvalidInputError> {
         if teban.opposite() == Sente && prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
             return Err(InvalidInputError(String::from(
@@ -363,16 +365,18 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             return Err(InvalidInputError(String::from(
                 "ply value exceeds max_ply."
             )));
+        } else if max_ply < self.initial_ply as u32 {
+            return Err(InvalidInputError(String::from(
+                "The value of the argument max_ply must be greater than or equal to the initial_ply set in the constructor."
+            )));
         }
 
         let mut mvs = vec![];
 
         for m in it {
-            let mut see = 0;
-
             match m {
                 LegalMove::To(mv) if mv.obtained().is_some() => {
-                    see = calc_see(teban,state,m);
+                    let see = calc_see(teban,state,m);
 
                     if see >= 0 {
                         mvs.push((MoveOrder::GoodCaptures(see),m,see));
@@ -382,13 +386,19 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                 },
                 _ => {
                     if Rule::is_oute_move(state,teban,m) {
-                        mvs.push((MoveOrder::Checks,m,see));
-                    } else if self.usage_killer_moves[ply as usize] > 0 &&
-                        (self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) ||
-                            self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false)) {
                         let see = E::see(teban,state,m);
 
-                        mvs.push((MoveOrder::KillerMoves(see),m,see));
+                        mvs.push((MoveOrder::Checks,m,see));
+                    } else if self.usage_killer_moves[max_ply as usize][ply as usize] > 0 {
+                        if self.killer_moves[max_ply as usize][ply as usize][0].map(|k| k == m).unwrap_or(false) {
+                            let see = E::see(teban,state,m);
+
+                            mvs.push((MoveOrder::KillerMoves(1),m,see));
+                        } else if self.killer_moves[max_ply as usize][ply as usize][1].map(|k| k == m).unwrap_or(false) {
+                            let see = E::see(teban,state,m);
+
+                            mvs.push((MoveOrder::KillerMoves(0),m,see));
+                        }
                     } else {
                         let to = match m {
                             LegalMove::To(m) => {
@@ -432,8 +442,11 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                             }
                         };
 
-                        let s = self.history[teban as usize][self.calc_piece_index(teban, state, m)?][to as usize] + bonus;
+                        let s = self.history[teban as usize][self.calc_piece_index(teban, state, m)?][to as usize];
+                        let s = s / 2i64.pow(max_ply - self.initial_ply as u32) + bonus;
                         let s = E::effect(teban,state,m,s);
+                        let see = E::see(teban,state,m);
+
                         mvs.push((
                             MoveOrder::Quiet(s),
                             m,
