@@ -22,6 +22,7 @@ mod see_xray;
 mod see_infinite;
 mod has_control_bug;
 mod has_control_gote_sliders_exhaustive;
+mod ou_surrounding_threats_count;
 
 use std::cmp;
 use std::collections::HashMap;
