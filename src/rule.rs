@@ -1441,6 +1441,10 @@ const NARI_HISHA_REV_MASK:u128 = 0b000000101_000000000_000000101;
 const OU_REV_MASK:u128 = 0b000000111_000000101_000000111;
 const KEI_REV_MASK:u128 = 0b000001000_000000000_000001000;
 const REV_MASK_EDGE_HIDE:u128 = 0b000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
+const OU_SURROUNDING_MASK:u128 = 0b000000111_000000101_000000111;
+const OU_SURROUNDING_TOP_MASK:u128 = 0b111111110_111111110_111111110;
+const OU_SURROUNDING_BOTTOM_MASK:u128 = 0b111111011_111111011_111111011;
+
 /// 左上を(0,0)とした平手初期局面
 pub const BANMEN_START_POS:Banmen = Banmen([
 	[GKyou,GKei,GGin,GKin,GOu,GKin,GGin,GKei,GKyou],
@@ -13637,6 +13641,64 @@ impl Rule {
 			count > 0
 		} else {
 			false
+		}
+	}
+
+	/// 先手の王の周囲の敵駒の数を返す
+	///
+	/// # Arguments
+	/// * `ps` - 盤面の状態を表すビットボード
+	#[inline]
+	pub fn sente_ou_surrounding_threats_count(ps:&PartialState) -> usize {
+		if let Some(p) = ps.gote_opponent_ou_position_board.iter().next() {
+			let (_,y) = p.square_to_point();
+
+			let mut mask = OU_SURROUNDING_MASK;
+
+			if y == 0 {
+				mask &= OU_SURROUNDING_TOP_MASK;
+			} else if y == 8 {
+				mask &= OU_SURROUNDING_BOTTOM_MASK;
+			}
+
+			let mask = if p < 10 {
+				mask >> 10 - p
+			} else {
+				mask << p - 10
+			};
+
+			(ps.gote_self_board & mask).bitcount()
+		} else {
+			0
+		}
+	}
+
+	/// 後手の王の周囲の敵駒の数を返す
+	///
+	/// # Arguments
+	/// * `ps` - 盤面の状態を表すビットボード
+	#[inline]
+	pub fn gote_ou_surrounding_threats_count(ps:&PartialState) -> usize {
+		if let Some(p) = ps.sente_opponent_ou_position_board.iter().next() {
+			let (_,y) = p.square_to_point();
+
+			let mut mask = OU_SURROUNDING_MASK;
+
+			if y == 0 {
+				mask &= OU_SURROUNDING_TOP_MASK;
+			} else if y == 8 {
+				mask &= OU_SURROUNDING_BOTTOM_MASK;
+			}
+
+			let mask = if p < 10 {
+				mask >> 10 - p
+			} else {
+				mask << p - 10
+			};
+
+			(ps.sente_self_board & mask).bitcount()
+		} else {
+			0
 		}
 	}
 
