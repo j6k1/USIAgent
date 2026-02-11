@@ -9284,11 +9284,11 @@ impl Rule {
 							kind
 						};
 
-						if Rule::in_check_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
+						if Rule::in_check_with_partial_state_and_from_and_kind(t.opposite(), &ps, m.dst(), kind) {
 							return true;
 						}
 
-						if Rule::in_check_with_partial_state_repeat_move_kinds(t, &ps) {
+						if Rule::in_check_with_partial_state_repeat_move_kinds(t.opposite(), &ps) {
 							return true;
 						}
 
@@ -9344,11 +9344,11 @@ impl Rule {
 
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
-						if Rule::in_check_with_partial_state_and_from_and_kind(t, &ps, m.dst(), kind) {
+						if Rule::in_check_with_partial_state_and_from_and_kind(t.opposite(), &ps, m.dst(), kind) {
 							return true;
 						}
 
-						if Rule::in_check_with_partial_state_repeat_move_kinds(t, &ps) {
+						if Rule::in_check_with_partial_state_repeat_move_kinds(t.opposite(), &ps) {
 							return true;
 						}
 
@@ -9385,7 +9385,7 @@ impl Rule {
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
 						if Rule::in_check_with_partial_state_and_from_and_kind(
-							t, &ps, m.dst(), KomaKind::from((t,m.kind()))
+							t.opposite(), &ps, m.dst(), KomaKind::from((t,m.kind()))
 						) {
 							return true;
 						}
@@ -9454,11 +9454,11 @@ impl Rule {
 
 				let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 
-				if Rule::in_check_with_partial_state_and_from_and_kind(t, &ps, dst, kind) {
+				if Rule::in_check_with_partial_state_and_from_and_kind(t.opposite(), &ps, dst, kind) {
 					return true;
 				}
 
-				if Rule::in_check_with_partial_state_repeat_move_kinds(t, &ps) {
+				if Rule::in_check_with_partial_state_repeat_move_kinds(t.opposite(), &ps) {
 					return true;
 				}
 
@@ -9494,7 +9494,7 @@ impl Rule {
 						let mv = mv.to_applied_move();
 						let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, mv);
 						!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(
-							t.opposite(),&state.banmen,&ps,mv
+							t,&state.banmen,&ps,mv
 						)
 					}
 				}
@@ -10885,7 +10885,7 @@ impl Rule {
 						}
 					}
 
-					if Rule::in_check(teban, &next) {
+					if Rule::in_check(teban.opposite(), &next) {
 						match oute_kyokumen_map.get(teban, &mhash,&shash) {
 							Some(&c) => {
 								oute_kyokumen_map.insert(teban,mhash,shash,c+1);
@@ -10954,7 +10954,7 @@ impl Rule {
 	/// `State`の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn is_nyugyoku_win(state:&State,t:Teban,mc:&MochigomaCollections,limit:&Option<Instant>) -> bool {
-		if Rule::in_check(t.opposite(), state) {
+		if Rule::in_check(t, state) {
 			return false
 		}
 
@@ -11122,10 +11122,7 @@ impl Rule {
 	#[inline]
 	pub fn responded_oute(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove)
 		-> Result<bool,InvalidStateError> {
-
-		let o = t.opposite();
-
-		if !Rule::in_check(o, state) {
+		if !Rule::in_check(t, state) {
 			return Err(InvalidStateError(String::from(
 				"The argument m is not Move of oute."
 			)));
@@ -11133,7 +11130,7 @@ impl Rule {
 
 		let ps = Rule::apply_move_to_partial_state_none_check(state, t, mc, m);
 
-		Ok(!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(o, &state.banmen, &ps, m))
+		Ok(!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(t, &state.banmen, &ps, m))
 	}
 
 	/// 先手の飛車、角、香車のいずれかの進路上にある駒が移動することで後手の王が飛車に取られる可能性がある場合その効きのマスクを、そうでない場合全盤面上の全ビットが1のマスクを返す
@@ -11898,7 +11895,7 @@ impl Rule {
 					}
 				}
 
-				let is_oute = Rule::in_check_with_partial_state_and_point_and_kind(teban, &state.part, dx, dy, kind);
+				let is_oute = Rule::in_check_with_partial_state_and_point_and_kind(teban.opposite(), &state.part, dx, dy, kind);
 
 				is_oute && Rule::legal_moves_all(teban.opposite(), state, &mc).into_iter().filter(|m| {
 					match *m {
@@ -11906,7 +11903,7 @@ impl Rule {
 						m @ _ => {
 							let m = m.to_applied_move();
 							let ps = Rule::apply_move_to_partial_state_none_check(state, teban.opposite(), mc, m);
-							!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(teban, &state.banmen, &ps, m)
+							!Rule::in_check_with_partial_state_and_old_banmen_and_opponent_move(teban.opposite(), &state.banmen, &ps, m)
 						},
 					}
 				}).count() == 0
@@ -11949,29 +11946,28 @@ impl Rule {
 		}
 	}
 
-	/// 手番側から王手がかかっているかを返す
+	/// 手番側に王手がかかっているかを返す
 	///
 	/// # Arguments
-	/// * `t` - 手を列挙したい手番
+	/// * `t` - 王手をかけられているか判定したい手番
 	/// * `state` - 盤面の状態
 	/// `State`が不正な場合の動作は未定義
 	#[inline]
-	pub fn in_check(t:Teban, state:&State)
-					-> bool {
+	pub fn in_check(t:Teban, state:&State) -> bool {
 		match t {
 			Teban::Sente => {
-				state.part.sente_checked_board != 0
+				state.part.gote_checked_board != 0
 			},
 			Teban::Gote => {
-				state.part.gote_checked_board != 0
+				state.part.sente_checked_board != 0
 			}
 		}
 	}
 
-	/// 相手に王手をかけているかどうかをビットボードと移動元座標と駒の種類から返す
+	/// 相手から王手をかけられているかどうかをビットボードと移動元座標と駒の種類から返す
 	///
 	/// # Arguments
-	/// * `t` - 手を列挙したい手番
+	/// * `t` - 王手をかけられているか判定したい手番
 	/// * `ps` - 盤面の状態を表すビットボード
 	/// * `x` - 盤面左上を0,0とした時の移動元のx座標
 	/// * `y` - 盤面左上を0,0とした時の移動元のy座標
@@ -11984,10 +11980,10 @@ impl Rule {
 		Rule::in_check_with_partial_state_and_from_and_kind(t, ps, from, kind)
 	}
 
-	/// 相手に王をかけているか否かビットボードと移動元座標(x*9+y)と駒の種類から返す
+	/// 相手から王手をかけられているか否かビットボードと移動元座標(x*9+y)と駒の種類から返す
 	///
 	/// # Arguments
-	/// * `t` - 手を列挙したい手番
+	/// * `t` - 王手をかけられているか判定したい手番
 	/// * `ps` - 盤面の状態を表すビットボード
 	/// * `from` - 盤面左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 駒の種類
@@ -11997,12 +11993,12 @@ impl Rule {
 		let state = ps;
 
 		(match kind {
-			SFu | SKei | SGin | SKin | SOu | SFuN | SKyouN | SKeiN | SGinN if t == Teban::Sente => {
+			SFu | SKei | SGin | SKin | SOu | SFuN | SKyouN | SKeiN | SGinN if t == Teban::Gote => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					t,state.sente_self_board,state.sente_opponent_ou_position_board,from,kind
+					t.opposite(),state.sente_self_board,state.sente_opponent_ou_position_board,from,kind
 				)
 			},
-			SKyou if t == Teban::Sente => {
+			SKyou if t == Teban::Gote => {
 				Rule::win_only_move_sente_kyou_with_point_and_kind_and_bitboard(
 					state.sente_opponent_ou_position_board,
 					state.gote_opponent_board,
@@ -12010,7 +12006,7 @@ impl Rule {
 					from
 				)
 			}
-			SKaku | SKakuN if t == Teban::Sente => {
+			SKaku | SKakuN if t == Teban::Gote => {
 				Rule::win_only_move_sente_kaku_with_point_and_kind_and_bitboard(
 					state.sente_opponent_ou_position_board,
 					state.sente_self_board,
@@ -12020,7 +12016,7 @@ impl Rule {
 					from, kind
 				)
 			},
-			SHisha | SHishaN if t == Teban::Sente => {
+			SHisha | SHishaN if t == Teban::Gote => {
 				Rule::win_only_move_sente_hisha_with_point_and_kind_and_bitboard(
 					state.sente_opponent_ou_position_board,
 					state.sente_self_board,
@@ -12030,12 +12026,12 @@ impl Rule {
 					from, kind
 				)
 			},
-			GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN if t == Teban::Gote => {
+			GFu | GKei | GGin | GKin | GOu | GFuN | GKyouN | GKeiN | GGinN if t == Teban::Sente => {
 				Rule::win_only_move_once_with_point_and_kind_and_bitboard(
-					t,state.gote_self_board,state.gote_opponent_ou_position_board,from,kind
+					t.opposite(),state.gote_self_board,state.gote_opponent_ou_position_board,from,kind
 				)
 			},
-			GKyou if t == Teban::Gote => {
+			GKyou if t == Teban::Sente => {
 				Rule::win_only_move_gote_kyou_with_point_and_kind_and_bitboard(
 					state.gote_opponent_ou_position_board,
 					state.sente_opponent_board,
@@ -12043,7 +12039,7 @@ impl Rule {
 					from
 				)
 			},
-			GKaku | GKakuN if t == Teban::Gote => {
+			GKaku | GKakuN if t == Teban::Sente => {
 				Rule::win_only_move_gote_kaku_with_point_and_kind_and_bitboard(
 					state.gote_opponent_ou_position_board,
 					state.gote_self_board,
@@ -12053,7 +12049,7 @@ impl Rule {
 					from, kind
 				)
 			},
-			GHisha | GHishaN if t == Teban::Gote => {
+			GHisha | GHishaN if t == Teban::Sente => {
 				Rule::win_only_move_gote_hisha_with_point_and_kind_and_bitboard(
 					state.gote_opponent_ou_position_board,
 					state.gote_self_board,
@@ -12067,7 +12063,7 @@ impl Rule {
 		}).is_some()
 	}
 
-	/// 相手に王手をかけているか否かビットボードから返す(香車、飛車、角のいずれかで詰むケースのみ)
+	/// 相手から王手をかけられているか否かビットボードから返す(香車、飛車、角のいずれかで詰むケースのみ)
 	///
 	/// # Arguments
 	/// * `t` - 手を列挙したい手番
@@ -12076,7 +12072,7 @@ impl Rule {
 	#[inline]
 	pub fn in_check_with_partial_state_repeat_move_kinds(t:Teban, ps:&PartialState) -> bool {
 		match t {
-			Teban::Sente => {
+			Teban::Gote => {
 				let bitboard = ps.sente_hisha_board;
 
 				for p in bitboard.iter() {
@@ -12101,7 +12097,7 @@ impl Rule {
 					}
 				}
 			},
-			Teban::Gote => {
+			Teban::Sente => {
 				let bitboard = ps.gote_hisha_board;
 
 				for p in bitboard.iter() {
@@ -12131,10 +12127,10 @@ impl Rule {
 		false
 	}
 
-	/// 自分の手番が相手の手番に王手をかけているか否か手の適用後のビットボードと手の適用前の盤面と手番側の打った手から返す
+	/// 自分の手番が相手の手番に王手をかけられているか否か手の適用後のビットボードと手の適用前の盤面と相手番側の打った手から返す
 	///
 	/// # Arguments
-	/// * `t` - 手を列挙したい手番
+	/// * `t` - 王手をかけられているか判定したい手番
 	/// * `banmen` - 手の適用前の盤面
 	/// * `ps` - 相手の手番側の手の適用後の盤面の状態を表すビットボード
 	/// * `m` - 相手の手番側が打った手
@@ -12168,11 +12164,6 @@ impl Rule {
 			&Banmen(ref kinds) => {
 				for y in 0..kinds.len() {
 					for x in 0..kinds[y].len() {
-						let (x,y) = match t {
-							Teban::Sente => (x,y),
-							Teban::Gote => (8 - x, 8 - y),
-						};
-
 						let kind = if x as i32 == sx && y as i32 == sy {
 							Blank
 						} else if x == dx && y == dy {
@@ -12184,7 +12175,7 @@ impl Rule {
 									kinds[sy as usize][sx as usize]
 								}
 								AppliedMove::Put(m) => {
-									KomaKind::from((t.opposite(),m.kind()))
+									KomaKind::from((t,m.kind()))
 								}
 							}
 						} else {
@@ -13640,7 +13631,7 @@ impl Rule {
 									oute_kyokumen_map:&KyokumenMap<u64,u32>)
 		-> bool {
 
-		if Rule::in_check(teban, state) {
+		if Rule::in_check(teban.opposite(),state) {
 			let count = oute_kyokumen_map.get(teban, &mhash, &shash).map(|&c| c).unwrap_or(0);
 
 			count > 0

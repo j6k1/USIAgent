@@ -79,7 +79,7 @@ impl PerftSolver for PerftSolverByEvasions {
                 _ => ()
             };
 
-            if Rule::in_check(teban.opposite(),state) {
+            if Rule::in_check(teban,state) {
                 result.checks += 1;
 
                 let mut rng = rand::thread_rng();
@@ -99,7 +99,7 @@ impl PerftSolver for PerftSolverByEvasions {
 
             let mut buffer = RandomPicker::new(Prng::new(rng.gen()));
 
-            if Rule::in_check(teban.opposite(),state) {
+            if Rule::in_check(teban,state) {
                 Rule::generate_moves::<EvasionsAll>(teban, state, mc, &mut buffer).unwrap();
             } else {
                 Rule::generate_moves::<NonEvasionsAll>(teban, state, mc, &mut buffer).unwrap();
@@ -110,7 +110,7 @@ impl PerftSolver for PerftSolverByEvasions {
 
                 match next {
                     (state, mc, _) => {
-                        if !Rule::in_check(teban.opposite(),&state) {
+                        if !Rule::in_check(teban,&state) {
                             result += self.perft(teban.opposite(),&state,&mc,Some(m),depth - 1);
                         }
                     }
