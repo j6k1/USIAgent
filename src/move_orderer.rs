@@ -107,12 +107,13 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
 
             self.current_max_ply = depth as usize;
         } else if (depth as usize) > self.current_max_ply {
-            let rate = 1 << (depth as usize - self.current_max_ply);
+            let m = 3i64.pow(depth - self.current_max_ply as u32);
+            let d = 1 << ((depth as usize - self.current_max_ply ) * 2);
 
             for t in self.history.iter_mut() {
                 for k in t.iter_mut() {
                     for h in k.iter_mut() {
-                        *h = *h / rate;
+                        *h = *h * m / d;
                     }
                 }
             }
