@@ -1156,6 +1156,144 @@ impl PartialState {
 
 		self.gote_checked_board = b;
 	}
+
+	/// SmallerStateに変換した値を返す
+	pub fn to_smaller(&self) -> SmallerState {
+		SmallerState {
+			sente_self_board: self.sente_self_board,
+			sente_opponent_board: self.sente_opponent_board,
+			gote_self_board: self.gote_self_board,
+			gote_opponent_board: self.gote_opponent_board,
+			sente_nari_board: self.sente_nari_board,
+			gote_nari_board: self.gote_nari_board,
+			sente_fu_board: self.sente_fu_board,
+			gote_fu_board: self.gote_fu_board,
+			sente_kyou_board: self.sente_kyou_board,
+			gote_kyou_board: self.gote_kyou_board,
+			sente_kei_board: self.sente_kei_board,
+			gote_kei_board: self.gote_kei_board,
+			sente_gin_board: self.sente_gin_board,
+			gote_gin_board: self.gote_gin_board,
+			sente_kin_board: self.sente_kin_board,
+			gote_kin_board: self.gote_kin_board,
+			sente_kaku_board: self.sente_kaku_board,
+			gote_kaku_board: self.gote_kaku_board,
+			sente_hisha_board: self.sente_hisha_board,
+			gote_hisha_board: self.gote_hisha_board,
+			sente_opponent_ou_position_board: self.sente_opponent_ou_position_board,
+			gote_opponent_ou_position_board: self.gote_opponent_ou_position_board
+		}
+	}
+}
+/// 合法手の生成に内部で利用するPIN駒と王手をかけている駒のビットボードを除いたビットボードの集合
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct SmallerState {
+	sente_self_board:BitBoard,
+	sente_opponent_board:BitBoard,
+	gote_self_board:BitBoard,
+	gote_opponent_board:BitBoard,
+	sente_nari_board:BitBoard,
+	gote_nari_board:BitBoard,
+	sente_fu_board:BitBoard,
+	gote_fu_board:BitBoard,
+	sente_kyou_board:BitBoard,
+	gote_kyou_board:BitBoard,
+	sente_kei_board:BitBoard,
+	gote_kei_board:BitBoard,
+	sente_gin_board:BitBoard,
+	gote_gin_board:BitBoard,
+	sente_kin_board:BitBoard,
+	gote_kin_board:BitBoard,
+	sente_kaku_board:BitBoard,
+	gote_kaku_board:BitBoard,
+	sente_hisha_board:BitBoard,
+	gote_hisha_board:BitBoard,
+	sente_opponent_ou_position_board:BitBoard,
+	gote_opponent_ou_position_board:BitBoard,
+}
+impl SmallerState {
+	pub fn kind(&self,p:u32) -> KomaKind {
+		let p_mask = 1 << (p + 1);
+		let p_mask = BitBoard::from(p_mask);
+
+		if self.sente_fu_board & p_mask != 0 {
+			if self.sente_nari_board & p_mask != 0 {
+				KomaKind::SFuN
+			} else {
+				KomaKind::SFu
+			}
+		} else if self.gote_fu_board & p_mask != 0 {
+			if self.gote_nari_board & p_mask != 0 {
+				KomaKind::GFuN
+			} else {
+				KomaKind::GFu
+			}
+		} else if self.sente_kyou_board & p_mask != 0 {
+			if self.sente_nari_board & p_mask != 0 {
+				KomaKind::SKyouN
+			} else {
+				KomaKind::SKyou
+			}
+		} else if self.gote_kyou_board & p_mask != 0 {
+			if self.gote_kyou_board & p_mask != 0 {
+				KomaKind::GKakuN
+			} else {
+				KomaKind::GKyouN
+			}
+		} else if self.sente_kei_board & p_mask != 0 {
+			if self.sente_nari_board & p_mask != 0 {
+				KomaKind::SKeiN
+			} else {
+				KomaKind::SKei
+			}
+		} else if self.gote_kei_board & p_mask != 0 {
+			if self.gote_nari_board & p_mask != 0 {
+				KomaKind::GKeiN
+			} else {
+				KomaKind::GKei
+			}
+		} else if self.sente_gin_board & p_mask != 0 {
+			if self.sente_nari_board & p_mask != 0 {
+				KomaKind::SGinN
+			} else {
+				KomaKind::SGin
+			}
+		} else if self.gote_gin_board & p_mask != 0 {
+			if self.gote_nari_board & p_mask != 0 {
+				KomaKind::GGinN
+			} else {
+				KomaKind::GGin
+			}
+		} else if self.sente_kin_board & p_mask != 0 {
+			KomaKind::SKin
+		} else if self.gote_kin_board & p_mask != 0 {
+			KomaKind::GKin
+		} else if self.sente_kaku_board & p_mask != 0 {
+			if self.sente_nari_board & p_mask != 0 {
+				KomaKind::SKakuN
+			} else {
+				KomaKind::SKaku
+			}
+		} else if self.gote_kaku_board & p_mask != 0 {
+			if self.gote_nari_board & p_mask != 0 {
+				KomaKind::GKakuN
+			} else {
+				KomaKind::GKaku
+			}
+		} else if self.sente_hisha_board & p_mask != 0 {
+			if self.sente_nari_board & p_mask != 0 {
+				KomaKind::SHishaN
+			} else {
+				KomaKind::SHisha
+			}
+		} else if self.gote_opponent_ou_position_board.reverse() & p_mask != 0 {
+			KomaKind::SOu
+		} else if self.sente_opponent_ou_position_board & p_mask != 0 {
+			KomaKind::GOu
+		} else {
+			KomaKind::Blank
+		}
+	}
 }
 /// 局面情報
 #[derive(Clone)]
