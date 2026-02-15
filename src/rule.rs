@@ -1212,6 +1212,11 @@ pub struct SmallerState {
 	gote_opponent_ou_position_board:BitBoard,
 }
 impl SmallerState {
+	/// `KomaKind`を取得
+	///
+	/// # Arguments
+	/// * `p` - 盤面左上を0,0とし、x * 9 + yで表される駒の位置
+	#[inline]
 	pub fn kind(&self,p:u32) -> KomaKind {
 		let p_mask = 1 << (p + 1);
 		let p_mask = BitBoard::from(p_mask);
@@ -1571,6 +1576,12 @@ const POSSIBLE_EVASIONS_BY_FU_CAPTURE_MASK:u128 = 0b000001111_000001001_00000111
 pub const POSSIBLE_OU_CAPTURES_MASK_OF_SENTE:u128 = 0b000111111_000111111_000111011_000111111_000111111;
 /// 後手側が先手王を詰ませる可能性のある駒の位置の範囲のビットマスク
 pub const POSSIBLE_OU_CAPTURES_MASK_OF_GOTE:u128 = 0b000111111_000111111_000110111_000111111_000111111;
+/// 1マス以内の位置のマスク
+pub const NEAREST_MASK:u128 = 0b000000111_000000101_000000111;
+/// 先手の桂馬が取れる位置のマスク
+pub const SENTE_NEAREST_KEI_MASK:u128 = 0b000001000_000000000_000001000;
+/// 後手の桂馬が取れる位置のマスク
+pub const GOTE_NEAREST_KEI_MASK:u128 = 0b000000001_000000000_000000001;
 const SENTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
 const GOTE_KYOU_FORCE_PROMOTION_MASK:u128 = 0b110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000_110000000;
 const FU_REV_MASK:u128 = 0b000000000_000000100_000000000;
@@ -12607,71 +12618,132 @@ impl Rule {
 	///
 	/// # Arguments
 	/// * `teban` - 攻め手側の手番（受け側の効きを計算したいときは逆にする）
-	/// * `state` - 盤面の状態
+	/// * `ps` - 盤面の状態
 	/// * `to` - 効きを調べたい位置
 	#[inline]
-	pub fn control_count(teban:Teban,state:&State,to:Square) -> usize {
-		let x = to * 114 / 1024;
-		let y = to - x * 9;
+	pub fn control_count(teban:Teban,ps:&PartialState,to:Square) -> usize {
 		let mut count = 0;
 
-		let board = if teban == Teban::Sente {
-			!BitBoard::from(1 << (to + 1))
-		} else {
-			!BitBoard::from(1 << (80 - to + 1))
-		};
-
-		for dx in (x-1).max(0)..=(x+1).min(8) {
-			for dy in (y-1).max(0)..=(y+1).min(8) {
-				let b = Rule::gen_candidate_bits(teban,
-													 board,
-													 dx as u32 * 9 + dy as u32,
-													 state.banmen.0[dy as usize][dx as usize]);
-				if b != 0 {
-					count += 1;
-				}
-			}
-		}
-
 		if teban == Teban::Sente {
-			if x > 0 && y < 7 && state.banmen.0[y as usize + 2][x as usize - 1] == KomaKind::SKei {
-				count += 1;
+			let board = !BitBoard::from(1 << (to + 1));
+
+			let nearest_mask = if to >= 10 {
+				NEAREST_MASK << (to - 10)
+			} else {
+				NEAREST_MASK >> (10 - to)
+			};
+
+			let nearest_mask = nearest_mask << 1;
+
+			for p in (ps.sente_fu_board & !ps.sente_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SFu);
+				if b != 0 {
+					count += 1;
+				}
 			}
 
-			if x < 8 && y < 7 && state.banmen.0[y as usize + 2][x as usize + 1] == KomaKind::SKei {
-				count += 1;
+			let kei_nearest_mask = if to >= 10 {
+				SENTE_NEAREST_KEI_MASK << (to - 10)
+			} else {
+				SENTE_NEAREST_KEI_MASK >> (10 - to)
+			};
+
+			let kei_nearest_mask = kei_nearest_mask << 1;
+
+			for p in (ps.sente_kei_board & !ps.sente_nari_board & kei_nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SKei);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.sente_gin_board & !ps.sente_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SGin);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in ((ps.sente_kin_board |
+				(ps.sente_nari_board & !ps.sente_kaku_board & !ps.sente_hisha_board)) & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SKin);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.sente_kaku_board & ps.sente_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SKakuN);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.sente_hisha_board & ps.sente_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SHishaN);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.gote_opponent_ou_position_board.reverse() & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SOu);
+				if b != 0 {
+					count += 1;
+				}
 			}
 
 			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
-				state.part.sente_self_board,
-				state.part.sente_opponent_board,
+				ps.sente_self_board,
+				ps.sente_opponent_board,
 				BitBoard::default(),
 				to as u32
 			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
-				state.part.sente_self_board,
-				state.part.sente_opponent_board,
+				ps.sente_self_board,
+				ps.sente_opponent_board,
 				BitBoard::default(),
 				to as u32
 			);
 
-			let b = b & state.part.sente_kaku_board;
+			let b = b & ps.sente_kaku_board;
 			let b = BitBoard::from(b);
 
 			count += b.iter().count();
 
 			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
+				ps.gote_opponent_board,
+				ps.gote_self_board,
 				BitBoard::default(),
 				80 - to as u32
 			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
+				ps.gote_opponent_board,
+				ps.gote_self_board,
 				BitBoard::default(),
 				80 - to as u32
 			);
 
-			let kaku_board = state.part.sente_kaku_board;
+			let kaku_board = ps.sente_kaku_board;
 
 			for p in kaku_board.iter() {
 				let p = 80 - p + 1;
@@ -12682,18 +12754,18 @@ impl Rule {
 			}
 
 			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
+				ps.gote_opponent_board,
+				ps.gote_self_board,
 				BitBoard::default(),
 				80 - to as u32
 			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
+				ps.gote_opponent_board,
+				ps.gote_self_board,
 				BitBoard::default(),
 				80 - to as u32
 			);
 
-			let hisha_board = state.part.sente_hisha_board;
+			let hisha_board = ps.sente_hisha_board;
 
 			for p in hisha_board.iter() {
 				let p = 80 - p + 1;
@@ -12704,53 +12776,136 @@ impl Rule {
 			}
 
 			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
-				state.part.sente_self_board,
-				state.part.sente_opponent_board,
-				BitBoard::default(),
-				to as u32
-			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
-				state.part.sente_self_board,
-				state.part.sente_opponent_board,
+				ps.sente_self_board,
+				ps.sente_opponent_board,
 				BitBoard::default(),
 				to as u32
 			);
 
 			{
-				let b = b & state.part.sente_hisha_board;
-				let b = BitBoard::from(b);
-
-				count += b.iter().count();
-			}
-
-			{
-				let b = b & (state.part.sente_kyou_board & !state.part.sente_nari_board);
+				let b = b & (ps.sente_kyou_board & !ps.sente_nari_board);
 
 				if b != 0 {
 					count += 1;
 				}
 			}
+
+			let b = b | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+				ps.sente_self_board,
+				ps.sente_opponent_board,
+				BitBoard::default(),
+				to as u32
+			);
+
+			{
+				let b = b & ps.sente_hisha_board;
+				let b = BitBoard::from(b);
+
+				count += b.iter().count();
+			}
 		} else {
-			if x < 8 && y > 1 && state.banmen.0[y as usize - 2][x as usize + 1] == KomaKind::GKei {
-				count += 1;
+			let board = !BitBoard::from(1 << (80 - to + 1));
+
+			let nearest_mask = if to >= 10 {
+				NEAREST_MASK << (to - 10)
+			} else {
+				NEAREST_MASK >> (10 - to)
+			};
+
+			let nearest_mask = nearest_mask << 1;
+
+			for p in (ps.gote_fu_board & !ps.gote_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::SFu);
+				if b != 0 {
+					count += 1;
+				}
 			}
 
-			if x > 0 && y > 1 && state.banmen.0[y as usize - 2][x as usize - 1] == KomaKind::GKei {
-				count += 1;
+			let kei_nearest_mask = if to >= 11 {
+				GOTE_NEAREST_KEI_MASK << (to - 11)
+			} else {
+				GOTE_NEAREST_KEI_MASK >> (11 - to)
+			};
+
+			let kei_nearest_mask = kei_nearest_mask << 1;
+
+			for p in (ps.gote_kei_board & !ps.gote_nari_board & kei_nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::GKei);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.gote_gin_board & !ps.gote_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::GGin);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in ((ps.gote_kin_board |
+				(ps.gote_nari_board & !ps.gote_kaku_board & !ps.gote_hisha_board)) & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::GKin);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.gote_kaku_board & ps.gote_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::GKakuN);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.gote_hisha_board & ps.gote_nari_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::GHishaN);
+				if b != 0 {
+					count += 1;
+				}
+			}
+
+			for p in (ps.sente_opponent_ou_position_board & nearest_mask).iter() {
+				let b = Rule::gen_candidate_bits(teban,
+												 board,
+												 p as u32,
+												 KomaKind::GOu);
+				if b != 0 {
+					count += 1;
+				}
 			}
 
 			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
+				ps.gote_self_board,
+				ps.gote_opponent_board,
 				BitBoard::default(),
 				80 - to as u32
 			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
+				ps.gote_self_board,
+				ps.gote_opponent_board,
 				BitBoard::default(),
 				80 - to as u32
 			);
 
-			let kaku_board = state.part.gote_kaku_board;
+			let kaku_board = ps.gote_kaku_board;
 
 			for p in kaku_board.iter() {
 				let p = 80 - p + 1;
@@ -12761,66 +12916,68 @@ impl Rule {
 			}
 
 			let b = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
-				state.part.sente_self_board,
-				state.part.sente_opponent_board,
+				ps.sente_opponent_board,
+				ps.sente_self_board,
 				BitBoard::default(),
 				to as u32
 			) | Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
-				state.part.sente_self_board,
-				state.part.sente_opponent_board,
+				ps.sente_opponent_board,
+				ps.sente_self_board,
 				BitBoard::default(),
 				to as u32
 			);
 
-			let b = b & state.part.gote_kaku_board;
+			let b = b & ps.gote_kaku_board;
 			let b = BitBoard::from(b);
 
 			count += b.iter().count();
 
 			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
-				state.part.sente_opponent_board,
-				state.part.sente_self_board,
+				ps.sente_opponent_board,
+				ps.sente_self_board,
 				BitBoard::default(),
 				to as u32
 			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
-				state.part.sente_opponent_board,
-				state.part.sente_self_board,
+				ps.sente_opponent_board,
+				ps.sente_self_board,
 				BitBoard::default(),
 				to as u32
 			);
 
 			{
-				let b = b & state.part.gote_hisha_board;
+				let b = b & ps.gote_hisha_board;
 				let b = BitBoard::from(b);
 
 				count += b.iter().count();
 			}
 
 			let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
-				BitBoard::default(),
-				80 - to as u32
-			) | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
-				state.part.gote_opponent_board,
-				state.part.gote_self_board,
+				ps.gote_self_board,
+				ps.gote_opponent_board,
 				BitBoard::default(),
 				80 - to as u32
 			);
 
-			let hisha_board = state.part.gote_hisha_board;
-
-			for p in hisha_board.iter() {
-				let p = 80 - p + 1;
-
-				if (b & (1 << p)) != 0 {
-					count += 1;
-				}
-			}
-
-			let kyou_board = state.part.gote_kyou_board & !state.part.gote_nari_board;
+			let kyou_board = ps.gote_kyou_board & !ps.gote_nari_board;
 
 			for p in kyou_board.iter() {
+				let p = 80 - p + 1;
+
+				if (b & (1 << p)) != 0 {
+					count += 1;
+				}
+			}
+
+			let b = b | Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
+				ps.gote_self_board,
+				ps.gote_opponent_board,
+				BitBoard::default(),
+				80 - to as u32
+			);
+
+			let hisha_board = ps.gote_hisha_board;
+
+			for p in hisha_board.iter() {
 				let p = 80 - p + 1;
 
 				if (b & (1 << p)) != 0 {

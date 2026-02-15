@@ -45,7 +45,7 @@ fn test_sente_fu_has_control() {
 
         banmen.0[y][x] = SFu;
 
-        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen),4 * 9 + 4),1);
+        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen).get_part(),4 * 9 + 4),1);
     }
 }
 #[test]
@@ -59,7 +59,7 @@ fn test_sente_kyou_has_control() {
 
         banmen.0[y][x] = SKyou;
 
-        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen),4 * 9 + 4),1);
+        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen).get_part(),4 * 9 + 4),1);
     }
 }
 #[test]
@@ -75,7 +75,7 @@ fn test_sente_kei_has_control() {
             banmen.0[y][x] = SKei;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 2);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 2);
     }
 }
 #[test]
@@ -90,7 +90,7 @@ fn test_sente_kei_has_control_edge() {
 
         banmen.0[y][x] = SKei;
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 1);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 1);
     }
 }
 #[test]
@@ -107,7 +107,7 @@ fn test_sente_gin_has_control() {
             banmen.0[y][x] = SGin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -124,7 +124,7 @@ fn test_sente_kin_has_control() {
             banmen.0[y][x] = SKin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -142,7 +142,7 @@ fn test_sente_nari_kin_has_control() {
                 banmen.0[y][x] = kind;
             }
 
-            assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+            assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
         }
     }
 }
@@ -160,7 +160,7 @@ fn test_sente_kaku_has_control() {
             banmen.0[y][x] = SKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -177,7 +177,7 @@ fn test_sente_hisha_has_control() {
             banmen.0[y][x] = SHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -206,7 +206,7 @@ fn test_sente_ou_has_control() {
             banmen.0[y][x] = SOu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -223,7 +223,7 @@ fn test_sente_kaku_nari_has_control() {
             banmen.0[y][x] = SKakuN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -240,7 +240,7 @@ fn test_sente_hisha_nari_has_control() {
             banmen.0[y][x] = SHishaN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -254,7 +254,7 @@ fn test_gote_fu_has_control() {
 
         banmen.0[8-y][8-x] = GFu;
 
-        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen),4 * 9 + 4),1);
+        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen).get_part(),4 * 9 + 4),1);
     }
 }
 #[test]
@@ -268,7 +268,7 @@ fn test_gote_kyou_has_control() {
 
         banmen.0[8-y][8-x] = GKyou;
 
-        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen),4 * 9 + 4),1);
+        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen).get_part(),4 * 9 + 4),1);
     }
 }
 #[test]
@@ -284,7 +284,7 @@ fn test_gote_kei_has_control() {
             banmen.0[8-y][8-x] = GKei;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 2);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 2);
     }
 }
 #[test]
@@ -299,7 +299,7 @@ fn test_gote_kei_has_control_edge() {
 
         banmen.0[8-y][8-x] = GKei;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 80 - (tx * 9 + ty)), 1);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 80 - (tx * 9 + ty)), 1);
     }
 }
 #[test]
@@ -316,7 +316,7 @@ fn test_gote_gin_has_control() {
             banmen.0[8-y][8-x] = GGin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -333,7 +333,7 @@ fn test_gote_kin_has_control() {
             banmen.0[8-y][8-x] = GKin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -351,7 +351,7 @@ fn test_gote_nari_kin_has_control() {
                 banmen.0[8-y][8-x] = kind;
             }
 
-            assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+            assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
         }
     }
 }
@@ -369,7 +369,7 @@ fn test_gote_kaku_has_control() {
             banmen.0[8-y][8-x] = GKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -386,7 +386,7 @@ fn test_gote_hisha_has_control() {
             banmen.0[8-y][8-x] = GHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -415,7 +415,7 @@ fn test_gote_ou_has_control() {
             banmen.0[8-y][8-x] = GOu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -432,7 +432,7 @@ fn test_gote_kaku_nari_has_control() {
             banmen.0[8-y][8-x] = GKakuN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -449,7 +449,7 @@ fn test_gote_hisha_nari_has_control() {
             banmen.0[8-y][8-x] = GHishaN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -463,7 +463,7 @@ fn test_sente_fu_none_control() {
 
         banmen.0[y][x] = SFu;
 
-        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen),4 * 9 + 4),0);
+        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen).get_part(),4 * 9 + 4),0);
     }
 }
 #[test]
@@ -477,7 +477,7 @@ fn test_sente_kyou_none_control() {
 
         banmen.0[y][x] = SKyou;
 
-        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen),4 * 9 + 4),0);
+        assert_eq!(Rule::control_count(Teban::Sente,&State::new(banmen).get_part(),4 * 9 + 4),0);
     }
 }
 #[test]
@@ -493,7 +493,7 @@ fn test_sente_kei_none_control() {
             banmen.0[y][x] = SKei;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -509,7 +509,7 @@ fn test_sente_gin_none_control() {
             banmen.0[y][x] = SGin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -525,7 +525,7 @@ fn test_sente_kin_none_control() {
             banmen.0[y][x] = SKin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -542,7 +542,7 @@ fn test_sente_nari_kin_none_control() {
                 banmen.0[y][x] = kind;
             }
 
-            assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+            assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
         }
     }
 }
@@ -559,7 +559,7 @@ fn test_sente_kaku_none_control() {
             banmen.0[y][x] = SKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -575,7 +575,7 @@ fn test_sente_hisha_none_control() {
             banmen.0[y][x] = SHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -611,7 +611,7 @@ fn test_sente_ou_none_control() {
             banmen.0[y][x] = SOu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -627,7 +627,7 @@ fn test_sente_kaku_nari_none_control() {
             banmen.0[y][x] = SKakuN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -643,7 +643,7 @@ fn test_sente_hisha_nari_none_control() {
             banmen.0[y][x] = SHishaN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -657,7 +657,7 @@ fn test_gote_fu_none_control() {
 
         banmen.0[8-y][8-x] = GFu;
 
-        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen),4 * 9 + 4),0);
+        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen).get_part(),4 * 9 + 4),0);
     }
 }
 #[test]
@@ -671,7 +671,7 @@ fn test_gote_kyou_none_control() {
 
         banmen.0[8-y][8-x] = GKyou;
 
-        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen),4 * 9 + 4),0);
+        assert_eq!(Rule::control_count(Teban::Gote,&State::new(banmen).get_part(),4 * 9 + 4),0);
     }
 }
 #[test]
@@ -687,7 +687,7 @@ fn test_gote_kei_none_control() {
             banmen.0[8-y][8-x] = GKei;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -703,7 +703,7 @@ fn test_gote_gin_none_control() {
             banmen.0[8-y][8-x] = SGin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -719,7 +719,7 @@ fn test_gote_kin_none_control() {
             banmen.0[8-y][8-x] = GKin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -736,7 +736,7 @@ fn test_gote_nari_kin_none_control() {
                 banmen.0[8-y][8-x] = kind;
             }
 
-            assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+            assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
         }
     }
 }
@@ -753,7 +753,7 @@ fn test_gote_kaku_none_control() {
             banmen.0[8-y][8-x] = GKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -769,7 +769,7 @@ fn test_gote_hisha_none_control() {
             banmen.0[y][x] = GHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -805,7 +805,7 @@ fn test_gote_ou_none_control() {
             banmen.0[8-y][8-x] = GOu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -821,7 +821,7 @@ fn test_gote_kaku_nari_none_control() {
             banmen.0[8-y][8-x] = GKakuN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -837,7 +837,7 @@ fn test_gote_hisha_nari_none_control() {
             banmen.0[8-y][8-x] = GHishaN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), 0);
     }
 }
 #[test]
@@ -854,7 +854,7 @@ fn test_sente_fu_mix() {
             banmen.0[y][x] = SFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -871,7 +871,7 @@ fn test_sente_kyou_mix() {
             banmen.0[y][x] = SKyou;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -888,7 +888,7 @@ fn test_sente_kei_mix() {
             banmen.0[y][x] = SKei;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -905,7 +905,7 @@ fn test_sente_gin_mix() {
             banmen.0[y][x] = SGin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -922,7 +922,7 @@ fn test_sente_kin_mix() {
             banmen.0[y][x] = SKin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -940,7 +940,7 @@ fn test_sente_nari_kin_mix() {
                 banmen.0[y][x] = kind;
             }
 
-            assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+            assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
         }
     }
 }
@@ -958,7 +958,7 @@ fn test_sente_kaku_mix() {
             banmen.0[y][x] = SKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -975,7 +975,7 @@ fn test_sente_hisha_mix() {
             banmen.0[y][x] = SHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -992,7 +992,7 @@ fn test_sente_ou_has_mix() {
             banmen.0[y][x] = SOu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1014,7 +1014,7 @@ fn test_sente_kaku_nari_mix() {
             banmen.0[y][x] = SKakuN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1036,7 +1036,7 @@ fn test_sente_hisha_nari_mix() {
             banmen.0[y][x] = SHishaN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1053,7 +1053,7 @@ fn test_gote_fu_mix() {
             banmen.0[8-y][8-x] = GFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1070,7 +1070,7 @@ fn test_gote_kyou_mix() {
             banmen.0[8-y][8-x] = GKyou;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1087,7 +1087,7 @@ fn test_gote_kei_mix() {
             banmen.0[8-y][8-x] = GKei;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1104,7 +1104,7 @@ fn test_gote_gin_mix() {
             banmen.0[8-y][8-x] = GGin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1118,10 +1118,10 @@ fn test_gote_kin_mix() {
         let mut banmen = blank_banmen.clone();
 
         for &(x,y) in it.iter() {
-            banmen.0[8-y][8-x] = SKin;
+            banmen.0[8-y][8-x] = GKin;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1139,7 +1139,7 @@ fn test_gote_nari_kin_mix() {
                 banmen.0[8-y][8-x] = kind;
             }
 
-            assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+            assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
         }
     }
 }
@@ -1157,7 +1157,7 @@ fn test_gote_kaku_mix() {
             banmen.0[8-y][8-x] = GKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1174,7 +1174,7 @@ fn test_gote_hisha_mix() {
             banmen.0[8-y][8-x] = GHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1191,7 +1191,7 @@ fn test_gote_ou_has_mix() {
             banmen.0[y][x] = GOu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1213,7 +1213,7 @@ fn test_gote_kaku_nari_mix() {
             banmen.0[8-y][8-x] = GKakuN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1235,7 +1235,7 @@ fn test_gote_hisha_nari_mix() {
             banmen.0[8-y][8-x] = GHishaN;
         }
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), 4 * 9 + 4), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), 4 * 9 + 4), answer);
     }
 }
 #[test]
@@ -1253,7 +1253,7 @@ fn test_sente_kyou_has_control_with_target_positions() {
             banmen.0[y][x] = SKyou;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1276,7 +1276,7 @@ fn test_sente_kaku_has_control_with_target_positions() {
             banmen.0[y][x] = SKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1299,7 +1299,7 @@ fn test_sente_hisha_has_control_with_target_positions() {
             banmen.0[y][x] = SHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1317,7 +1317,7 @@ fn test_sente_kyou_mix_with_target_positions() {
             banmen.0[y][x] = SKyou;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1340,7 +1340,7 @@ fn test_sente_kaku_mix_with_target_positions() {
             banmen.0[y][x] = SKaku;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1363,7 +1363,7 @@ fn test_sente_hisha_mix_with_target_positions() {
             banmen.0[y][x] = SHisha;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1384,7 +1384,7 @@ fn test_gote_kyou_has_control_with_target_positions() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1410,7 +1410,7 @@ fn test_gote_kaku_has_control_with_target_positions() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1436,7 +1436,7 @@ fn test_gote_hisha_has_control_with_target_positions() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1457,7 +1457,7 @@ fn test_gote_kyou_mix_with_target_positions() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1483,7 +1483,7 @@ fn test_gote_kaku_mix_with_target_positions() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1509,7 +1509,7 @@ fn test_gote_hisha_mix_with_target_positions() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), answer);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), answer);
     }
 }
 #[test]
@@ -1533,7 +1533,7 @@ fn test_sente_kyou_none_control_occupied_self() {
             banmen.0[oy][ox] = SFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1557,7 +1557,7 @@ fn test_sente_kaku_none_control_occupied_self() {
             banmen.0[oy][ox] = SFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1581,7 +1581,7 @@ fn test_sente_hisha_none_control_occupied_self() {
             banmen.0[oy][ox] = SFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1608,7 +1608,7 @@ fn test_gote_kyou_none_control_occupied_self() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1635,7 +1635,7 @@ fn test_gote_kaku_none_control_occupied_self() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1662,7 +1662,7 @@ fn test_gote_hisha_none_control_occupied_self() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1686,7 +1686,7 @@ fn test_sente_kyou_none_control_occupied_opponent() {
             banmen.0[oy][ox] = GFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1710,7 +1710,7 @@ fn test_sente_kaku_none_control_occupied_opponent() {
             banmen.0[oy][ox] = GFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1734,7 +1734,7 @@ fn test_sente_hisha_none_control_occupied_opponent() {
             banmen.0[oy][ox] = GFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1761,7 +1761,7 @@ fn test_gote_kyou_none_control_occupied_opponent() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1788,7 +1788,7 @@ fn test_gote_kaku_none_control_occupied_opponent() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1815,7 +1815,7 @@ fn test_gote_hisha_none_control_occupied_opponent() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 0);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 0);
     }
 }
 #[test]
@@ -1839,7 +1839,7 @@ fn test_sente_kyou_has_control_none_occupied_self() {
             banmen.0[oy][ox] = SFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 1);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 1);
     }
 }
 #[test]
@@ -1863,7 +1863,7 @@ fn test_sente_kaku_has_control_none_occupied_self() {
             banmen.0[oy][ox] = SFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -1887,7 +1887,7 @@ fn test_sente_hisha_has_control_none_occupied_self() {
             banmen.0[oy][ox] = SFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -1914,7 +1914,7 @@ fn test_gote_kyou_has_control_none_occupied_self() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 1);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 1);
     }
 }
 #[test]
@@ -1941,7 +1941,7 @@ fn test_gote_kaku_has_control_none_occupied_self() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -1968,7 +1968,7 @@ fn test_gote_hisha_has_control_none_occupied_self() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -1992,7 +1992,7 @@ fn test_sente_kyou_has_control_none_occupied_opponent() {
             banmen.0[oy][ox] = GFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 1);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 1);
     }
 }
 #[test]
@@ -2016,7 +2016,7 @@ fn test_sente_kaku_has_control_none_occupied_opponent() {
             banmen.0[oy][ox] = GFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -2040,7 +2040,7 @@ fn test_sente_hisha_has_control_none_occupied_opponent() {
             banmen.0[oy][ox] = GFu;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -2067,7 +2067,7 @@ fn test_gote_kyou_has_control_none_occupied_opponent() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 1);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 1);
     }
 }
 #[test]
@@ -2094,7 +2094,7 @@ fn test_gote_kaku_has_control_none_occupied_opponent() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -2121,7 +2121,7 @@ fn test_gote_hisha_has_control_none_occupied_opponent() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), 2);
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), 2);
     }
 }
 #[test]
@@ -2163,7 +2163,7 @@ fn test_sente_mix() {
             banmen.0[oy][ox] = kind;
         }
 
-        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen), tx * 9 + ty), answer,
+        assert_eq!(Rule::control_count(Teban::Sente, &State::new(banmen).get_part(), tx * 9 + ty), answer,
             "testcase = {}",i
         );
     }
@@ -2210,7 +2210,7 @@ fn test_gote_mix() {
         let tx = 8 - tx;
         let ty = 8 - ty;
 
-        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen), tx * 9 + ty), answer,
+        assert_eq!(Rule::control_count(Teban::Gote, &State::new(banmen).get_part(), tx * 9 + ty), answer,
                    "testcase = {}",i
         );
     }
