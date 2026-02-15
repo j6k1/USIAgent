@@ -13712,8 +13712,8 @@ impl Rule {
 	/// * `short_control_filter_mask_offset` - short_control_filter_maskの盤面左上からのオフセット
 	#[inline]
 	pub fn sente_danger_count(ps: &PartialState,
-						  danger_mask: BitBoard, danger_mask_offset: i32,
-						  short_control_filter_mask: BitBoard, short_control_filter_mask_offset: i32) -> usize {
+						      danger_mask: BitBoard, danger_mask_offset: i32,
+						      short_control_filter_mask: BitBoard, short_control_filter_mask_offset: i32) -> usize {
 
 		let short_control_filter_mask = short_control_filter_mask << 1;
 
@@ -13726,66 +13726,52 @@ impl Rule {
 		let mut board = BitBoard::default();
 
 		for p in (ps.gote_fu_board & !ps.gote_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Gote,
 									 BitBoard::default(),
-									 x * 9 + y,
+									 p as u32,
 									 KomaKind::GFu);
 		}
 
 		for p in (ps.gote_kei_board & !ps.gote_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Gote,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::GKei).reverse();
 		}
 
 		for p in (ps.gote_gin_board & !ps.gote_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Gote,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::GGin);
 		}
 
 		for p in ((ps.gote_kin_board | (ps.gote_nari_board & !ps.gote_kaku_board & !ps.gote_hisha_board)) &
 				   short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Gote,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::GKin);
 		}
 
 		for p in (ps.gote_kaku_board & ps.gote_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Gote,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::GKakuN);
 		}
 
 		for p in (ps.gote_hisha_board & ps.gote_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Gote,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::GHishaN);
 		}
 
 		for p in (ps.sente_opponent_ou_position_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Gote,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::GOu).reverse();
 		}
 
@@ -13860,8 +13846,8 @@ impl Rule {
 	/// * `short_control_filter_mask_offset` - short_control_filter_maskの盤面左上からのオフセット
 	#[inline]
 	pub fn gote_danger_count(ps: &PartialState,
-						  danger_mask: BitBoard, danger_mask_offset: i32,
-						  short_control_filter_mask: BitBoard, short_control_filter_mask_offset: i32) -> usize {
+						     danger_mask: BitBoard, danger_mask_offset: i32,
+						     short_control_filter_mask: BitBoard, short_control_filter_mask_offset: i32) -> usize {
 
 		let short_control_filter_mask = short_control_filter_mask << 1;
 
@@ -13874,67 +13860,54 @@ impl Rule {
 		let mut board = BitBoard::default();
 
 		for p in (ps.sente_fu_board & !ps.sente_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Sente,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::SFu);
 		}
 
 		for p in (ps.sente_kei_board & !ps.sente_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Sente,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::SKei);
 		}
 
 		for p in (ps.sente_gin_board & !ps.sente_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Sente,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::SGin);
 		}
 
 		for p in ((ps.sente_kin_board | (ps.sente_nari_board & !ps.sente_kaku_board & !ps.sente_hisha_board)) &
 			short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Sente,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::SKin);
 		}
 
 		for p in (ps.sente_kaku_board & ps.sente_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Sente,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::SKakuN);
 		}
 
 		for p in (ps.sente_hisha_board & ps.sente_nari_board & short_control_filter_mask).iter() {
-			let (x,y) = p.square_to_point();
-
 			board |= Rule::gen_candidate_bits(Teban::Sente,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::SHishaN);
 		}
 
 		for p in (ps.gote_opponent_ou_position_board & short_control_filter_mask).iter() {
 			let p = 80 - p;
-			let (x,y) = p.square_to_point();
 
 			board |= Rule::gen_candidate_bits(Teban::Sente,
 											  BitBoard::default(),
-											  x * 9 + y,
+											  p as u32,
 											  KomaKind::SOu);
 		}
 
