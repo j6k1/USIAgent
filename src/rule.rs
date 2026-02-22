@@ -319,6 +319,14 @@ impl LegalMove {
 			_ => None,
 		}
 	}
+	/// 移動先または駒を打った先のマスの左上からx * 9 + yで表されるインデックス
+	#[inline]
+	pub fn dst(&self) -> u32 {
+		match self {
+			&LegalMove::To(ref m) => m.dst(),
+			&LegalMove::Put(ref m) => m.dst(),
+		}
+	}
 }
 impl From<LegalMove> for Move {
 	#[inline]
