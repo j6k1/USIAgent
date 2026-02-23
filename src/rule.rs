@@ -327,6 +327,14 @@ impl LegalMove {
 			&LegalMove::Put(ref m) => m.dst(),
 		}
 	}
+	/// 成る手が否か
+	#[inline]
+	pub fn is_nari(&self) -> bool {
+		match self {
+			&LegalMove::To(ref m) => m.is_nari(),
+			_ => false,
+		}
+	}
 }
 impl From<LegalMove> for Move {
 	#[inline]
