@@ -9,7 +9,7 @@ use shogi::{KomaKind, Teban};
 use shogi::KomaKind::GFu;
 use shogi::Teban::{Gote, Sente};
 
-const CM_BONUS:i64 = 4800;
+const CM_BONUS:i64 = 60;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// 指し手の並び替え順
