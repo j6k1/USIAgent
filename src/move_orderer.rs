@@ -164,6 +164,35 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         Ok(())
     }
 
+    /// 手がKiller Moveであるか判定
+    ///
+    /// # Arguments
+    /// * `ply` - 現在の探索深さ
+    /// * `m` - Killer Moveか判定する候補手
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] plyがコンストラクタで指定したmax_plyの値を超えている
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
+    #[inline]
+    pub fn is_killer(&self, ply: u32, m: LegalMove) -> Result<bool,InvalidInputError> {
+        if (ply as usize) > self.max_ply {
+            return Err(InvalidInputError(String::from("ply value exceeds max_ply.")));
+        }
+
+        Ok(if self.usage_killer_moves[ply as usize] == 0 {
+            false
+        } else if self.killer_moves[ply as usize][0] == Some(m) {
+            true
+        } else if self.killer_moves[ply as usize][1] == Some(m) {
+            true
+        } else {
+            false
+        })
+    }
+
     /// Historyの更新
     ///
     /// # Arguments
@@ -238,6 +267,39 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         Ok(())
     }
 
+    /// Historyの参照
+    ///
+    /// # Arguments
+    /// * `teban` - 手番
+    /// * `state` - 盤面の状態
+    /// * `m` - 調べる手
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] mが駒を取る手
+    ///                         mの移動元に駒がない、mの移動元の駒種がteban側の駒種でない
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
+    #[inline]
+    pub fn look_up_history(&self, teban: Teban, state: &State, m: LegalMove)
+        -> Result<i64,InvalidInputError> {
+        if m.obtained().is_some() {
+            return Err(InvalidInputError(String::from("The move that captured the piece is not recorded in the history.")));
+        }
+
+        let to = match m {
+            LegalMove::To(m) => {
+                m.dst()
+            },
+            LegalMove::Put(m) => {
+                m.dst()
+            }
+        };
+
+        Ok(self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize])
+    }
+
     /// Counter Moveの更新
     ///
     /// # Arguments
@@ -305,6 +367,70 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         }
 
         Ok(())
+    }
+
+    /// 手がCounter Moveであるか判定
+    ///
+    /// # Arguments
+    /// *
+    /// * `m` - Counter Moveか判定する候補手
+    /// * `teban` - mの手番
+    /// * `prev_move` - 直前に差された手
+    /// * `prev_kind` - 直前に差された手の駒の種類（LegalMove::Putの場合はKomaKind::Blankを渡す）
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidInputError`] prev_kindとteban.opposite()の駒種が一致していない
+    ///
+    /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
+    #[inline]
+    pub fn is_counter_move(&self, m: LegalMove, teban: Teban, prev_move: LegalMove, prev_kind: KomaKind) -> Result<bool,InvalidInputError> {
+        if m.obtained().is_some() {
+            return Ok(false);
+        }
+
+        if let LegalMove::To(mv) = m {
+            if mv.is_nari() {
+                return Ok(false);
+            }
+        }
+
+        match prev_move {
+            LegalMove::To(mv) if teban == Teban::Sente => {
+                if prev_kind == KomaKind::Blank {
+                    return Ok(false);
+                }
+
+                if prev_kind < KomaKind::GFu {
+                    return Err(InvalidInputError(String::from(
+                        "The previous move was made by the Gote player, but the piece type in prev_kind belongs to the Sente player."
+                    )));
+                }
+
+                let index = prev_kind as usize - KomaKind::GFu as usize;
+
+                Ok(self.counter_moves[teban.opposite() as usize][index][mv.dst() as usize] == Some(m))
+            },
+            LegalMove::To(mv) => {
+                if prev_kind == KomaKind::Blank {
+                    return Ok(false);
+                }
+
+                if prev_kind >= KomaKind::GFu {
+                    return Err(InvalidInputError(String::from(
+                        "The previous move was made by the Sente player, but the piece type in prev_kind belongs to the Gote player."
+                    )));
+                }
+
+                let index = prev_kind as usize;
+
+                Ok(self.counter_moves[teban.opposite() as usize][index][mv.dst() as usize] == Some(m))
+            },
+            LegalMove::Put(mv) => {
+                Ok(self.counter_moves[teban.opposite() as usize][mv.kind() as usize][mv.dst() as usize] == Some(m))
+            }
+        }
     }
 
     /// 駒の種類をMoveOrdererで使う内部インデックスに変換する
