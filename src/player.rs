@@ -348,6 +348,8 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 										if let Err(ref e) = writer.write(&buffer) {
 											let _ = on_error_handler.lock().map(|h| h.call(e));
 										}
+
+										buffer.clear();
 									}
 								}
 							}
@@ -362,6 +364,8 @@ impl<W> InfoSendWorker<W> where W: USIOutputWriter {
 										if let Err(ref e) = writer.write(&buffer) {
 											let _ = on_error_handler.lock().map(|h| h.call(e));
 										}
+
+										buffer.clear();
 									}
 								}
 							}
