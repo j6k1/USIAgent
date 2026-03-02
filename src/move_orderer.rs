@@ -9,7 +9,7 @@ use shogi::{KomaKind, Teban};
 use shogi::KomaKind::GFu;
 use shogi::Teban::{Gote, Sente};
 
-const CM_BONUS:i64 = 60;
+const CM_BONUS:i64 = 64;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// 指し手の並び替え順
@@ -17,8 +17,8 @@ const CM_BONUS:i64 = 60;
 pub enum MoveOrder {
     BadCaptures(i32),
     Quiet(i64),
-    KillerMoves(usize),
     Checks,
+    KillerMoves(usize),
     GoodCaptures(i32),
 }
 pub(crate) mod private {
@@ -64,8 +64,11 @@ impl<const FACTOR:usize> private::QuietSeeEffectBase for DivideFactor<FACTOR> {
 pub struct MoveOrderer<E: QuietSeeEffect + Clone + Debug> {
     killer_moves:Vec<[Option<LegalMove>; 2]>,
     usage_killer_moves:Vec<u8>,
-    history:[[[i64;81]; 21]; 2],
-    counter_moves: [[[Option<LegalMove>;81]; 21]; 2],
+    history:[[[i64;81]; 14]; 2],
+    follow_up_history:Box<[[[[i64;81]; 14]; 81]; 14]>,
+    continuation_history:Box<[[[[i64;81]; 14]; 81]; 14]>,
+    piece_to_square:[[i64;81]; 14],
+    counter_moves: [[[Option<LegalMove>;81]; 14]; 2],
     max_ply: usize,
     current_max_ply: usize,
     effect:PhantomData<E>,
@@ -80,8 +83,11 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         MoveOrderer {
             killer_moves: vec![[None; 2]; max_ply+1],
             usage_killer_moves: vec![0; max_ply+1],
-            history: [[[0;81]; 21]; 2],
-            counter_moves: [[[None;81]; 21]; 2],
+            history: [[[0;81]; 14]; 2],
+            follow_up_history: Box::new([[[[0;81]; 14]; 81]; 14]),
+            continuation_history: Box::new([[[[0;81]; 14]; 81]; 14]),
+            piece_to_square:[[0;81]; 14],
+            counter_moves: [[[None;81]; 14]; 2],
             max_ply: max_ply,
             current_max_ply: 0,
             effect:PhantomData::<E>,
@@ -94,6 +100,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// * `depth` - 現在の探索深さ
     #[inline]
     pub fn on_start_search(&mut self, depth: u32) {
+        /*
         if self.current_max_ply == 0 {
             self.current_max_ply = depth as usize;
         } else if (depth as usize) < self.current_max_ply {
@@ -120,6 +127,8 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
 
             self.current_max_ply = depth as usize;
         }
+
+         */
     }
 
     /// Killer Moveの更新
@@ -210,7 +219,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_improve_history(
-        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
+        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32, move_history: &[Option<(u8,u8)>]
     ) -> Result<(),InvalidInputError> {
         if m.obtained().is_some() {
             return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the history.")));
@@ -225,7 +234,43 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         };
 
-        self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize] += (depth * depth) as i64;
+        let bonus = depth as i64 * 6;
+        let piece_index = self.calc_piece_index(teban,state,m)?;
+
+        let h = self.history[teban as usize][piece_index][to as usize];
+
+        self.history[teban as usize][piece_index][to as usize] = h + bonus - h * bonus.abs() / 512;
+
+        let h = self.piece_to_square[piece_index][to as usize];
+
+        self.piece_to_square[piece_index][to as usize] = h + bonus - h * bonus.abs() / 512;
+
+        let next_piece = piece_index;
+        let next_to = to;
+
+        for h in move_history.iter().rev().skip(1).step_by(2).take(1) {
+            if let &Some((p,t)) = h {
+                let h = self.follow_up_history[p as usize][t as usize][next_piece][next_to as usize];
+
+                self.follow_up_history[p as usize][t as usize][next_piece][next_to as usize] = h + bonus - h * bonus.abs() / 512;
+            }
+        }
+
+        let mut next_piece = piece_index;
+        let mut next_to = to;
+
+        for h in move_history.iter().rev().skip(1).step_by(2).take(2) {
+            if let &Some((p,t)) = h {
+                let h = self.continuation_history[p as usize][t as usize][next_piece][next_to as usize];
+
+                self.continuation_history[p as usize][t as usize][next_piece][next_to as usize] = h + bonus - h * bonus.abs() / 512;
+
+                next_piece = p as usize;
+                next_to = t as u32;
+            } else {
+                break;
+            }
+        }
 
         Ok(())
     }
@@ -262,7 +307,10 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         };
 
-        self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize] -= depth as i64;
+        let bonus = -(depth as i64 * 2);
+        let h = self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize];
+
+        self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize] = h + bonus - h * bonus.abs() / 512;
 
         Ok(())
     }
@@ -447,7 +495,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     ///
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
-    fn calc_piece_index(&self, teban: Teban, state: &State, m: LegalMove) -> Result<usize,InvalidInputError> {
+    pub fn calc_piece_index(&self, teban: Teban, state: &State, m: LegalMove) -> Result<usize,InvalidInputError> {
         match m {
             LegalMove::To(m) => {
                 if teban == Teban::Sente {
@@ -462,7 +510,9 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                         return Err(InvalidInputError(String::from("There are no pieces on the move origin.")));
                     }
 
-                    Ok(kind as usize + if m.is_nari() {
+                    Ok(kind as usize + if m.is_nari() && kind > KomaKind::SKin {
+                        7
+                    } else if m.is_nari() {
                         8
                     } else {
                         0
@@ -479,7 +529,9 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                         return Err(InvalidInputError(String::from("There are no pieces on the move origin.")));
                     }
 
-                    Ok(kind as usize - KomaKind::GFu as usize + if m.is_nari() {
+                    Ok(kind as usize - KomaKind::GFu as usize + if m.is_nari() && kind > KomaKind::GKin {
+                        7
+                    } else if m.is_nari() {
                         8
                     } else {
                         0
@@ -489,7 +541,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             LegalMove::Put(m) => {
                 let kind = m.kind();
 
-                Ok(kind as usize + 14)
+                Ok(kind as usize)
             }
         }
     }
@@ -511,7 +563,8 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(
-        &self, it: I, ply: u32, teban: Teban, state: &State, prev_move: Option<LegalMove>, prev_kind: KomaKind
+        &self, it: I, ply: u32, teban: Teban, state: &State,
+        prev_move: Option<LegalMove>, prev_kind: KomaKind, move_history: &[Option<(u8,u8)>]
     ) -> Result<impl Iterator<Item=(LegalMove,i32)>,InvalidInputError> {
         if teban.opposite() == Sente && prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
             return Err(InvalidInputError(String::from(
@@ -569,7 +622,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                             } else if prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
                                 prev_kind as usize - KomaKind::GFu as usize
                             } else {
-                                21
+                                14
                             };
 
                             if prev_kind != KomaKind::Blank {
@@ -596,7 +649,30 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                             }
                         };
 
-                        let s = self.history[teban as usize][self.calc_piece_index(teban, state, m)?][to as usize];
+                        let piece_index = self.calc_piece_index(teban,state,m)?;
+
+                        assert!(piece_index < 14);
+
+                        let mut s = self.history[teban as usize][piece_index][to as usize];
+
+                        s += self.piece_to_square[piece_index][to as usize];
+
+                        for h in move_history.iter().rev().skip(1).take(1) {
+                            if let &Some((p,t)) = h {
+                                let h = self.follow_up_history[p as usize][t as usize][piece_index][to as usize];
+
+                                s += h;
+                            }
+                        }
+
+                        for h in move_history.iter().rev().skip(1).take(1) {
+                            if let &Some((p,t)) = h {
+                                let h = self.continuation_history[p as usize][t as usize][piece_index][to as usize];
+
+                                s += h;
+                            }
+                        }
+
                         let s = s + bonus;
                         let s = E::effect(teban,state,m,s);
                         let see = E::see(teban,state,m);
