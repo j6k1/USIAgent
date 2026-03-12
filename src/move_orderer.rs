@@ -20,6 +20,8 @@ pub enum MoveOrder {
     Checks,
     KillerMoves(usize),
     GoodCaptures(i32),
+    PV,
+    TT
 }
 pub(crate) mod private {
     use rule::{LegalMove, State};
@@ -552,8 +554,11 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// * `ply` - 現在の探索深さ
     /// * `teban` - 手番
     /// * `state` - 盤面の状態
+    /// * `tt_move` - 置換表から取得した手
+    /// * `pv` - 現在のPV
     /// * `prev_move` - 直前に差された手
     /// * `prev_kind` - 直前に差された手の駒種（LegaLMove::Putの場合はKomaKind::Blank）
+    /// * `move_history` - 直近の手の履歴
     ///
     /// # Errors
     ///
@@ -564,6 +569,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     #[inline]
     pub fn ordering<I: Iterator<Item=LegalMove>>(
         &self, it: I, ply: u32, teban: Teban, state: &State,
+        tt_move:Option<LegalMove>,pv:Option<LegalMove>,
         prev_move: Option<LegalMove>, prev_kind: KomaKind, move_history: &[Option<(u8,u8)>]
     ) -> Result<impl Iterator<Item=(LegalMove,i32)>,InvalidInputError> {
         if teban.opposite() == Sente && prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
@@ -583,105 +589,123 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         let mut mvs = vec![];
 
         for m in it {
-            match m {
-                LegalMove::To(mv) if mv.obtained().is_some() => {
-                    let see = calc_see(teban,state,m);
+            if tt_move.map(|tt_m| tt_m == m).unwrap_or(false) {
+                let see = if m.obtained().is_some() {
+                    calc_see(teban,state,m)
+                } else {
+                    0
+                };
 
-                    if see >= 0 {
-                        mvs.push((MoveOrder::GoodCaptures(see),m,see));
-                    } else {
-                        mvs.push((MoveOrder::BadCaptures(see),m,see));
-                    }
-                },
-                _ => {
-                    if Rule::is_oute_move(state,teban,m) {
-                        let see = E::see(teban,state,m);
+                mvs.push((MoveOrder::TT,m,see));
+            } else if pv.map(|pv| pv == m).unwrap_or(false) {
+                let see = if m.obtained().is_some() {
+                    calc_see(teban,state,m)
+                } else {
+                    0
+                };
 
-                        mvs.push((MoveOrder::Checks,m,see));
-                    } else if self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) {
-                        let see = E::see(teban,state,m);
+                mvs.push((MoveOrder::PV,m,see));
+            } else {
+                match m {
+                    LegalMove::To(mv) if mv.obtained().is_some() => {
+                        let see = calc_see(teban,state,m);
 
-                        mvs.push((MoveOrder::KillerMoves(1),m,see));
-                    } else if self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false) {
-                        let see = E::see(teban,state,m);
+                        if see >= 0 {
+                            mvs.push((MoveOrder::GoodCaptures(see),m,see));
+                        } else {
+                            mvs.push((MoveOrder::BadCaptures(see),m,see));
+                        }
+                    },
+                    _ => {
+                        if Rule::is_oute_move(state,teban,m) {
+                            let see = E::see(teban,state,m);
 
-                        mvs.push((MoveOrder::KillerMoves(0),m,see));
-                    } else {
-                        let to = match m {
-                            LegalMove::To(m) => {
-                                m.dst()
-                            },
-                            LegalMove::Put(m) => {
-                                m.dst()
-                            }
-                        };
+                            mvs.push((MoveOrder::Checks,m,see));
+                        } else if self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) {
+                            let see = E::see(teban,state,m);
 
-                        let bonus = {
-                            let index = if teban.opposite() == Teban::Sente {
-                                prev_kind as usize
-                            } else if prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
-                                prev_kind as usize - KomaKind::GFu as usize
-                            } else {
-                                14
+                            mvs.push((MoveOrder::KillerMoves(1),m,see));
+                        } else if self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false) {
+                            let see = E::see(teban,state,m);
+
+                            mvs.push((MoveOrder::KillerMoves(0),m,see));
+                        } else {
+                            let to = match m {
+                                LegalMove::To(m) => {
+                                    m.dst()
+                                },
+                                LegalMove::Put(m) => {
+                                    m.dst()
+                                }
                             };
 
-                            if prev_kind != KomaKind::Blank {
-                                prev_move.map(|prev_move| {
-                                    let dst = match prev_move {
-                                        LegalMove::To(m) => {
-                                            m.dst()
-                                        },
-                                        LegalMove::Put(m) => {
-                                            m.dst()
+                            let bonus = {
+                                let index = if teban.opposite() == Teban::Sente {
+                                    prev_kind as usize
+                                } else if prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
+                                    prev_kind as usize - KomaKind::GFu as usize
+                                } else {
+                                    14
+                                };
+
+                                if prev_kind != KomaKind::Blank {
+                                    prev_move.map(|prev_move| {
+                                        let dst = match prev_move {
+                                            LegalMove::To(m) => {
+                                                m.dst()
+                                            },
+                                            LegalMove::Put(m) => {
+                                                m.dst()
+                                            }
+                                        };
+
+                                        if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
+                                            m == cm
+                                        }).unwrap_or(false) {
+                                            CM_BONUS
+                                        } else {
+                                            0
                                         }
-                                    };
+                                    }).unwrap_or(0)
+                                } else {
+                                    0
+                                }
+                            };
 
-                                    if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
-                                        m == cm
-                                    }).unwrap_or(false) {
-                                        CM_BONUS
-                                    } else {
-                                        0
-                                    }
-                                }).unwrap_or(0)
-                            } else {
-                                0
+                            let piece_index = self.calc_piece_index(teban,state,m)?;
+
+                            assert!(piece_index < 14);
+
+                            let mut s = self.history[teban as usize][piece_index][to as usize];
+
+                            s += self.piece_to_square[piece_index][to as usize];
+
+                            for h in move_history.iter().rev().skip(1).take(1) {
+                                if let &Some((p,t)) = h {
+                                    let h = self.follow_up_history[p as usize][t as usize][piece_index][to as usize];
+
+                                    s += h;
+                                }
                             }
-                        };
 
-                        let piece_index = self.calc_piece_index(teban,state,m)?;
+                            for h in move_history.iter().rev().skip(1).take(1) {
+                                if let &Some((p,t)) = h {
+                                    let h = self.continuation_history[p as usize][t as usize][piece_index][to as usize];
 
-                        assert!(piece_index < 14);
-
-                        let mut s = self.history[teban as usize][piece_index][to as usize];
-
-                        s += self.piece_to_square[piece_index][to as usize];
-
-                        for h in move_history.iter().rev().skip(1).take(1) {
-                            if let &Some((p,t)) = h {
-                                let h = self.follow_up_history[p as usize][t as usize][piece_index][to as usize];
-
-                                s += h;
+                                    s += h;
+                                }
                             }
+
+                            let s = s + bonus;
+                            let s = E::effect(teban,state,m,s);
+                            let see = E::see(teban,state,m);
+
+                            mvs.push((
+                                MoveOrder::Quiet(s),
+                                m,
+                                see
+                            ))
                         }
-
-                        for h in move_history.iter().rev().skip(1).take(1) {
-                            if let &Some((p,t)) = h {
-                                let h = self.continuation_history[p as usize][t as usize][piece_index][to as usize];
-
-                                s += h;
-                            }
-                        }
-
-                        let s = s + bonus;
-                        let s = E::effect(teban,state,m,s);
-                        let see = E::see(teban,state,m);
-
-                        mvs.push((
-                            MoveOrder::Quiet(s),
-                            m,
-                            see
-                        ))
                     }
                 }
             }
