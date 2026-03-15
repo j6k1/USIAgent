@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 use std::time::{Instant,Duration};
 use std::convert::TryFrom;
+use std::sync::atomic::{AtomicU32, Ordering};
 use chrono::Local;
 use bitboard::BitBoard;
 
@@ -509,6 +510,44 @@ impl Find<ObtainKind,Vec<Move>> for Vec<LegalMove> {
 			0 => None,
 			_ => Some(mvs),
 		}
+	}
+}
+#[derive(Debug)]
+#[repr(transparent)]
+pub struct AtomicLegalMove(AtomicU32);
+impl Default for AtomicLegalMove {
+	fn default() -> Self {
+		AtomicLegalMove(AtomicU32::new(0xffffffff))
+	}
+}
+impl From<&AtomicLegalMove> for Option<LegalMove> {
+	fn from(mv: &AtomicLegalMove) -> Self {
+		let bits = mv.0.load(Ordering::Acquire);
+
+		if bits == 0xffffffff {
+			None
+		} else if (bits & 0x80000000) != 0 {
+			Some(LegalMove::Put(LegalMovePut(bits & 0x7fffffff)))
+		} else {
+			Some(LegalMove::To(LegalMoveTo(bits)))
+		}
+	}
+}
+impl AtomicLegalMove {
+	pub fn store(&self,m:Option<LegalMove>,ordering: Ordering) {
+		match m {
+			Some(LegalMove::To(mv)) => self.0.store(mv.0,ordering),
+			Some(LegalMove::Put(mp)) => self.0.store(mp.0 | 0x80000000,ordering),
+			None => self.0.store(0xffffffff,ordering),
+		}
+	}
+
+	pub fn load(&self,ordering: Ordering) -> Option<LegalMove> {
+		self.into()
+	}
+
+	pub fn clear(&self,ordering: Ordering) {
+		self.0.store(0xffffffff,ordering);
 	}
 }
 /// 合法手生成に内部で利用するビットボード群と盤面を管理する構造体

@@ -72,7 +72,6 @@ pub struct MoveOrderer<E: QuietSeeEffect + Clone + Debug> {
     piece_to_square:[[i64;81]; 14],
     counter_moves: [[[Option<LegalMove>;81]; 14]; 2],
     max_ply: usize,
-    current_max_ply: usize,
     effect:PhantomData<E>,
 }
 impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
@@ -91,46 +90,8 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             piece_to_square:[[0;81]; 14],
             counter_moves: [[[None;81]; 14]; 2],
             max_ply: max_ply,
-            current_max_ply: 0,
             effect:PhantomData::<E>,
         }
-    }
-
-    /// 反復深化のたびに呼び出すハンドラ
-    ///
-    /// # Arguments
-    /// * `depth` - 現在の探索深さ
-    #[inline]
-    pub fn on_start_search(&mut self, depth: u32) {
-        /*
-        if self.current_max_ply == 0 {
-            self.current_max_ply = depth as usize;
-        } else if (depth as usize) < self.current_max_ply {
-            for t in self.history.iter_mut() {
-                for k in t.iter_mut() {
-                    for h in k.iter_mut() {
-                        *h = 0;
-                    }
-                }
-            }
-
-            self.current_max_ply = depth as usize;
-        } else if (depth as usize) > self.current_max_ply {
-            let m = 3i64.pow(depth - self.current_max_ply as u32);
-            let d = 1 << ((depth as usize - self.current_max_ply ) * 2);
-
-            for t in self.history.iter_mut() {
-                for k in t.iter_mut() {
-                    for h in k.iter_mut() {
-                        *h = *h * m / d;
-                    }
-                }
-            }
-
-            self.current_max_ply = depth as usize;
-        }
-
-         */
     }
 
     /// Killer Moveの更新
@@ -211,6 +172,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
     /// * `depth` - 現在の残り探索深さ
+    /// * `move_history` - 直近の手の履歴
     ///
     /// # Errors
     ///
