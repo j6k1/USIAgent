@@ -1,3 +1,13 @@
+pub const FU_SCORE_BASE:i32 = 90;
+pub const KYOU_SCORE_BASE:i32 = 315;
+pub const KEI_SCORE_BASE:i32 = 405;
+pub const GIN_SCORE_BASE:i32 = 495;
+pub const KIN_SCORE_BASE:i32 = 540;
+pub const KAKU_SCORE_BASE:i32 = 855;
+pub const HISHA_SCORE_BASE:i32 = 990;
+pub const KAKU_NARI_SCORE_BASE:i32 = 945;
+pub const HISHA_NARI_SCORE_BASE:i32 = 1395;
+pub const OU_SCORE_BASE:i32 = 15000;
 pub const FU_SCORE:i32 = 90 * 9 / 10;
 pub const KYOU_SCORE:i32 = 315 * 9 / 10;
 pub const KEI_SCORE:i32 = 405 * 9 / 10;

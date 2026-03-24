@@ -543,7 +543,15 @@ impl AtomicLegalMove {
 	}
 
 	pub fn load(&self,ordering: Ordering) -> Option<LegalMove> {
-		self.into()
+		let bits = self.0.load(ordering);
+
+		if bits == 0xffffffff {
+			None
+		} else if (bits & 0x80000000) != 0 {
+			Some(LegalMove::Put(LegalMovePut(bits & 0x7fffffff)))
+		} else {
+			Some(LegalMove::To(LegalMoveTo(bits)))
+		}
 	}
 
 	pub fn clear(&self,ordering: Ordering) {
