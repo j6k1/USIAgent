@@ -255,7 +255,7 @@ impl StatsHistory {
                                                    teban: Teban, state: &State,
                                                    move_count: usize, depth: u32,
                                                    best_value: T,
-                                                   static_eval: i32, prev_static_eval: i32
+                                                   static_eval: i32, prev_static_eval: i32,
                                                    prev_in_check: bool,
                                                    prev_kind: KomaKind, prev_move: LegalMove)
         -> Result<(),InvalidParameterError> where T: Ord + From<i32> {
