@@ -7,18 +7,16 @@ use shogi::KomaKind::GFu;
 
 const LOW_PLY_HISTORY_SIZE:usize = 5;
 
-#[repr(C)]
+#[repr(transparent)]
 #[derive(Copy,Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
 pub struct StatsEntry<const D:i32> {
-    entry:i32,
-    update_count:u32
+    entry:i32
 }
 impl<const D:i32> StatsEntry<D> {
     #[inline]
     pub fn new(entry:i32) -> StatsEntry<D> {
         StatsEntry {
-            entry:entry,
-            update_count:0,
+            entry:entry
         }
     }
 }
@@ -30,8 +28,7 @@ impl<const D:i32> Add<i32> for StatsEntry<D> {
         let clamped_bonus = bonus.clamp(-D,D);
 
         StatsEntry {
-            entry: clamped_bonus - self.entry * clamped_bonus.abs() / D,
-            update_count: self.update_count + 1
+            entry: clamped_bonus - self.entry * clamped_bonus.abs() / D
         }
     }
 }
@@ -89,33 +86,32 @@ impl StatsHistory {
     }
 
     #[inline]
-    fn move_to_moved_piece(&self, kind: KomaKind, teban: Teban, m:LegalMove) -> Result<usize,InvalidParameterError> {
-        match m {
+    fn normalize_kind(&self, kind:KomaKind, is_nari:bool) -> Result<usize,InvalidParameterError> {
+        if kind == KomaKind::Blank {
+            Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})", kind)))
+        } else if kind >= KomaKind::GFu && is_nari {
+            Ok(kind.to_nari() as usize - KomaKind::GFu as usize)
+        } else if kind >= KomaKind::GFu {
+            Ok(kind as usize - KomaKind::GFu as usize)
+        } else if is_nari {
+            Ok(kind.to_nari() as usize)
+        } else {
+            Ok(kind as usize)
+        }
+    }
+
+    #[inline]
+    fn moved_after_piece(&self, teban: Teban, state: &State, prev_move:LegalMove) -> Result<usize,InvalidParameterError> {
+        match prev_move {
             LegalMove::To(m) => {
-                if kind == KomaKind::Blank {
-                    Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})",kind)))
-                } else {
-                    match teban {
-                        Teban::Sente if kind < KomaKind::GFu && m.is_nari() => {
-                            Ok(kind.to_nari() as usize)
-                        },
-                        Teban::Sente if kind < KomaKind::GFu => {
-                            Ok(kind as usize)
-                        },
-                        Teban::Gote if kind >= KomaKind::GFu && m.is_nari() => {
-                            Ok(kind.is_nari() as usize - KomaKind::GFu as usize)
-                        },
-                        Teban::Gote if kind >= KomaKind::GFu => {
-                            Ok(kind as usize - KomaKind::GFu as usize)
-                        },
-                        _ => {
-                            Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})",kind)))
-                        }
-                    }
-                }
+                let (x,y) = m.dst().square_to_point();
+
+                let kind = state.get_banmen().0[y as usize][x as usize];
+
+                Ok(self.normalize_kind(kind,m.is_nari())?)
             },
             LegalMove::Put(m) => {
-                match KomaKind::try_from((teban,m.kind())) {
+                match KomaKind::try_from((teban.opposite(),m.kind())) {
                     Ok(kind) => Ok(kind as usize),
                     Err(e) => {
                         Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})",m.kind())))
@@ -126,9 +122,9 @@ impl StatsHistory {
     }
     const CONTNUATION_HISTORY_BONUSES:[i32; 6] = [1157,648,288,576,140,441];
     #[inline]
-    pub fn update_continuation_history(&mut self, ply: usize, teban: Teban, state: &State, kind:KomaKind, m:LegalMove, bonus:i32)
+    pub fn update_continuation_history(&mut self, ply: usize, teban: Teban, kind: KomaKind, m:LegalMove, bonus:i32)
         -> Result<(),InvalidParameterError> {
-        let moved_piece = self.move_to_moved_piece(kind, teban, m)?;
+        let moved_piece = self.normalize_kind(kind,m.is_nari())?;
 
         self.continuation_history[teban as usize][ply][moved_piece][m.dst() as usize] += bonus;
 
@@ -136,9 +132,9 @@ impl StatsHistory {
     }
 
     #[inline]
-    pub fn update_continuation_histories(&mut self, ply: usize, teban: Teban, in_check: bool, kind:KomaKind, m:LegalMove, bonus:i32)
+    pub fn update_continuation_histories(&mut self, ply: usize, teban: Teban, in_check: bool, kind: KomaKind, m:LegalMove, bonus:i32)
         -> Result<(),InvalidParameterError> {
-        let kind = self.move_to_moved_piece(kind, teban, m)?;
+        let kind = self.normalize_kind(kind,m.is_nari())?;
 
         for (i,(h,&w)) in self.continuation_history[teban as usize].iter_mut()
             .take(ply as usize + 1)
@@ -166,7 +162,7 @@ impl StatsHistory {
 
         self.update_continuation_histories(ply, teban, Rule::in_check(teban,state), kind, m, bonus * 955 / 1024)?;
 
-        self.pawn_history[self.move_to_moved_piece(kind, teban, m)?][m.dst() as usize] += bonus * if bonus > 0 {
+        self.pawn_history[self.normalize_kind(kind,m.is_nari())?][m.dst() as usize] += bonus * if bonus > 0 {
             850
         } else {
             550
@@ -176,15 +172,15 @@ impl StatsHistory {
     }
 
     #[inline]
-    pub fn update_quiet_histories_by_static_eval(&mut self, teban: Teban, tt_hit: bool, prev_kind: KomaKind, prev_move: LegalMove,
+    pub fn update_quiet_histories_by_static_eval(&mut self, teban: Teban, tt_hit: bool, kind: KomaKind, m: LegalMove,
                                                 static_eval: i32, prev_static_eval: i32)
         -> Result<(),InvalidParameterError> {
         let eval_diff = (-prev_static_eval + static_eval).clamp(-200, 156) + 58;
 
-        self.main_history[teban.opposite() as usize][self.move_to_index(prev_move)] += eval_diff * 9;
+        self.main_history[teban.opposite() as usize][self.move_to_index(m)] += eval_diff * 9;
 
-        if !tt_hit && prev_kind != KomaKind::SFu && prev_kind != KomaKind::GFu && !prev_move.is_nari() {
-            self.pawn_history[self.move_to_moved_piece(prev_kind, teban, prev_move)?][prev_move.dst() as usize] += eval_diff * 14;
+        if !tt_hit && !m.is_nari() {
+            self.pawn_history[self.normalize_kind(kind,false)?][m.dst() as usize] += eval_diff * 14;
         }
 
         Ok(())
@@ -201,7 +197,7 @@ impl StatsHistory {
                             captures_searched: &[LegalMoveTo],
                             tt_hit: bool,
                             prev_kind: KomaKind, prev_move:Option<LegalMove>) -> Result<(),InvalidParameterError> {
-        let best_move_moved_piece  = self.move_to_moved_piece(best_move_kind, teban, best_move)?;
+        let best_move_moved_piece  = self.normalize_kind(best_move_kind,best_move.is_nari())?;
 
         let bonus = (121 * depth as i32 - 77).min(1633) + 375 * tt_move.map(|m| m == best_move).unwrap_or(false) as i32;
         let malus = (825 * depth as i32- 1962159) - 16 * move_count as i32;
@@ -235,7 +231,7 @@ impl StatsHistory {
         for &m in captures_searched {
             if let Some(o) = m.obtained() {
                 let (x,y) = m.src().square_to_point();
-                let moved_piece = self.move_to_moved_piece(state.get_banmen().0[y as usize][x as usize],teban,LegalMove::To(m))?;
+                let mut moved_piece = self.normalize_kind(state.get_banmen().0[y as usize][x as usize],m.is_nari())?;
 
                 self.capture_history[moved_piece][m.dst() as usize][o as usize] += -malus * 1397 / 1024;
             }
@@ -257,12 +253,9 @@ impl StatsHistory {
                                                    best_value: T,
                                                    static_eval: i32, prev_static_eval: i32,
                                                    prev_in_check: bool,
-                                                   prev_kind: KomaKind, prev_move: LegalMove)
+                                                   prev_kind: KomaKind,
+                                                   prev_move: LegalMove)
         -> Result<(),InvalidParameterError> where T: Ord + From<i32> {
-        if prev_kind == KomaKind::Blank {
-            return Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})",prev_kind)))
-        }
-
         let mut bonus_scale = -228;
 
         bonus_scale -= stat_score / 104;
@@ -280,11 +273,7 @@ impl StatsHistory {
         self.main_history[teban.opposite() as usize][self.move_to_index(prev_move)] += scaled_bonus * 220 / 32768;
 
         if prev_kind != KomaKind::SFu && prev_kind != KomaKind::GFu && !prev_move.is_nari() {
-            let kind_index = if prev_kind < GFu {
-                prev_kind as usize
-            } else {
-                prev_kind as usize - GFu as usize
-            };
+            let kind_index = self.moved_after_piece(teban.opposite(),state,prev_move)?;
 
             self.pawn_history[kind_index][prev_move.dst() as usize] += scaled_bonus * 1164 / 32768;
         }
@@ -293,20 +282,12 @@ impl StatsHistory {
     }
 
     #[inline]
-    pub fn update_capture_histories_when_fail_low(&mut self, prev_kind: KomaKind, prev_move: LegalMove)
+    pub fn update_capture_histories_when_fail_low(&mut self, teban: Teban, state: &State, prev_move: LegalMove)
         -> Result<(),InvalidParameterError> {
-        if prev_kind == KomaKind::Blank {
-            return Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})",prev_kind)))
-        }
-
         if let Some(o) = prev_move.obtained() {
-            let kind_index = if prev_kind < GFu {
-                prev_kind as usize
-            } else {
-                prev_kind as usize - GFu as usize
-            };
+            let prev_kind = self.moved_after_piece(teban.opposite(),state,prev_move)?;
 
-            self.capture_history[kind_index][prev_move.dst() as usize][o as usize] += 964;
+            self.capture_history[prev_kind][prev_move.dst() as usize][o as usize] += 964;
 
             Ok(())
         } else {
