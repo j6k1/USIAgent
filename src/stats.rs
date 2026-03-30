@@ -101,24 +101,29 @@ impl StatsHistory {
     }
 
     #[inline]
-    fn moved_after_piece(&self, teban: Teban, state: &State, prev_move:LegalMove) -> Result<usize,InvalidParameterError> {
+    fn moved_after_piece(&self, teban: Teban, state: &State, prev_move:LegalMove) -> Result<KomaKind,InvalidParameterError> {
         match prev_move {
             LegalMove::To(m) => {
                 let (x,y) = m.dst().square_to_point();
 
                 let kind = state.get_banmen().0[y as usize][x as usize];
 
-                Ok(self.normalize_kind(kind,m.is_nari())?)
+                Ok(kind)
             },
             LegalMove::Put(m) => {
                 match KomaKind::try_from((teban.opposite(),m.kind())) {
-                    Ok(kind) => Ok(kind as usize),
+                    Ok(kind) => Ok(kind),
                     Err(e) => {
                         Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})",m.kind())))
                     }
                 }
             }
         }
+    }
+
+    #[inline]
+    fn moved_after_piece_index(&self, teban: Teban, state: &State, prev_move:LegalMove) -> Result<usize,InvalidParameterError> {
+        Ok(self.normalize_kind(self.moved_after_piece(teban,state,prev_move)?,prev_move.is_nari())?)
     }
     const CONTNUATION_HISTORY_BONUSES:[i32; 6] = [1157,648,288,576,140,441];
     #[inline]
@@ -241,9 +246,15 @@ impl StatsHistory {
     }
 
     #[inline]
-    pub fn update_quiet_histories_by_fail_high_tt_move(&mut self, ply: usize, depth: u32, teban: Teban, state: &State, tt_kind: KomaKind, tt_move: LegalMove)
+    pub fn update_quiet_histories_by_fail_high_tt_move(&mut self, ply: usize, depth: u32, teban: Teban, state: &State,
+                                                       tt_kind: KomaKind, tt_move: LegalMove,
+                                                       prev_move: LegalMove)
         -> Result<(),InvalidParameterError> {
-        self.update_quiet_histories(ply, teban, state, tt_kind, tt_move,  (130 * depth as i32 - 71).min(1043))
+        self.update_quiet_histories(ply, teban, state, tt_kind, tt_move,  (130 * depth as i32 - 71).min(1043))?;
+
+        Ok(self.update_continuation_histories(ply - 1, teban.opposite(), Rule::in_check(teban,state),
+                                                self.moved_after_piece(teban,state,prev_move)?,prev_move
+                                                     , -2142)?)
     }
 
     #[inline]
@@ -273,7 +284,7 @@ impl StatsHistory {
         self.main_history[teban.opposite() as usize][self.move_to_index(prev_move)] += scaled_bonus * 220 / 32768;
 
         if prev_kind != KomaKind::SFu && prev_kind != KomaKind::GFu && !prev_move.is_nari() {
-            let kind_index = self.moved_after_piece(teban.opposite(),state,prev_move)?;
+            let kind_index = self.moved_after_piece_index(teban.opposite(), state, prev_move)?;
 
             self.pawn_history[kind_index][prev_move.dst() as usize] += scaled_bonus * 1164 / 32768;
         }
@@ -285,7 +296,7 @@ impl StatsHistory {
     pub fn update_capture_histories_when_fail_low(&mut self, teban: Teban, state: &State, prev_move: LegalMove)
         -> Result<(),InvalidParameterError> {
         if let Some(o) = prev_move.obtained() {
-            let prev_kind = self.moved_after_piece(teban.opposite(),state,prev_move)?;
+            let prev_kind = self.moved_after_piece_index(teban.opposite(), state, prev_move)?;
 
             self.capture_history[prev_kind][prev_move.dst() as usize][o as usize] += 964;
 
