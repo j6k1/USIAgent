@@ -80,13 +80,15 @@ impl StatsHistory {
         self.low_ply_history = [[StatsEntry::new(97); 32768]; 5];
     }
 
+    #[inline]
     fn move_to_index(&self, m:LegalMove) -> usize {
         match m {
             LegalMove::To(m) => ((m.is_nari() as usize) << 14) | ((m.src() as usize) << 7) | m.dst() as usize,
-            LegalMove::Put(m) => ((m.dst() as usize) << 7) | (m.kind() as usize + 81),
+            LegalMove::Put(m) => ((m.kind() as usize + 81) << 7) | (m.dst() as usize),
         }
     }
 
+    #[inline]
     fn move_to_moved_piece(&self, kind: KomaKind, teban: Teban, m:LegalMove) -> Result<usize,InvalidParameterError> {
         match m {
             LegalMove::To(m) => {
@@ -123,6 +125,7 @@ impl StatsHistory {
         }
     }
     const CONTNUATION_HISTORY_BONUSES:[i32; 6] = [1157,648,288,576,140,441];
+    #[inline]
     pub fn update_continuation_history(&mut self, ply: usize, teban: Teban, state: &State, kind:KomaKind, m:LegalMove, bonus:i32)
         -> Result<(),InvalidParameterError> {
         let moved_piece = self.move_to_moved_piece(kind, teban, m)?;
@@ -132,6 +135,7 @@ impl StatsHistory {
         Ok(())
     }
 
+    #[inline]
     pub fn update_continuation_histories(&mut self, ply: usize, teban: Teban, in_check: bool, kind:KomaKind, m:LegalMove, bonus:i32)
         -> Result<(),InvalidParameterError> {
         let kind = self.move_to_moved_piece(kind, teban, m)?;
@@ -151,6 +155,7 @@ impl StatsHistory {
         Ok(())
     }
 
+    #[inline]
     pub fn update_quiet_histories(&mut self, ply: usize, teban: Teban, state: &State, kind: KomaKind, m: LegalMove, bonus:i32)
         -> Result<(),InvalidParameterError> {
         self.main_history[teban as usize][self.move_to_index(m)] += bonus;
@@ -170,6 +175,7 @@ impl StatsHistory {
         Ok(())
     }
 
+    #[inline]
     pub fn update_quiet_histories_by_static_eval(&mut self, teban: Teban, tt_hit: bool, prev_kind: KomaKind, prev_move: LegalMove,
                                                 static_eval: i32, prev_static_eval: i32)
         -> Result<(),InvalidParameterError> {
@@ -184,6 +190,7 @@ impl StatsHistory {
         Ok(())
     }
 
+    #[inline]
     pub fn update_all_stats(&mut self, ply: usize, depth: u32,
                             teban: Teban, state: &State,
                             move_count: usize,
@@ -237,11 +244,13 @@ impl StatsHistory {
         Ok(())
     }
 
+    #[inline]
     pub fn update_quiet_histories_by_fail_high_tt_move(&mut self, ply: usize, depth: u32, teban: Teban, state: &State, tt_kind: KomaKind, tt_move: LegalMove)
         -> Result<(),InvalidParameterError> {
         self.update_quiet_histories(ply, teban, state, tt_kind, tt_move,  (130 * depth as i32 - 71).min(1043))
     }
 
+    #[inline]
     pub fn update_quiet_histories_when_fail_low<T>(&mut self, ply: usize, stat_score: i32,
                                                    teban: Teban, state: &State,
                                                    move_count: usize, depth: u32,
@@ -282,6 +291,7 @@ impl StatsHistory {
         Ok(())
     }
 
+    #[inline]
     pub fn update_capture_histories_when_fail_low(&mut self, prev_kind: KomaKind, prev_move: LegalMove)
         -> Result<(),InvalidParameterError> {
         if prev_kind == KomaKind::Blank {
