@@ -254,7 +254,8 @@ impl StatsHistory {
     pub fn update_quiet_histories_when_fail_low<T>(&mut self, ply: usize, stat_score: i32,
                                                    teban: Teban, state: &State,
                                                    move_count: usize, depth: u32,
-                                                   best_value: T, static_eval: i32, prev_static_eval: i32
+                                                   best_value: T,
+                                                   static_eval: i32, prev_static_eval: i32
                                                    prev_in_check: bool,
                                                    prev_kind: KomaKind, prev_move: LegalMove)
         -> Result<(),InvalidParameterError> where T: Ord + From<i32> {
@@ -268,7 +269,7 @@ impl StatsHistory {
         bonus_scale += (63 * depth as i32).min(508);
         bonus_scale += 184 * (move_count > 8) as i32;
         bonus_scale += 143 * (!Rule::in_check(teban,state) && best_value <= T::from(static_eval - 92)) as i32;
-        bonus_scale += 149 * (!prev_in_check && best_value <= T::from(-(static_eval - 70))) as i32;
+        bonus_scale += 149 * (!prev_in_check && best_value <= T::from(-(prev_static_eval - 70))) as i32;
 
         bonus_scale = bonus_scale.max(0);
 
