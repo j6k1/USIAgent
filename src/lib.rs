@@ -29,6 +29,7 @@ pub mod bitboard;
 pub mod see;
 pub mod move_orderer;
 pub mod consts;
+pub mod stats;
 
 use std::error::Error;
 use std::fmt;

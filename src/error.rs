@@ -763,3 +763,33 @@ impl error::Error for InvalidInputError {
 		}
 	}
 }
+/// パラメータ不正
+#[derive(Debug,Eq,PartialEq)]
+pub struct InvalidParameterError {
+	message: String
+}
+impl InvalidParameterError {
+	pub fn new(message: String) -> InvalidParameterError {
+		InvalidParameterError { message: message }
+	}
+}
+impl fmt::Display for InvalidParameterError {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match *self {
+			InvalidParameterError { message: ref s } => write!(f, "{}",s)
+		}
+	}
+}
+impl error::Error for InvalidParameterError {
+	fn description(&self) -> &str {
+		match *self {
+			InvalidParameterError { message: ref s }  => "invalid input."
+		}
+	}
+
+	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+		match *self {
+			InvalidParameterError { message:_ } => None
+		}
+	}
+}

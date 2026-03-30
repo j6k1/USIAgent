@@ -10,7 +10,13 @@ use shogi::KomaKind::GFu;
 use shogi::Teban::{Gote, Sente};
 
 const CM_BONUS:i64 = 64;
-
+const MAIN_HISTORY_WEIGHT: i64 = 2;
+const PIECE_TO_SQUARE_WEIGHT: i64 = 2;
+const FOLLOW_UP_WEIGHT: i64 = 1;
+const CONTINUATION_WEIGHT: i64 = 1;
+const COUNTER_MOVE_WEIGHT: i64 = 1;
+const CHECK_SEE_THRESHOLD: i32 = -75;
+pub const HISTORY_SCALE: i64 = 1024;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// 指し手の並び替え順
 /// ※降順に並び変えるので優先度の低い物から列挙する
@@ -68,7 +74,7 @@ pub struct MoveOrderer<E: QuietSeeEffect + Clone + Debug> {
     usage_killer_moves:Vec<u8>,
     history:[[[i64;81]; 14]; 2],
     follow_up_history:Box<[[[[i64;81]; 14]; 81]; 14]>,
-    continuation_history:Box<[[[[i64;81]; 14]; 81]; 14]>,
+    continuation_history:[Vec<[[i64;81]; 14]>; 2],
     piece_to_square:[[i64;81]; 14],
     counter_moves: [[[Option<LegalMove>;81]; 14]; 2],
     max_ply: usize,
@@ -86,7 +92,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             usage_killer_moves: vec![0; max_ply+1],
             history: [[[0;81]; 14]; 2],
             follow_up_history: Box::new([[[[0;81]; 14]; 81]; 14]),
-            continuation_history: Box::new([[[[0;81]; 14]; 81]; 14]),
+            continuation_history: [vec![[[0;81]; 14]; max_ply+1],vec![[[0;81]; 14]; max_ply+1]],
             piece_to_square:[[0;81]; 14],
             counter_moves: [[[None;81]; 14]; 2],
             max_ply: max_ply,
@@ -172,6 +178,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// * `state` - 盤面の状態
     /// * `m` - 候補手
     /// * `depth` - 現在の残り探索深さ
+    /// * `ply` - 現在の探索深さ
     /// * `move_history` - 直近の手の履歴
     ///
     /// # Errors
@@ -183,7 +190,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_improve_history(
-        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32, move_history: &[Option<(u8,u8)>]
+        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32, ply: u32, move_history: &[Option<(u8,u8)>]
     ) -> Result<(),InvalidInputError> {
         if m.obtained().is_some() {
             return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the history.")));
@@ -198,7 +205,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         };
 
-        let bonus = depth as i64 * 6;
+        let bonus = depth as i64 * 6 * HISTORY_SCALE;
         let piece_index = self.calc_piece_index(teban,state,m)?;
 
         let h = self.history[teban as usize][piece_index][to as usize];
@@ -212,7 +219,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         let next_piece = piece_index;
         let next_to = to;
 
-        for h in move_history.iter().rev().skip(1).step_by(2).take(1) {
+        for h in move_history.iter().rev().take(1) {
             if let &Some((p,t)) = h {
                 let h = self.follow_up_history[p as usize][t as usize][next_piece][next_to as usize];
 
@@ -220,20 +227,19 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         }
 
-        let mut next_piece = piece_index;
-        let mut next_to = to;
+        let in_check = Rule::in_check(teban,state);
 
-        for h in move_history.iter().rev().skip(1).step_by(2).take(2) {
-            if let &Some((p,t)) = h {
-                let h = self.continuation_history[p as usize][t as usize][next_piece][next_to as usize];
+        for (i,h) in self.continuation_history[teban as usize].iter_mut()
+            .take(ply as usize + 1).rev().skip(1)
+            .take(6).enumerate() {
 
-                self.continuation_history[p as usize][t as usize][next_piece][next_to as usize] = h + bonus - h * bonus.abs() / 512;
-
-                next_piece = p as usize;
-                next_to = t as u32;
-            } else {
+            if in_check && i >= 2 {
                 break;
             }
+
+            let c = h[piece_index][to as usize];
+
+            h[piece_index][to as usize] = (c + (bonus >> i) + (i == 0) as i64 * 88) - (c * bonus.abs() >> i) / 512;
         }
 
         Ok(())
@@ -271,7 +277,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         };
 
-        let bonus = -(depth as i64 * 2);
+        let bonus = -(depth as i64 * 2 * HISTORY_SCALE);
         let h = self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize];
 
         self.history[teban as usize][self.calc_piece_index(teban,state,m)?][to as usize] = h + bonus - h * bonus.abs() / 512;
@@ -509,6 +515,15 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         }
     }
+    /// 次の探索深さを読む直前に呼ぶ関数
+    ///
+    /// # Arguments
+    /// * `ply` - 次の探索深さ
+    ///
+    pub fn enter_node(&mut self, ply: u32) {
+        self.continuation_history[Teban::Sente as usize][ply as usize] = [[0i64;81];14];
+        self.continuation_history[Teban::Gote as usize][ply as usize] = [[0i64;81];14];
+    }
     /// 指し手を並び変える関数
     ///
     /// # Arguments
@@ -624,7 +639,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
                                         if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
                                             m == cm
                                         }).unwrap_or(false) {
-                                            CM_BONUS
+                                            CM_BONUS * COUNTER_MOVE_WEIGHT
                                         } else {
                                             0
                                         }
@@ -638,24 +653,26 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
 
                             assert!(piece_index < 14);
 
-                            let mut s = self.history[teban as usize][piece_index][to as usize];
+                            let mut s = MAIN_HISTORY_WEIGHT * self.history[teban as usize][piece_index][to as usize];
 
-                            s += self.piece_to_square[piece_index][to as usize];
+                            s += PIECE_TO_SQUARE_WEIGHT * self.piece_to_square[piece_index][to as usize];
 
-                            for h in move_history.iter().rev().skip(1).take(1) {
-                                if let &Some((p,t)) = h {
+                            for h in move_history.iter().rev().take(1) {
+                                if let &Some((p, t)) = h {
                                     let h = self.follow_up_history[p as usize][t as usize][piece_index][to as usize];
 
-                                    s += h;
+                                    s += FOLLOW_UP_WEIGHT * h;
                                 }
                             }
 
-                            for h in move_history.iter().rev().skip(1).take(1) {
-                                if let &Some((p,t)) = h {
-                                    let h = self.continuation_history[p as usize][t as usize][piece_index][to as usize];
-
-                                    s += h;
+                            for (i,h) in self.continuation_history[teban as usize].iter()
+                                                                                           .take(ply as usize + 1)
+                                                                                           .rev().skip(1)
+                                                                                           .take(6).enumerate() {
+                                if i == 4 {
+                                    continue;
                                 }
+                                s += h[piece_index][to as usize] / (1 << 5);
                             }
 
                             let s = s + bonus;
