@@ -47,9 +47,9 @@ impl<const D:i32> From<StatsEntry<D>> for i32 {
 pub struct StatsHistory {
     max_ply:usize,
     main_history:[[StatsEntry<7183>; 32768]; 2],
-    pawn_history:[[StatsEntry<8192>; 81]; 14],
-    capture_history:[[[StatsEntry<10692>; 7]; 81]; 14],
-    continuation_history:[Vec<[[StatsEntry<30000>; 81]; 14]>; 2],
+    pawn_history:[[StatsEntry<8192>; 81]; 28],
+    capture_history:[[[StatsEntry<10692>; 7]; 81]; 28],
+    continuation_history:Vec<[[StatsEntry<30000>; 81]; 28]>,
     low_ply_history:[[StatsEntry<7183>; 32768]; 5],
 }
 impl StatsHistory {
@@ -58,22 +58,16 @@ impl StatsHistory {
         StatsHistory {
             max_ply:max_ply,
             main_history:[[StatsEntry::new(68); 32768]; 2],
-            pawn_history:[[StatsEntry::new(-1238); 81]; 14],
-            capture_history:[[[StatsEntry::new(-689); 7]; 81]; 14],
-            continuation_history:[
-                vec![[[StatsEntry::new(-529); 81]; 14]; max_ply+1],
-                vec![[[StatsEntry::new(-529); 81]; 14]; max_ply+1],
-            ],
+            pawn_history:[[StatsEntry::new(-1238); 81]; 28],
+            capture_history:[[[StatsEntry::new(-689); 7]; 81]; 28],
+            continuation_history: vec![[[StatsEntry::new(-529); 81]; 28]; max_ply+1],
             low_ply_history:[[StatsEntry::new(97); 32768]; 5],
         }
     }
 
     #[inline]
     pub fn startup(&mut self) {
-        self.continuation_history = [
-            vec![[[StatsEntry::new(-529); 81]; 14]; self.max_ply+1],
-            vec![[[StatsEntry::new(-529); 81]; 14]; self.max_ply+1],
-        ];
+        self.continuation_history = vec![[[StatsEntry::new(-529); 81]; 28]; self.max_ply+1];
         self.low_ply_history = [[StatsEntry::new(97); 32768]; 5];
     }
 
@@ -89,10 +83,6 @@ impl StatsHistory {
     fn normalize_kind(&self, kind:KomaKind, is_nari:bool) -> Result<usize,InvalidParameterError> {
         if kind == KomaKind::Blank {
             Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})", kind)))
-        } else if kind >= KomaKind::GFu && is_nari {
-            Ok(kind.to_nari() as usize - KomaKind::GFu as usize)
-        } else if kind >= KomaKind::GFu {
-            Ok(kind as usize - KomaKind::GFu as usize)
         } else if is_nari {
             Ok(kind.to_nari() as usize)
         } else {
@@ -111,7 +101,7 @@ impl StatsHistory {
                 Ok(kind)
             },
             LegalMove::Put(m) => {
-                match KomaKind::try_from((teban.opposite(),m.kind())) {
+                match KomaKind::try_from((teban,m.kind())) {
                     Ok(kind) => Ok(kind),
                     Err(e) => {
                         Err(InvalidParameterError::new(format!("The piece being moved is invalid ({:?})",m.kind())))
@@ -123,7 +113,7 @@ impl StatsHistory {
 
     #[inline]
     fn moved_after_piece_index(&self, teban: Teban, state: &State, prev_move:LegalMove) -> Result<usize,InvalidParameterError> {
-        Ok(self.normalize_kind(self.moved_after_piece(teban,state,prev_move)?,prev_move.is_nari())?)
+        Ok(self.normalize_kind(self.moved_after_piece(teban.opposite(),state,prev_move)?,prev_move.is_nari())?)
     }
     const CONTNUATION_HISTORY_BONUSES:[i32; 6] = [1157,648,288,576,140,441];
     #[inline]
@@ -131,17 +121,17 @@ impl StatsHistory {
         -> Result<(),InvalidParameterError> {
         let moved_piece = self.normalize_kind(kind,m.is_nari())?;
 
-        self.continuation_history[teban as usize][ply][moved_piece][m.dst() as usize] += bonus;
+        self.continuation_history[ply][moved_piece][m.dst() as usize] += bonus;
 
         Ok(())
     }
 
     #[inline]
-    pub fn update_continuation_histories(&mut self, ply: usize, teban: Teban, in_check: bool, kind: KomaKind, m:LegalMove, bonus:i32)
+    pub fn update_continuation_histories(&mut self, ply: usize, in_check: bool, kind: KomaKind, m:LegalMove, bonus:i32)
         -> Result<(),InvalidParameterError> {
         let kind = self.normalize_kind(kind,m.is_nari())?;
 
-        for (i,(h,&w)) in self.continuation_history[teban as usize].iter_mut()
+        for (i,(h,&w)) in self.continuation_history.iter_mut()
             .take(ply as usize + 1)
             .rev().skip(1)
             .take(6).zip(Self::CONTNUATION_HISTORY_BONUSES.iter()).enumerate() {
@@ -165,7 +155,7 @@ impl StatsHistory {
             self.low_ply_history[teban as usize][self.move_to_index(m)] += bonus * 761 / 1024;
         }
 
-        self.update_continuation_histories(ply, teban, Rule::in_check(teban,state), kind, m, bonus * 955 / 1024)?;
+        self.update_continuation_histories(ply, Rule::in_check(teban,state), kind, m, bonus * 955 / 1024)?;
 
         self.pawn_history[self.normalize_kind(kind,m.is_nari())?][m.dst() as usize] += bonus * if bonus > 0 {
             850
@@ -229,7 +219,7 @@ impl StatsHistory {
 
         if let Some(prev_move) = prev_move {
             if tt_hit && prev_move.obtained().is_some() {
-                self.update_continuation_histories(ply - 1, teban.opposite(), prev_in_check, prev_kind, prev_move, -malus * 614 / 1024);
+                self.update_continuation_histories(ply - 1, prev_in_check, prev_kind, prev_move, -malus * 614 / 1024);
             }
         }
 
@@ -252,8 +242,8 @@ impl StatsHistory {
         -> Result<(),InvalidParameterError> {
         self.update_quiet_histories(ply, teban, state, tt_kind, tt_move,  (130 * depth as i32 - 71).min(1043))?;
 
-        Ok(self.update_continuation_histories(ply - 1, teban.opposite(), Rule::in_check(teban,state),
-                                                self.moved_after_piece(teban,state,prev_move)?,prev_move
+        Ok(self.update_continuation_histories(ply - 1, Rule::in_check(teban,state),
+                                                self.moved_after_piece(teban.opposite(),state,prev_move)?,prev_move
                                                      , -2142)?)
     }
 
@@ -279,7 +269,7 @@ impl StatsHistory {
 
         let scaled_bonus = (144 * depth as i32 - 92).min(1365) * bonus_scale;
 
-        self.update_continuation_histories(ply - 1, teban.opposite(), prev_in_check, prev_kind, prev_move, scaled_bonus * 400 / 32768)?;
+        self.update_continuation_histories(ply - 1, prev_in_check, prev_kind, prev_move, scaled_bonus * 400 / 32768)?;
 
         self.main_history[teban.opposite() as usize][self.move_to_index(prev_move)] += scaled_bonus * 220 / 32768;
 
