@@ -765,31 +765,31 @@ impl error::Error for InvalidInputError {
 }
 /// パラメータ不正
 #[derive(Debug,Eq,PartialEq)]
-pub struct InvalidParameterError {
+pub struct IllegalParameterError {
 	message: String
 }
-impl InvalidParameterError {
-	pub fn new(message: String) -> InvalidParameterError {
-		InvalidParameterError { message: message }
+impl IllegalParameterError {
+	pub fn new(message: String) -> IllegalParameterError {
+		IllegalParameterError { message: message }
 	}
 }
-impl fmt::Display for InvalidParameterError {
+impl fmt::Display for IllegalParameterError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match *self {
-			InvalidParameterError { message: ref s } => write!(f, "{}",s)
+			IllegalParameterError { message: ref s } => write!(f, "{}", s)
 		}
 	}
 }
-impl error::Error for InvalidParameterError {
+impl error::Error for IllegalParameterError {
 	fn description(&self) -> &str {
 		match *self {
-			InvalidParameterError { message: ref s }  => "invalid input."
+			IllegalParameterError { message: _ }  => "invalid input."
 		}
 	}
 
 	fn source(&self) -> Option<&(dyn error::Error + 'static)> {
 		match *self {
-			InvalidParameterError { message:_ } => None
+			IllegalParameterError { message:_ } => None
 		}
 	}
 }
