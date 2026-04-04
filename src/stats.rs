@@ -20,6 +20,11 @@ impl<const D:i32> StatsEntry<D> {
             entry:entry
         }
     }
+
+    #[inline]
+    pub fn value(self) -> i32 {
+        self.entry
+    }
 }
 impl<const D:i32> Add<i32> for StatsEntry<D> {
     type Output = Self;
@@ -37,11 +42,6 @@ impl<const D:i32> AddAssign<i32> for StatsEntry<D> {
     #[inline]
     fn add_assign(&mut self, bonus:i32) {
         *self = *self + bonus;
-    }
-}
-impl<const D:i32> From<StatsEntry<D>> for i32 {
-    fn from(entry:StatsEntry<D>) -> i32 {
-        entry.entry
     }
 }
 #[derive(Clone)]
@@ -171,7 +171,7 @@ impl StatsHistory {
     pub fn lookup_main_history(&self, teban: Teban, m:LegalMove) -> Result<i32, IllegalParameterError> {
         let key = self.key(m);
 
-        Ok(self.main_history[teban as usize][key].into())
+        Ok(self.main_history[teban as usize][key].value())
     }
 
     #[inline]
@@ -184,14 +184,14 @@ impl StatsHistory {
 
         let key = self.key(m);
 
-        Ok(self.low_ply_history[teban as usize][key].into())
+        Ok(self.low_ply_history[teban as usize][key].value())
     }
 
     #[inline]
     pub fn lookup_pawn_history(&self, teban: Teban, kind: KomaKind, m:LegalMove) -> Result<i32, IllegalParameterError> {
         let kind = self.normalize_kind(teban,kind,m)?;
 
-        Ok(self.pawn_history[kind][m.dst() as usize].into())
+        Ok(self.pawn_history[kind][m.dst() as usize].value())
     }
     #[inline]
     pub fn continuation_histories_iter(&self, ply: usize, teban: Teban, kind: KomaKind, m:LegalMove)
@@ -234,7 +234,7 @@ impl StatsHistory {
         let kind = self.normalize_capture_kind(kind, m)?;
 
         if let Some(o) = m.obtained() {
-            Ok(self.capture_history[kind as usize][m.dst() as usize][o as usize].into())
+            Ok(self.capture_history[kind as usize][m.dst() as usize][o as usize].value())
         } else {
             Err(IllegalParameterError::new(String::from("This is not a move that captures a piece.")))
         }
