@@ -2,7 +2,6 @@
 
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use rand::Rng;
 use error::InvalidInputError;
 use rule::{LegalMove, Rule, SquareToPoint, State};
 use see::calc_see;
@@ -60,7 +59,7 @@ impl private::QuietSeeEffectBase for UnusedQuietSee {
 pub struct DivideFactor<const FACTOR:usize>;
 impl<const FACTOR:usize> private::QuietSeeEffectBase for DivideFactor<FACTOR> {
     fn effect(teban: Teban, state: &State, m: LegalMove, score: i32) -> i32 {
-        (score * FACTOR as i32 + calc_see(teban, state, m) as i32) / FACTOR as i32
+        (score * FACTOR as i32 + calc_see(teban, state, m)) / FACTOR as i32
     }
 
     fn see(teban: Teban, state: &State, m: LegalMove) -> i32 {

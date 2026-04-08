@@ -1,7 +1,6 @@
 use std::convert::{TryFrom};
 use std::fmt::{Debug, Formatter};
 use std::ops::{Add, AddAssign, Index, IndexMut};
-use rand::Rng;
 use error::{IllegalParameterError};
 use rule::{LegalMove, LegalMoveTo, Rule, SquareToPoint, State};
 use shogi::{KomaKind, Teban};
@@ -230,7 +229,7 @@ impl StatsHistory {
     }
 
     #[inline]
-    pub fn lookup_capture_history(&self, teban: Teban, kind: KomaKind, m:LegalMoveTo) -> Result<i32, IllegalParameterError> {
+    pub fn lookup_capture_history(&self, kind: KomaKind, m:LegalMoveTo) -> Result<i32, IllegalParameterError> {
         let kind = self.normalize_capture_kind(kind, m)?;
 
         if let Some(o) = m.obtained() {
