@@ -604,7 +604,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         &self, it: I, ply: u32, teban: Teban, state: &State,
         tt_move:Option<LegalMove>,pv:Option<LegalMove>,
         prev_move: Option<LegalMove>, prev_kind: KomaKind, move_history: &[Option<(u8,u8)>]
-    ) -> Result<impl Iterator<Item=(LegalMove,i32)>,InvalidInputError> {
+    ) -> Result<impl Iterator<Item=(LegalMove,i32)> + Clone,InvalidInputError> {
         if teban.opposite() == Sente && prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
             return Err(InvalidInputError(String::from(
                 "The move specified for the Sente player's turn was designated as the Gote player's move."
