@@ -1086,9 +1086,9 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     let mut i = scores.len() - 1;
 
     while i > 0 {
-        scores[i-1] = -(scores[i-1]).max(-scores[i]);
+        scores[i-1] = (scores[i-1]).max(-scores[i]);
         i -= 1;
     }
 
-    scores[0]
+    -scores[0]
 }
