@@ -140,9 +140,9 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         }
     }
 
-    let mut score = capture_score;
+    let mut score = -capture_score;
 
-    let mut scores = vec![-score];
+    let mut scores = vec![score];
 
     match m {
         LegalMove::To(m) => {
