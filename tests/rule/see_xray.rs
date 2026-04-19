@@ -25,7 +25,7 @@ fn see_xray_rook_value() {
     let m = LegalMove::To(LegalMoveTo::new(idx(4, 5), idx(4, 4), false, Some(ObtainKind::Gin)));
     let got = calc_see(Teban::Sente, &s, m);
 
-    assert_eq!(got, -445);
+    assert_eq!(got, 364);
 }
 
 #[test]
@@ -41,7 +41,7 @@ fn see_xray_bishop_value() {
     let m = LegalMove::To(LegalMoveTo::new(idx(4, 5), idx(4, 4), false, Some(ObtainKind::Gin)));
     let got = calc_see(Teban::Sente, &s, m);
 
-    assert_eq!(got, -607);
+    assert_eq!(got, 364);
 }
 
 #[test]
@@ -57,7 +57,7 @@ fn see_xray_lance_value() {
     let m = LegalMove::To(LegalMoveTo::new(idx(4, 5), idx(4, 4), false, Some(ObtainKind::Gin)));
     let got = calc_see(Teban::Sente, &s, m);
 
-    assert_eq!(got, -445);
+    assert_eq!(got, 364);
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn see_xray_rook_value_mirrored() {
     let m = LegalMove::To(LegalMoveTo::new(idx(4, 3), idx(4, 4), false, Some(ObtainKind::Gin)));
     let got = calc_see(Teban::Gote, &s, m);
 
-    assert_eq!(got, -445);
+    assert_eq!(got, 364);
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn see_xray_bishop_value_mirrored() {
     let m = LegalMove::To(LegalMoveTo::new(idx(4, 3), idx(4, 4), false, Some(ObtainKind::Gin)));
     let got = calc_see(Teban::Gote, &s, m);
 
-    assert_eq!(got, -607);
+    assert_eq!(got, 364);
 }
 
 #[test]
@@ -105,5 +105,5 @@ fn see_xray_lance_value_mirrored() {
     let m = LegalMove::To(LegalMoveTo::new(idx(4, 3), idx(4, 4), false, Some(ObtainKind::Gin)));
     let got = calc_see(Teban::Gote, &s, m);
 
-    assert_eq!(got, -445);
+    assert_eq!(got, 364);
 }

@@ -25,7 +25,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             // 初手で動く駒のビットをビットボードから取り除く
             match kind {
                 KomaKind::SFu => {
-                    state.part.gote_fu_board ^= 1 << (80 - from + 1);
+                    state.part.sente_fu_board ^= 1 << (from + 1);
                 },
                 KomaKind::SKyou => {
                     state.part.sente_kyou_board ^= 1 << (from + 1);
@@ -154,7 +154,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
 
         match kind {
             KomaKind::SFu => {
-                state.part.gote_fu_board ^= 1 << (80 - target + 1);
+                state.part.sente_fu_board ^= 1 << (target + 1);
             },
             KomaKind::SKyou => {
                 state.part.sente_kyou_board ^= 1 << (target + 1);
@@ -306,7 +306,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
             opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 &&
             opponent_ou_bb == 0 {
 
-            return scores[0];
+            return -scores[0];
         }
 
         let self_fu_bb = Rule::has_control_bits_sente_fu(&state, target as Square);
@@ -348,7 +348,7 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
            opponent_kaku_nari_bb == 0 && opponent_hisha_nari_bb == 0 &&
            opponent_ou_bb == 0 {
 
-           return scores[0];
+           return -scores[0];
         }
 
         let self_fu_bb = Rule::has_control_bits_gote_fu(&state, target as Square);
