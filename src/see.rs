@@ -14,6 +14,127 @@ use shogi::{KomaKind, Teban};
 pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
     let mut state = state.clone();
 
+    match m {
+        LegalMove::To(m) => {
+            let from = m.src();
+
+            let (x,y) = from.square_to_point();
+
+            let kind = state.get_banmen().0[y as usize][x as usize];
+
+            // 初手で動く駒のビットをビットボードから取り除く
+            match kind {
+                KomaKind::SFu => {
+                    state.part.gote_fu_board ^= 1 << (80 - from + 1);
+                },
+                KomaKind::SKyou => {
+                    state.part.sente_kyou_board ^= 1 << (from + 1);
+                },
+                KomaKind::SKei => {
+                    state.part.sente_kei_board ^= 1 << (from + 1);
+                },
+                KomaKind::SGin => {
+                    state.part.sente_gin_board ^= 1 << (from + 1);
+                },
+                KomaKind::SKin => {
+                    state.part.sente_kin_board ^= 1 << (from + 1);
+                },
+                KomaKind::SKaku => {
+                    state.part.sente_kaku_board ^= 1 << (from + 1);
+                },
+                KomaKind::SHisha => {
+                    state.part.sente_hisha_board ^= 1 << (from + 1);
+                },
+                KomaKind::SOu => {
+                    state.part.gote_opponent_ou_position_board ^= 1 << (80 - from + 1);
+                },
+                KomaKind::SFuN => {
+                    state.part.sente_fu_board ^= 1 << (from + 1);
+                    state.part.sente_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::SKyouN => {
+                    state.part.sente_kyou_board ^= 1 << (from + 1);
+                    state.part.sente_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::SKeiN => {
+                    state.part.sente_kei_board ^= 1 << (from + 1);
+                    state.part.sente_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::SGinN => {
+                    state.part.sente_gin_board ^= 1 << (from + 1);
+                    state.part.sente_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::SKakuN => {
+                    state.part.sente_kaku_board ^= 1 << (from + 1);
+                    state.part.sente_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::SHishaN => {
+                    state.part.sente_hisha_board ^= 1 << (from + 1);
+                    state.part.sente_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::GFu => {
+                    state.part.gote_fu_board ^= 1 << (from + 1);
+                },
+                KomaKind::GKyou => {
+                    state.part.gote_kyou_board ^= 1 << (from + 1);
+                },
+                KomaKind::GKei => {
+                    state.part.gote_kei_board ^= 1 << (from + 1);
+                },
+                KomaKind::GGin => {
+                    state.part.gote_gin_board ^= 1 << (from + 1);
+                },
+                KomaKind::GKin => {
+                    state.part.gote_kin_board ^= 1 << (from + 1);
+                },
+                KomaKind::GKaku => {
+                    state.part.gote_kaku_board ^= 1 << (from + 1);
+                },
+                KomaKind::GHisha => {
+                    state.part.gote_hisha_board ^= 1 << (from + 1);
+                },
+                KomaKind::GOu => {
+                    state.part.sente_opponent_ou_position_board ^= 1 << (from + 1);
+                },
+                KomaKind::GFuN => {
+                    state.part.gote_fu_board ^= 1 << (from + 1);
+                    state.part.gote_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::GKyouN => {
+                    state.part.gote_kyou_board ^= 1 << (from + 1);
+                    state.part.gote_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::GKeiN => {
+                    state.part.gote_kei_board ^= 1 << (from + 1);
+                    state.part.gote_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::GGinN => {
+                    state.part.gote_gin_board ^= 1 << (from + 1);
+                    state.part.gote_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::GKakuN => {
+                    state.part.gote_kaku_board ^= 1 << (from + 1);
+                    state.part.gote_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::GHishaN => {
+                    state.part.gote_hisha_board ^= 1 << (from + 1);
+                    state.part.gote_nari_board ^= 1 << (from + 1);
+                },
+                KomaKind::Blank => ()
+            };
+
+
+            if teban == Teban::Sente {
+                state.part.sente_self_board ^= 1 << (from + 1);
+                state.part.gote_opponent_board ^= 1 << (80 - from + 1);
+            } else {
+                state.part.gote_self_board ^= 1 << (80 - from + 1);
+                state.part.sente_opponent_board ^= 1 << (from + 1);
+            }
+        },
+        _ => ()
+    }
+
     let mut capture_score = 0;
 
     let target = match m {
@@ -132,11 +253,11 @@ pub fn calc_see(teban: Teban, state:&State, m: LegalMove) -> i32 {
         };
 
         if teban == Teban::Sente {
-            state.part.sente_self_board ^= 1 << (target + 1);
-            state.part.gote_opponent_board ^= 1 << (80 - target + 1);
-        } else {
             state.part.gote_self_board ^= 1 << (80 - target + 1);
             state.part.sente_opponent_board ^= 1 << (target + 1);
+        } else {
+            state.part.sente_self_board ^= 1 << (target + 1);
+            state.part.gote_opponent_board ^= 1 << (80 - target + 1);
         }
     }
 
