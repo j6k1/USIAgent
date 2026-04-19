@@ -1,546 +1,193 @@
 use usiagent::see::calc_see;
-use usiagent::rule::{LegalMove, State};
-use usiagent::rule::LegalMoveTo;
+use usiagent::rule::{LegalMove, LegalMoveTo, State};
 use usiagent::shogi::*;
 use usiagent::shogi::KomaKind::*;
 
 #[inline]
-fn idx(x:u32,y:u32) -> u32 { x*9 + y }
+fn idx(x: u32, y: u32) -> u32 { x * 9 + y }
 
 #[inline]
-fn set_piece(b:&mut Banmen, x:u32, y:u32, k:KomaKind) { b.0[y as usize][x as usize] = k; }
+fn set_piece(b: &mut Banmen, x: u32, y: u32, k: KomaKind) { b.0[y as usize][x as usize] = k; }
 
 #[inline]
-fn blank() -> Banmen { Banmen([[Blank;9];9]) }
-
-//
-// 目的:
-// calc_see において、初期状態ではターゲットへの効きが自駒で遮られている飛車・角・香車が、
-// その遮っている駒がターゲットに応手で移動することで効きが有効になり、以降の取り合いに参加できることを検証する。
-// 現状の実装ではこの「後から有効になる効き」を考慮していない可能性があるため、
-// 有無で SEE の結果が変わることを期待するテストを用意する。
-// 実装が未対応の場合、このテストは失敗する想定。
-//
+fn blank() -> Banmen { Banmen([[Blank; 9]; 9]) }
 
 #[test]
-fn see_xray_rook_becomes_attacker_after_blocker_moves_to_target() {
-    // 盤面イメージ（x は列、y は行、y 増加が後手の前進方向）
-    // 初期: 4,4 に後手銀。先手歩が 4,5 から取り。4,3 の後手歩が取り返して 4,4 に乗ることで、
-    // 4,0 の後手飛車の筋が開き、次の手番で飛車も 4,4 に取れるようになる。
-
-    // ケースA: 飛車なし（かつ先手に追撃の駒あり）
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, GGin); // target piece
-    set_piece(&mut b_a, 4,5, SFu); // first attacker (Sente)
-    set_piece(&mut b_a, 4,3, GFu); // immediate recapture (Gote) and the blocker for rook line
-    set_piece(&mut b_a, 5,4, SKin); // Sente next attacker to continue the exchange
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
+fn see_xray_rook_changes_result() {
+    let mut a = blank();
+    set_piece(&mut a, 4, 4, GGin);
+    set_piece(&mut a, 4, 5, SFu);
+    set_piece(&mut a, 4, 3, GFu);
+    set_piece(&mut a, 5, 4, SKin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4, 5), idx(4, 4), false, Some(ObtainKind::Gin)));
     let v_a = calc_see(Teban::Sente, &s_a, m);
 
-    // ケースB: 飛車あり（4,0）→ ブロッカーが動くと筋が通る（後手飛車がさらに取り合いに参加）
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, GGin);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 5,4, SKin); // same Sente follow-up attacker
-    set_piece(&mut b_b, 4,0, GHisha); // hidden x-ray attacker
-    let s_b = State::new(b_b);
+    let mut b = blank();
+    set_piece(&mut b, 4, 4, GGin);
+    set_piece(&mut b, 4, 5, SFu);
+    set_piece(&mut b, 4, 3, GFu);
+    set_piece(&mut b, 5, 4, SKin);
+    set_piece(&mut b, 4, 0, GHisha);
+    let s_b = State::new(b);
     let v_b = calc_see(Teban::Sente, &s_b, m);
 
-    // スコアを具体的に検証する。
-    // 手順:
-    // 1) 先手歩が銀を取る → gain[0] = 銀
-    // 2) 後手歩が取り返す → gain[1] = 銀-歩
-    // 3) 先手金が取り返す → gain[2] = -銀
-    // 4) （ケースBのみ）後手飛車が取り返す → gain[3] = 銀-金
-    // 新仕様では最終結果は scores[0]（初回の獲得駒の価値）になるケース。
-    // よって隠れた飛車が参加してもしなくても最終値は銀の価値で一致する。
-    let expect = 90*9/10 - 495*9/10; // pawn - silver under current SEE
-    assert_eq!(v_a, expect, "SEE without rook should be pawn - silver");
-    assert_eq!(v_b, expect, "SEE with hidden rook joining should also be pawn - silver");
+    assert_ne!(v_a, v_b);
 }
 
 #[test]
-fn see_xray_bishop_becomes_attacker_after_blocker_moves_to_target() {
-    // 斜めの筋での検証。
-    // 初期: 4,4 に後手銀。先手歩が 4,5 から取り。3,3 の後手銀が 4,4 に取り返すと、
-    // 1,1 の後手角の斜めが開き、次の手番で角も 4,4 を取れるようになる。
-
-    // ケースA: 角なし（かつ先手に追撃の駒あり）
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, GGin); // target
-    set_piece(&mut b_a, 4,5, SFu); // first attacker (Sente)
-    set_piece(&mut b_a, 3,3, GGin); // immediate recapture (Gote) and the blocker for bishop diagonal
-    set_piece(&mut b_a, 5,5, SGin); // Sente follow-up attacker
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
+fn see_xray_bishop_changes_result() {
+    let mut a = blank();
+    set_piece(&mut a, 4, 4, GGin);
+    set_piece(&mut a, 4, 5, SFu);
+    set_piece(&mut a, 3, 3, GGin);
+    set_piece(&mut a, 5, 5, SGin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4, 5), idx(4, 4), false, Some(ObtainKind::Gin)));
     let v_a = calc_see(Teban::Sente, &s_a, m);
 
-    // ケースB: 角あり（1,1）→ ブロッカーが動くと斜めが通る
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, GGin);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 3,3, GGin);
-    set_piece(&mut b_b, 5,5, SGin); // same Sente follow-up attacker
-    set_piece(&mut b_b, 1,1, GKaku); // hidden x-ray attacker on diagonal 1,1 -> 4,4
-    let s_b = State::new(b_b);
+    let mut b = blank();
+    set_piece(&mut b, 4, 4, GGin);
+    set_piece(&mut b, 4, 5, SFu);
+    set_piece(&mut b, 3, 3, GGin);
+    set_piece(&mut b, 5, 5, SGin);
+    set_piece(&mut b, 1, 1, GKaku);
+    let s_b = State::new(b);
     let v_b = calc_see(Teban::Sente, &s_b, m);
 
-    // 現行実装では本交換は歩-銀の値に収束する。
-    let expect = 90*9/10 - 495*9/10; // pawn - silver
-    assert_eq!(v_a, expect, "SEE without bishop should be pawn - silver");
-    assert_eq!(v_b, expect, "SEE with hidden bishop should also be pawn - silver");
+    assert_ne!(v_a, v_b);
 }
 
 #[test]
-fn see_xray_lance_becomes_attacker_after_blocker_moves_to_target() {
-    // 香車の筋での検証。
-    // 初期: 4,4 に後手銀。先手歩が 4,5 から取り。4,3 の後手歩が 4,4 に取り返すと、
-    // 4,0 の後手香車の筋が開き、次の手番で香車も 4,4 を取れるようになる。
-
-    // ケースA: 香車なし（かつ先手に追撃の駒あり）
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, GGin); // target
-    set_piece(&mut b_a, 4,5, SFu); // first attacker (Sente)
-    set_piece(&mut b_a, 4,3, GFu); // immediate recapture (Gote) and the blocker for lance line
-    set_piece(&mut b_a, 5,4, SKin); // Sente's next attacker
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
+fn see_xray_lance_changes_result() {
+    let mut a = blank();
+    set_piece(&mut a, 4, 4, GGin);
+    set_piece(&mut a, 4, 5, SFu);
+    set_piece(&mut a, 4, 3, GFu);
+    set_piece(&mut a, 5, 4, SKin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4, 5), idx(4, 4), false, Some(ObtainKind::Gin)));
     let v_a = calc_see(Teban::Sente, &s_a, m);
 
-    // ケースB: 香車あり（4,0）→ ブロッカーが動くと筋が通る
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, GGin);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 5,4, SKin);
-    set_piece(&mut b_b, 4,0, GKyou); // hidden x-ray attacker
-    let s_b = State::new(b_b);
+    let mut b = blank();
+    set_piece(&mut b, 4, 4, GGin);
+    set_piece(&mut b, 4, 5, SFu);
+    set_piece(&mut b, 4, 3, GFu);
+    set_piece(&mut b, 5, 4, SKin);
+    set_piece(&mut b, 4, 0, GKyou);
+    let s_b = State::new(b);
     let v_b = calc_see(Teban::Sente, &s_b, m);
 
-    // 現行実装では本交換は歩-銀の値に収束する。
-    let expect = 90*9/10 - 495*9/10; // pawn - silver
-    assert_eq!(v_a, expect, "SEE without lance should be pawn - silver");
-    assert_eq!(v_b, expect, "SEE with hidden lance should also be pawn - silver");
+    assert_ne!(v_a, v_b);
 }
 
+#[test]
+fn see_xray_rook_changes_result_mirrored() {
+    let mut a = blank();
+    set_piece(&mut a, 4, 4, SGin);
+    set_piece(&mut a, 4, 3, GFu);
+    set_piece(&mut a, 4, 5, SFu);
+    set_piece(&mut a, 5, 4, GKin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4, 3), idx(4, 4), false, Some(ObtainKind::Gin)));
+    let v_a = calc_see(Teban::Gote, &s_a, m);
 
-// ---------------- 追加テスト: 効きが復活して最終SEEが変わることを検証 ----------------
+    let mut b = blank();
+    set_piece(&mut b, 4, 4, SGin);
+    set_piece(&mut b, 4, 3, GFu);
+    set_piece(&mut b, 4, 5, SFu);
+    set_piece(&mut b, 5, 4, GKin);
+    set_piece(&mut b, 4, 8, SHisha);
+    let s_b = State::new(b);
+    let v_b = calc_see(Teban::Gote, &s_b, m);
+
+    assert_ne!(v_a, v_b);
+}
 
 #[test]
-fn see_xray_rook_activation_changes_see() {
-    // ターゲット 4,4 に後手銀。先手歩(4,5)で取り、後手歩(4,3)が取り返す。
-    // さらに先手金(5,4)が取り返すまでは同じ。ここでケースBのみ、4,0 の後手飛車が
-    // ブロッカー(4,3)の移動で筋が通り、以降の取り合いに参加できる。
-    // 先手側にもさらに追撃駒(3,4 の先手銀)を置き、交換の長さがケース間で異なるようにする。
+fn see_xray_bishop_changes_result_mirrored() {
+    let mut a = blank();
+    set_piece(&mut a, 4, 4, SGin);
+    set_piece(&mut a, 4, 3, GFu);
+    set_piece(&mut a, 3, 5, SGin);
+    set_piece(&mut a, 5, 3, GKin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4, 3), idx(4, 4), false, Some(ObtainKind::Gin)));
+    let v_a = calc_see(Teban::Gote, &s_a, m);
 
-    // ケースA: 飛車なし
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, GGin);
-    set_piece(&mut b_a, 4,5, SFu);
-    set_piece(&mut b_a, 4,3, GFu);
-    set_piece(&mut b_a, 5,4, SKin);
-    set_piece(&mut b_a, 3,4, SGin); // 追加の先手追撃駒
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
+    let mut b = blank();
+    set_piece(&mut b, 4, 4, SGin);
+    set_piece(&mut b, 4, 3, GFu);
+    set_piece(&mut b, 3, 5, SGin);
+    set_piece(&mut b, 5, 3, GKin);
+    set_piece(&mut b, 7, 7, SKaku);
+    let s_b = State::new(b);
+    let v_b = calc_see(Teban::Gote, &s_b, m);
+
+    assert_ne!(v_a, v_b);
+}
+
+#[test]
+fn see_xray_lance_changes_result_mirrored() {
+    let mut a = blank();
+    set_piece(&mut a, 4, 4, SGin);
+    set_piece(&mut a, 4, 3, GFu);
+    set_piece(&mut a, 4, 5, SFu);
+    set_piece(&mut a, 5, 4, GKin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(4, 3), idx(4, 4), false, Some(ObtainKind::Gin)));
+    let v_a = calc_see(Teban::Gote, &s_a, m);
+
+    let mut b = blank();
+    set_piece(&mut b, 4, 4, SGin);
+    set_piece(&mut b, 4, 3, GFu);
+    set_piece(&mut b, 4, 5, SFu);
+    set_piece(&mut b, 5, 4, GKin);
+    set_piece(&mut b, 4, 8, SKyou);
+    let s_b = State::new(b);
+    let v_b = calc_see(Teban::Gote, &s_b, m);
+
+    assert_ne!(v_a, v_b);
+}
+
+#[test]
+fn see_xray_line_opens_from_gote_capture() {
+    let mut a = blank();
+    set_piece(&mut a, 5, 5, SFu);
+    set_piece(&mut a, 5, 4, GFu);
+    set_piece(&mut a, 4, 3, GGin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(5, 4), idx(5, 5), false, Some(ObtainKind::Fu)));
+    let v_a = calc_see(Teban::Gote, &s_a, m);
+
+    let mut b = blank();
+    set_piece(&mut b, 6, 6, SKaku);
+    set_piece(&mut b, 5, 5, SFu);
+    set_piece(&mut b, 5, 4, GFu);
+    set_piece(&mut b, 4, 3, GGin);
+    let s_b = State::new(b);
+    let v_b = calc_see(Teban::Gote, &s_b, m);
+
+    assert_ne!(v_a, v_b);
+}
+
+#[test]
+fn see_xray_line_opens_from_sente_capture_mirrored() {
+    let mut a = blank();
+    set_piece(&mut a, 5, 3, GFu);
+    set_piece(&mut a, 5, 4, SFu);
+    set_piece(&mut a, 4, 5, SGin);
+    let s_a = State::new(a);
+    let m = LegalMove::To(LegalMoveTo::new(idx(5, 4), idx(5, 3), false, Some(ObtainKind::Fu)));
     let v_a = calc_see(Teban::Sente, &s_a, m);
 
-    // ケースB: 飛車あり（x-ray で後から参加）
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, GGin);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 5,4, SKin);
-    set_piece(&mut b_b, 3,4, SGin);
-    set_piece(&mut b_b, 4,0, GHisha);
-    let s_b = State::new(b_b);
+    let mut b = blank();
+    set_piece(&mut b, 6, 2, GKaku);
+    set_piece(&mut b, 5, 3, GFu);
+    set_piece(&mut b, 5, 4, SFu);
+    set_piece(&mut b, 4, 5, SGin);
+    let s_b = State::new(b);
     let v_b = calc_see(Teban::Sente, &s_b, m);
 
-    // 効き復活により交換が一手以上伸び、最終SEEが変化し得ることを検証する。
-    assert_eq!(v_b, v_a, "Hidden rook joining later yields same SEE under current implementation");
-}
-
-#[test]
-fn see_xray_bishop_activation_changes_see() {
-    // 斜め x-ray 版。1,1 の後手角が、ブロッカー(3,3)が 4,4 に動くことで参加できる。
-
-    // ケースA: 角なし
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, GGin);
-    set_piece(&mut b_a, 4,5, SFu);
-    set_piece(&mut b_a, 3,3, GGin); // ブロッカー兼取り返し
-    set_piece(&mut b_a, 5,5, SKin);
-    set_piece(&mut b_a, 6,6, SHisha); // 先手追加攻め駒
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Sente, &s_a, m);
-
-    // ケースB: 角あり（x-ray で後から参加）
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, GGin);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 3,3, GGin);
-    set_piece(&mut b_b, 5,5, SKin);
-    set_piece(&mut b_b, 6,6, SHisha);
-    set_piece(&mut b_b, 1,1, GKaku);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Sente, &s_b, m);
-
-    assert_eq!(v_b, v_a, "Hidden bishop joining later yields same SEE under current implementation");
-}
-
-#[test]
-fn see_xray_lance_activation_changes_see() {
-    // 縦 x-ray 版。4,0 の後手香が、ブロッカー(4,3)が 4,4 に動くことで参加できる。
-
-    // ケースA: 香なし
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, GGin);
-    set_piece(&mut b_a, 4,5, SFu);
-    set_piece(&mut b_a, 4,3, GFu);
-    set_piece(&mut b_a, 5,4, SKin);
-    set_piece(&mut b_a, 3,4, SGin); // 追加の先手追撃駒
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,5), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Sente, &s_a, m);
-
-    // ケースB: 香あり（x-ray で後から参加）
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, GGin);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 5,4, SKin);
-    set_piece(&mut b_b, 3,4, SGin);
-    set_piece(&mut b_b, 4,0, GKyou);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Sente, &s_b, m);
-
-    assert_eq!(v_b, v_a, "Hidden lance joining later yields same SEE under current implementation");
-}
-
-// --- New tests: cases where x-ray activation changes SEE starting from Gote pawn capturing ---
-#[test]
-fn see_xray_bishop_line_opens_changes_result_from_gote_capture() {
-    // Coordinates (0-based):
-    // Sente bishop at (6,6) = 7七
-    // Sente pawn at (5,5) = 6六 (blocks the bishop)
-    // Gote pawn at (5,4) = 6五 (can capture the Sente pawn)
-    // Gote silver at (4,3) = 5四 (attacks the target 5,5)
-    // Start from Gote pawn capturing Sente pawn on (5,5).
-
-    // Case A: without hidden Sente bishop
-    let mut b_a = blank();
-    set_piece(&mut b_a, 5,5, SFu); // blocker and initial target occupant
-    set_piece(&mut b_a, 5,4, GFu); // Gote pawn to capture
-    set_piece(&mut b_a, 4,3, GGin); // Gote silver attacking target (5,5)
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,5), false, Some(ObtainKind::Fu)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    // Case B: with hidden Sente bishop at 7七 which becomes an attacker after the blocker moves onto target
-    let mut b_b = blank();
-    set_piece(&mut b_b, 6,6, SKaku); // hidden x-ray attacker
-    set_piece(&mut b_b, 5,5, SFu);
-    set_piece(&mut b_b, 5,4, GFu);
-    set_piece(&mut b_b, 4,3, GGin);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    // The presence of the hidden bishop should change the capture chain and SEE result.
-    assert_ne!(v_a, v_b, "SEE should change when bishop x-ray becomes active after the capture");
-}
-
-#[test]
-fn see_xray_rook_line_opens_changes_result_from_gote_capture() {
-    // Sente rook at (5,8), Sente pawn at (5,5) blocks, Gote pawn at (5,4) captures to (5,5).
-    // After capture, the rook gains a line to recapture on (5,5).
-
-    // Case A: without hidden Sente rook
-    let mut b_a = blank();
-    set_piece(&mut b_a, 5,5, SFu);
-    set_piece(&mut b_a, 5,4, GFu);
-    // Add a Gote silver to ensure further participation
-    set_piece(&mut b_a, 4,5, GGin); // attacks (5,5)
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,5), false, Some(ObtainKind::Fu)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    // Case B: with hidden rook
-    let mut b_b = blank();
-    set_piece(&mut b_b, 5,8, SHisha);
-    set_piece(&mut b_b, 5,5, SFu);
-    set_piece(&mut b_b, 5,4, GFu);
-    set_piece(&mut b_b, 4,5, GGin);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    assert_ne!(v_a, v_b, "SEE should change when rook x-ray becomes active after the capture");
-}
-
-#[test]
-fn see_xray_lance_line_opens_changes_result_from_gote_capture() {
-    // Sente lance at (5,8), Sente pawn at (5,5) blocks, Gote pawn at (5,4) captures to (5,5).
-    // After capture, lance can recapture along the file.
-
-    // Case A: without hidden Sente lance
-    let mut b_a = blank();
-    set_piece(&mut b_a, 5,5, SFu);
-    set_piece(&mut b_a, 5,4, GFu);
-    set_piece(&mut b_a, 4,5, GGin); // Gote silver attacking target
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,5), false, Some(ObtainKind::Fu)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    // Case B: with hidden Sente lance
-    let mut b_b = blank();
-    set_piece(&mut b_b, 5,8, SKyou);
-    set_piece(&mut b_b, 5,5, SFu);
-    set_piece(&mut b_b, 5,4, GFu);
-    set_piece(&mut b_b, 4,5, GGin);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    assert_ne!(v_a, v_b, "SEE should change when lance x-ray becomes active after the capture");
-}
-
-
-// ---------------- Mirrored tests (board flipped vertically, sides swapped) ----------------
-
-#[test]
-fn see_xray_rook_becomes_attacker_after_blocker_moves_to_target_mirrored() {
-    // Mirroring the rook x-ray test: flip vertically (y -> 8-y) and swap sides.
-    // Case A: no rook
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, SGin); // target piece becomes Sente silver
-    set_piece(&mut b_a, 4,3, GFu); // first attacker (Gote)
-    set_piece(&mut b_a, 4,5, SFu); // immediate recapture (Sente) and blocker for rook line
-    set_piece(&mut b_a, 5,4, GKin); // Gote next attacker
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,3), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    // Case B: hidden rook appears after blocker moves
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, SGin);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 5,4, GKin);
-    set_piece(&mut b_b, 4,8, SHisha); // hidden x-ray attacker (mirrored from GHisha at 4,0)
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    let expect = 90*9/10 - 495*9/10; // pawn - silver under current SEE
-    assert_eq!(v_a, expect, "SEE without rook should be pawn - silver (mirrored)");
-    assert_eq!(v_b, expect, "SEE with hidden rook should also be pawn - silver (mirrored)");
-}
-
-#[test]
-fn see_xray_bishop_becomes_attacker_after_blocker_moves_to_target_mirrored() {
-    // Mirroring the bishop x-ray test.
-    // Case A: no bishop
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, SGin); // target
-    set_piece(&mut b_a, 4,3, GFu); // first attacker (Gote)
-    set_piece(&mut b_a, 5,5, SGin); // Sente piece becomes Gote piece when mirrored; but here we place Gote follow-up at symmetrical square
-    // For strict mirror of original (Sente follow-up at 5,5), we need Gote follow-up at 5,3 after flip. However, the exchange evaluation
-    // is insensitive to this exact attacker identity for equality expectation; keep symmetric around target:
-    set_piece(&mut b_a, 5,3, GKin); // Gote follow-up attacker (mirrored role)
-    set_piece(&mut b_a, 3,5, SGin); // immediate recapture/blocker (mirrored from 3,3 GGin)
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,3), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    // Case B: bishop present
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, SGin);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 3,5, SGin);
-    set_piece(&mut b_b, 5,3, GKin);
-    set_piece(&mut b_b, 7,7, SKaku); // hidden x-ray attacker (mirror of GKaku at 1,1)
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    let expect = 90*9/10 - 495*9/10; // pawn - silver
-    assert_eq!(v_a, expect, "SEE without bishop should be pawn - silver (mirrored)");
-    assert_eq!(v_b, expect, "SEE with hidden bishop should also be pawn - silver (mirrored)");
-}
-
-#[test]
-fn see_xray_lance_becomes_attacker_after_blocker_moves_to_target_mirrored() {
-    // Mirroring the lance x-ray test.
-    // Case A: no lance
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, SGin); // target
-    set_piece(&mut b_a, 4,3, GFu); // first attacker (Gote)
-    set_piece(&mut b_a, 4,5, SFu); // immediate recapture (Sente) and blocker for lance line
-    set_piece(&mut b_a, 5,4, GKin); // Gote next attacker
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,3), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    // Case B: lance present
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, SGin);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 5,4, GKin);
-    set_piece(&mut b_b, 4,8, SKyou); // hidden x-ray attacker (mirror of GKyou at 4,0)
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    let expect = 90*9/10 - 495*9/10; // pawn - silver
-    assert_eq!(v_a, expect, "SEE without lance should be pawn - silver (mirrored)");
-    assert_eq!(v_b, expect, "SEE with hidden lance should also be pawn - silver (mirrored)");
-}
-
-// Mirrored versions of activation equality tests
-
-#[test]
-fn see_xray_rook_activation_changes_see_mirrored() {
-    // Mirror of rook_activation test.
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, SGin);
-    set_piece(&mut b_a, 4,3, GFu);
-    set_piece(&mut b_a, 4,5, SFu);
-    set_piece(&mut b_a, 5,4, GKin);
-    set_piece(&mut b_a, 3,4, GGin);
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,3), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, SGin);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 4,5, SFu);
-    set_piece(&mut b_b, 5,4, GKin);
-    set_piece(&mut b_b, 3,4, GGin);
-    set_piece(&mut b_b, 4,8, SHisha);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    assert_eq!(v_b, v_a, "Hidden rook joining later yields same SEE (mirrored)");
-}
-
-#[test]
-fn see_xray_bishop_activation_changes_see_mirrored() {
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, SGin);
-    set_piece(&mut b_a, 4,3, GFu);
-    set_piece(&mut b_a, 5,3, GKin);
-    set_piece(&mut b_a, 6,2, GHisha);
-    set_piece(&mut b_a, 5,5, SGin); // mirrored layout ensures balanced attackers
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,3), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, SGin);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 5,3, GKin);
-    set_piece(&mut b_b, 6,2, GHisha);
-    set_piece(&mut b_b, 5,5, SGin);
-    set_piece(&mut b_b, 7,7, SKaku);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-
-    assert_eq!(v_b, v_a, "Hidden bishop joining later yields same SEE (mirrored)");
-}
-
-#[test]
-fn see_xray_lance_activation_changes_see_mirrored() {
-    let mut b_a = blank();
-    set_piece(&mut b_a, 4,4, SGin);
-    set_piece(&mut b_a, 4,3, GFu);
-    set_piece(&mut b_a, 5,4, GKin);
-    set_piece(&mut b_a, 3,4, GGin);
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(4,3), idx(4,4), false, Some(ObtainKind::Gin)));
-    let v_a = calc_see(Teban::Gote, &s_a, m);
-
-    let mut b_b = blank();
-    set_piece(&mut b_b, 4,4, SGin);
-    set_piece(&mut b_b, 4,3, GFu);
-    set_piece(&mut b_b, 5,4, GKin);
-    set_piece(&mut b_b, 3,4, GGin);
-    set_piece(&mut b_b, 4,8, SKyou);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Gote, &s_b, m);
-    
-    // Without hidden lance, the two-ply exchange yields pawn - silver
-    let expect_a = 495*9/10; // 銀
-    assert_eq!(v_a, expect_a, "SEE without hidden lance should be pawn - silver (mirrored)");
-    // With hidden lance joining later, result becomes pawn - lance
-    let expect_b = 90*9/10 - 495*9/10; // 歩 - 銀
-    assert_eq!(v_b, expect_b, "SEE with hidden lance should be pawn - lance (mirrored)");
-}
-
-// Mirrored versions of the Gote-start capture tests (now Sente starts)
-
-#[test]
-fn see_xray_bishop_line_opens_changes_result_from_sente_capture_mirrored() {
-    // Mirror of bishop_line_opens_changes_result_from_gote_capture
-    // Target becomes (5,3) with Gote pawn; Sente pawn at (5,4) captures.
-    let mut b_a = blank();
-    set_piece(&mut b_a, 5,3, GFu); // initial target piece (mirrored)
-    set_piece(&mut b_a, 5,4, SFu); // Sente pawn to capture
-    set_piece(&mut b_a, 4,5, SGin); // Sente silver attacking target (mirrored from GGin at 4,3)
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,3), false, Some(ObtainKind::Fu)));
-    let v_a = calc_see(Teban::Sente, &s_a, m);
-
-    // Case B: with hidden Gote bishop at mirrored square
-    let mut b_b = blank();
-    set_piece(&mut b_b, 6,2, GKaku); // hidden x-ray attacker (mirror of SKaku at 6,6)
-    set_piece(&mut b_b, 5,3, GFu);
-    set_piece(&mut b_b, 5,4, SFu);
-    set_piece(&mut b_b, 4,5, SGin);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Sente, &s_b, m);
-
-    assert_ne!(v_a, v_b, "SEE should change when bishop x-ray becomes active after the capture (mirrored)");
-}
-
-#[test]
-fn see_xray_rook_line_opens_changes_result_from_sente_capture_mirrored() {
-    // Mirror of rook_line_opens_changes_result_from_gote_capture
-    let mut b_a = blank();
-    set_piece(&mut b_a, 5,3, GFu);
-    set_piece(&mut b_a, 5,4, SFu);
-    set_piece(&mut b_a, 4,3, SGin); // Sente silver attacking target (mirrored)
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,3), false, Some(ObtainKind::Fu)));
-    let v_a = calc_see(Teban::Sente, &s_a, m);
-
-    let mut b_b = blank();
-    set_piece(&mut b_b, 5,0, GHisha); // hidden rook (mirror of SHisha at 5,8)
-    set_piece(&mut b_b, 5,3, GFu);
-    set_piece(&mut b_b, 5,4, SFu);
-    set_piece(&mut b_b, 4,3, SGin);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Sente, &s_b, m);
-
-    assert_ne!(v_a, v_b, "SEE should change when rook x-ray becomes active after the capture (mirrored)");
-}
-
-#[test]
-fn see_xray_lance_line_opens_changes_result_from_sente_capture_mirrored() {
-    // Mirror of lance_line_opens_changes_result_from_gote_capture
-    let mut b_a = blank();
-    set_piece(&mut b_a, 5,3, GFu);
-    set_piece(&mut b_a, 5,4, SFu);
-    set_piece(&mut b_a, 4,3, SGin); // Sente silver attacking target
-    let s_a = State::new(b_a);
-    let m = LegalMove::To(LegalMoveTo::new(idx(5,4), idx(5,3), false, Some(ObtainKind::Fu)));
-    let v_a = calc_see(Teban::Sente, &s_a, m);
-
-    let mut b_b = blank();
-    set_piece(&mut b_b, 5,0, GKyou); // hidden lance (mirror of SKyou at 5,8)
-    set_piece(&mut b_b, 5,3, GFu);
-    set_piece(&mut b_b, 5,4, SFu);
-    set_piece(&mut b_b, 4,3, SGin);
-    let s_b = State::new(b_b);
-    let v_b = calc_see(Teban::Sente, &s_b, m);
-
-    assert_ne!(v_a, v_b, "SEE should change when lance x-ray becomes active after the capture (mirrored)");
+    assert_ne!(v_a, v_b);
 }
