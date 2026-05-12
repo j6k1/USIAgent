@@ -12,6 +12,7 @@ mod is_mate;
 mod sennichite;
 mod validate;
 mod is_oute_move;
+mod in_check;
 mod control;
 mod is_possible_nari;
 mod position;

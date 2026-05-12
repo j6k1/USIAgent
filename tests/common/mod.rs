@@ -257,30 +257,30 @@ impl<T> Iterator for ConsumedIterator<T> where T: Send + 'static {
 	}
 }
 pub struct MockPlayer {
-	pub on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer, Box<dyn KeepAliveSender>) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_newgame: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
+	pub on_isready: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer, Box<dyn KeepAliveSender>) -> Result<(),CommonError> + Send + 'static>>,
+	pub on_newgame: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static>>,
+	pub on_position: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,Teban,Banmen,
 												Mochigoma,
-												Mochigoma,u32,Vec<Move>) -> Result<(),CommonError> + Send + 'static)>>,
-	pub on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,
+												Mochigoma,u32,Vec<Move>) -> Result<(),CommonError> + Send + 'static>>,
+	pub on_think: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,
 												Option<Instant>,
 												&UsiGoTimeLimit,
 												Arc<Mutex<UserEventQueue>>,
-												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
-												Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
-												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
-	) -> Result<BestMove,CommonError> + Send + 'static)>>,
+												Box<dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static>,
+												Box<dyn FnOnce(u64,Box<dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static>) -> PeriodicallyInfoSender>,
+												Box<dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static>
+	) -> Result<BestMove,CommonError> + Send + 'static>>,
 
-	pub on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
+	pub on_think_mate: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 												Arc<Mutex<UserEventQueue>>,
-												Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
-												Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
-												Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
-	) -> Result<CheckMate,CommonError> + Send + 'static)>>,
+												Box<dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static>,
+												Box<dyn FnOnce(u64,Box<dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static>) -> PeriodicallyInfoSender>,
+												Box<dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static>
+	) -> Result<CheckMate,CommonError> + Send + 'static>>,
 
-	pub on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
+	pub on_gameover: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,&GameEndState,
 												Arc<Mutex<UserEventQueue>>)
-				-> Result<(),CommonError> + Send + 'static)>>,
+				-> Result<(),CommonError> + Send + 'static>>,
 	pub options_it:ConsumedIterator<(String,SysEventOption)>,
 	pub sender:Sender<Result<ActionKind,String>>,
 	info_send_notifier:Sender<()>,
@@ -294,32 +294,32 @@ pub struct MockPlayer {
 impl MockPlayer {
 	pub fn new(sender:Sender<Result<ActionKind,String>>,
 				info_send_notifier:Sender<()>,
-				on_isready: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer, Box<dyn KeepAliveSender>) -> Result<(),CommonError> + Send + 'static)>>,
-				on_newgame: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static)>>,
-				on_position: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,Teban,Banmen,
+				on_isready: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer, Box<dyn KeepAliveSender>) -> Result<(),CommonError> + Send + 'static>>,
+				on_newgame: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer) -> Result<(),CommonError> + Send + 'static>>,
+				on_position: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,Teban,Banmen,
 															Mochigoma,
 															Mochigoma,u32,Vec<Move>
-				) -> Result<(),CommonError> + Send + 'static)>>,
+				) -> Result<(),CommonError> + Send + 'static>>,
 
-				on_think: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,
+				on_think: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,
 															Option<Instant>,
 															&UsiGoTimeLimit,
 															Arc<Mutex<UserEventQueue>>,
-															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
-															Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
-															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
-				) -> Result<BestMove,CommonError> + Send + 'static)>>,
+															Box<dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static>,
+															Box<dyn FnOnce(u64,Box<dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static>) -> PeriodicallyInfoSender>,
+															Box<dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static>
+				) -> Result<BestMove,CommonError> + Send + 'static>>,
 
-				on_think_mate: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
+				on_think_mate: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,&UsiGoMateTimeLimit,
 															Arc<Mutex<UserEventQueue>>,
-															Box<(dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static)>,
-															Box<dyn FnOnce(u64,Box<(dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static)>) -> PeriodicallyInfoSender>,
-															Box<(dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static)>
-				) -> Result<CheckMate,CommonError> + Send + 'static)>>,
+															Box<dyn FnMut(Vec<UsiInfoSubCommand>) -> Result<(),InfoSendError> + Send + 'static>,
+															Box<dyn FnOnce(u64,Box<dyn FnMut() -> Vec<UsiInfoSubCommand> + Send + 'static>) -> PeriodicallyInfoSender>,
+															Box<dyn FnMut(&mut MockPlayer) -> Result<bool,CommonError> + Send + 'static>
+				) -> Result<CheckMate,CommonError> + Send + 'static>>,
 
-				on_gameover: ConsumedIterator<Box<(dyn FnMut(&mut MockPlayer,&GameEndState,
+				on_gameover: ConsumedIterator<Box<dyn FnMut(&mut MockPlayer,&GameEndState,
 															Arc<Mutex<UserEventQueue>>)
-				-> Result<(),CommonError> + Send + 'static)>>
+				-> Result<(),CommonError> + Send + 'static>>
 	) -> MockPlayer {
 		MockPlayer {
 			on_isready:on_isready,
