@@ -293,6 +293,29 @@ fn in_check_after_applying_king_move_next_to_opponent_king() {
 }
 
 #[test]
+fn in_check_after_moved_king_attacks_opponent_king() {
+    let state = state_with((8, 8), (4, 3), &[]);
+    let (state, _, _) = Rule::apply_move_none_check(
+        &state,
+        Teban::Sente,
+        &MochigomaCollections::Empty,
+        mv_to((8, 8), (4, 4)).to_applied_move(),
+    );
+
+    assert!(Rule::in_check(Teban::Gote, &state));
+
+    let state = state_with((4, 5), (8, 0), &[]);
+    let (state, _, _) = Rule::apply_move_none_check(
+        &state,
+        Teban::Gote,
+        &MochigomaCollections::Empty,
+        mv_to((8, 0), (4, 4)).to_applied_move(),
+    );
+
+    assert!(Rule::in_check(Teban::Sente, &state));
+}
+
+#[test]
 fn in_check_after_applying_drop_that_blocks_rook_check() {
     let state = state_with((8, 8), (4, 1), &[(4, 4, SHisha)]);
     assert!(Rule::in_check(Teban::Gote, &state));
