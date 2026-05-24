@@ -151,6 +151,15 @@ fn gote_in_check_from_each_sente_piece_kind() {
 }
 
 #[test]
+fn in_check_from_opponent_king() {
+    let state = state_for_sente_check(GOu, (4, 4));
+    assert!(Rule::in_check(Teban::Sente, &state), "gote king attacks sente king");
+
+    let state = state_for_gote_check(SOu, (4, 4));
+    assert!(Rule::in_check(Teban::Gote, &state), "sente king attacks gote king");
+}
+
+#[test]
 fn in_check_from_promoted_piece_additional_king_step_controls() {
     let state = state_with((8, 8), (4, 3), &[(4, 4, SKakuN)]);
     assert!(Rule::in_check(Teban::Gote, &state), "sente horse vertical");
