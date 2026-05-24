@@ -1303,10 +1303,10 @@ impl SmallerState {
 				KomaKind::SKyou
 			}
 		} else if self.gote_kyou_board & p_mask != 0 {
-			if self.gote_kyou_board & p_mask != 0 {
-				KomaKind::GKakuN
-			} else {
+			if self.sente_nari_board & p_mask != 0 {
 				KomaKind::GKyouN
+			} else {
+				KomaKind::GKyou
 			}
 		} else if self.sente_kei_board & p_mask != 0 {
 			if self.sente_nari_board & p_mask != 0 {
@@ -6454,6 +6454,7 @@ impl Rule {
 	/// * `flip_self_occupied_board` - checked_boardと逆の手番側視点の自身の駒のビットボード
 	/// * `flip_opponent_occupied_board` - checked_boardと逆の手番側視点の相手の駒のビットボード
 	/// * `to` - 移動しようとする先の位置
+	/// * `exclude_mask` - 結果をフィルタするためのビットボード
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
@@ -6508,7 +6509,7 @@ impl Rule {
 						return b & checked_board & exclude_mask;
 					}
 				} else if sy == y {
-					let b = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+					let b = Rule::gen_candidate_bits_by_hisha_to_right_include(
 						self_occupied_board,
 						opponent_occupied_board,
 						p
