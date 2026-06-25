@@ -4567,7 +4567,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_kyou_sente(state, p, board, move_builder, mvs).unwrap();
+					AS::append_kyou_sente(state, p, board, move_builder, mvs)?;
 				}
 
 				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
@@ -4615,7 +4615,7 @@ impl ChecksMoveGenerator {
 						state.part.sente_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_kyou_gote(state, p, board, move_builder, mvs).unwrap();
+					AS::append_kyou_gote(state, p, board, move_builder, mvs)?;
 				}
 
 				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
@@ -4871,22 +4871,50 @@ impl ChecksMoveGenerator {
 	pub fn generate_kin<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												  -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			for p in state.part.sente_kin_board.iter() {
-				let p = p as u32;
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
 
-				AS::append_sente(state, p,
-								 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SKin),
-								 move_builder, mvs)?;
+				for p in state.part.sente_kin_board.iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SKin
+									 ) & rev_check_mask,
+									 move_builder, mvs)?;
+				}
 			}
 		} else {
-			let candidatebits = state.part.gote_kin_board.reverse();
+			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
 
-			for p in candidatebits.iter() {
-				let p = p as u32;
+				let candidatebits = state.part.gote_kin_board.reverse();
 
-				AS::append_gote(state, 80 - p,
-								Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GKin),
-								move_builder, mvs)?;
+				for p in candidatebits.iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GKin
+									) & rev_check_mask,
+									move_builder, mvs)?;
+				}
 			}
 		}
 
@@ -4911,63 +4939,197 @@ impl ChecksMoveGenerator {
 	pub fn generate_kaku<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												   -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
-				let p = p as u32;
+			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
+				for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
+					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,
+						p,state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board
+					);
 
-				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					p as u32,
-					state,
-					move_builder,
-					mvs
-				);
-			}
-			for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
-				let p = p as u32;
+					let p = p as u32;
 
-				Rule::legal_moves_sente_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					p as u32,
-					state,
-					move_builder,
-					mvs
-				);
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.gote_opponent_board,state.part.gote_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.sente_self_board,state.part.sente_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.gote_opponent_board,
+						state.part.gote_self_board,80 - p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.sente_self_board,state.part.sente_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+				}
+
+				for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
+					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,
+						p,state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board
+					);
+
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.gote_opponent_board,state.part.gote_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.sente_self_board,state.part.sente_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.gote_opponent_board,
+						state.part.gote_self_board,80 - p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.sente_self_board,state.part.sente_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(Teban::Sente,state.part.sente_self_board,p,SKakuN
+									 ) & rev_check_mask,
+									 move_builder, mvs
+					)?;
+				}
 			}
 		} else {
-			for p in (state.part.gote_kaku_board & !state.part.gote_nari_board).reverse().iter() {
-				let p = p as u32;
+			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
+				for p in (state.part.gote_kaku_board & !state.part.gote_nari_board).reverse().iter() {
+					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,
+						p,state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board
+					);
 
-				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					80 - p as u32,
-					state,
-					move_builder,
-					mvs
-				);
-			}
+					let p = p as u32;
 
-			for p in (state.part.gote_kaku_board & state.part.gote_nari_board).reverse().iter() {
-				let p = p as u32;
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
 
-				Rule::legal_moves_gote_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					80 - p as u32,
-					state,
-					move_builder,
-					mvs
-				);
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.gote_self_board,state.part.gote_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.gote_self_board,state.part.gote_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+				}
+
+				for p in (state.part.gote_kaku_board & state.part.gote_nari_board).reverse().iter() {
+					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,
+						p,state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board
+					);
+
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.gote_self_board,state.part.gote_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
+						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
+						state.part.gote_self_board,state.part.gote_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(Teban::Gote,state.part.gote_self_board,80 - p,GKakuN
+									) & rev_check_mask,
+									move_builder, mvs)?;
+				}
 			}
 		}
 
@@ -4992,63 +5154,206 @@ impl ChecksMoveGenerator {
 	pub fn generate_hisha<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 													-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
-				let p = p as u32;
+			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
+				for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
+					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,
+						p,state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board
+					);
 
-				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					p as u32,
-					state,
-					move_builder,
-					mvs
-				);
-			}
-			for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
-				let p = p as u32;
+					let p = p as u32;
 
-				Rule::legal_moves_sente_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					p as u32,
-					state,
-					move_builder,
-					mvs
-				);
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let p = p as u32;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.gote_opponent_board,state.part.gote_self_board, 80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.sente_self_board, state.part.sente_opponent_board, p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.gote_opponent_board,state.part.gote_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.sente_self_board,state.part.sente_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+				}
+
+				for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
+					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,
+						p,state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board
+					);
+
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let p = p as u32;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.gote_opponent_board,state.part.gote_self_board, 80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.sente_self_board, state.part.sente_opponent_board, p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.gote_opponent_board,state.part.gote_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.sente_self_board,state.part.sente_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+
+					let p = p as u32;
+
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),o as u32);
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(Teban::Sente,state.part.sente_self_board,p,SHishaN
+									 ) & rev_check_mask,
+									 move_builder, mvs)?;
+				}
 			}
 		} else {
-			for p in (state.part.gote_hisha_board & !state.part.gote_nari_board).reverse().iter() {
-				let p = p as u32;
+			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
+				for p in (state.part.gote_hisha_board & !state.part.gote_nari_board).reverse().iter() {
+					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,
+						p,state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board
+					);
 
-				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					80 - p as u32,
-					state,
-					move_builder,
-					mvs
-				);
-			}
+					let p = p as u32;
 
-			for p in (state.part.gote_hisha_board & state.part.gote_nari_board).reverse().iter() {
-				let p = p as u32;
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
 
-				Rule::legal_moves_gote_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
-					state.part.gote_self_board,
-					state.part.gote_opponent_board,
-					state.part.sente_self_board,
-					state.part.sente_opponent_board,
-					80 - p as u32,
-					state,
-					move_builder,
-					mvs
-				);
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let p = p as u32;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.sente_opponent_board,state.part.sente_self_board, 80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.gote_self_board, state.part.gote_opponent_board, p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.gote_self_board,state.part.gote_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+				}
+
+				for p in (state.part.gote_hisha_board & state.part.gote_nari_board).reverse().iter() {
+					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,
+						p,state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board
+					);
+
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let p = p as u32;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.sente_opponent_board,state.part.sente_self_board, 80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.gote_self_board, state.part.gote_opponent_board, p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let board = Rule::gen_candidate_bits_by_hisha_to_right(
+						state.part.gote_self_board,state.part.gote_opponent_board,p
+					) & rev_check_mask;
+
+					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+
+					let p = p as u32;
+
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),o as u32);
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(Teban::Gote,state.part.gote_self_board,80 - p,GHishaN
+									) & rev_check_mask,
+									move_builder, mvs)?;
+				}
 			}
 		}
 
@@ -5073,20 +5378,47 @@ impl ChecksMoveGenerator {
 	pub fn generate_ou<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			for p in state.part.gote_opponent_ou_position_board.reverse().iter() {
-				let p = p as u32;
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(OU_REV_MASK),p as u32);
 
-				AS::append_sente(state, p,
-								 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SOu),
-								 move_builder, mvs)?;
+				for p in state.part.gote_opponent_ou_position_board.reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SOu) & rev_check_mask,
+									 move_builder, mvs)?;
+				}
 			}
 		} else {
-			for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
-				let p = p as u32;
+			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(OU_REV_MASK),p as u32);
 
-				AS::append_gote(state, 80 - p,
-								Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GOu),
-								move_builder, mvs)?;
+				for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GOu
+									) & rev_check_mask,
+									move_builder, mvs)?;
+				}
 			}
 		}
 
@@ -5112,41 +5444,49 @@ impl ChecksMoveGenerator {
 							-> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
 			if count > 0 {
-				let occ = (state.part.sente_fu_board & !state.part.sente_nari_board) >> 1;
-				let board = BitBoard::from(DOUBLE_FU_CHECK_MASK) - occ;
+				if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK),p as u32);
 
-				let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
+					let occ = (state.part.sente_fu_board & !state.part.sente_nari_board) >> 1;
+					let board = BitBoard::from(DOUBLE_FU_CHECK_MASK) - occ;
 
-				let mask = BitBoard::from(DOUBLE_FU_CHECK_MASK) - (mask_source >> 8) ^ DOUBLE_FU_CHECK_MASK;
+					let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
 
-				let candidate_bitboard = !(
-					state.part.sente_self_board | state.part.sente_opponent_board
-				) &	BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1);
+					let mask = BitBoard::from(DOUBLE_FU_CHECK_MASK) - (mask_source >> 8) ^ DOUBLE_FU_CHECK_MASK;
 
-				for p in candidate_bitboard.iter() {
-					if state.part.sente_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
-						!Rule::is_put_fu_and_mate_sente(state,p as u32) {
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					let candidate_bitboard = !(
+						state.part.sente_self_board | state.part.sente_opponent_board
+					) &	BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1) & rev_check_mask;
+
+					for p in candidate_bitboard.iter() {
+						if state.part.sente_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
+							!Rule::is_put_fu_and_mate_sente(state,p as u32) {
+							mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+						}
 					}
 				}
 			}
 		} else {
 			if count > 0 {
-				let occ = (state.part.gote_fu_board & !state.part.gote_nari_board).reverse() >> 1;
-				let board = BitBoard::from(DOUBLE_FU_CHECK_MASK) - occ;
+				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK),p as u32);
 
-				let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
+					let occ = (state.part.gote_fu_board & !state.part.gote_nari_board).reverse() >> 1;
+					let board = BitBoard::from(DOUBLE_FU_CHECK_MASK) - occ;
 
-				let mask = (BitBoard::from(DOUBLE_FU_CHECK_MASK) - (mask_source >> 8)) ^ DOUBLE_FU_CHECK_MASK;
+					let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
 
-				let candidate_bitboard = !(
-					state.part.gote_self_board | state.part.gote_opponent_board
-				) & BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1);
+					let mask = (BitBoard::from(DOUBLE_FU_CHECK_MASK) - (mask_source >> 8)) ^ DOUBLE_FU_CHECK_MASK;
 
-				for p in candidate_bitboard.iter() {
-					if state.part.gote_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
-						!Rule::is_put_fu_and_mate_gote(state,80 - p as u32) {
-						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, 80 - p as u32))).unwrap();
+					let candidate_bitboard = !(
+						state.part.gote_self_board | state.part.gote_opponent_board
+					) & BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1) & rev_check_mask;
+
+					for p in candidate_bitboard.iter() {
+						if state.part.gote_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
+							!Rule::is_put_fu_and_mate_gote(state,80 - p as u32) {
+							mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, 80 - p as u32))).unwrap();
+						}
 					}
 				}
 			}
@@ -5173,23 +5513,39 @@ impl ChecksMoveGenerator {
 	pub fn generate_drop_kyou(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
 							  -> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
-			if count > 0 {
-				let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board) &
-					BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1);
+			if let Some(_) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
+					state.part.sente_opponent_ou_position_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board
+				);
 
-				for p in candidate_bitboard.iter() {
-					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+				if count > 0 {
+					let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board) &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & rev_check_mask;
+
+					for p in candidate_bitboard.iter() {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+					}
 				}
 			}
 		} else {
 			if count > 0 {
-				let candidate_bitboard = !(state.part.gote_self_board | state.part.gote_opponent_board) &
-					BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1);
+				if let Some(_) = state.part.gote_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,
+						state.part.gote_self_board,
+						state.part.gote_opponent_board
+					);
 
-				for p in candidate_bitboard.iter() {
-					let p = 80 - p;
+					let candidate_bitboard = !(state.part.gote_self_board | state.part.gote_opponent_board) &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & rev_check_mask;
 
-					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+					for p in candidate_bitboard.iter() {
+						let p = 80 - p;
+
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+					}
 				}
 			}
 		}
@@ -5215,69 +5571,31 @@ impl ChecksMoveGenerator {
 	pub fn generate_drop_kei(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
 							 -> Result<(), LimitSizeError> {
 		if teban == Teban::Sente {
-			if count > 0 {
-				let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board) &
-					BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1);
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KEI_REV_MASK),p as u32);
 
-				for p in candidate_bitboard.iter() {
-					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+				if count > 0 {
+					let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board) &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1) & rev_check_mask;
+
+					for p in candidate_bitboard.iter() {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+					}
 				}
 			}
 		} else {
 			if count > 0 {
-				let candidate_bitboard = !(state.part.gote_self_board | state.part.gote_opponent_board) &
-					BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1);
+				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KEI_REV_MASK),p as u32);
 
-				for p in candidate_bitboard.iter() {
-					let p = 80 - p;
+					let candidate_bitboard = !(state.part.gote_self_board | state.part.gote_opponent_board) &
+						BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1) & rev_check_mask;
 
-					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
-				}
-			}
-		}
+					for p in candidate_bitboard.iter() {
+						let p = 80 - p;
 
-		Ok(())
-	}
-
-	/// 銀、金、角、飛車を置く差し手を生成する
-	///
-	/// # Arguments
-	/// * `teban` - 手番
-	/// * `state` - 盤面の状態
-	/// * `m` - 持ち駒の種類
-	/// * `count` - 歩の持ち駒の個数
-	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
-	/// * `mvs` - 生成された指し手を格納するバッファ
-	///
-	/// # Errors
-	///
-	/// この関数は以下のエラーを返すケースがあります。
-	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
-	///
-	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
-	#[inline]
-	pub fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
-								shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>)
-								-> Result<(), LimitSizeError> {
-		if teban == Teban::Sente {
-			if count > 0 {
-				if *shared_candidatebits == 0 {
-					*shared_candidatebits = !(state.part.sente_self_board | state.part.sente_opponent_board) & BANMEN_MASK;
-				};
-
-				for p in (*shared_candidatebits).iter() {
-					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
-				}
-			}
-		} else {
-			if count > 0 {
-				if *shared_candidatebits == 0 {
-					*shared_candidatebits = !(state.part.gote_self_board | state.part.gote_opponent_board) & BANMEN_MASK;
-				};
-
-				for p in (*shared_candidatebits).iter() {
-					let p = 80 - p;
-					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+					}
 				}
 			}
 		}
@@ -5303,7 +5621,38 @@ impl ChecksMoveGenerator {
 	#[inline]
 	pub fn generate_drop_gin(teban: Teban, state: &State, count: usize,
 							 shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
+		if teban == Teban::Sente {
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),p as u32);
+
+				if count > 0 {
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.sente_self_board | state.part.sente_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Gin, p as u32))).unwrap();
+					}
+				}
+			}
+		} else {
+			if count > 0 {
+				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),p as u32);
+
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.gote_self_board | state.part.gote_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						let p = 80 - p;
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Gin, p as u32))).unwrap();
+					}
+				}
+			}
+		}
+
+		Ok(())
 	}
 
 	/// 金を置く差し手を生成する
@@ -5324,7 +5673,38 @@ impl ChecksMoveGenerator {
 	#[inline]
 	pub fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 							 mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
+		if teban == Teban::Sente {
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				if count > 0 {
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.sente_self_board | state.part.sente_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kin, p as u32))).unwrap();
+					}
+				}
+			}
+		} else {
+			if count > 0 {
+				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.gote_self_board | state.part.gote_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						let p = 80 - p;
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kin, p as u32))).unwrap();
+					}
+				}
+			}
+		}
+
+		Ok(())
 	}
 
 	/// 角を置く差し手を生成する
@@ -5345,7 +5725,48 @@ impl ChecksMoveGenerator {
 	#[inline]
 	pub fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 							  mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits, mvs)
+		if teban == Teban::Sente {
+			if let Some(_) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
+					state.part.sente_opponent_ou_position_board,
+					-1,
+					state.part.sente_self_board,state.part.sente_opponent_board,
+					state.part.gote_opponent_board,state.part.gote_self_board
+				);
+
+				if count > 0 {
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.sente_self_board | state.part.sente_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kaku, p as u32))).unwrap();
+					}
+				}
+			}
+		} else {
+			if count > 0 {
+				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,
+						-1,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board
+					);
+
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.gote_self_board | state.part.gote_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						let p = 80 - p;
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kaku, p as u32))).unwrap();
+					}
+				}
+			}
+		}
+
+		Ok(())
 	}
 
 	/// 飛車を置く差し手を生成する
@@ -5366,7 +5787,48 @@ impl ChecksMoveGenerator {
 	#[inline]
 	pub fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
 							   mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits, mvs)
+		if teban == Teban::Sente {
+			if let Some(_) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
+					state.part.sente_opponent_ou_position_board,
+					-1,
+					state.part.sente_self_board,state.part.sente_opponent_board,
+					state.part.gote_opponent_board,state.part.gote_self_board
+				);
+
+				if count > 0 {
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.sente_self_board | state.part.sente_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Hisha, p as u32))).unwrap();
+					}
+				}
+			}
+		} else {
+			if count > 0 {
+				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,
+						-1,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board
+					);
+
+					if *shared_candidatebits == 0 {
+						*shared_candidatebits = !(state.part.gote_self_board | state.part.gote_opponent_board) & BANMEN_MASK;
+					};
+
+					for p in ((*shared_candidatebits) & rev_check_mask).iter() {
+						let p = 80 - p;
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Hisha, p as u32))).unwrap();
+					}
+				}
+			}
+		}
+
+		Ok(())
 	}
 }
 
@@ -15037,7 +15499,7 @@ impl Rule {
 	/// # Arguments
 	///
 	/// * `ou_position_board` - 王手をかける手番側から見た王の位置を表すビットボード
-	/// * `from` - 王手をかける手番側視点での動かす駒の移動元
+	/// * `from` - 王手をかける手番側視点での動かす駒の移動元。駒を打つ手の場合は-1を渡す。
 	/// * `self_occupied_board` - 王手をかけようとする手番側から見た王手をかけようとする手番側のビットボード
 	/// * `opponent_occupied_board` - 王手をかけようとする手番側から見た王手をかけられる側の手番のビットボード
 	/// * `flip_self_occupied_board` - 王手をかけられようとする手番側から見た王手をかけられようとする手番側のビットボード
@@ -15093,7 +15555,7 @@ impl Rule {
 	/// # Arguments
 	///
 	/// * `ou_position_board` - 王手をかける手番側から見た王の位置を表すビットボード
-	/// * `from` - 王手をかける手番側視点での動かす駒の移動元
+	/// * `from` - 王手をかける手番側視点での動かす駒の移動元。駒を打つ手の場合は-1を渡す。
 	/// * `self_occupied_board` - 王手をかけようとする手番側から見た王手をかけようとする手番側のビットボード
 	/// * `opponent_occupied_board` - 王手をかけようとする手番側から見た王手をかけられる側の手番のビットボード
 	/// * `flip_self_occupied_board` - 王手をかけられようとする手番側から見た王手をかけられようとする手番側のビットボード
