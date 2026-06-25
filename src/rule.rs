@@ -4354,6 +4354,1022 @@ impl EvasionsMoveGenerator {
 		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits, mvs)
 	}
 }
+/// 合法手の列挙の実装（王手のみを列挙）
+pub struct ChecksMoveGenerator;
+impl ChecksMoveGenerator {
+	/// 持ち駒を置く指し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		let mc = match mc {
+			&MochigomaCollections::Pair(ref ms, ref mg) => {
+				match teban {
+					Teban::Sente => {
+						ms
+					},
+					Teban::Gote => {
+						mg
+					}
+				}
+			},
+			&MochigomaCollections::Empty => {
+				return Ok(());
+			}
+		};
+
+		let mut it = mc.iter();
+
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+		Self::generate_drop_fu(teban,state,count,mvs)?;
+
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+		Self::generate_drop_kyou(teban,state,count,mvs)?;
+
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+		Self::generate_drop_kei(teban,state,count,mvs)?;
+
+		let mut shared_candidatebits = BitBoard::default();
+
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+		Self::generate_drop_gin(teban,state,count,&mut shared_candidatebits,mvs)?;
+
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+		Self::generate_drop_kin(teban,state,count,&mut shared_candidatebits,mvs)?;
+
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+		Self::generate_drop_kaku(teban,state,count,&mut shared_candidatebits,mvs)?;
+
+		let (_,count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+		Self::generate_drop_hisha(teban,state,count,&mut shared_candidatebits,mvs)?;
+
+		Ok(())
+	}
+
+	/// 歩を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_fu<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK),p as u32);
+
+				for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_fu_sente(state, p,
+										Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SFu) & rev_check_mask,
+										move_builder, mvs)?;
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				for p in (state.part.sente_fu_board & state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SFuN) & rev_check_mask,
+									 move_builder, mvs)?;
+				}
+			}
+		} else {
+			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK), p as u32);
+
+				for p in (state.part.gote_fu_board & !state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_fu_gote(state, 80 - p,
+									   Rule::gen_candidate_bits(teban, state.part.gote_self_board, 80 - p, GFu) & rev_check_mask,
+									   move_builder, mvs)?;
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK), p as u32);
+
+				for p in (state.part.gote_fu_board & state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(teban, state.part.gote_self_board, 80 - p, GFuN) & rev_check_mask,
+									move_builder, mvs)?;
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 香車を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_kyou<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+												  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
+					state.part.sente_opponent_ou_position_board,
+					state.part.sente_self_board,state.part.sente_opponent_board
+				);
+
+				for p in (state.part.sente_kyou_board & !state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.gote_opponent_board,
+						state.part.gote_self_board, 80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_kyou_sente(state, p, board, move_builder, mvs).unwrap();
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				for p in (state.part.sente_kyou_board & state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(
+										 teban,state.part.sente_self_board,p,SKyouN
+									 ) & rev_check_mask,
+									 move_builder, mvs)?;
+				}
+			}
+		} else {
+			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
+					state.part.gote_opponent_ou_position_board,
+					state.part.gote_self_board,state.part.gote_opponent_board
+				);
+
+				for p in (state.part.gote_kyou_board & !state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
+						state.part.sente_opponent_board,
+						state.part.sente_self_board, 80 - p
+					) & rev_check_mask.reverse();
+
+					AS::append_kyou_gote(state, p, board, move_builder, mvs).unwrap();
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				for p in (state.part.gote_kyou_board & state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GKyouN) & rev_check_mask,
+									move_builder, mvs)?;
+				}
+			}
+		}
+		Ok(())
+	}
+
+	/// 桂馬を進める差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_kei<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KEI_REV_MASK),p as u32);
+
+				for p in (state.part.sente_kei_board & !state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_kei_sente(state, p,
+										 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SKei
+										 ) & rev_check_mask,
+										 move_builder, mvs)?;
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				for p in (state.part.sente_kei_board & state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SKeiN
+									 ) & rev_check_mask,
+									 move_builder, mvs)?;
+				}
+			}
+		} else {
+			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KEI_REV_MASK),p as u32);
+
+				for p in (state.part.gote_kei_board & !state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_kei_gote(state, 80 - p,
+										Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GKei
+										) & rev_check_mask,
+										move_builder, mvs)?;
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				for p in (state.part.gote_kei_board & state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GKeiN
+									) & rev_check_mask,
+									move_builder, mvs)?;
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 銀を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_gin<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),p as u32);
+
+				for p in (state.part.sente_gin_board & !state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_sente_possible_promotion(state, p,
+														Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SGin
+														) & rev_check_mask,
+														move_builder, mvs)?;
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				for p in (state.part.sente_gin_board & state.part.sente_nari_board).iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
+						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
+						state.part.sente_self_board,state.part.sente_opponent_board,
+						state.part.gote_opponent_board,state.part.gote_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_sente(state, p,
+									 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SGinN
+									 ) & rev_check_mask,
+									 move_builder, mvs)?;
+				}
+			}
+		} else {
+			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),p as u32);
+
+				for p in (state.part.gote_gin_board & !state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_gote_possible_promotion(state, 80 - p,
+													   Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GGin
+													   ) & rev_check_mask,
+													   move_builder, mvs)?;
+				}
+
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+
+				for p in (state.part.gote_gin_board & state.part.gote_nari_board).reverse().iter() {
+					let p = p as u32;
+
+					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
+						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
+						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
+						state.part.gote_self_board,state.part.gote_opponent_board,
+						state.part.sente_opponent_board,state.part.sente_self_board,
+					);
+
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					AS::append_gote(state, 80 - p,
+									Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GGinN
+									) & rev_check_mask,
+									move_builder, mvs)?;
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 金を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_kin<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+												  -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in state.part.sente_kin_board.iter() {
+				let p = p as u32;
+
+				AS::append_sente(state, p,
+								 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SKin),
+								 move_builder, mvs)?;
+			}
+		} else {
+			let candidatebits = state.part.gote_kin_board.reverse();
+
+			for p in candidatebits.iter() {
+				let p = p as u32;
+
+				AS::append_gote(state, 80 - p,
+								Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GKin),
+								move_builder, mvs)?;
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 角を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_kaku<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+												   -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_sente_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+			for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_sente_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			for p in (state.part.gote_kaku_board & !state.part.gote_nari_board).reverse().iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_gote_kaku_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+
+			for p in (state.part.gote_kaku_board & state.part.gote_nari_board).reverse().iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_gote_kaku_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 飛車を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_hisha<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+													-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_sente_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+			for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_sente_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+		} else {
+			for p in (state.part.gote_hisha_board & !state.part.gote_nari_board).reverse().iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_gote_hisha_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+
+			for p in (state.part.gote_hisha_board & state.part.gote_nari_board).reverse().iter() {
+				let p = p as u32;
+
+				Rule::legal_moves_gote_hisha_nari_with_point_and_kind_and_bitboard_and_buffer::<_,AS>(
+					state.part.gote_self_board,
+					state.part.gote_opponent_board,
+					state.part.sente_self_board,
+					state.part.sente_opponent_board,
+					80 - p as u32,
+					state,
+					move_builder,
+					mvs
+				);
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 王を動かす差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_ou<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+												 -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		if teban == Teban::Sente {
+			for p in state.part.gote_opponent_ou_position_board.reverse().iter() {
+				let p = p as u32;
+
+				AS::append_sente(state, p,
+								 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SOu),
+								 move_builder, mvs)?;
+			}
+		} else {
+			for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
+				let p = p as u32;
+
+				AS::append_gote(state, 80 - p,
+								Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GOu),
+								move_builder, mvs)?;
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 歩を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 歩の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_fu(teban: Teban, state: &State, count: usize,mvs: &mut impl MovePicker<LegalMove>)
+							-> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				let occ = (state.part.sente_fu_board & !state.part.sente_nari_board) >> 1;
+				let board = BitBoard::from(DOUBLE_FU_CHECK_MASK) - occ;
+
+				let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
+
+				let mask = BitBoard::from(DOUBLE_FU_CHECK_MASK) - (mask_source >> 8) ^ DOUBLE_FU_CHECK_MASK;
+
+				let candidate_bitboard = !(
+					state.part.sente_self_board | state.part.sente_opponent_board
+				) &	BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1);
+
+				for p in candidate_bitboard.iter() {
+					if state.part.sente_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
+						!Rule::is_put_fu_and_mate_sente(state,p as u32) {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, p as u32))).unwrap();
+					}
+				}
+			}
+		} else {
+			if count > 0 {
+				let occ = (state.part.gote_fu_board & !state.part.gote_nari_board).reverse() >> 1;
+				let board = BitBoard::from(DOUBLE_FU_CHECK_MASK) - occ;
+
+				let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
+
+				let mask = (BitBoard::from(DOUBLE_FU_CHECK_MASK) - (mask_source >> 8)) ^ DOUBLE_FU_CHECK_MASK;
+
+				let candidate_bitboard = !(
+					state.part.gote_self_board | state.part.gote_opponent_board
+				) & BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1);
+
+				for p in candidate_bitboard.iter() {
+					if state.part.gote_opponent_ou_position_board & 1u128 << p as u128 == 0 ||
+						!Rule::is_put_fu_and_mate_gote(state,80 - p as u32) {
+						mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Fu, 80 - p as u32))).unwrap();
+					}
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 香車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 香車の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_kyou(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
+							  -> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board) &
+					BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1);
+
+				for p in candidate_bitboard.iter() {
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+				}
+			}
+		} else {
+			if count > 0 {
+				let candidate_bitboard = !(state.part.gote_self_board | state.part.gote_opponent_board) &
+					BANMEN_MASK & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1);
+
+				for p in candidate_bitboard.iter() {
+					let p = 80 - p;
+
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kyou, p as u32))).unwrap();
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 桂馬を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 桂馬の持ち駒の個数
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_kei(teban: Teban, state: &State, count: usize, mvs: &mut impl MovePicker<LegalMove>)
+							 -> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				let candidate_bitboard = !(state.part.sente_self_board | state.part.sente_opponent_board) &
+					BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1);
+
+				for p in candidate_bitboard.iter() {
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+				}
+			}
+		} else {
+			if count > 0 {
+				let candidate_bitboard = !(state.part.gote_self_board | state.part.gote_opponent_board) &
+					BANMEN_MASK & !(DENY_MOVE_SENTE_KEI_MASK << 1);
+
+				for p in candidate_bitboard.iter() {
+					let p = 80 - p;
+
+					mvs.push(LegalMove::Put(LegalMovePut::new(MochigomaKind::Kei, p as u32))).unwrap();
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 銀、金、角、飛車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `m` - 持ち駒の種類
+	/// * `count` - 歩の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
+								shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>)
+								-> Result<(), LimitSizeError> {
+		if teban == Teban::Sente {
+			if count > 0 {
+				if *shared_candidatebits == 0 {
+					*shared_candidatebits = !(state.part.sente_self_board | state.part.sente_opponent_board) & BANMEN_MASK;
+				};
+
+				for p in (*shared_candidatebits).iter() {
+					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
+				}
+			}
+		} else {
+			if count > 0 {
+				if *shared_candidatebits == 0 {
+					*shared_candidatebits = !(state.part.gote_self_board | state.part.gote_opponent_board) & BANMEN_MASK;
+				};
+
+				for p in (*shared_candidatebits).iter() {
+					let p = 80 - p;
+					mvs.push(LegalMove::Put(LegalMovePut::new(m, p as u32))).unwrap();
+				}
+			}
+		}
+
+		Ok(())
+	}
+
+	/// 銀を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 銀の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_gin(teban: Teban, state: &State, count: usize,
+							 shared_candidatebits: &mut BitBoard, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
+	}
+
+	/// 金を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 金の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
+							 mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
+	}
+
+	/// 角を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 角の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
+							  mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits, mvs)
+	}
+
+	/// 飛車を置く差し手を生成する
+	///
+	/// # Arguments
+	/// * `teban` - 手番
+	/// * `state` - 盤面の状態
+	/// * `count` - 飛車の持ち駒の個数
+	/// * `shared_candidatebits` - 生成された差し手のビットボード（銀、金、角、飛車の差し手の列挙で共有される）
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	/// # Errors
+	///
+	/// この関数は以下のエラーを返すケースがあります。
+	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
+	///
+	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
+	#[inline]
+	pub fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
+							   mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits, mvs)
+	}
+}
+
 pub struct NonEvasionsAll;
 impl GenerateStrategy for NonEvasionsAll {
 	type Environment = ();
@@ -13867,10 +14883,9 @@ impl Rule {
 	///
 	/// # Arguments
 	///
-	/// * `teban` - 王手をかけようとする側の手番
 	/// * `ou_position_board` - 王手をかける手番側から見た王の位置を表すビットボード
-	/// * `pin_board` - pin駒の位置を表す先手座標系のビットボード
-	/// * `from` - 動かす駒の移動元
+	/// * `pin_board` - 王手をかける手番側から見たpin駒の位置を表す座標系のビットボード
+	/// * `from` - 王手をかける手番側から見た動かす駒の移動元
 	/// * `self_kyou_board` - 王手をかけようとする手番側の先手座標系香車の位置のビットボード
 	/// * `self_kaku_board` - 王手をかけようとする手番側の先手座標系の角の位置のビットボード
 	/// * `self_hisha_board` - 王手をかけようとする手番側の先手座標系の飛車の位置のビットボード
@@ -13881,7 +14896,6 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_unpinning_reverse_check_mask(
-		teban:Teban,
 		ou_position_board:BitBoard,
 		pin_board:BitBoard,
 		from:u32,
@@ -13897,16 +14911,6 @@ impl Rule {
 			let p = p as u32;
 
 			let from_mask = BitBoard::from(1 << (from + 1));
-
-			if pin_board & from_mask == 0 {
-				return BitBoard::default();
-			}
-
-			let (from_mask,pin_board) = if teban == Teban::Gote {
-				(from_mask.reverse(),pin_board.reverse())
-			} else {
-				(from_mask,pin_board)
-			};
 
 			let self_occupied_board = self_occupied_board ^ from_mask;
 			let flip_opponent_occupied_board = flip_opponent_occupied_board ^ from_mask.reverse();
@@ -14042,7 +15046,7 @@ impl Rule {
 	#[inline]
 	pub fn gen_kaku_reverse_check_mask(
 		ou_position_board:BitBoard,
-		from:u32,
+		from:i32,
 		self_occupied_board:BitBoard,
 		opponent_occupied_board:BitBoard,
 		flip_self_occupied_board:BitBoard,
@@ -14051,10 +15055,16 @@ impl Rule {
 		if let Some(p) = ou_position_board.iter().next() {
 			let p = p as u32;
 
-			let from_mask = BitBoard::from(1 << (from + 1));
+			let (self_occupied_board,flip_opponent_occupied_board) = if from != -1 {
+				let from_mask = BitBoard::from(1 << (from + 1));
 
-			let self_occupied_board = self_occupied_board ^ from_mask;
-			let flip_opponent_occupied_board = flip_opponent_occupied_board ^ from_mask.reverse();
+				let self_occupied_board = self_occupied_board ^ from_mask;
+				let flip_opponent_occupied_board = flip_opponent_occupied_board ^ from_mask.reverse();
+
+				(self_occupied_board,flip_opponent_occupied_board)
+			} else {
+				(self_occupied_board,flip_opponent_occupied_board)
+			};
 
 			Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
 				flip_opponent_occupied_board,
@@ -14092,7 +15102,7 @@ impl Rule {
 	#[inline]
 	pub fn gen_hisha_reverse_check_mask(
 		ou_position_board:BitBoard,
-		from:u32,
+		from:i32,
 		self_occupied_board:BitBoard,
 		opponent_occupied_board:BitBoard,
 		flip_self_occupied_board:BitBoard,
@@ -14101,10 +15111,16 @@ impl Rule {
 		if let Some(p) = ou_position_board.iter().next() {
 			let p = p as u32;
 
-			let from_mask = BitBoard::from(1 << (from + 1));
+			let (self_occupied_board,flip_opponent_occupied_board) = if from != -1 {
+				let from_mask = BitBoard::from(1 << (from + 1));
 
-			let self_occupied_board = self_occupied_board ^ from_mask;
-			let flip_opponent_occupied_board = flip_opponent_occupied_board ^ from_mask.reverse();
+				let self_occupied_board = self_occupied_board ^ from_mask;
+				let flip_opponent_occupied_board = flip_opponent_occupied_board ^ from_mask.reverse();
+
+				(self_occupied_board,flip_opponent_occupied_board)
+			} else {
+				(self_occupied_board,flip_opponent_occupied_board)
+			};
 
 			Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
 				self_occupied_board,
@@ -14270,7 +15286,6 @@ impl Rule {
 		}
 	}
 
-	/* これらの関数群はバグがある上にインターフェースの設計もよろしくないので後で作り直すか削除する。
 	/// 先手の王の周囲の敵駒の数を返す
 	///
 	/// # Arguments
@@ -14596,7 +15611,7 @@ impl Rule {
 
 		board.bitcount()
 	}
-	*/
+
 	/// 現在の持ち時間を更新して返す(フィッシャークロックルール対応)
 	/// # Arguments
 	/// * `limit` - 持ち時間
