@@ -1889,25 +1889,6 @@ pub trait GenerateStrategy {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	fn generate_drop_kei(teban:Teban,state:&State,count:usize, env: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
-	/// 銀、金、角、飛を置く手の共通実装を定義する
-	///
-	/// # Arguments
-	/// * `teban` - 手番
-	/// * `state` - 盤面の状態
-	/// * `m` - 駒の種類
-	/// * `count` - 駒の枚数
-	/// * `shared_candidatebits` - 銀、金、角、飛の合法手列挙で共有されるビットボード
-	/// * `env` - 指し手生成時に利用する環境
-	/// * `mvs` - 生成された指し手を格納するバッファ
-	///
-	/// # Errors
-	///
-	/// この関数は以下のエラーを返すケースがあります。
-	/// * [`LimitSizeError`] バッファのサイズの上限を超えて指し手を格納しようとした
-	///
-	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
-	fn generate_drop_common(teban:Teban, state:&State, m:MochigomaKind, count: usize, shared_candidatebits:
-							&mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(),LimitSizeError>;
 	/// 銀を置く手を生成する
 	///
 	/// # Arguments
@@ -5796,7 +5777,7 @@ impl ChecksMoveGenerator {
 			}
 		} else {
 			if count > 0 {
-				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				if let Some(_) = state.part.gote_opponent_ou_position_board.iter().next() {
 					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,
 						-1,
@@ -5858,7 +5839,7 @@ impl ChecksMoveGenerator {
 			}
 		} else {
 			if count > 0 {
-				if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+				if let Some(_) = state.part.gote_opponent_ou_position_board.iter().next() {
 					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,
 						-1,
@@ -5979,34 +5960,27 @@ impl GenerateStrategy for NonEvasionsAll {
 	}
 
 	#[inline]
-	fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
-							shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
-							-> Result<(), LimitSizeError> {
-		MoveGenerator::generate_drop_common(teban,state,m,count,shared_candidatebits,mvs)
-	}
-
-	#[inline]
 	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
-						 shared_candidatebits: &mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,env,mvs)
+						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,env,mvs)
+						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						  env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,env,mvs)
+						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,env,mvs)
+						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,mvs)
 	}
 }
 pub struct NonEvasions;
@@ -6106,34 +6080,27 @@ impl GenerateStrategy for NonEvasions {
 	}
 
 	#[inline]
-	fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
-							shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
-							-> Result<(), LimitSizeError> {
-		MoveGenerator::generate_drop_common(teban,state,m,count,shared_candidatebits,mvs)
-	}
-
-	#[inline]
 	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
-						 shared_candidatebits: &mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,env,mvs)
+						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Gin,count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,env,mvs)
+						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						  env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,env,mvs)
+						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,env,mvs)
+						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,mvs)
 	}
 }
 pub struct CaptureOrPawnPromotions;
@@ -6233,34 +6200,27 @@ impl GenerateStrategy for CaptureOrPawnPromotions {
 	}
 
 	#[inline]
-	fn generate_drop_common(_: Teban, _: &State, _:MochigomaKind, _: usize,
-							_: &mut BitBoard, _: &mut Self::Environment, _: &mut impl MovePicker<LegalMove>)
-							-> Result<(), LimitSizeError> {
-		Ok(())
-	}
-
-	#[inline]
 	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
-						 shared_candidatebits: &mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,env,mvs)
+						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,env,mvs)
+						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						  env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,env,mvs)
+						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,env,mvs)
+						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,mvs)
 	}
 }
 pub struct QuietsWithoutPawnPromotions;
@@ -6394,34 +6354,27 @@ impl GenerateStrategy for QuietsWithoutPawnPromotions {
 	}
 
 	#[inline]
-	fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
-							shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
-							-> Result<(), LimitSizeError> {
-		MoveGenerator::generate_drop_common(teban,state,m,count,shared_candidatebits,mvs)
-	}
-
-	#[inline]
 	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
-						 shared_candidatebits: &mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,env,mvs)
+						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,env,mvs)
+						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						  env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,env,mvs)
+						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,env,mvs)
+						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		MoveGenerator::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,mvs)
 	}
 }
 pub struct EvasionsAll;
@@ -6547,34 +6500,27 @@ impl GenerateStrategy for EvasionsAll {
 	}
 
 	#[inline]
-	fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
-							shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
-							-> Result<(), LimitSizeError> {
-		EvasionsMoveGenerator::generate_drop_common(teban,state,m,count,shared_candidatebits,mvs)
-	}
-
-	#[inline]
 	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
-						 shared_candidatebits: &mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,env,mvs)
+						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,env,mvs)
+						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						  env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,env,mvs)
+						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,env,mvs)
+						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,mvs)
 	}
 }
 pub struct Evasions;
@@ -6700,34 +6646,147 @@ impl GenerateStrategy for Evasions {
 	}
 
 	#[inline]
-	fn generate_drop_common(teban: Teban, state: &State, m:MochigomaKind, count: usize,
-							shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
-							-> Result<(), LimitSizeError> {
-		EvasionsMoveGenerator::generate_drop_common(teban,state,m,count,shared_candidatebits,mvs)
-	}
-
-	#[inline]
 	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
-						 shared_candidatebits: &mut BitBoard, env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,env,mvs)
+						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Gin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						 env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,env,mvs)
+						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kin, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						  env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,env,mvs)
+						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Kaku, count,shared_candidatebits,mvs)
 	}
 
 	#[inline]
 	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
-						   env: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
-		Self::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,env,mvs)
+						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		EvasionsMoveGenerator::generate_drop_common(teban,state,MochigomaKind::Hisha, count,shared_candidatebits,mvs)
+	}
+}
+pub struct Checks;
+impl GenerateStrategy for Checks {
+	type Environment = ();
+	type AppendStrategy = ForcePromotions;
+
+	#[inline]
+	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		let move_builder = if teban == Teban::Sente {
+			Rule::default_moveto_builder(&state.banmen, state.part.sente_opponent_board)
+		} else {
+			Rule::default_moveto_builder(&state.banmen, state.part.sente_self_board)
+		};
+
+		ChecksMoveGenerator::generate_fu::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+		ChecksMoveGenerator::generate_ou::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+		ChecksMoveGenerator::generate_kyou::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+		ChecksMoveGenerator::generate_kei::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+		ChecksMoveGenerator::generate_gin::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+		ChecksMoveGenerator::generate_kin::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+		ChecksMoveGenerator::generate_kaku::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+		ChecksMoveGenerator::generate_hisha::<_,Self::AppendStrategy>(teban,state,&move_builder,mvs)?;
+
+		Ok(())
+	}
+
+	#[inline]
+	fn generate_drop(teban: Teban, state: &State, mc: &MochigomaCollections, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop(teban,state,mc,mvs)
+	}
+
+	#[inline]
+	fn generate_fu<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_fu::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_kyou<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_kyou::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_kei<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment,mvs: &mut impl MovePicker<LegalMove>)
+						  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_kei::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_gin<'a,B>(teban: Teban, state: &State, move_builder:&B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_gin::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_kin<'a,B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						  -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_kin::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_kaku<'a,B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						   -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_kaku::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_hisha<'a,B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+							-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_hisha::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_ou<'a,B>(teban: Teban, state: &State, move_builder: &B,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						 -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		ChecksMoveGenerator::generate_ou::<_,Self::AppendStrategy>(teban,state,move_builder,mvs)
+	}
+
+	#[inline]
+	fn generate_drop_fu(teban: Teban, state: &State, count: usize,_: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						-> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop_fu(teban,state,count,mvs)
+	}
+
+	#[inline]
+	fn generate_drop_kyou(teban: Teban, state: &State, count: usize, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						  -> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop_kyou(teban,state,count,mvs)
+	}
+
+	#[inline]
+	fn generate_drop_kei(teban: Teban, state: &State, count: usize, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>)
+						 -> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop_kei(teban,state,count,mvs)
+	}
+
+	#[inline]
+	fn generate_drop_gin(teban: Teban, state: &State, count: usize,
+						 shared_candidatebits: &mut BitBoard, _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop_gin(teban,state,count,shared_candidatebits,mvs)
+	}
+
+	#[inline]
+	fn generate_drop_kin(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
+						 _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop_kin(teban,state,count,shared_candidatebits,mvs)
+	}
+
+	#[inline]
+	fn generate_drop_kaku(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
+						  _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop_kaku(teban,state,count,shared_candidatebits,mvs)
+	}
+
+	#[inline]
+	fn generate_drop_hisha(teban: Teban, state: &State, count: usize, shared_candidatebits: &mut BitBoard,
+						   _: &mut Self::Environment, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
+		ChecksMoveGenerator::generate_drop_hisha(teban,state,count,shared_candidatebits,mvs)
 	}
 }
 pub struct AppendAll;
