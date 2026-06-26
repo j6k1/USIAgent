@@ -1674,7 +1674,7 @@ pub const BANMEN_START_POS:Banmen = Banmen([
 /// 指し手の列挙を定義するトレイト
 pub trait GenerateStrategy {
 	type Environment;
-	type AppendStrategy: AppendStrategy;
+	type AppendStrategy;
 
 	/// 盤面上の駒の指し手を生成する
 	///
@@ -2178,6 +2178,239 @@ pub trait AppendStrategy {
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
 	fn append_force_promotion_target_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+														move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+														-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+}
+/// 王手の生成時に利用されるバッファに追加される手を取捨選択する機能の実装を定義するトレイト
+pub trait ChecksAppendStrategy {
+	/// 先手の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+						  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+						  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+						 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+						 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_inverse_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+								  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+								  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+								 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+								 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の指し手を追加する(成れる可能性がある駒の場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+											 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+											 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する(成れる可能性がある駒の場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+											move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+											-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の指し手を追加する(成れる可能性がある駒の場合かつ逆向きのビットボードから追加する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_inverse_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+													 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+													 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の指し手を追加する(成れる可能性がある駒の場合かつ逆向きのビットボードから追加する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn apppend_inverse_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+													 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+													 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の歩の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_fu_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の香車の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_kyou_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の桂馬の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_kei_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の歩の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_fu_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の香車の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_kyou_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の桂馬の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_kei_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+							 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の不成を生成しない駒の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_force_promotion_target_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+												 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の不成を生成しない駒の指し手を追加する
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_force_promotion_target_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+												move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 先手の不成を生成しない駒の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_force_promotion_target_inverse_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+														 nari_check_mask: u128,
+														 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
+														 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
+	/// 後手の不成を生成しない駒の指し手を追加する(逆向きのビットボードを参照する場合の実装)
+	///
+	/// # Arguments
+	/// * `state` - 盤面の状態
+	/// * `from` - 移動元
+	/// * `candidatebits` - 手の候補のビットボード
+	/// * `nari_check_mask` - 成った場合のみ追加される手のビットボード
+	/// * `move_builder` - 指し手をバッファに追加するクロージャ
+	/// * `mvs` - 生成された指し手を格納するバッファ
+	///
+	fn append_force_promotion_target_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+														nari_check_mask: u128,
 														move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 														-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 }
@@ -7601,6 +7834,228 @@ impl AppendStrategy for AppendQuietsWithoutPawnPromotions {
 		Ok(())
 	}
 }
+pub struct ChecksForcePromotions;
+impl ChecksAppendStrategy for ChecksForcePromotions {
+	#[inline]
+	fn append_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+						   move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		AppendAll::append_sente(state,from,candidatebits,move_builder,mvs)
+	}
+
+	#[inline]
+	fn append_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+						  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		AppendAll::append_gote(state,from,candidatebits,move_builder,mvs)
+	}
+
+	#[inline]
+	fn append_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+											  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,nari_check_mask,0,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+											 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,nari_check_mask,0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_fu_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,nari_check_mask,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+				BANMEN_MASK >> 1,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_fu_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,nari_check_mask,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
+				BANMEN_MASK >> 1,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kyou_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+								move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,nari_check_mask,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,SENTE_KYOU_FORCE_PROMOTION_MASK,
+				true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kyou_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							   move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,nari_check_mask,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,GOTE_KYOU_FORCE_PROMOTION_MASK,
+				false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kei_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							   move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,nari_check_mask,DENY_MOVE_SENTE_KEI_MASK,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_kei_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+							  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,nari_check_mask,DENY_MOVE_GOTE_KEI_MASK,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_inverse_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+								   move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		AppendAll::append_inverse_sente(state,from,candidatebits,move_builder,mvs)
+	}
+
+	#[inline]
+	fn append_inverse_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+								  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		AppendAll::append_inverse_gote(state,from,candidatebits,move_builder,mvs)
+	}
+
+	#[inline]
+	fn append_inverse_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+													  nari_check_mask: u128,
+													  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
+				SENTE_NARI_MASK,nari_check_mask,0,0,true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn apppend_inverse_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+													  nari_check_mask: u128,
+													  move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
+				GOTE_NARI_MASK,nari_check_mask,0,0,false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+												  nari_check_mask: u128,
+												  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1,false,
+				move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+												 nari_check_mask: u128,
+												 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1, true,
+				move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_inverse_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+														  nari_check_mask: u128,
+														  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				SENTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1,
+				true,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+
+	#[inline]
+	fn append_force_promotion_target_inverse_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+														 nari_check_mask: u128,
+														 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
+		for p in candidatebits.iter() {
+			Rule::append_check_moves_from_banmen(
+				p,from,false,
+				GOTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1,
+				false,move_builder,mvs
+			);
+		}
+
+		Ok(())
+	}
+}
 /// オブジェクトの状態の検証用
 pub trait Validate {
 	/// 状態が正しければtrueを、そうでなければfalseを返す
@@ -9102,6 +9557,53 @@ impl Rule {
 			mvs.push(move_builder(from, to, true)).unwrap();
 
 			if (force_promotion_mask & to_mask == 0) && deny_move_mask & to_mask == 0 {
+				mvs.push(move_builder(from, to, false)).unwrap();
+			}
+		} else if nari || deny_move_mask & to_mask == 0 {
+			mvs.push(move_builder(from, to, false)).unwrap();
+		}
+	}
+
+	/// 王手をかける手をバッファに追加
+	///
+	/// # Arguments
+	/// * `m` - 盤面の左上を0,0とし、x * 9 + yで表される移動先の駒の位置。後手の手の場合は上下さかさまになっている
+	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
+	/// * `kind` - 移動する駒の種類
+	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `nari_check_mask` - ビットボードを用いて成る場合のみ王手になるか判定するためのマスク
+	/// * `nari` - 駒が成っているかどうか
+	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
+	/// * `inverse_position` - ビットボードを上下逆さにするか否か
+	/// * `move_builder` - LegalMoveを生成するためのコールバック
+	/// * `mvs` - 手を追加するバッファ
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義（通常,Rule::legal_moves_allの内部から呼び出される）
+	#[inline]
+	pub fn append_check_moves_from_banmen<F>(
+		m:Square,
+		from:u32,
+		nari:bool,
+		nari_mask:u128,
+		nari_check_mask:u128,
+		deny_move_mask:u128,
+		force_promotion_mask:u128,
+		inverse_position:bool,
+		move_builder:&F,
+		mvs:&mut impl MovePicker<LegalMove>
+	) where F: Fn(u32,u32,bool) -> LegalMove {
+		let to = m as u32;
+
+		let to = (!inverse_position as i32 * 80 - (80 - to as i32)).abs() as u32;
+
+		let to_mask = 1 << to;
+		let from_mask = 1 << from;
+
+		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
+			mvs.push(move_builder(from, to, true)).unwrap();
+
+			if (force_promotion_mask & to_mask == 0) &&
+				nari_check_mask & to_mask == 0 && deny_move_mask & to_mask == 0 {
 				mvs.push(move_builder(from, to, false)).unwrap();
 			}
 		} else if nari || deny_move_mask & to_mask == 0 {
