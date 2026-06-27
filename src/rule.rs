@@ -4887,7 +4887,7 @@ impl ChecksMoveGenerator {
 					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p);
 
 					AS::append_kyou_gote(
-						state, p, board & (rev_check_mask.reverse() | nari_check_mask),
+						state, 80 - p, board & (rev_check_mask.reverse() | nari_check_mask),
 						(rev_check_mask >> 1).into(),
 						(nari_check_mask >> 1).into(),
 						move_builder, mvs
