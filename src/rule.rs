@@ -4810,7 +4810,7 @@ impl ChecksMoveGenerator {
 				let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
 					state.part.sente_opponent_ou_position_board,
 					state.part.sente_self_board,state.part.sente_opponent_board
-				);
+				).reverse();
 
 				for p in (state.part.sente_kyou_board & !state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -4820,7 +4820,7 @@ impl ChecksMoveGenerator {
 						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
 						state.part.sente_self_board,state.part.sente_opponent_board,
 						state.part.gote_opponent_board,state.part.gote_self_board,
-					);
+					).reverse();
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
@@ -4832,8 +4832,8 @@ impl ChecksMoveGenerator {
 					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p) | rev_unpinning_check_mask;
 
 					AS::append_kyou_sente(
-						state, p, board & (rev_check_mask.reverse() | nari_check_mask),
-						(rev_check_mask >> 1).into(),
+						state, p, board & (rev_check_mask | nari_check_mask),
+						(rev_check_mask.reverse() >> 1).into(),
 						(nari_check_mask.reverse() >> 1).into(),
 						move_builder, mvs
 					)?;
@@ -4865,7 +4865,7 @@ impl ChecksMoveGenerator {
 				let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
 					state.part.gote_opponent_ou_position_board,
 					state.part.gote_self_board,state.part.gote_opponent_board
-				);
+				).reverse();
 
 				for p in (state.part.gote_kyou_board & !state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -4875,7 +4875,7 @@ impl ChecksMoveGenerator {
 						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
 						state.part.gote_self_board,state.part.gote_opponent_board,
 						state.part.sente_opponent_board,state.part.sente_self_board,
-					);
+					).reverse();
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
@@ -4887,8 +4887,8 @@ impl ChecksMoveGenerator {
 					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p) | rev_unpinning_check_mask;
 
 					AS::append_kyou_gote(
-						state, 80 - p, board & (rev_check_mask.reverse() | nari_check_mask),
-						(rev_check_mask.reverse() >> 1).into(),
+						state, 80 - p, board & (rev_check_mask | nari_check_mask),
+						(rev_check_mask >> 1).into(),
 						(nari_check_mask >> 1).into(),
 						move_builder, mvs
 					)?;
