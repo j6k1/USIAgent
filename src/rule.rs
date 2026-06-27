@@ -16219,9 +16219,10 @@ impl Rule {
 			let flip_self_occupied_board = flip_self_occupied_board ^ from_mask.reverse();
 
 			if self_kyou_board != 0 || self_hisha_board != 0 {
-				let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
 					self_occupied_board,
 					opponent_occupied_board,
+					self_occupied_board | opponent_occupied_board,
 					p
 				);
 
@@ -16231,9 +16232,10 @@ impl Rule {
 			}
 
 			if self_kaku_board != 0 {
-				let m = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+				let m = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
 					flip_self_occupied_board,
 					flip_opponent_occupied_board,
+					flip_self_occupied_board | flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
@@ -16241,9 +16243,10 @@ impl Rule {
 					return !m;
 				}
 
-				let m = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+				let m = Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
 					flip_self_occupied_board,
 					flip_opponent_occupied_board,
+					flip_self_occupied_board | flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
@@ -16251,9 +16254,10 @@ impl Rule {
 					return !m;
 				}
 
-				let m = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+				let m = Rule::gen_candidate_bits_by_kaku_to_right_bottom_with_exclude(
 					self_occupied_board,
 					opponent_occupied_board,
+					self_occupied_board | opponent_occupied_board,
 					p
 				);
 
@@ -16261,9 +16265,10 @@ impl Rule {
 					return !m;
 				}
 
-				let m = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+				let m = Rule::gen_candidate_bits_by_kaku_to_right_top_with_exclude(
 					self_occupied_board,
 					opponent_occupied_board,
+					self_occupied_board | opponent_occupied_board,
 					p
 				);
 
@@ -16273,9 +16278,10 @@ impl Rule {
 			}
 
 			if self_hisha_board != 0 {
-				let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+				let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_with_exclude(
 					flip_self_occupied_board,
 					flip_opponent_occupied_board,
+					flip_self_occupied_board | flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
@@ -16283,9 +16289,10 @@ impl Rule {
 					return !m;
 				}
 
-				let m = Rule::gen_candidate_bits_by_hisha_to_right_include(
-					opponent_occupied_board,
+				let m = Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
 					self_occupied_board,
+					opponent_occupied_board,
+					self_occupied_board | opponent_occupied_board,
 					p
 				);
 
@@ -16293,9 +16300,10 @@ impl Rule {
 					return !m;
 				}
 
-				let m = Rule::gen_candidate_bits_by_hisha_to_right_include(
+				let m = Rule::gen_candidate_bits_by_hisha_to_right_with_exclude(
 					flip_self_occupied_board,
 					flip_opponent_occupied_board,
+					flip_self_occupied_board | flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
