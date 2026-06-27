@@ -33,6 +33,12 @@ impl From<BitBoard> for (u64,u64) {
         unsafe { (*bitboard.bitboard.get_unchecked(0), *bitboard.bitboard.get_unchecked(1)) }
     }
 }
+impl From<BitBoard> for u128 {
+    #[inline]
+    fn from(bitboard: BitBoard) -> Self {
+        unsafe { bitboard.merged_bitboard }
+    }
+}
 impl BitOr for BitBoard {
     type Output = Self;
 

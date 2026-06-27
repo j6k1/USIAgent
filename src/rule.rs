@@ -1627,6 +1627,8 @@ const BOTTOM_MASK: u128 = 0b000000111_000000111_000000111;
 const RIGHT_MASK: u128 = 0b000000000_111111111_111111111;
 const SENTE_NARI_MASK: u128 = 0b000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111_000000111;
 const GOTE_NARI_MASK: u128 = 0b111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000_111000000;
+const NARI_MASK: u128 = SENTE_NARI_MASK;
+const INV_NARI_MASK: u128 = GOTE_NARI_MASK;
 const DENY_MOVE_SENTE_FU_AND_KYOU_MASK: u128 = 0b000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
 const DENY_MOVE_SENTE_KEI_MASK: u128 = 0b000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011_000000011;
 const DENY_MOVE_GOTE_FU_AND_KYOU_MASK: u128 = 0b100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000_100000000;
@@ -4653,11 +4655,11 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_fu<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_fu<'a,B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK),p as u32);
+			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK),o as u32);
 
 				for p in (state.part.sente_fu_board & !state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -4671,14 +4673,19 @@ impl ChecksMoveGenerator {
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
+					let candidates = Rule::gen_candidate_bits(
+						teban,state.part.sente_self_board,p,SFu
+					);
+
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+
 					AS::append_fu_sente(state, p,
-										Rule::gen_candidate_bits(
-											teban,state.part.sente_self_board,p,SFu
-										) & rev_check_mask,
+										candidates & (rev_check_mask | nari_check_mask),
+										nari_check_mask.into(),
 										move_builder, mvs)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),o as u32);
 
 				for p in (state.part.sente_fu_board & state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -4700,8 +4707,8 @@ impl ChecksMoveGenerator {
 				}
 			}
 		} else {
-			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK), p as u32);
+			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(FU_REV_MASK), o as u32);
 
 				for p in (state.part.gote_fu_board & !state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -4715,14 +4722,19 @@ impl ChecksMoveGenerator {
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
+					let candidates = Rule::gen_candidate_bits(
+						teban, state.part.gote_self_board, 80 - p, GFu
+					);
+
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+
 					AS::append_fu_gote(state, 80 - p,
-									   Rule::gen_candidate_bits(
-										   teban, state.part.gote_self_board, 80 - p, GFu
-									   ) & rev_check_mask,
+									   candidates & (rev_check_mask | nari_check_mask),
+									   nari_check_mask.into(),
 									   move_builder, mvs)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK), p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK), o as u32);
 
 				for p in (state.part.gote_fu_board & state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -4763,10 +4775,10 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_kyou<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_kyou<'a,B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
 				let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
 					state.part.sente_opponent_ou_position_board,
 					state.part.sente_self_board,state.part.sente_opponent_board
@@ -4787,12 +4799,16 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board, 80 - p
-					) & rev_check_mask.reverse();
+					);
 
-					AS::append_kyou_sente(state, p, board, move_builder, mvs)?;
+					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p,board);
+
+					AS::append_kyou_sente(
+						state, p, board & (rev_check_mask.reverse() | nari_check_mask), nari_check_mask.into(), move_builder, mvs
+					)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),o as u32);
 
 				for p in (state.part.sente_kyou_board & state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -4814,7 +4830,7 @@ impl ChecksMoveGenerator {
 				}
 			}
 		} else {
-			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
 				let rev_check_mask = Rule::gen_kyou_reverse_check_mask(
 					state.part.gote_opponent_ou_position_board,
 					state.part.gote_self_board,state.part.gote_opponent_board
@@ -4835,12 +4851,16 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board, 80 - p
-					) & rev_check_mask.reverse();
+					);
 
-					AS::append_kyou_gote(state, p, board, move_builder, mvs)?;
+					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p,board);
+
+					AS::append_kyou_gote(
+						state, p, board & (rev_check_mask.reverse() | nari_check_mask), nari_check_mask.into(), move_builder, mvs
+					)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),o as u32);
 
 				for p in (state.part.gote_kyou_board & state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -4880,11 +4900,11 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_kei<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_kei<'a,B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KEI_REV_MASK),p as u32);
+			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_kei_rev_mask(o as u32);
 
 				for p in (state.part.sente_kei_board & !state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -4898,13 +4918,19 @@ impl ChecksMoveGenerator {
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
+					let candidates = Rule::gen_candidate_bits(
+						teban,state.part.sente_self_board,p,SKei
+					);
+
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates);
+
 					AS::append_kei_sente(state, p,
-										 Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SKei
-										 ) & rev_check_mask,
+										 candidates & (rev_check_mask | nari_check_mask),
+										 nari_check_mask.into(),
 										 move_builder, mvs)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),o as u32);
 
 				for p in (state.part.sente_kei_board & state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -4925,8 +4951,8 @@ impl ChecksMoveGenerator {
 				}
 			}
 		} else {
-			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KEI_REV_MASK),p as u32);
+			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_kei_rev_mask(o as u32);
 
 				for p in (state.part.gote_kei_board & !state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -4940,13 +4966,19 @@ impl ChecksMoveGenerator {
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
+					let candidates = Rule::gen_candidate_bits(
+						teban,state.part.gote_self_board,80 - p,GKei
+					);
+
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates);
+
 					AS::append_kei_gote(state, 80 - p,
-										Rule::gen_candidate_bits(teban,state.part.gote_self_board,80 - p,GKei
-										) & rev_check_mask,
+										candidates & (rev_check_mask | nari_check_mask),
+										nari_check_mask.into(),
 										move_builder, mvs)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),o as u32);
 
 				for p in (state.part.gote_kei_board & state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -4987,11 +5019,11 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_gin<'a,B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_gin<'a,B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder:&B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),p as u32);
+			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),o as u32);
 
 				for p in (state.part.sente_gin_board & !state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -5005,13 +5037,19 @@ impl ChecksMoveGenerator {
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
+					let candidates = Rule::gen_candidate_bits(
+						teban,state.part.sente_self_board,p,SGin
+					);
+
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates);
+
 					AS::append_sente_possible_promotion(state, p,
-														Rule::gen_candidate_bits(teban,state.part.sente_self_board,p,SGin
-														) & rev_check_mask,
+														candidates & (rev_check_mask | nari_check_mask),
+														nari_check_mask.into(),
 														move_builder, mvs)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),o as u32);
 
 				for p in (state.part.sente_gin_board & state.part.sente_nari_board).iter() {
 					let p = p as u32;
@@ -5032,8 +5070,8 @@ impl ChecksMoveGenerator {
 				}
 			}
 		} else {
-			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),p as u32);
+			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(GIN_REV_MASK),o as u32);
 
 				for p in (state.part.gote_gin_board & !state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -5047,14 +5085,19 @@ impl ChecksMoveGenerator {
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
+					let candidates = Rule::gen_candidate_bits(
+						teban,state.part.gote_self_board,80 - p,GGin
+					);
+
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates);
+
 					AS::append_gote_possible_promotion(state, 80 - p,
-													   Rule::gen_candidate_bits(
-														   teban,state.part.gote_self_board,80 - p,GGin
-													   ) & rev_check_mask,
+													   candidates & (rev_check_mask | nari_check_mask),
+													   nari_check_mask.into(),
 													   move_builder, mvs)?;
 				}
 
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
+				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),o as u32);
 
 				for p in (state.part.gote_gin_board & state.part.gote_nari_board).reverse().iter() {
 					let p = p as u32;
@@ -5094,7 +5137,7 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_kin<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_kin<'a, B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												  -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
@@ -5164,11 +5207,14 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_kaku<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_kaku<'a, B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												   -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
 				for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
+					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32);
+					let inv_nari_check_mask = nari_check_mask.reverse();
+
 					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
 						state.part.sente_opponent_ou_position_board,
 						p,state.part.sente_self_board,state.part.sente_opponent_board,
@@ -5184,35 +5230,35 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, inv_nari_check_mask.into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board, nari_check_mask.into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
-					) & rev_check_mask;
+					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, inv_nari_check_mask.into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board, nari_check_mask.into(), move_builder, mvs)?;
 				}
 
 				for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
@@ -5238,28 +5284,28 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_inverse_sente(state, p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_sente(state, p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_inverse_sente(state, p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_sente(state, p, board, move_builder, mvs)?;
 
 					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
 
@@ -5274,6 +5320,9 @@ impl ChecksMoveGenerator {
 		} else {
 			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
 				for p in (state.part.gote_kaku_board & !state.part.gote_nari_board).reverse().iter() {
+					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32);
+					let inv_nari_check_mask = nari_check_mask.reverse();
+
 					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,
 						p,state.part.gote_self_board,state.part.gote_opponent_board,
@@ -5289,35 +5338,43 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_gote(
+						state, 80 - p, board, inv_nari_check_mask.into(), move_builder, mvs
+					)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_gote(
+						state, 80 - p, board, nari_check_mask.into(), move_builder, mvs
+					)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_gote(
+						state, 80 - p, board, inv_nari_check_mask.into(), move_builder, mvs
+					)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_gote(
+						state, 80 - p, board, nari_check_mask.into(), move_builder, mvs
+					)?;
 				}
 
 				for p in (state.part.gote_kaku_board & state.part.gote_nari_board).reverse().iter() {
@@ -5343,28 +5400,28 @@ impl ChecksMoveGenerator {
 						state.part.sente_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
 
@@ -5395,11 +5452,14 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_hisha<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_hisha<'a, B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 													-> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
 				for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
+					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32);
+					let inv_nari_check_mask = nari_check_mask.reverse();
+
 					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
 						state.part.sente_opponent_ou_position_board,
 						p,state.part.sente_self_board,state.part.sente_opponent_board,
@@ -5415,7 +5475,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
 
 					let p = p as u32;
 
@@ -5424,28 +5484,28 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, inv_nari_check_mask.into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board, p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board, nari_check_mask.into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, inv_nari_check_mask.into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board, nari_check_mask.into(), move_builder, mvs)?;
 				}
 
 				for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
@@ -5473,28 +5533,28 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_inverse_sente(state, p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board, p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_sente(state, p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, move_builder, mvs)?;
+					AS::append_inverse_sente(state, p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, move_builder, mvs)?;
+					AS::append_sente(state, p, board, move_builder, mvs)?;
 
 					let p = p as u32;
 
@@ -5510,6 +5570,9 @@ impl ChecksMoveGenerator {
 		} else {
 			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
 				for p in (state.part.gote_hisha_board & !state.part.gote_nari_board).reverse().iter() {
+					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32);
+					let inv_nari_check_mask = nari_check_mask.reverse();
+
 					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,
 						p,state.part.gote_self_board,state.part.gote_opponent_board,
@@ -5525,7 +5588,7 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
 
 					let p = p as u32;
 
@@ -5534,28 +5597,36 @@ impl ChecksMoveGenerator {
 						state.part.sente_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_gote(
+						state, 80 - p, board, inv_nari_check_mask.into(), move_builder, mvs
+					)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board, p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_gote(
+						state, 80 - p, board, nari_check_mask.into(),move_builder, mvs
+					)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_gote(
+						state, 80 - p, board, inv_nari_check_mask.into(), move_builder, mvs
+					)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_force_promotion_target_gote(
+						state, 80 - p, board, nari_check_mask.into(), move_builder, mvs
+					)?;
 				}
 
 				for p in (state.part.gote_hisha_board & state.part.gote_nari_board).reverse().iter() {
@@ -5583,27 +5654,27 @@ impl ChecksMoveGenerator {
 						state.part.sente_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board, p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_gote(state, 80 - p, board, move_builder, mvs)?;
+					AS::append_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let p = p as u32;
 
@@ -5636,7 +5707,7 @@ impl ChecksMoveGenerator {
 	///
 	/// [`LimitSizeError`]: ../error/struct.LimitSizeError.html
 	#[inline]
-	pub fn generate_ou<'a, B,AS: AppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
+	pub fn generate_ou<'a, B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
@@ -6905,7 +6976,7 @@ impl GenerateStrategy for Evasions {
 pub struct Checks;
 impl GenerateStrategy for Checks {
 	type Environment = ();
-	type AppendStrategy = ForcePromotions;
+	type AppendStrategy = ChecksForcePromotions;
 
 	#[inline]
 	fn generate_piece(teban: Teban, state: &State, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> {
@@ -9186,7 +9257,6 @@ impl Rule {
 		r
 	}
 
-
 	/// pin駒の移動に伴って消滅する先手の飛車の王に対する効きのビットボードを生成
 	/// # Arguments
 	/// * `state` - 盤面の状態
@@ -9285,7 +9355,6 @@ impl Rule {
 		r
 	}
 
-
 	/// pin駒の移動に伴って消滅する先手の香車の後手の王に対する効きのビットボードを生成
 	/// # Arguments
 	/// * `state` - 盤面の状態
@@ -9321,7 +9390,6 @@ impl Rule {
 
 		r
 	}
-
 
 	/// pin駒の移動に伴って消滅する先手の角の王に対する効きのビットボードを生成
 	/// # Arguments
@@ -9421,7 +9489,6 @@ impl Rule {
 		r
 	}
 
-
 	/// pin駒の移動に伴って消滅する先手の飛車の王に対する効きのビットボードを生成
 	/// # Arguments
 	/// * `state` - 盤面の状態
@@ -9518,6 +9585,76 @@ impl Rule {
 		}
 
 		r
+	}
+
+	/// 駒が成る手のみで王手になる手を抽出するマスクを生成する
+	///
+	/// # Arguments
+	///
+	/// * `ou_position` - 王の位置
+	/// * `from` - 駒の移動元
+	/// * `candidatebits` - 駒が成らないときに王手になる移動先のビットボード
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_nari_check_mask(ou_position:u32,from:u32,candidatebits:BitBoard) -> BitBoard {
+		if NARI_MASK & (1 << (from + 1)) != 0 {
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position) & !candidatebits
+		} else {
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position) & NARI_MASK & !candidatebits
+		}
+	}
+
+	/// 駒が成る手のみで王手になる手を抽出する生成された手の座標系が手番と逆側の場合のマスクを生成する
+	///
+	/// # Arguments
+	///
+	/// * `ou_position` - 王の位置
+	/// * `from` - 駒の移動元
+	/// * `candidatebits` - 駒が成らないときに王手になる移動先のビットボード
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_inv_nari_check_mask(ou_position:u32,from:u32,candidatebits:BitBoard) -> BitBoard {
+		if INV_NARI_MASK & (1 << (from + 1)) != 0 {
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position).reverse() & !candidatebits
+		} else {
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position).reverse() & INV_NARI_MASK & !candidatebits
+		}
+	}
+
+	/// 角の駒が成る手のみで王手になる手を抽出するマスクを生成する
+	///
+	/// # Arguments
+	///
+	/// * `ou_position` - 王の位置
+	/// * `from` - 駒の移動元
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_kaku_nari_check_mask(ou_position:u32,from:u32) -> BitBoard {
+		if NARI_MASK & (1 << (from + 1)) != 0 {
+			Self::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),ou_position)
+		} else {
+			Self::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),ou_position) & NARI_MASK
+		}
+	}
+
+	/// 飛車の駒が成る手のみで王手になる手を抽出するマスクを生成する
+	///
+	/// # Arguments
+	///
+	/// * `ou_position` - 王の位置
+	/// * `from` - 駒の移動元
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_hisha_nari_check_mask(ou_position:u32,from:u32) -> BitBoard {
+		if INV_NARI_MASK & (1 << (from + 1)) != 0 {
+			Self::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),ou_position)
+		} else {
+			Self::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),ou_position) & NARI_MASK
+		}
 	}
 
 	/// 合法手をバッファに追加
