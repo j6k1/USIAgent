@@ -16094,7 +16094,7 @@ impl Rule {
 		flip_self_occupied_board:BitBoard,
 		flip_opponent_occupied_board:BitBoard,
 	) -> BitBoard {
-		if pin_board & (1 << (from + 1)) != 0 {
+		if pin_board & (1 << (from + 1)) == 0 {
 			return BitBoard::default();
 		} else if let Some(p) = ou_position_board.iter().next() {
 			let p = p as u32;
