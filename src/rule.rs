@@ -5256,10 +5256,6 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board
 					);
 
-					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32) | rev_check_mask;
-
-					let p = p as u32;
-
 					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
 						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
 						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
@@ -5268,6 +5264,10 @@ impl ChecksMoveGenerator {
 					);
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32) | rev_check_mask;
+
+					let p = p as u32;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.gote_opponent_board,
@@ -5373,10 +5373,6 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board
 					);
 
-					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32) | rev_check_mask;
-
-					let p = p as u32;
-
 					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
 						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
@@ -5385,6 +5381,10 @@ impl ChecksMoveGenerator {
 					);
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32) | rev_check_mask;
+
+					let p = p as u32;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_opponent_board,
@@ -5519,10 +5519,6 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board
 					);
 
-					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32) | rev_check_mask;
-
-					let p = p as u32;
-
 					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
 						state.part.sente_opponent_ou_position_board,state.part.sente_pin_board,
 						p,state.part.sente_kyou_board,state.part.sente_kaku_board,state.part.sente_hisha_board,
@@ -5531,6 +5527,10 @@ impl ChecksMoveGenerator {
 					);
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32) | rev_check_mask;
+
+					let p = p as u32;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_opponent_board,
@@ -5635,10 +5635,6 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board
 					);
 
-					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32) | rev_check_mask;
-
-					let p = p as u32;
-
 					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,state.part.gote_pin_board.reverse(),
 						p,state.part.gote_kyou_board,state.part.gote_kaku_board,state.part.gote_hisha_board,
@@ -5647,6 +5643,10 @@ impl ChecksMoveGenerator {
 					);
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+
+					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32) | rev_check_mask;
+
+					let p = p as u32;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_opponent_board,
