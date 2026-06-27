@@ -5265,7 +5265,7 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_ou_position_board,
 						p,state.part.sente_self_board,state.part.sente_opponent_board,
 						state.part.gote_opponent_board,state.part.gote_self_board
-					);
+					) | Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
 
 					let p = p as u32;
 
@@ -5305,8 +5305,6 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_sente(state, p, board, move_builder, mvs)?;
-
-					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
 
 					AS::append_sente(state, p,
 									 Rule::gen_candidate_bits(
@@ -5380,7 +5378,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_ou_position_board,
 						p,state.part.gote_self_board,state.part.gote_opponent_board,
 						state.part.sente_opponent_board,state.part.sente_self_board
-					);
+					) | Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
 
 					let p = p as u32;
 
@@ -5420,8 +5418,6 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_gote(state, 80 - p, board, move_builder, mvs)?;
-
-					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_KAKU_REV_MASK),o as u32);
 
 					AS::append_gote(state, 80 - p,
 									Rule::gen_candidate_bits(
@@ -5474,8 +5470,6 @@ impl ChecksMoveGenerator {
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
 
-					let p = p as u32;
-
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board, 80 - p
@@ -5510,7 +5504,7 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_ou_position_board,
 						p,state.part.sente_self_board,state.part.sente_opponent_board,
 						state.part.gote_opponent_board,state.part.gote_self_board
-					);
+					) | Rule::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),o as u32);
 
 					let p = p as u32;
 
@@ -5522,8 +5516,6 @@ impl ChecksMoveGenerator {
 					);
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
-
-					let p = p as u32;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_opponent_board,
@@ -5553,10 +5545,6 @@ impl ChecksMoveGenerator {
 
 					AS::append_sente(state, p, board, move_builder, mvs)?;
 
-					let p = p as u32;
-
-					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),o as u32);
-
 					AS::append_sente(state, p,
 									 Rule::gen_candidate_bits(
 										 Teban::Sente,state.part.sente_self_board,p,SHishaN
@@ -5585,8 +5573,6 @@ impl ChecksMoveGenerator {
 					);
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
-
-					let p = p as u32;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_opponent_board,
@@ -5630,7 +5616,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_ou_position_board,
 						p,state.part.gote_self_board,state.part.gote_opponent_board,
 						state.part.sente_opponent_board,state.part.sente_self_board
-					);
+					) | Rule::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),o as u32);
 
 					let p = p as u32;
 
@@ -5642,8 +5628,6 @@ impl ChecksMoveGenerator {
 					);
 
 					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
-
-					let p = p as u32;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_opponent_board,
@@ -5672,10 +5656,6 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_gote(state, 80 - p, board, move_builder, mvs)?;
-
-					let p = p as u32;
-
-					let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),o as u32);
 
 					AS::append_gote(state, 80 - p,
 									Rule::gen_candidate_bits(
