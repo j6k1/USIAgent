@@ -4730,7 +4730,7 @@ impl ChecksMoveGenerator {
 
 					AS::append_fu_gote(state, 80 - p,
 									   candidates & (rev_check_mask | nari_check_mask),
-									   (nari_check_mask >> 1).into(),
+									   (nari_check_mask.reverse() >> 1).into(),
 									   move_builder, mvs)?;
 				}
 
@@ -4804,7 +4804,7 @@ impl ChecksMoveGenerator {
 					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p,board & rev_check_mask.reverse());
 
 					AS::append_kyou_sente(
-						state, p, board & (rev_check_mask.reverse() | nari_check_mask), (nari_check_mask >> 1).into(), move_builder, mvs
+						state, p, board & (rev_check_mask.reverse() | nari_check_mask), (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
 					)?;
 				}
 
@@ -4974,7 +4974,7 @@ impl ChecksMoveGenerator {
 
 					AS::append_kei_gote(state, 80 - p,
 										candidates & (rev_check_mask | nari_check_mask),
-										(nari_check_mask >> 1).into(),
+										(nari_check_mask.reverse() >> 1).into(),
 										move_builder, mvs)?;
 				}
 
@@ -5093,7 +5093,7 @@ impl ChecksMoveGenerator {
 
 					AS::append_gote_possible_promotion(state, 80 - p,
 													   candidates & (rev_check_mask | nari_check_mask),
-													   (nari_check_mask >> 1).into(),
+													   (nari_check_mask.reverse() >> 1).into(),
 													   move_builder, mvs)?;
 				}
 
@@ -5236,7 +5236,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_self_board,
@@ -5250,7 +5250,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_self_board,
@@ -5351,7 +5351,7 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(), move_builder, mvs
+						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
@@ -5369,7 +5369,7 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(), move_builder, mvs
+						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
 					)?;
 				}
 
@@ -5475,7 +5475,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_self_board,
@@ -5489,7 +5489,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_self_board,
@@ -5589,7 +5589,7 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(),move_builder, mvs
+						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(),move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
@@ -5607,7 +5607,7 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(), move_builder, mvs
+						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
 					)?;
 				}
 
