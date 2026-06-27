@@ -4703,7 +4703,7 @@ impl ChecksMoveGenerator {
 						teban,state.part.sente_self_board,p,SFu
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p) | rev_unpinning_check_mask;
 
 					AS::append_fu_sente(state, p,
 										candidates & (rev_check_mask | nari_check_mask),
@@ -4753,7 +4753,7 @@ impl ChecksMoveGenerator {
 						teban, state.part.gote_self_board, 80 - p, GFu
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p) | rev_unpinning_check_mask;
 
 					AS::append_fu_gote(state, 80 - p,
 									   candidates & (rev_check_mask | nari_check_mask),
@@ -4829,7 +4829,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board, 80 - p
 					);
 
-					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p);
+					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p) | rev_unpinning_check_mask;
 
 					AS::append_kyou_sente(
 						state, p, board & (rev_check_mask.reverse() | nari_check_mask),
@@ -4884,7 +4884,7 @@ impl ChecksMoveGenerator {
 						state.part.sente_self_board, 80 - p
 					);
 
-					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p);
+					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p) | rev_unpinning_check_mask;
 
 					AS::append_kyou_gote(
 						state, 80 - p, board & (rev_check_mask.reverse() | nari_check_mask),
@@ -4956,7 +4956,7 @@ impl ChecksMoveGenerator {
 						teban,state.part.sente_self_board,p,SKei
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p) | rev_unpinning_check_mask;
 
 					AS::append_kei_sente(state, p,
 										 candidates & (rev_check_mask | nari_check_mask),
@@ -5005,7 +5005,7 @@ impl ChecksMoveGenerator {
 						teban,state.part.gote_self_board,80 - p,GKei
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p) | rev_unpinning_check_mask;
 
 					AS::append_kei_gote(state, 80 - p,
 										candidates & (rev_check_mask | nari_check_mask),
@@ -5077,7 +5077,7 @@ impl ChecksMoveGenerator {
 						teban,state.part.sente_self_board,p,SGin
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p) | rev_unpinning_check_mask;
 
 					AS::append_sente_possible_promotion(state, p,
 														candidates & (rev_check_mask | nari_check_mask),
@@ -5126,7 +5126,7 @@ impl ChecksMoveGenerator {
 						teban,state.part.gote_self_board,80 - p,GGin
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p) | rev_unpinning_check_mask;
 
 					AS::append_gote_possible_promotion(state, 80 - p,
 													   candidates & (rev_check_mask | nari_check_mask),
@@ -5771,7 +5771,7 @@ impl ChecksMoveGenerator {
 	pub fn generate_ou<'a, B,AS: ChecksAppendStrategy>(teban: Teban, state: &State, move_builder: &B,mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
-			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
+			if let Some(_) = state.part.sente_opponent_ou_position_board.iter().next() {
 				for p in state.part.gote_opponent_ou_position_board.reverse().iter() {
 					let p = p as u32;
 
@@ -5792,7 +5792,7 @@ impl ChecksMoveGenerator {
 				}
 			}
 		} else {
-			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
+			if let Some(_) = state.part.gote_opponent_ou_position_board.iter().next() {
 				for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
 					let p = p as u32;
 
