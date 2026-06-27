@@ -4833,7 +4833,7 @@ impl ChecksMoveGenerator {
 
 					AS::append_kyou_sente(
 						state, p, board & (rev_check_mask.reverse() | nari_check_mask),
-						(rev_check_mask.reverse() >> 1).into(),
+						(rev_check_mask >> 1).into(),
 						(nari_check_mask.reverse() >> 1).into(),
 						move_builder, mvs
 					)?;
@@ -4888,7 +4888,7 @@ impl ChecksMoveGenerator {
 
 					AS::append_kyou_gote(
 						state, 80 - p, board & (rev_check_mask.reverse() | nari_check_mask),
-						(rev_check_mask >> 1).into(),
+						(rev_check_mask.reverse() >> 1).into(),
 						(nari_check_mask >> 1).into(),
 						move_builder, mvs
 					)?;
