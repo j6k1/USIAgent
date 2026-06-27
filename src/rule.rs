@@ -2243,7 +2243,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+											 rev_check_mask: u128,
+											 nari_check_mask: u128,
 											 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 											 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 後手の指し手を追加する(成れる可能性がある駒の場合の実装)
@@ -2256,7 +2258,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+											rev_check_mask: u128,
+											nari_check_mask: u128,
 											move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 											-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 先手の指し手を追加する(成れる可能性がある駒の場合かつ逆向きのビットボードから追加する場合の実装)
@@ -2269,7 +2273,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_inverse_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_inverse_sente_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+													 rev_check_mask: u128,
+													 nari_check_mask: u128,
 													 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 													 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 後手の指し手を追加する(成れる可能性がある駒の場合かつ逆向きのビットボードから追加する場合の実装)
@@ -2282,7 +2288,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn apppend_inverse_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn apppend_inverse_gote_possible_promotion<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+													 rev_check_mask: u128,
+													 nari_check_mask: u128,
 													 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 													 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 先手の歩の指し手を追加する
@@ -2294,7 +2302,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_fu_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_fu_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							 rev_check_mask: u128,
+							 nari_check_mask: u128,
 							 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 先手の香車の指し手を追加する
@@ -2307,7 +2317,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_kyou_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kyou_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							   rev_check_mask: u128,
+							   nari_check_mask: u128,
 							   move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							   -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 先手の桂馬の指し手を追加する
@@ -2320,7 +2332,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_kei_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kei_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							  rev_check_mask: u128,
+							  nari_check_mask: u128,
 							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 後手の歩の指し手を追加する
@@ -2332,7 +2346,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_fu_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_fu_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							rev_check_mask: u128,
+							nari_check_mask: u128,
 							move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 後手の香車の指し手を追加する
@@ -2345,7 +2361,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_kyou_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kyou_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							  rev_check_mask: u128,
+							  nari_check_mask: u128,
 							  move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							  -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 後手の桂馬の指し手を追加する
@@ -2358,7 +2376,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_kei_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kei_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+							 rev_check_mask: u128,
+							 nari_check_mask: u128,
 							 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 							 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 先手の不成を生成しない駒の指し手を追加する
@@ -2371,7 +2391,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_force_promotion_target_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_force_promotion_target_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+												 rev_check_mask: u128,
+												 nari_check_mask: u128,
 												 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 												 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 後手の不成を生成しない駒の指し手を追加する
@@ -2384,7 +2406,9 @@ pub trait ChecksAppendStrategy {
 	/// * `move_builder` - 指し手をバッファに追加するクロージャ
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
-	fn append_force_promotion_target_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_force_promotion_target_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+												rev_check_mask: u128,
+												nari_check_mask: u128,
 												move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 												-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
 	/// 先手の不成を生成しない駒の指し手を追加する(逆向きのビットボードを参照する場合の実装)
@@ -2398,6 +2422,7 @@ pub trait ChecksAppendStrategy {
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
 	fn append_force_promotion_target_inverse_sente<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+														 rev_check_mask: u128,
 														 nari_check_mask: u128,
 														 move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 														 -> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
@@ -2412,6 +2437,7 @@ pub trait ChecksAppendStrategy {
 	/// * `mvs` - 生成された指し手を格納するバッファ
 	///
 	fn append_force_promotion_target_inverse_gote<'a,B>(state: &State, from: u32, candidatebits: BitBoard,
+														rev_check_mask: u128,
 														nari_check_mask: u128,
 														move_builder:&B, mvs: &mut impl MovePicker<LegalMove>)
 														-> Result<(), LimitSizeError> where B:  Fn(u32,u32,bool) -> LegalMove + 'a;
@@ -4677,10 +4703,11 @@ impl ChecksMoveGenerator {
 						teban,state.part.sente_self_board,p,SFu
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
 
 					AS::append_fu_sente(state, p,
 										candidates & (rev_check_mask | nari_check_mask),
+										(rev_check_mask >> 1).into(),
 										(nari_check_mask >> 1).into(),
 										move_builder, mvs)?;
 				}
@@ -4726,10 +4753,11 @@ impl ChecksMoveGenerator {
 						teban, state.part.gote_self_board, 80 - p, GFu
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
 
 					AS::append_fu_gote(state, 80 - p,
 									   candidates & (rev_check_mask | nari_check_mask),
+									   (rev_check_mask.reverse() >> 1).into(),
 									   (nari_check_mask.reverse() >> 1).into(),
 									   move_builder, mvs)?;
 				}
@@ -4801,10 +4829,13 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board, 80 - p
 					);
 
-					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p,board & rev_check_mask.reverse());
+					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p);
 
 					AS::append_kyou_sente(
-						state, p, board & (rev_check_mask.reverse() | nari_check_mask), (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
+						state, p, board & (rev_check_mask.reverse() | nari_check_mask),
+						(rev_check_mask.reverse() >> 1).into(),
+						(nari_check_mask.reverse() >> 1).into(),
+						move_builder, mvs
 					)?;
 				}
 
@@ -4853,10 +4884,13 @@ impl ChecksMoveGenerator {
 						state.part.sente_self_board, 80 - p
 					);
 
-					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p,board & rev_check_mask.reverse());
+					let nari_check_mask = Rule::gen_inv_nari_check_mask(o as u32,80 - p);
 
 					AS::append_kyou_gote(
-						state, p, board & (rev_check_mask.reverse() | nari_check_mask), (nari_check_mask >> 1).into(), move_builder, mvs
+						state, p, board & (rev_check_mask.reverse() | nari_check_mask),
+						(rev_check_mask >> 1).into(),
+						(nari_check_mask >> 1).into(),
+						move_builder, mvs
 					)?;
 				}
 
@@ -4922,10 +4956,11 @@ impl ChecksMoveGenerator {
 						teban,state.part.sente_self_board,p,SKei
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
 
 					AS::append_kei_sente(state, p,
 										 candidates & (rev_check_mask | nari_check_mask),
+										 (rev_check_mask >> 1).into(),
 										 (nari_check_mask >> 1).into(),
 										 move_builder, mvs)?;
 				}
@@ -4970,10 +5005,11 @@ impl ChecksMoveGenerator {
 						teban,state.part.gote_self_board,80 - p,GKei
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
 
 					AS::append_kei_gote(state, 80 - p,
 										candidates & (rev_check_mask | nari_check_mask),
+										(rev_check_mask.reverse() >> 1).into(),
 										(nari_check_mask.reverse() >> 1).into(),
 										move_builder, mvs)?;
 				}
@@ -5041,10 +5077,11 @@ impl ChecksMoveGenerator {
 						teban,state.part.sente_self_board,p,SGin
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
 
 					AS::append_sente_possible_promotion(state, p,
 														candidates & (rev_check_mask | nari_check_mask),
+														(rev_check_mask >> 1).into(),
 														(nari_check_mask >> 1).into(),
 														move_builder, mvs)?;
 				}
@@ -5089,10 +5126,11 @@ impl ChecksMoveGenerator {
 						teban,state.part.gote_self_board,80 - p,GGin
 					);
 
-					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p,candidates & rev_check_mask);
+					let nari_check_mask = Rule::gen_nari_check_mask(o as u32,p);
 
 					AS::append_gote_possible_promotion(state, 80 - p,
 													   candidates & (rev_check_mask | nari_check_mask),
+													   (rev_check_mask.reverse() >> 1).into(),
 													   (nari_check_mask.reverse() >> 1).into(),
 													   move_builder, mvs)?;
 				}
@@ -5236,28 +5274,40 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board,
+																	(rev_check_mask.reverse() >> 1).into(),
+																	(nari_check_mask.reverse() >> 1).into(),
+																	move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board,
+															(rev_check_mask >> 1).into(),
+															(nari_check_mask >> 1).into(),
+															move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board,
+																	(rev_check_mask.reverse() >> 1).into(),
+																	(nari_check_mask.reverse() >> 1).into(),
+																	move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board,
+															(rev_check_mask >> 1).into(),
+															(nari_check_mask >> 1).into(),
+															move_builder, mvs)?;
 				}
 
 				for p in (state.part.sente_kaku_board & state.part.sente_nari_board).iter() {
@@ -5342,7 +5392,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask.reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(), move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask >> 1).into(),
+						(nari_check_mask >> 1).into(),
+						move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
@@ -5351,7 +5404,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask.reverse() >> 1).into(),
+						(nari_check_mask.reverse() >> 1).into(),
+						move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
@@ -5360,7 +5416,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask.reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(), move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask >> 1).into(),
+						(nari_check_mask >> 1).into(),
+						move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
@@ -5369,7 +5428,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask.reverse() >> 1).into(),
+						(nari_check_mask.reverse() >> 1).into(),
+						move_builder, mvs
 					)?;
 				}
 
@@ -5475,28 +5537,40 @@ impl ChecksMoveGenerator {
 						state.part.gote_self_board, 80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board,
+																	(rev_check_mask.reverse() >> 1).into(),
+																	(nari_check_mask.reverse() >> 1).into(),
+																	move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board, p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board,
+															(rev_check_mask >> 1).into(),
+															(nari_check_mask >> 1).into(),
+															move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
 					) & rev_check_mask.reverse();
 
-					AS::append_force_promotion_target_inverse_sente(state, p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_inverse_sente(state, p, board,
+																	(rev_check_mask.reverse() >> 1).into(),
+																	(nari_check_mask.reverse() >> 1).into(),
+																	move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
 					) & rev_check_mask;
 
-					AS::append_force_promotion_target_sente(state, p, board, (nari_check_mask >> 1).into(), move_builder, mvs)?;
+					AS::append_force_promotion_target_sente(state, p, board,
+															(rev_check_mask >> 1).into(),
+															(nari_check_mask >> 1).into(),
+															move_builder, mvs)?;
 				}
 
 				for p in (state.part.sente_hisha_board & state.part.sente_nari_board).iter() {
@@ -5580,7 +5654,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask.reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(), move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask >> 1).into(),
+						(nari_check_mask >> 1).into(),
+						move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
@@ -5589,7 +5666,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(),move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask.reverse() >> 1).into(),
+						(nari_check_mask.reverse() >> 1).into(),
+						move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
@@ -5598,7 +5678,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask.reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
-						state, 80 - p, board, (nari_check_mask >> 1).into(), move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask >> 1).into(),
+						(nari_check_mask >> 1).into(),
+						move_builder, mvs
 					)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
@@ -5607,7 +5690,10 @@ impl ChecksMoveGenerator {
 					) & rev_check_mask;
 
 					AS::append_force_promotion_target_gote(
-						state, 80 - p, board, (nari_check_mask.reverse() >> 1).into(), move_builder, mvs
+						state, 80 - p, board,
+						(rev_check_mask.reverse() >> 1).into(),
+						(nari_check_mask.reverse() >> 1).into(),
+						move_builder, mvs
 					)?;
 				}
 
@@ -7897,12 +7983,15 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_sente_possible_promotion<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_sente_possible_promotion<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+											  rev_check_mask: u128,
+											  nari_check_mask: u128,
 											  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,nari_check_mask,0,0,false,move_builder,mvs
+				SENTE_NARI_MASK,rev_check_mask,nari_check_mask,0,0,false,
+				move_builder,mvs
 			);
 		}
 
@@ -7910,12 +7999,15 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_gote_possible_promotion<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_gote_possible_promotion<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+											 rev_check_mask: u128,
+											 nari_check_mask: u128,
 											 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,nari_check_mask,0,0,true,move_builder,mvs
+				GOTE_NARI_MASK,rev_check_mask,nari_check_mask,0,0,true,
+				move_builder,mvs
 			);
 		}
 
@@ -7923,12 +8015,14 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_fu_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_fu_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+							  rev_check_mask: u128,
+							  nari_check_mask: u128,
 							  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,nari_check_mask,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
+				SENTE_NARI_MASK,rev_check_mask,nari_check_mask,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,
 				BANMEN_MASK >> 1,false,move_builder,mvs
 			);
 		}
@@ -7937,12 +8031,14 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_fu_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_fu_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+							 rev_check_mask: u128,
+							 nari_check_mask: u128,
 							 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,nari_check_mask,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
+				GOTE_NARI_MASK,rev_check_mask,nari_check_mask,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,
 				BANMEN_MASK >> 1,true,move_builder,mvs
 			);
 		}
@@ -7951,12 +8047,15 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_kyou_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kyou_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+								rev_check_mask: u128,
+								nari_check_mask: u128,
 								move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,nari_check_mask,DENY_MOVE_SENTE_FU_AND_KYOU_MASK,SENTE_KYOU_FORCE_PROMOTION_MASK,
+				SENTE_NARI_MASK,rev_check_mask,nari_check_mask,
+				DENY_MOVE_SENTE_FU_AND_KYOU_MASK,SENTE_KYOU_FORCE_PROMOTION_MASK,
 				true,move_builder,mvs
 			);
 		}
@@ -7965,12 +8064,15 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_kyou_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kyou_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+							   rev_check_mask: u128,
+							   nari_check_mask: u128,
 							   move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,nari_check_mask,DENY_MOVE_GOTE_FU_AND_KYOU_MASK,GOTE_KYOU_FORCE_PROMOTION_MASK,
+				GOTE_NARI_MASK,rev_check_mask,nari_check_mask,
+				DENY_MOVE_GOTE_FU_AND_KYOU_MASK,GOTE_KYOU_FORCE_PROMOTION_MASK,
 				false,move_builder,mvs
 			);
 		}
@@ -7979,12 +8081,15 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_kei_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kei_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+							   rev_check_mask: u128,
+							   nari_check_mask: u128,
 							   move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,nari_check_mask,DENY_MOVE_SENTE_KEI_MASK,0,false,move_builder,mvs
+				SENTE_NARI_MASK,rev_check_mask,nari_check_mask,DENY_MOVE_SENTE_KEI_MASK,0,false,
+				move_builder,mvs
 			);
 		}
 
@@ -7992,12 +8097,15 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_kei_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kei_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+							  rev_check_mask: u128,
+							  nari_check_mask: u128,
 							  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,nari_check_mask,DENY_MOVE_GOTE_KEI_MASK,0,true,move_builder,mvs
+				GOTE_NARI_MASK,rev_check_mask,nari_check_mask,DENY_MOVE_GOTE_KEI_MASK,0,true,
+				move_builder,mvs
 			);
 		}
 
@@ -8018,12 +8126,14 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 
 	#[inline]
 	fn append_inverse_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+													  rev_check_mask: u128,
 													  nari_check_mask: u128,
 													  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,(state.part.sente_nari_board & (1u128 << (from + 1))) != 0,
-				SENTE_NARI_MASK,nari_check_mask,0,0,true,move_builder,mvs
+				SENTE_NARI_MASK,rev_check_mask,nari_check_mask,0,0,true,
+				move_builder,mvs
 			);
 		}
 
@@ -8032,12 +8142,14 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 
 	#[inline]
 	fn apppend_inverse_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard,
+													  rev_check_mask: u128,
 													  nari_check_mask: u128,
 													  move_builder: &B,mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,(state.part.gote_nari_board & (1u128 << (from + 1))) != 0,
-				GOTE_NARI_MASK,nari_check_mask,0,0,false,move_builder,mvs
+				GOTE_NARI_MASK,rev_check_mask,nari_check_mask,0,0,false,
+				move_builder,mvs
 			);
 		}
 
@@ -8046,12 +8158,14 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 
 	#[inline]
 	fn append_force_promotion_target_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+												  rev_check_mask: u128,
 												  nari_check_mask: u128,
 												  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1,false,
+				SENTE_NARI_MASK,rev_check_mask,nari_check_mask,0,BANMEN_MASK >> 1,
+				false,
 				move_builder,mvs
 			);
 		}
@@ -8061,12 +8175,14 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 
 	#[inline]
 	fn append_force_promotion_target_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+												 rev_check_mask: u128,
 												 nari_check_mask: u128,
 												 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1, true,
+				GOTE_NARI_MASK,rev_check_mask,nari_check_mask,0,BANMEN_MASK >> 1,
+				true,
 				move_builder,mvs
 			);
 		}
@@ -8076,12 +8192,13 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 
 	#[inline]
 	fn append_force_promotion_target_inverse_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+														  rev_check_mask: u128,
 														  nari_check_mask: u128,
 														  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				SENTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1,
+				SENTE_NARI_MASK,rev_check_mask,nari_check_mask,0,BANMEN_MASK >> 1,
 				true,move_builder,mvs
 			);
 		}
@@ -8091,12 +8208,13 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 
 	#[inline]
 	fn append_force_promotion_target_inverse_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard,
+														 rev_check_mask: u128,
 														 nari_check_mask: u128,
 														 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
 				p,from,false,
-				GOTE_NARI_MASK,nari_check_mask,0,BANMEN_MASK >> 1,
+				GOTE_NARI_MASK,rev_check_mask,nari_check_mask,0,BANMEN_MASK >> 1,
 				false,move_builder,mvs
 			);
 		}
@@ -9570,15 +9688,14 @@ impl Rule {
 	///
 	/// * `ou_position` - 王の位置
 	/// * `from` - 駒の移動元
-	/// * `candidatebits` - 駒が成らないときに王手になる移動先のビットボード
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
-	pub fn gen_nari_check_mask(ou_position:u32,from:u32,candidatebits:BitBoard) -> BitBoard {
+	pub fn gen_nari_check_mask(ou_position:u32,from:u32) -> BitBoard {
 		if (NARI_MASK << 1) & (1 << (from + 1)) != 0 {
-			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position) & !candidatebits
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position)
 		} else {
-			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position) & (NARI_MASK << 1) & !candidatebits
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position) & (NARI_MASK << 1)
 		}
 	}
 
@@ -9588,15 +9705,14 @@ impl Rule {
 	///
 	/// * `ou_position` - 王の位置
 	/// * `from` - 駒の移動元
-	/// * `candidatebits` - 駒が成らないときに王手になる移動先のビットボード
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
-	pub fn gen_inv_nari_check_mask(ou_position:u32,from:u32,candidatebits:BitBoard) -> BitBoard {
+	pub fn gen_inv_nari_check_mask(ou_position:u32,from:u32) -> BitBoard {
 		if (INV_NARI_MASK << 1) & (1 << (from + 1)) != 0 {
-			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position).reverse() & !candidatebits
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position).reverse()
 		} else {
-			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position).reverse() & (INV_NARI_MASK << 1) & !candidatebits
+			Self::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),ou_position).reverse() & (INV_NARI_MASK << 1)
 		}
 	}
 
@@ -9685,6 +9801,7 @@ impl Rule {
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される移動元の駒の位置
 	/// * `kind` - 移動する駒の種類
 	/// * `nari_mask` - ビットボードを用いて移動先で駒が成れるか判定するためのマスク
+	/// * `rev_check_mask` - ビットボードを用いて成りを考慮しなくても王手に成るか判定するためのマスク
 	/// * `nari_check_mask` - ビットボードを用いて成る場合のみ王手になるか判定するためのマスク
 	/// * `nari` - 駒が成っているかどうか
 	/// * `deny_move_mask` - ビットボードを用いて移動先で駒が成らなくても合法手か判定するためのマスク
@@ -9699,6 +9816,7 @@ impl Rule {
 		from:u32,
 		nari:bool,
 		nari_mask:u128,
+		rev_check_mask:u128,
 		nari_check_mask:u128,
 		deny_move_mask:u128,
 		force_promotion_mask:u128,
@@ -9714,10 +9832,12 @@ impl Rule {
 		let from_mask = 1 << from;
 
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
-			mvs.push(move_builder(from, to, true)).unwrap();
+			if nari_check_mask & to_mask != 0 {
+				mvs.push(move_builder(from, to, true)).unwrap();
+			}
 
 			if (force_promotion_mask & to_mask == 0) &&
-				nari_check_mask & to_mask == 0 && deny_move_mask & to_mask == 0 {
+				rev_check_mask & to_mask != 0 && deny_move_mask & to_mask == 0 {
 				mvs.push(move_builder(from, to, false)).unwrap();
 			}
 		} else if nari || deny_move_mask & to_mask == 0 {
