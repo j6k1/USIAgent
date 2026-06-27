@@ -5267,12 +5267,12 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_sente(state, p, board,
 																	(rev_check_mask.reverse() >> 1).into(),
@@ -5282,7 +5282,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_sente(state, p, board,
 															(rev_check_mask >> 1).into(),
@@ -5292,7 +5292,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_sente(state, p, board,
 																	(rev_check_mask.reverse() >> 1).into(),
@@ -5302,7 +5302,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_sente(state, p, board,
 															(rev_check_mask >> 1).into(),
@@ -5384,12 +5384,12 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board,80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
 						state, 80 - p, board,
@@ -5401,7 +5401,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_gote(
 						state, 80 - p, board,
@@ -5413,7 +5413,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board,80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
 						state, 80 - p, board,
@@ -5425,7 +5425,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_bottom(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_gote(
 						state, 80 - p, board,
@@ -5530,12 +5530,12 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board, 80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_sente(state, p, board,
 																	(rev_check_mask.reverse() >> 1).into(),
@@ -5545,7 +5545,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board, p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_sente(state, p, board,
 															(rev_check_mask >> 1).into(),
@@ -5555,7 +5555,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_sente(state, p, board,
 																	(rev_check_mask.reverse() >> 1).into(),
@@ -5565,7 +5565,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_self_board,
 						state.part.sente_opponent_board,p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_sente(state, p, board,
 															(rev_check_mask >> 1).into(),
@@ -5646,12 +5646,12 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask | nari_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
 
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board, 80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
 						state, 80 - p, board,
@@ -5663,7 +5663,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board, p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_gote(
 						state, 80 - p, board,
@@ -5675,7 +5675,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.sente_opponent_board,
 						state.part.sente_self_board,80 - p
-					) & rev_check_mask.reverse();
+					) & (rev_check_mask | nari_check_mask).reverse();
 
 					AS::append_force_promotion_target_inverse_gote(
 						state, 80 - p, board,
@@ -5687,7 +5687,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
 						state.part.gote_self_board,
 						state.part.gote_opponent_board,p
-					) & rev_check_mask;
+					) & (rev_check_mask | nari_check_mask);
 
 					AS::append_force_promotion_target_gote(
 						state, 80 - p, board,
