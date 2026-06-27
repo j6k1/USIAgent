@@ -9832,7 +9832,7 @@ impl Rule {
 		let from_mask = 1 << from;
 
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
-			if nari_check_mask & to_mask != 0 || rev_check_mask & to_mask != 0 {
+			if nari_check_mask & to_mask != 0 || (rev_check_mask & nari_check_mask) & to_mask != 0 {
 				mvs.push(move_builder(from, to, true)).unwrap();
 			}
 
