@@ -5295,7 +5295,7 @@ impl ChecksMoveGenerator {
 					let board = Rule::gen_candidate_bits_by_kaku_to_right_top(
 						state.part.gote_opponent_board,
 						state.part.gote_self_board,80 - p
-					) & rev_check_mask;
+					) & rev_check_mask.reverse();
 
 					AS::append_inverse_sente(state, p, board, move_builder, mvs)?;
 
@@ -5660,7 +5660,8 @@ impl ChecksMoveGenerator {
 					AS::append_gote(state, 80 - p, board, move_builder, mvs)?;
 
 					let board = Rule::gen_candidate_bits_by_hisha_to_right(
-						state.part.sente_opponent_board,state.part.sente_self_board,80 - p
+						state.part.sente_opponent_board,
+						state.part.sente_self_board,80 - p
 					) & rev_check_mask.reverse();
 
 					AS::append_inverse_gote(state, 80 - p, board, move_builder, mvs)?;
