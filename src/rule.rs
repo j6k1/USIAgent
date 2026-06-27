@@ -5250,13 +5250,13 @@ impl ChecksMoveGenerator {
 		if teban == Teban::Sente {
 			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
 				for p in (state.part.sente_kaku_board & !state.part.sente_nari_board).iter() {
-					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32);
-
 					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
 						state.part.sente_opponent_ou_position_board,
 						p,state.part.sente_self_board,state.part.sente_opponent_board,
 						state.part.gote_opponent_board,state.part.gote_self_board
 					);
+
+					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32) | rev_check_mask;
 
 					let p = p as u32;
 
@@ -5367,13 +5367,13 @@ impl ChecksMoveGenerator {
 		} else {
 			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
 				for p in (state.part.gote_kaku_board & !state.part.gote_nari_board).reverse().iter() {
-					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32);
-
 					let rev_check_mask = Rule::gen_kaku_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,
 						p,state.part.gote_self_board,state.part.gote_opponent_board,
 						state.part.sente_opponent_board,state.part.sente_self_board
 					);
+
+					let nari_check_mask = Rule::gen_kaku_nari_check_mask(o as u32,p as u32) | rev_check_mask;
 
 					let p = p as u32;
 
@@ -5513,13 +5513,13 @@ impl ChecksMoveGenerator {
 		if teban == Teban::Sente {
 			if let Some(o) = state.part.sente_opponent_ou_position_board.iter().next() {
 				for p in (state.part.sente_hisha_board & !state.part.sente_nari_board).iter() {
-					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32);
-
 					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
 						state.part.sente_opponent_ou_position_board,
 						p,state.part.sente_self_board,state.part.sente_opponent_board,
 						state.part.gote_opponent_board,state.part.gote_self_board
 					);
+
+					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32) | rev_check_mask;
 
 					let p = p as u32;
 
@@ -5629,13 +5629,13 @@ impl ChecksMoveGenerator {
 		} else {
 			if let Some(o) = state.part.gote_opponent_ou_position_board.iter().next() {
 				for p in (state.part.gote_hisha_board & !state.part.gote_nari_board).reverse().iter() {
-					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32);
-
 					let rev_check_mask = Rule::gen_hisha_reverse_check_mask(
 						state.part.gote_opponent_ou_position_board,
 						p,state.part.gote_self_board,state.part.gote_opponent_board,
 						state.part.sente_opponent_board,state.part.sente_self_board
 					);
+
+					let nari_check_mask = Rule::gen_hisha_nari_check_mask(o as u32,p as u32) | rev_check_mask;
 
 					let p = p as u32;
 
@@ -9832,7 +9832,7 @@ impl Rule {
 		let from_mask = 1 << from;
 
 		if !nari && (nari_mask & to_mask != 0 || nari_mask & from_mask != 0) {
-			if nari_check_mask & to_mask != 0 || (rev_check_mask & nari_check_mask) & to_mask != 0 {
+			if nari_check_mask & to_mask != 0 || rev_check_mask & to_mask != 0 {
 				mvs.push(move_builder(from, to, true)).unwrap();
 			}
 
