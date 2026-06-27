@@ -7920,7 +7920,7 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_sente_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_sente_possible_promotion<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
 											  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
@@ -7933,7 +7933,7 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_gote_possible_promotion<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_gote_possible_promotion<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
 											 move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
@@ -8002,7 +8002,7 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_kei_sente<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kei_sente<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
 							   move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
@@ -8015,7 +8015,7 @@ impl ChecksAppendStrategy for ChecksForcePromotions {
 	}
 
 	#[inline]
-	fn append_kei_gote<'a, B>(state: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
+	fn append_kei_gote<'a, B>(_: &State, from: u32, candidatebits: BitBoard, nari_check_mask: u128,
 							  move_builder: &B, mvs: &mut impl MovePicker<LegalMove>) -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		for p in candidatebits.iter() {
 			Rule::append_check_moves_from_banmen(
