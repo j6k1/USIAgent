@@ -5204,9 +5204,7 @@ impl ChecksMoveGenerator {
 			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
 				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(KIN_REV_MASK),p as u32);
 
-				let candidatebits = state.part.gote_kin_board.reverse();
-
-				for p in candidatebits.iter() {
+				for p in state.part.gote_kin_board.reverse().iter() {
 					let p = p as u32;
 
 					let rev_unpinning_check_mask = Rule::gen_unpinning_reverse_check_mask(
@@ -5774,8 +5772,6 @@ impl ChecksMoveGenerator {
 												 -> Result<(), LimitSizeError> where B: Fn(u32, u32, bool) -> LegalMove + 'a {
 		if teban == Teban::Sente {
 			if let Some(p) = state.part.sente_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(OU_REV_MASK),p as u32);
-
 				for p in state.part.gote_opponent_ou_position_board.reverse().iter() {
 					let p = p as u32;
 
@@ -5786,7 +5782,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask;// | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask;
 
 					AS::append_sente(state, p,
 									 Rule::gen_candidate_bits(
@@ -5797,8 +5793,6 @@ impl ChecksMoveGenerator {
 			}
 		} else {
 			if let Some(p) = state.part.gote_opponent_ou_position_board.iter().next() {
-				let rev_check_mask = Rule::adjust_rev_mask(BitBoard::from(OU_REV_MASK),p as u32);
-
 				for p in state.part.sente_opponent_ou_position_board.reverse().iter() {
 					let p = p as u32;
 
@@ -5809,7 +5803,7 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask;// | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask;
 
 					AS::append_gote(state, 80 - p,
 									Rule::gen_candidate_bits(
@@ -16222,7 +16216,7 @@ impl Rule {
 			let from_mask = BitBoard::from(1 << (from + 1));
 
 			let self_occupied_board = self_occupied_board ^ from_mask;
-			let flip_opponent_occupied_board = flip_opponent_occupied_board ^ from_mask.reverse();
+			let flip_self_occupied_board = flip_self_occupied_board ^ from_mask.reverse();
 
 			if self_kyou_board != 0 || self_hisha_board != 0 {
 				let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
@@ -16238,8 +16232,8 @@ impl Rule {
 
 			if self_kaku_board != 0 {
 				let m = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
-					flip_opponent_occupied_board,
 					flip_self_occupied_board,
+					flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
@@ -16248,8 +16242,8 @@ impl Rule {
 				}
 
 				let m = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
-					flip_opponent_occupied_board,
 					flip_self_occupied_board,
+					flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
@@ -16280,8 +16274,8 @@ impl Rule {
 
 			if self_hisha_board != 0 {
 				let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
-					flip_opponent_occupied_board,
 					flip_self_occupied_board,
+					flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
@@ -16290,8 +16284,8 @@ impl Rule {
 				}
 
 				let m = Rule::gen_candidate_bits_by_hisha_to_right_include(
-					self_occupied_board,
 					opponent_occupied_board,
+					self_occupied_board,
 					p
 				);
 
@@ -16300,8 +16294,8 @@ impl Rule {
 				}
 
 				let m = Rule::gen_candidate_bits_by_hisha_to_right_include(
-					flip_opponent_occupied_board,
 					flip_self_occupied_board,
+					flip_opponent_occupied_board,
 					80 - p
 				).reverse();
 
