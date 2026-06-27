@@ -5786,7 +5786,7 @@ impl ChecksMoveGenerator {
 						state.part.gote_opponent_board,state.part.gote_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask;// | rev_check_mask;
 
 					AS::append_sente(state, p,
 									 Rule::gen_candidate_bits(
@@ -5809,7 +5809,7 @@ impl ChecksMoveGenerator {
 						state.part.sente_opponent_board,state.part.sente_self_board,
 					);
 
-					let rev_check_mask = rev_unpinning_check_mask | rev_check_mask;
+					let rev_check_mask = rev_unpinning_check_mask;// | rev_check_mask;
 
 					AS::append_gote(state, 80 - p,
 									Rule::gen_candidate_bits(
