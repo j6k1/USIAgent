@@ -9650,7 +9650,7 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_hisha_nari_check_mask(ou_position:u32,from:u32) -> BitBoard {
-		if INV_NARI_MASK & (1 << (from + 1)) != 0 {
+		if NARI_MASK & (1 << (from + 1)) != 0 {
 			Self::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),ou_position)
 		} else {
 			Self::adjust_rev_mask(BitBoard::from(NARI_HISHA_REV_MASK),ou_position) & NARI_MASK
