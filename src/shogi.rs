@@ -9,6 +9,7 @@ use error::*;
 use Find;
 use MaxIndex;
 use std::collections::HashMap;
+use std::ops::{Index, IndexMut};
 
 /// 盤面上の駒の種別
 #[derive(Clone, Copy, Eq, PartialOrd, Ord, PartialEq, Debug, Hash)]
@@ -153,6 +154,17 @@ impl fmt::Debug for Banmen {
 									})
 									.collect::<Vec<String>>().join("\n"))
 		}
+	}
+}
+impl Index<usize> for Banmen {
+	type Output = [KomaKind; 9];
+	fn index(&self, index: usize) -> &Self::Output {
+		&self.0[index]
+	}
+}
+impl IndexMut<usize> for Banmen {
+	fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+		&mut self.0[index]
 	}
 }
 impl Find<KomaKind,Vec<KomaPosition>> for Banmen {

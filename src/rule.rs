@@ -1660,6 +1660,8 @@ const REV_MASK_EDGE_HIDE:u128 = 0b000000001_000000001_000000001_000000001_000000
 pub const OU_SURROUNDING_MASK:u128 = 0b000000111_000000101_000000111;
 pub const OU_SURROUNDING_TOP_MASK:u128 = 0b111111110_111111110_111111110;
 pub const OU_SURROUNDING_BOTTOM_MASK:u128 = 0b111111011_111111011_111111011;
+pub const OU_SURROUNDING_LEFT_MASK:u128 = 0b111111111_111111111_111111000;
+pub const OU_SURROUNDING_RIGHT_MASK:u128 = 0b111111000_111111111_111111111;
 
 /// 左上を(0,0)とした平手初期局面
 pub const BANMEN_START_POS:Banmen = Banmen([
@@ -8398,6 +8400,72 @@ impl Rule {
 		}
 
 		BitBoard::from(board)
+	}
+
+	/// 香車の効きのビットボードを生成する。相手番視点から見たビットボードが返る
+	///
+	/// # Arguments
+	///
+	/// * `flip_self_occupied_board` - 相手番視点から見た手番側のビットボード
+	/// * `flip_opponent_occupied_board` - 相手番視点から見た非手番側のビットボード
+	/// * `from` - 駒の位置。後手の場合は逆さまにした時の位置を指定する。
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_control_bits_by_kyou(
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+		from:u32
+	) -> BitBoard {
+		Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from)
+	}
+
+	/// 角の効きのビットボードを生成する
+	///
+	/// # Arguments
+	///
+	/// * `self_occupied_board` - 手番視点から見た手番側のビットボード
+	/// * `opponent_occupied_board` - 手番視点から見た非手番側のビットボード
+	/// * `flip_self_occupied_board` - 相手番視点から見た手番側のビットボード
+	/// * `flip_opponent_occupied_board` - 相手番視点から見た非手番側のビットボード
+	/// * `from` - 駒の位置。後手の場合は逆さまにした時の位置を指定する。
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_control_bits_by_kaku(
+		self_occupied_board:BitBoard,
+		opponent_occupied_board:BitBoard,
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+		from:u32
+	) -> BitBoard {
+		Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(self_occupied_board,opponent_occupied_board,from) |
+		Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse() |
+		Rule::gen_candidate_bits_by_kaku_to_right_top_include(self_occupied_board,opponent_occupied_board,from) |
+		Rule::gen_candidate_bits_by_kaku_to_right_top_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse()
+	}
+
+
+	/// 飛車の効きのビットボードを生成する
+	///
+	/// # Arguments
+	///
+	/// * `self_occupied_board` - 手番視点から見た手番側のビットボード
+	/// * `opponent_occupied_board` - 手番視点から見た非手番側のビットボード
+	/// * `flip_self_occupied_board` - 相手番視点から見た手番側のビットボード
+	/// * `flip_opponent_occupied_board` - 相手番視点から見た非手番側のビットボード
+	/// * `from` - 駒の位置。後手の場合は逆さまにした時の位置を指定する。
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_control_bits_by_hisha(
+		self_occupied_board:BitBoard,
+		opponent_occupied_board:BitBoard,
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+		from:u32
+	) -> BitBoard {
+		Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(self_occupied_board,opponent_occupied_board,from) |
+		Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse() |
+		Rule::gen_candidate_bits_by_hisha_to_right_include(self_occupied_board,opponent_occupied_board,from) |
+		Rule::gen_candidate_bits_by_hisha_to_right_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse()
 	}
 
 	/// 盤面上の王に対する香車、飛車、角の駒の利きをビットボードに列挙
@@ -16521,6 +16589,7 @@ impl Rule {
 	/// 千日手検出用マップの更新関数
 	///
 	/// # Arguments
+	/// * `state` - 盤面の状態
 	/// * `teban` - 手を列挙したい手番
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
@@ -16541,6 +16610,7 @@ impl Rule {
 	/// 現在の局面が千日手か否かを返す
 	///
 	/// # Arguments
+	/// * `state` - 盤面の状態
 	/// * `teban` - 手を列挙したい手番
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
@@ -16559,6 +16629,7 @@ impl Rule {
 	/// 連続王手の千日手検出用マップの更新関数
 	///
 	/// # Arguments
+	/// * `state` - 盤面の状態
 	/// * `teban` - 手を列挙したい手番
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
@@ -16579,6 +16650,7 @@ impl Rule {
 	/// 現在の局面が連続王手の千日手か否かを返す
 	///
 	/// # Arguments
+	/// * `state` - 盤面の状態
 	/// * `teban` - 手を列挙したい手番
 	/// * `mhash` - 局面を表すハッシュ（第一キー)
 	/// * `shash` - 局面を表すハッシュ（第二キー)
@@ -16594,6 +16666,47 @@ impl Rule {
 			count > 0
 		} else {
 			false
+		}
+	}
+	/// 王の周囲1マス以内のビットマスクを返す
+	///
+	/// # Arguments
+	/// * `teban` - 王の手番
+	/// * `ps` - 盤面の状態を表すビットボード
+	#[inline]
+	pub fn gen_ou_surrounding_mask(teban:Teban,ps:&PartialState) -> BitBoard {
+		let p = if teban == Teban::Sente {
+			ps.gote_opponent_ou_position_board.iter().next().map(|p| 80 - p)
+		} else {
+			ps.sente_opponent_ou_position_board.iter().next()
+		};
+
+		if let Some(p) = p {
+			let (x,y) = p.square_to_point();
+
+			let mut mask = OU_SURROUNDING_MASK;
+
+			if y == 0 {
+				mask = mask & OU_SURROUNDING_TOP_MASK;
+			} else if y == 8 {
+				mask = mask & OU_SURROUNDING_BOTTOM_MASK;
+			}
+
+			if x == 0 {
+				mask = mask & OU_SURROUNDING_LEFT_MASK;
+			} else if x == 8 {
+				mask = mask & OU_SURROUNDING_RIGHT_MASK;
+			}
+
+			if p <= 9 {
+				mask = mask >> (9 - p) as u128;
+			} else {
+				mask = mask << (p - 9) as u128;
+			}
+
+			BitBoard::from(mask)
+		} else {
+			BitBoard::default()
 		}
 	}
 
