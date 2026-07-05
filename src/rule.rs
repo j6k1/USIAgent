@@ -16775,7 +16775,7 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_mask_for_possible_ou_blocker_candidate(teban:Teban,state:&State,from:u32) -> BitBoard {
-		let op = Rule::ou_square(teban,state);
+		let op = Rule::ou_square(teban.opposite(),state);
 
 		if op == -1 {
 			return BitBoard::default();
@@ -16825,7 +16825,7 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_mask_for_possible_ou_blocker_by_fu(teban:Teban,state:&State,from:u32) -> BitBoard {
-		let op = Rule::ou_square(teban,state);
+		let op = Rule::ou_square(teban.opposite(),state);
 
 		if op == -1 {
 			return BitBoard::default();
