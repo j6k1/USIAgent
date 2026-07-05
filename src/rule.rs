@@ -16784,7 +16784,10 @@ impl Rule {
 		let (ox,oy) = op.square_to_point();
 		let (sx,sy) = from.square_to_point();
 
-		if sx != ox && sy != oy && (ox as i32 - sx as i32).abs() != (oy as i32 - sy as i32).abs() {
+		let dx = ox as i32 - sx as i32;
+		let dy = oy as i32 - sy as i32;
+
+		if sx != ox && sy != oy && dx.abs() != dy.abs() {
 			return BitBoard::default();
 		}
 
@@ -16810,8 +16813,64 @@ impl Rule {
 			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize - 1]) |
 			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize + 9])
 		} else {
-			BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize + 1]) |
-			BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize - 9])
+			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize + 1]) |
+			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize - 9])
+		}
+	}
+	/// 飛車、角、香車の王手ラインを遮断する可能性のある桂馬をフィルタするマスクを生成する。マスクは常に先手視点で生成される。
+	///
+	/// # Arguments
+	///
+	/// * `taban` - 王手をかけている方の手番
+	/// * `state` - 盤面の状態
+	/// * `from` - 王手をかけている駒の位置。常に先手座標で指定する。
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_candidate_bits_for_possible_ou_blocker_by_kei(teban:Teban,state:&State,from:u32) -> BitBoard {
+		let op = Rule::ou_square(teban.opposite(),state);
+
+		if op == -1 {
+			return BitBoard::default();
+		}
+
+		let (ox,oy) = op.square_to_point();
+		let (sx,sy) = from.square_to_point();
+
+		let dx = ox as i32 - sx as i32;
+		let dy = oy as i32 - sy as i32;
+
+		if sx != ox && sy != oy && dx.abs() != dy.abs() {
+			return BitBoard::default();
+		}
+
+		if teban.opposite() == Teban::Sente {
+			if ox == sx && ox == 0 {
+				BitBoard::from(V_MASK << (9 + 1))
+			} else if ox == sx && ox == 8 {
+				BitBoard::from(V_MASK >> (7 * 9 + 1))
+			} else if ox == sx {
+				BitBoard::from(V_MASK >> (ox * 9 - 9 + 1)) | BitBoard::from(V_MASK << (oy * 9 + 9 + 1))
+			} else if oy == sy && oy <= 6 {
+				BitBoard::from(H_MASK << (oy + 2))
+			} else if dx.abs() == dy.abs() {
+				!BitBoard::default()
+			} else {
+				BitBoard::default()
+			}
+		} else {
+			if ox == sx && ox == 0 {
+				BitBoard::from(V_MASK << (9 + 1))
+			} else if ox == sx && ox == 8 {
+				BitBoard::from(V_MASK >> (7 * 9 + 1))
+			} else if ox == sx {
+				BitBoard::from(V_MASK >> (ox * 9 - 9 + 1)) | BitBoard::from(V_MASK << (oy * 9 + 9 + 1))
+			} else if oy == sy && oy >= 2 {
+				BitBoard::from(H_MASK << (oy - 2))
+			} else if dx.abs() == dy.abs() {
+				!BitBoard::default()
+			} else {
+				BitBoard::default()
+			}
 		}
 	}
 
@@ -16844,30 +16903,6 @@ impl Rule {
 		if teban.opposite() == Teban::Sente {
 			if ox == sx {
 				BitBoard::default()
-			} else if oy == sy && oy > 0 && ox + 1 < sx {
-				let b = BitBoard::from(1 << (from - 1 - 9 + 1));
-				((b - (1 << (op + 9 - 1 + 1))) ^ b) & (V_MASK << (oy - 1 + 1))
-			} else if oy == sy && oy > 0 && ox - 1 > sx {
-				let b = BitBoard::from(1 << (op + 1 - 9 + 1));
-				((b - (1 << (from + 1 - 9 + 1))) ^ b) & (V_MASK >> (oy - 1 + 1))
-			} else if ox < sx && oy < sy {
-				let b = BitBoard::from(1 << (from - 9 - 2 + 1));
-				((b - (1 << (op + 9 + 1))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize - 1])
-			} else if ox > sx && oy > sy {
-				let b = BitBoard::from(1 << (op - 9 - 2 + 1));
-				((b - (1 << (from + 9 + 1))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize - 1])
-			} else if ox < sx && oy > sy {
-				let b = BitBoard::from(1 << (from - 9 + 1));
-				((b - (1 << (op + 9 - 2))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize - 9])
-			} else if ox > sx && oy < sy {
-				let b = BitBoard::from(1 << (op - 9 + 1));
-				((b - (1 << (from + 9 - 2))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize - 9])
-			} else {
-				BitBoard::default()
-			}
-		} else {
-			if ox == sx {
-				BitBoard::default()
 			} else if oy == sy && oy < 8 && ox + 1 < sx {
 				let b = BitBoard::from(1 << (from + 1 - 9 + 1));
 				((b - (1 << (op + 1 + 9 + 1))) ^ b) & (V_MASK << (oy + 1 + 1))
@@ -16886,6 +16921,30 @@ impl Rule {
 			} else if ox > sx && oy < sy {
 				let b = BitBoard::from(1 << (op - 9 + 2 + 1));
 				((b - (1 << (from + 9 + 1))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize + 1])
+			} else {
+				BitBoard::default()
+			}
+		} else {
+			if ox == sx {
+				BitBoard::default()
+			} else if oy == sy && oy > 0 && ox + 1 < sx {
+				let b = BitBoard::from(1 << (from - 1 - 9 + 1));
+				((b - (1 << (op + 9 - 1 + 1))) ^ b) & (V_MASK << (oy - 1 + 1))
+			} else if oy == sy && oy > 0 && ox - 1 > sx {
+				let b = BitBoard::from(1 << (op + 1 - 9 + 1));
+				((b - (1 << (from + 1 - 9 + 1))) ^ b) & (V_MASK >> (oy - 1 + 1))
+			} else if ox < sx && oy < sy {
+				let b = BitBoard::from(1 << (from - 9 - 2 + 1));
+				((b - (1 << (op + 9 + 1))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[from as usize - 1])
+			} else if ox > sx && oy > sy {
+				let b = BitBoard::from(1 << (op - 9 - 2 + 1));
+				((b - (1 << (from + 9 + 1))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize - 1])
+			} else if ox < sx && oy > sy {
+				let b = BitBoard::from(1 << (from - 9 + 1));
+				((b - (1 << (op + 9 - 2))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[from as usize - 9])
+			} else if ox > sx && oy < sy {
+				let b = BitBoard::from(1 << (op - 9 + 1));
+				((b - (1 << (from + 9 - 2))) ^ b) & BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize - 9])
 			} else {
 				BitBoard::default()
 			}
