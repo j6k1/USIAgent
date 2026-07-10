@@ -8467,6 +8467,134 @@ impl Rule {
 		Rule::gen_candidate_bits_by_hisha_to_right_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse()
 	}
 
+	/// 香車から特定の駒への利きのビットボードを生成する。対象の駒に対する効きがない場合は空のビットボードを返す
+	///
+	/// # Arguments
+	///
+	/// * `target` - 手番視点から見たターゲットとする駒の位置
+	/// * `flip_self_occupied_board` - 相手番視点から見た手番側のビットボード
+	/// * `flip_opponent_occupied_board` - 相手番視点から見た非手番側のビットボード
+	/// * `from` - 駒の位置。後手の場合は逆さまにした時の位置を指定する。
+	/// ビットボードは常に手番側視点で返される
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_target_attack_mask_by_kyou(
+		target:u32,
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let target_mask = 1 << (80 - target + 1);
+
+		let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from);
+
+		if target_mask & m != 0 {
+			return (m & !(flip_self_occupied_board | flip_opponent_occupied_board)).reverse();
+		}
+
+		BitBoard::default()
+	}
+
+	/// 角から特定の駒への利きのビットボードを生成する。対象の駒に対する効きがない場合は空のビットボードを返す
+	///
+	/// # Arguments
+	///
+	/// * `target` - 手番視点から見たターゲットとする駒の位置
+	/// * `self_occupied_board` - 手番視点から見た手番側のビットボード
+	/// * `opponent_occupied_board` - 手番視点から見た非手番側のビットボード
+	/// * `flip_self_occupied_board` - 相手番視点から見た手番側のビットボード
+	/// * `flip_opponent_occupied_board` - 相手番視点から見た非手番側のビットボード
+	/// * `from` - 駒の位置。後手の場合は逆さまにした時の位置を指定する。
+	/// ビットボードは常に手番側視点で返される
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_target_attack_mask_by_kaku(
+		target:u32,
+		self_occupied_board:BitBoard,
+		opponent_occupied_board:BitBoard,
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let target_mask = 1 << (target + 1);
+
+		let m = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(self_occupied_board,opponent_occupied_board,from);
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		let m = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse();
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		let m = Rule::gen_candidate_bits_by_kaku_to_right_top_include(self_occupied_board,opponent_occupied_board,from);
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		let m = Rule::gen_candidate_bits_by_kaku_to_right_top_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse();
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		BitBoard::default()
+	}
+
+	/// 飛車から特定の駒への利きのビットボードを生成する。対処となる駒に対する効きがない場合は空のビットボードを返す
+	///
+	/// # Arguments
+	///
+	/// * `target` - 手番視点から見たターゲットとする駒の位置
+	/// * `self_occupied_board` - 手番視点から見た手番側のビットボード
+	/// * `opponent_occupied_board` - 手番視点から見た非手番側のビットボード
+	/// * `flip_self_occupied_board` - 相手番視点から見た手番側のビットボード
+	/// * `flip_opponent_occupied_board` - 相手番視点から見た非手番側のビットボード
+	/// * `from` - 駒の位置。後手の場合は逆さまにした時の位置を指定する。
+	/// ビットボードは常に手番側視点で返される
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_target_attack_mask_by_hisha(
+		target:u32,
+		self_occupied_board:BitBoard,
+		opponent_occupied_board:BitBoard,
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+		from:u32
+	) -> BitBoard {
+		let target_mask = 1 << (target + 1);
+
+		let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(self_occupied_board,opponent_occupied_board,from);
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		let m = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse();
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		let m = Rule::gen_candidate_bits_by_hisha_to_right_include(self_occupied_board,opponent_occupied_board,from);
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		let m = Rule::gen_candidate_bits_by_hisha_to_right_include(flip_self_occupied_board,flip_opponent_occupied_board,80 - from).reverse();
+
+		if target_mask & m != 0 {
+			return m & !(self_occupied_board | opponent_occupied_board);
+		}
+
+		BitBoard::default()
+	}
+
 	/// 盤面上の王に対する香車、飛車、角の駒の利きをビットボードに列挙
 	///
 	/// # Arguments
@@ -8716,7 +8844,7 @@ impl Rule {
 	/// それが原因で王手が無効化された駒のビットを立てたビットボードを返す
 	///
 	/// # Arguments
-	/// * `ou_position_board` - checked_board仁対応した手番の王の位置のビットボード
+	/// * `ou_position_board` - checked_boardに対応した手番の王の位置のビットボード
 	/// * `checked_board` - 王手をかけている駒のビットを立てたビットボード
 	/// * `self_occupied_board` - checked_boardと同じ手番側視点の自身の駒のビットボード
 	/// * `opponent_occupied_board` - checked_boardと同じ手番側視点の相手の駒のビットボード
@@ -16260,7 +16388,7 @@ impl Rule {
 	/// * `self_occupied_board` - 王手をかけようとする手番側から見た王手をかけようとする手番側のビットボード
 	/// * `opponent_occupied_board` - 王手をかけようとする手番側から見た王手をかけられる側の手番のビットボード
 	/// * `flip_self_occupied_board` - 王手をかけられようとする手番側から見た王手をかけられようとする手番側のビットボード
-	/// * `flip_opponent_occupied_board` - 王手をかけられようとする手番側から見た王手をかけようとするる側の手番のビットボード
+	/// * `flip_opponent_occupied_board` - 王手をかけられようとする手番側から見た王手をかけようとする側の手番のビットボード
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_unpinning_reverse_check_mask(
@@ -16381,6 +16509,151 @@ impl Rule {
 		}
 
 		BitBoard::default()
+	}
+
+
+	/// pin駒の移動によってかかる王手を抽出するためのビットマスクを生成し、王手をかけている駒の位置とともに返す
+	///
+	/// # Arguments
+	///
+	/// * `ou_position_board` - 王手をかける手番側から見た王の位置を表すビットボード
+	/// * `pin_board` - 王手をかける手番側から見たpin駒の位置を表す座標系のビットボード
+	/// * `from` - 王手をかける手番側から見た動かす駒の移動元
+	/// * `self_kyou_board` - 王手をかけようとする手番側の先手座標系香車の位置のビットボード
+	/// * `self_kaku_board` - 王手をかけようとする手番側の先手座標系の角の位置のビットボード
+	/// * `self_hisha_board` - 王手をかけようとする手番側の先手座標系の飛車の位置のビットボード
+	/// * `self_occupied_board` - 王手をかけようとする手番側から見た王手をかけようとする手番側のビットボード
+	/// * `opponent_occupied_board` - 王手をかけようとする手番側から見た王手をかけられる側の手番のビットボード
+	/// * `flip_self_occupied_board` - 王手をかけられようとする手番側から見た王手をかけられようとする手番側のビットボード
+	/// * `flip_opponent_occupied_board` - 王手をかけられようとする手番側から見た王手をかけようとする側の手番のビットボード
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_unpinning_reverse_check_mask_and_attacker(
+		ou_position_board:BitBoard,
+		pin_board:BitBoard,
+		from:u32,
+		self_kyou_board:BitBoard,
+		self_kaku_board:BitBoard,
+		self_hisha_board:BitBoard,
+		self_occupied_board:BitBoard,
+		opponent_occupied_board:BitBoard,
+		flip_self_occupied_board:BitBoard,
+		flip_opponent_occupied_board:BitBoard,
+	) -> (BitBoard,Option<Square>) {
+		if pin_board & (1 << (from + 1)) == 0 {
+			return (BitBoard::default(),None);
+		} else if let Some(p) = ou_position_board.iter().next() {
+			let p = p as u32;
+
+			let from_mask = BitBoard::from(1 << (from + 1));
+
+			let self_occupied_board = self_occupied_board ^ from_mask;
+			let flip_self_occupied_board = flip_self_occupied_board ^ from_mask.reverse();
+
+			if self_kyou_board != 0 || self_hisha_board != 0 {
+				let im = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+					self_occupied_board,
+					opponent_occupied_board,
+					p
+				);
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.reverse().iter().next().map(|p| 80 - p));
+				}
+			}
+
+			if self_kaku_board != 0 {
+				let im = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+					flip_self_occupied_board,
+					flip_opponent_occupied_board,
+					80 - p
+				).reverse();
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.iter().next())
+				}
+
+				let im = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+					flip_self_occupied_board,
+					flip_opponent_occupied_board,
+					80 - p
+				).reverse();
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.iter().next());
+				}
+
+				let im = Rule::gen_candidate_bits_by_kaku_to_right_bottom_include(
+					self_occupied_board,
+					opponent_occupied_board,
+					p
+				);
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.reverse().iter().next().map(|p| 80 - p));
+				}
+
+				let im = Rule::gen_candidate_bits_by_kaku_to_right_top_include(
+					self_occupied_board,
+					opponent_occupied_board,
+					p
+				);
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.reverse().iter().next().map(|p| 80 - p));
+				}
+			}
+
+			if self_hisha_board != 0 {
+				let im = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
+					flip_self_occupied_board,
+					flip_opponent_occupied_board,
+					80 - p
+				).reverse();
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.iter().next());
+				}
+
+				let im = Rule::gen_candidate_bits_by_hisha_to_right_include(
+					self_occupied_board,
+					opponent_occupied_board,
+					p
+				);
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.reverse().iter().next().map(|p| 80 - p));
+				}
+
+				let im = Rule::gen_candidate_bits_by_hisha_to_right_include(
+					flip_self_occupied_board,
+					flip_opponent_occupied_board,
+					80 - p
+				).reverse();
+
+				let m = im & !(self_occupied_board | opponent_occupied_board);
+
+				if m & pin_board != 0 {
+					return (!m,im.iter().next());
+				}
+			}
+		}
+
+		(BitBoard::default(),None)
 	}
 
 	/// 香車の移動によって王手がかかる位置のビットマスクの生成
@@ -16774,7 +17047,7 @@ impl Rule {
 	/// * `from` - 王手をかけている駒の位置。常に先手座標で指定する。
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
-	pub fn gen_candidate_bits_for_possible_ou_blocker(teban:Teban,state:&State,from:u32) -> BitBoard {
+	pub fn gen_possible_block_mask(teban:Teban,state:&State,from:u32) -> BitBoard {
 		let op = Rule::ou_square(teban.opposite(),state);
 
 		if op == -1 {
@@ -16826,7 +17099,7 @@ impl Rule {
 	/// * `from` - 王手をかけている駒の位置。常に先手座標で指定する。
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
-	pub fn gen_candidate_bits_for_possible_ou_blocker_by_kei(teban:Teban,state:&State,from:u32) -> BitBoard {
+	pub fn gen_kei_possible_block_mask(teban:Teban,state:&State,from:u32) -> BitBoard {
 		let op = Rule::ou_square(teban.opposite(),state);
 
 		if op == -1 {
@@ -16883,7 +17156,7 @@ impl Rule {
 	/// * `from` - 王手をかけている駒の位置。常に先手座標で指定する。
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
-	pub fn gen_mask_for_possible_ou_blocker_by_fu(teban:Teban,state:&State,from:u32) -> BitBoard {
+	pub fn gen_fu_reachable_block_mask(teban:Teban,state:&State,from:u32) -> BitBoard {
 		let op = Rule::ou_square(teban.opposite(),state);
 
 		if op == -1 {
