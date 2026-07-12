@@ -336,6 +336,14 @@ impl LegalMove {
 			_ => false,
 		}
 	}
+	/// 駒を打つ手か否か
+	#[inline]
+	pub fn is_drop(&self) -> bool {
+		match self {
+			&LegalMove::Put(_) => true,
+			&LegalMove::To(_) => false,
+		}
+	}
 }
 impl From<LegalMove> for Move {
 	#[inline]
