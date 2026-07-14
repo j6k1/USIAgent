@@ -17453,44 +17453,44 @@ impl Rule {
 			(ox,oy,sx,sy)
 		};
 
-		let t = from.max(op as u32);
+		let s = from.min(op as u32);
 
 		if tx == sx {
 			BitBoard::from(V_MASK >> (tx * 9 + 9 + 1)) | BitBoard::from(V_MASK << (tx * 9 + 9 + 1))
 		} else if ty == sy {
 			BitBoard::from(H_MASK >> (ty + 1 - 1)) | BitBoard::from(H_MASK << (ty + 1 + 1))
 		} else if sy < ty && tx == 8 && ty == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9])) << 1
-		} else if sy < ty && ty == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize + 8]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
 		} else if sy < ty && tx == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
-				BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9]) |
-				BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 8])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize - 8]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
+		} else if sy < ty && ty == 8 {
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 8]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
 		} else if sy < ty {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize + 8]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 8])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize - 8]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 8]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
 		} else if tx == 8 && ty == 0 {
-			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9])) << 1
 		} else if tx == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 10])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 10])) << 1
 		} else if ty == 0 {
-			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 10])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 10])) << 1
 		} else {
-			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 10]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 10])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 10]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 10])) << 1
 		}
 	}
 	/// 飛車、角、香車の王手ラインを遮断する可能性のある桂馬をフィルタするマスクを生成する。マスクは常に先手視点で生成される。
