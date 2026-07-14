@@ -8615,8 +8615,8 @@ impl Rule {
 	pub fn has_blocking_move(teban:Teban,state:&State,m:LegalMove) -> bool {
 		if teban == Teban::Sente {
 			let mut self_occupied_board = state.part.sente_self_board;
-			let opponent_occupied_board = state.part.sente_opponent_board;
-			let flip_self_occupied_board = state.part.gote_opponent_board;
+			let mut opponent_occupied_board = state.part.sente_opponent_board;
+			let mut flip_self_occupied_board = state.part.gote_opponent_board;
 			let mut flip_opponent_occupied_board = state.part.gote_self_board;
 
 			let op = if let Some(op) = state.get_part().sente_opponent_ou_position_board.iter().next() {
@@ -8636,21 +8636,26 @@ impl Rule {
 					let to_mask = BitBoard::from(1 << (to + 1));
 
 					self_occupied_board ^= from_mask | to_mask;
-					flip_opponent_occupied_board ^= (from_mask | to_mask).reverse();
+					flip_self_occupied_board ^= (from_mask | to_mask).reverse();
 
 					let captured_mask = mv.obtained().map(|_| (1 << (mv.dst() + 1)).into()).unwrap_or(BitBoard::default());
+					let captured_mask = !captured_mask;
+
+					opponent_occupied_board &= captured_mask;
+					flip_opponent_occupied_board &= captured_mask.reverse();
+
 					let pin_board = state.get_part().sente_pin_board;
 
 					let mut check_line = BitBoard::default();
-					let mut attacker = from;
+					let mut attacker = to;
 
 					if let Some((unpinning_mask, unpinning_attacker)) = Rule::gen_unpinning_reverse_check_mask_and_attacker(
 							state.get_part().sente_opponent_ou_position_board,
 							pin_board,
 							from,
-							state.get_part().sente_kyou_board ^ captured_mask,
-							state.get_part().sente_kaku_board ^ captured_mask,
-							state.get_part().sente_hisha_board ^ captured_mask,
+							state.get_part().sente_kyou_board & captured_mask,
+							state.get_part().sente_kaku_board & captured_mask,
+							state.get_part().sente_hisha_board & captured_mask,
 							self_occupied_board,
 							opponent_occupied_board,
 							flip_self_occupied_board,
@@ -8662,23 +8667,27 @@ impl Rule {
 						}
 					}
 
-					if attacker == from {
+					if attacker == to {
+						if state.get_part().sente_checked_board & !from_mask != 0 {
+							return false;
+						}
+
 						check_line = if (state.get_part().sente_kyou_board & !state.get_part().sente_nari_board) & from_mask != 0 {
 						   Rule::gen_target_attack_mask_by_kyou(op as u32,
 																  flip_self_occupied_board,
-																  flip_opponent_occupied_board,from)
+																  flip_opponent_occupied_board,to)
 						} else if state.get_part().sente_kaku_board & from_mask != 0 {
 							Rule::gen_target_attack_mask_by_kaku(op as u32,
 																  self_occupied_board,
 																  opponent_occupied_board,
 																  flip_self_occupied_board,
-																  flip_opponent_occupied_board,from)
+																  flip_opponent_occupied_board,to)
 						} else if state.get_part().sente_hisha_board & from_mask != 0 {
 							Rule::gen_target_attack_mask_by_hisha(op as u32,
 																   self_occupied_board,
 																   opponent_occupied_board,
 																   flip_self_occupied_board,
-																   flip_opponent_occupied_board,from)
+																   flip_opponent_occupied_board,to)
 						} else {
 							return false;
 						};
@@ -8725,14 +8734,14 @@ impl Rule {
 					}
 
 					if Rule::gen_fu_reachable_block_mask(teban,state,attacker) &
-						(state.get_part().gote_fu_board ^ captured_mask) != 0 {
+						(state.get_part().gote_fu_board & captured_mask) != 0 {
 						return true;
 					}
 
 					let possible_block_mask = Rule::gen_possible_block_mask(teban,state,attacker);
 
 					for p in (state.get_part().gote_gin_board &
-									 !state.get_part().gote_nari_board ^
+									 !state.get_part().gote_nari_board &
 									 captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(80 - p as u32, KomaKind::GGin) & check_line != 0 {
 							return true;
@@ -8743,14 +8752,14 @@ impl Rule {
 							state.get_part().gote_kyou_board |
 							state.get_part().gote_kaku_board |
 							state.get_part().gote_hisha_board
-						)) ^ captured_mask & possible_block_mask).iter() {
+						)) & captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(80 - p as u32,KomaKind::GKin) & check_line != 0 {
 							return true;
 						}
 					}
 
 					for p in (state.get_part().gote_kaku_board &
-						state.get_part().gote_nari_board ^
+						state.get_part().gote_nari_board &
 						captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(80 - p as u32, KomaKind::GKakuN) & check_line != 0 {
 							return true;
@@ -8758,7 +8767,7 @@ impl Rule {
 					}
 
 					for p in (state.get_part().gote_hisha_board &
-						state.get_part().gote_nari_board ^
+						state.get_part().gote_nari_board &
 						captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(80 - p as u32, KomaKind::GHishaN) & check_line != 0 {
 							return true;
@@ -8768,7 +8777,7 @@ impl Rule {
 					let possible_block_mask = Rule::gen_kei_possible_block_mask(teban,state,attacker);
 
 					for p in (state.get_part().gote_kei_board &
-						!state.get_part().gote_nari_board ^
+						!state.get_part().gote_nari_board &
 						captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(80 - p as u32, KomaKind::GKei) & check_line != 0 {
 							return true;
@@ -8780,8 +8789,8 @@ impl Rule {
 			}
 		} else {
 			let mut self_occupied_board = state.part.gote_self_board;
-			let opponent_occupied_board = state.part.gote_opponent_board;
-			let flip_self_occupied_board = state.part.sente_opponent_board;
+			let mut opponent_occupied_board = state.part.gote_opponent_board;
+			let mut flip_self_occupied_board = state.part.sente_opponent_board;
 			let mut flip_opponent_occupied_board = state.part.sente_self_board;
 
 			let op = if let Some(op) = state.get_part().gote_opponent_ou_position_board.iter().next() {
@@ -8801,21 +8810,26 @@ impl Rule {
 					let to_mask = BitBoard::from(1 << (to + 1));
 
 					self_occupied_board ^= (from_mask | to_mask).reverse();
-					flip_opponent_occupied_board ^= from_mask | to_mask;
+					flip_self_occupied_board ^= from_mask | to_mask;
 
 					let captured_mask = mv.obtained().map(|_| (1 << (mv.dst() + 1)).into()).unwrap_or(BitBoard::default());
+					let captured_mask = !captured_mask;
+
+					opponent_occupied_board &= captured_mask.reverse();
+					flip_opponent_occupied_board &= captured_mask;
+
 					let pin_board = state.get_part().gote_pin_board;
 
 					let mut check_line = BitBoard::default();
-					let mut attacker = from;
+					let mut attacker = to;
 
 					if let Some((unpinning_mask, unpinning_attacker)) = Rule::gen_unpinning_reverse_check_mask_and_attacker(
 						state.get_part().gote_opponent_ou_position_board,
 						pin_board,
 						80 - from,
-						state.get_part().gote_kyou_board ^ captured_mask,
-						state.get_part().gote_kaku_board ^ captured_mask,
-						state.get_part().gote_hisha_board ^ captured_mask,
+						state.get_part().gote_kyou_board & captured_mask,
+						state.get_part().gote_kaku_board & captured_mask,
+						state.get_part().gote_hisha_board & captured_mask,
 						self_occupied_board,
 						opponent_occupied_board,
 						flip_self_occupied_board,
@@ -8827,23 +8841,27 @@ impl Rule {
 						}
 					}
 
-					if attacker == from {
+					if attacker == to {
+						if state.get_part().gote_checked_board & !from_mask.reverse() != 0 {
+							return false;
+						}
+
 						check_line = if (state.get_part().gote_kyou_board & !state.get_part().gote_nari_board) & from_mask != 0 {
 							Rule::gen_target_attack_mask_by_kyou(op as u32,
 																  flip_self_occupied_board,
-																  flip_opponent_occupied_board,from)
+																  flip_opponent_occupied_board,80 - to)
 						} else if state.get_part().gote_kaku_board & from_mask != 0 {
 							Rule::gen_target_attack_mask_by_kaku(op as u32,
 																  self_occupied_board,
 																  opponent_occupied_board,
 																  flip_self_occupied_board,
-																  flip_opponent_occupied_board,from)
+																  flip_opponent_occupied_board,80 - to)
 						} else if state.get_part().gote_hisha_board & from_mask != 0 {
 							Rule::gen_target_attack_mask_by_hisha(op as u32,
 																   self_occupied_board,
 																   opponent_occupied_board,
 																   flip_self_occupied_board,
-																   flip_opponent_occupied_board,from)
+																   flip_opponent_occupied_board,80 - to)
 						} else {
 							return false;
 						};
@@ -8890,14 +8908,14 @@ impl Rule {
 					}
 
 					if Rule::gen_fu_reachable_block_mask(teban,state,attacker) &
-						(state.get_part().sente_fu_board ^ captured_mask) != 0 {
+						(state.get_part().sente_fu_board & captured_mask) != 0 {
 						return true;
 					}
 
 					let possible_block_mask = Rule::gen_possible_block_mask(teban,state,attacker);
 
 					for p in (state.get_part().sente_gin_board &
-						!state.get_part().sente_nari_board ^
+						!state.get_part().sente_nari_board &
 						captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(p as u32, KomaKind::SGin) & check_line != 0 {
 							return true;
@@ -8908,14 +8926,14 @@ impl Rule {
 						state.get_part().sente_kyou_board |
 						state.get_part().sente_kaku_board |
 						state.get_part().sente_hisha_board
-					)) ^ captured_mask & possible_block_mask).iter() {
+					)) & captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(p as u32,KomaKind::SKin) & check_line != 0 {
 							return true;
 						}
 					}
 
 					for p in (state.get_part().sente_kaku_board &
-						state.get_part().sente_nari_board ^
+						state.get_part().sente_nari_board &
 						captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(80 - p as u32, KomaKind::SKakuN) & check_line != 0 {
 							return true;
@@ -8923,7 +8941,7 @@ impl Rule {
 					}
 
 					for p in (state.get_part().sente_hisha_board &
-						state.get_part().sente_nari_board ^
+						state.get_part().sente_nari_board &
 						captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(80 - p as u32, KomaKind::SHishaN) & check_line != 0 {
 							return true;
@@ -8933,7 +8951,7 @@ impl Rule {
 					let possible_block_mask = Rule::gen_kei_possible_block_mask(teban,state,attacker);
 
 					for p in (state.get_part().sente_kei_board &
-						!state.get_part().sente_nari_board ^
+						!state.get_part().sente_nari_board &
 						captured_mask & possible_block_mask).iter() {
 						if Rule::gen_control_bits(p as u32, KomaKind::SKei) & check_line != 0 {
 							return true;
@@ -17429,30 +17447,50 @@ impl Rule {
 			return BitBoard::default();
 		}
 
-		if ox == sx && ox == 0 {
-			BitBoard::from(V_MASK << (9 + 1))
-		} else if ox == sx && ox == 8 {
-			BitBoard::from(V_MASK >> (7 * 9 + 1))
-		} else if ox == sx {
-			BitBoard::from(V_MASK >> (ox * 9 - 9 + 1)) | BitBoard::from(V_MASK << (oy * 9 + 9 + 1))
-		} else if oy == sy && oy == 0 {
-			BitBoard::from(H_MASK << (1 + 1))
-		} else if oy == sy && oy == 8 {
-			BitBoard::from(H_MASK >> (7 + 1))
-		} else if oy == sy {
-			BitBoard::from(H_MASK >> (oy - 1 + 1)) | BitBoard::from(H_MASK << (oy + 1 + 1))
-		} else if ox < sx && oy < sy {
-			BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize + 1]) |
-			BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize + 9])
-		} else if ox > sx && oy > sy {
-			BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize - 1]) |
-			BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[op as usize - 9])
-		} else if ox < sx {
-			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize - 1]) |
-			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize + 9])
+		let (sx,sy,tx,ty) = if op as u32 >= from {
+			(sx,sy,ox,oy)
 		} else {
-			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize + 1]) |
-			BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[op as usize - 9])
+			(ox,oy,sx,sy)
+		};
+
+		let t = from.max(op as u32);
+
+		if tx == sx {
+			BitBoard::from(V_MASK >> (tx * 9 + 9 + 1)) | BitBoard::from(V_MASK << (tx * 9 + 9 + 1))
+		} else if ty == sy {
+			BitBoard::from(H_MASK >> (ty + 1 - 1)) | BitBoard::from(H_MASK << (ty + 1 + 1))
+		} else if sy < ty && tx == 8 && ty == 8 {
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9])) << 1
+		} else if sy < ty && ty == 8 {
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize + 8]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9])) << 1
+		} else if sy < ty && tx == 8 {
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
+				BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9]) |
+				BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 8])) << 1
+		} else if sy < ty {
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize + 8]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[t as usize - 8])) << 1
+		} else if tx == 8 && ty == 0 {
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9])) << 1
+		} else if tx == 8 {
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 10])) << 1
+		} else if ty == 0 {
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 10])) << 1
+		} else {
+			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize - 10]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[t as usize + 10])) << 1
 		}
 	}
 	/// 飛車、角、香車の王手ラインを遮断する可能性のある桂馬をフィルタするマスクを生成する。マスクは常に先手視点で生成される。

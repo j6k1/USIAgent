@@ -25,14 +25,14 @@ fn test_has_blocking_move() {
             Path::new("data").join("random").join("generatemoves").join("random_kyokumen_sfen_uniq.txt")
         ).unwrap()).lines().zip(BufReader::new(
         File::open(
-            Path::new("data").join("random").join("generatemoves").join("answer_has_blocking_move.txt")
+            Path::new("data").join("random").join("has_blocking").join("answer_has_blocking_by_random_move.txt")
         ).unwrap()).lines()).enumerate() {
 
         let mut expected = answer.unwrap().split(',').into_iter().map(|m| m.to_string()).collect::<Vec<String>>();
 
         expected.sort();
 
-        let expected = expected.join(" ");
+        let expected = expected.join(",");
 
         let sfen = format!("sfen {}",sfen.unwrap());
 
