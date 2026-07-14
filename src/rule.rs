@@ -17443,7 +17443,7 @@ impl Rule {
 		let dx = ox as i32 - sx as i32;
 		let dy = oy as i32 - sy as i32;
 
-		if sx != ox && sy != oy && dx.abs() != dy.abs() {
+		if sx != ox && sy != oy && (dx.abs() != dy.abs() || dx.abs() <= 1 || dy.abs() <= 1) {
 			return BitBoard::default();
 		}
 
@@ -17459,38 +17459,16 @@ impl Rule {
 			BitBoard::from(V_MASK >> (tx * 9 + 9 + 1)) | BitBoard::from(V_MASK << (tx * 9 + 9 + 1))
 		} else if ty == sy {
 			BitBoard::from(H_MASK >> (ty + 1 - 1)) | BitBoard::from(H_MASK << (ty + 1 + 1))
-		} else if sy < ty && tx == 8 && ty == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
-		} else if sy < ty && tx == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize - 8]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
-		} else if sy < ty && ty == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 8]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
 		} else if sy < ty {
-			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize - 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize - 8]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 8]) |
-			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9])) << 1
-		} else if tx == 8 && ty == 0 {
-			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9])) << 1
-		} else if tx == 8 {
-			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 10])) << 1
-		} else if ty == 0 {
-			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 10])) << 1
+			(BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 1]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 9]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 2]) |
+			 BitBoard::from(KAKU_TO_RIGHT_BOTTOM_MASK_MAP[s as usize + 18])) << 1
 		} else {
 			(BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 1]) |
 			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 9]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 10]) |
-			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 10])) << 1
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize - 2]) |
+			 BitBoard::from(KAKU_TO_RIGHT_TOP_MASK_MAP[s as usize + 18])) << 1
 		}
 	}
 	/// 飛車、角、香車の王手ラインを遮断する可能性のある桂馬をフィルタするマスクを生成する。マスクは常に先手視点で生成される。
