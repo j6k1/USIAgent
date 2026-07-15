@@ -8371,7 +8371,6 @@ impl Rule {
 	/// 盤面上の駒の利きをビットボードに列挙
 	///
 	/// # Arguments
-	/// * `teban` - 手を列挙したい手番
 	/// * `from` - 盤面の左上を0,0とし、x * 9 + yで表される駒の移動元の位置。常に先手側から見た位置になる（後手の場合は逆さまの値を渡す）
 	/// * `kind` - 移動する駒の種類
 	///
@@ -8614,6 +8613,10 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	pub fn has_blocking_move(teban:Teban,state:&State,m:LegalMove) -> bool {
 		if teban == Teban::Sente {
+			if state.get_part().sente_checked_board.bitcount() > 1 {
+				return false;
+			}
+
 			let mut self_occupied_board = state.part.sente_self_board;
 			let mut opponent_occupied_board = state.part.sente_opponent_board;
 			let mut flip_self_occupied_board = state.part.gote_opponent_board;
@@ -8627,6 +8630,9 @@ impl Rule {
 
 			match m {
 				LegalMove::Put(_) => false,
+				LegalMove::To(mv) if mv.obtained() == Some(ObtainKind::Ou) => {
+					false
+				},
 				LegalMove::To(mv) => {
 					let from = mv.src();
 
@@ -8691,6 +8697,19 @@ impl Rule {
 						} else {
 							return false;
 						};
+					} else {
+						let (x,y) = from.square_to_point();
+
+						let kind = if mv.is_nari() {
+							state.get_banmen()[y as usize][x as usize].to_nari()
+						} else {
+							state.get_banmen()[y as usize][x as usize]
+						};
+
+						if Rule::gen_control_bits(to,kind) &
+						   state.get_part().sente_opponent_ou_position_board != 0 {
+							return false;
+						}
 					}
 
 					if check_line == 0 {
@@ -8788,6 +8807,10 @@ impl Rule {
 				}
 			}
 		} else {
+			if state.get_part().gote_checked_board.bitcount() > 1 {
+				return false;
+			}
+
 			let mut self_occupied_board = state.part.gote_self_board;
 			let mut opponent_occupied_board = state.part.gote_opponent_board;
 			let mut flip_self_occupied_board = state.part.sente_opponent_board;
@@ -8801,6 +8824,9 @@ impl Rule {
 
 			match m {
 				LegalMove::Put(_) => false,
+				LegalMove::To(mv) if mv.obtained() == Some(ObtainKind::Ou) => {
+					false
+				},
 				LegalMove::To(mv) => {
 					let from = mv.src();
 
@@ -8825,7 +8851,7 @@ impl Rule {
 
 					if let Some((unpinning_mask, unpinning_attacker)) = Rule::gen_unpinning_reverse_check_mask_and_attacker(
 						state.get_part().gote_opponent_ou_position_board,
-						pin_board,
+						pin_board.reverse(),
 						80 - from,
 						state.get_part().gote_kyou_board & captured_mask,
 						state.get_part().gote_kaku_board & captured_mask,
@@ -8865,6 +8891,19 @@ impl Rule {
 						} else {
 							return false;
 						};
+					} else {
+						let (x,y) = from.square_to_point();
+
+						let kind = if mv.is_nari() {
+							state.get_banmen()[y as usize][x as usize].to_nari()
+						} else {
+							state.get_banmen()[y as usize][x as usize]
+						};
+
+						if Rule::gen_control_bits(80 - to,kind) &
+							state.get_part().gote_opponent_ou_position_board != 0 {
+							return false;
+						}
 					}
 
 					if check_line == 0 {
@@ -16916,8 +16955,8 @@ impl Rule {
 
 			let from_mask = BitBoard::from(1 << (from + 1));
 
-			let self_occupied_board = self_occupied_board ^ from_mask;
-			let flip_self_occupied_board = flip_self_occupied_board ^ from_mask.reverse();
+			let self_occupied_board = self_occupied_board & !from_mask;
+			let flip_self_occupied_board = flip_self_occupied_board & !from_mask.reverse();
 
 			if self_kyou_board != 0 || self_hisha_board != 0 {
 				let im = Rule::gen_candidate_bits_by_hisha_or_kyou_to_top_include(
