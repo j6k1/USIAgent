@@ -27,7 +27,6 @@ fn test_has_blocking_move() {
         File::open(
             Path::new("data").join("random").join("has_blocking").join("answer_has_blocking_move_by_random_move.txt")
         ).unwrap()).lines()).enumerate() {
-
         let mut expected = answer.unwrap().split(',').into_iter().map(|m| m.to_string()).collect::<Vec<String>>();
 
         expected.sort();
