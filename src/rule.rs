@@ -8653,7 +8653,7 @@ impl Rule {
 				}
 
 				for p in (state.get_part().gote_kyou_board &
-					!state.get_part().sente_pin_board & !state.get_part().gote_nari_board & captured_mask).iter() {
+					!state.get_part().gote_nari_board & captured_mask).iter() {
 					if Rule::gen_control_bits_by_kyou(
 						opponent_occupied_board,
 						self_occupied_board,
