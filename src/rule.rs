@@ -8368,6 +8368,71 @@ impl Rule {
 		BitBoard::from(board)
 	}
 
+	/// 駒を打つ合法手をビットボードに列挙
+	///
+	/// # Arguments
+	///
+	/// * `self_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `opponent_occupied_board` - 手番視点で見た手番側の駒の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_drop_candidate_bits(self_occupied_board:BitBoard, opponent_occupied_board:BitBoard) -> BitBoard {
+		!(self_occupied_board | opponent_occupied_board) &	BANMEN_MASK
+	}
+
+	/// 歩を打つ合法手をビットボードに列挙
+	///
+	/// # Arguments
+	///
+	/// * `self_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `opponent_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `self_nari_board` - 手番側視点で見た手番側の成り駒の位置
+	/// * `self_fu_board`- 手番側視点で見た手番側の歩の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_drop_candidate_bits_by_fu(self_occupied_board:BitBoard,
+										 opponent_occupied_board:BitBoard,
+										 self_nari_board:BitBoard,
+										 self_fu_board:BitBoard
+	) -> BitBoard {
+		let occ = (self_fu_board & !self_nari_board) >> 1;
+		let board = BitBoard::from(DOUBLE_FU_CHECK_MASK) - occ;
+
+		let mask_source = (board ^ DOUBLE_FU_CHECK_MASK) & DOUBLE_FU_CHECK_MASK;
+
+		let mask = BitBoard::from(DOUBLE_FU_CHECK_MASK) - (mask_source >> 8) ^ DOUBLE_FU_CHECK_MASK;
+
+		Rule::gen_drop_candidate_bits(self_occupied_board,opponent_occupied_board) & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1) & !(mask << 1)
+	}
+
+	/// 香車を打つ合法手をビットボードに列挙
+	///
+	/// # Arguments
+	///
+	/// * `self_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `opponent_occupied_board` - 手番視点で見た手番側の駒の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_drop_candidate_bits_by_kyou(self_occupied_board:BitBoard, opponent_occupied_board:BitBoard) -> BitBoard {
+		Rule::gen_drop_candidate_bits(self_occupied_board,opponent_occupied_board) & !(DENY_MOVE_SENTE_FU_AND_KYOU_MASK << 1)
+	}
+
+	/// 桂馬を打つ合法手をビットボードに列挙
+	///
+	/// # Arguments
+	///
+	/// * `self_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `opponent_occupied_board` - 手番視点で見た手番側の駒の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn gen_drop_candidate_bits_by_kei(self_occupied_board:BitBoard, opponent_occupied_board:BitBoard) -> BitBoard {
+		Rule::gen_drop_candidate_bits(self_occupied_board,opponent_occupied_board) & !(DENY_MOVE_SENTE_KEI_MASK << 1)
+	}
+
 	/// 盤面上の駒の利きをビットボードに列挙
 	///
 	/// # Arguments
@@ -8610,6 +8675,7 @@ impl Rule {
 	/// * `m` - 王手になる手
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn has_blocking_move(teban:Teban,state:&State,m:LegalMove) -> bool {
 		if teban == Teban::Sente {
 			if state.get_part().sente_checked_board != 0 || state.get_part().gote_checked_board != 0 {
@@ -8749,6 +8815,289 @@ impl Rule {
 								 flip_opponent_occupied_board,
 								 captured_mask,
 								 attacker)
+				}
+			}
+		}
+	}
+
+	/// 手番側の飛車、角、香車による王手をブロック可能な相手側の手の種類を返す。
+	/// 駒の移動で一つでもブロック可能な手がある場合はカウント1,これに加えて駒を打つ手でブロック可能なものがある場合駒種ごとにさらに1加算される
+	///
+	/// # Arguments
+	/// * `teban` - 王手をかけている手番
+	/// * `state` - 盤面の状態
+	/// * `mc` - 持ち駒の状態
+	/// * `m` - 王手になる手
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn can_blocking_count(teban:Teban,state:&State,mc:MochigomaCollections,m:LegalMove) -> usize {
+		#[inline]
+		fn can_drop_blocking_count(teban:Teban,
+								   mc:MochigomaCollections,
+								   check_line:BitBoard,
+								   self_occupied_board:BitBoard,
+								   opponent_occupied_board:BitBoard,
+								   self_nari_board:BitBoard,
+								   self_fu_board:BitBoard) -> usize {
+			let mut blocking_count = 0;
+
+			let mc = match mc {
+				MochigomaCollections::Empty => {
+					return blocking_count;
+				},
+				MochigomaCollections::Pair(mc,_) if teban == Teban::Sente => {
+					mc
+				},
+				MochigomaCollections::Pair(_,mc) => {
+					mc
+				}
+			};
+
+			let mut it = mc.iter();
+
+			let (_, count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+			if count > 0 && Rule::has_blocking_drop_by_fu(
+				check_line,
+				self_occupied_board,
+				opponent_occupied_board,
+				self_nari_board,
+				self_fu_board
+			) {
+				blocking_count += 1;
+			}
+
+			let (_, count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+			if count > 0 && Rule::has_blocking_drop_by_kyou(
+				check_line,
+				self_occupied_board,
+				opponent_occupied_board
+			) {
+				blocking_count += 1;
+			}
+
+			let (_, count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+			if count > 0 && Rule::has_blocking_drop_by_kei(
+				check_line,
+				self_occupied_board,
+				opponent_occupied_board
+			) {
+				blocking_count += 1;
+			}
+
+			let (_, count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+			if count > 0 {
+				blocking_count += 1;
+			}
+
+			let (_, count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+			if count > 0 {
+				blocking_count += 1;
+			}
+
+			let (_, count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+			if count > 0 {
+				blocking_count += 1;
+			}
+
+			let (_, count) = it.next().expect("Could not retrieve item from logic error iterator.");
+
+			if count > 0 {
+				blocking_count += 1;
+			}
+
+			blocking_count
+		}
+
+		if teban == Teban::Sente {
+			if state.get_part().sente_checked_board != 0 || state.get_part().gote_checked_board != 0 {
+				return 0;
+			}
+
+			let mut blocking_count = 0;
+
+			let mut self_occupied_board = state.part.sente_self_board;
+			let mut opponent_occupied_board = state.part.sente_opponent_board;
+			let mut flip_self_occupied_board = state.part.gote_opponent_board;
+			let mut flip_opponent_occupied_board = state.part.gote_self_board;
+			let mut self_checked_bitboard = state.part.sente_checked_board;
+
+			match m {
+				LegalMove::Put(mv) => {
+					let to = mv.dst();
+					let to_mask = BitBoard::from(1 << (to + 1));
+
+					self_occupied_board ^= to_mask;
+					flip_self_occupied_board ^= to_mask.reverse();
+
+					let (check_line, attacker) = Rule::gen_check_line(teban, state, m);
+
+					if check_line != 0 && Rule::can_move_for_blocking_sente(state,
+															 check_line,
+															 self_occupied_board,
+															 opponent_occupied_board,
+															 flip_self_occupied_board,
+															 flip_opponent_occupied_board,
+															 !BitBoard::default(),
+															 attacker) {
+						blocking_count += 1;
+					}
+
+					blocking_count += can_drop_blocking_count(
+						teban.opposite(),mc,check_line,
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						state.get_part().gote_nari_board.reverse(),
+						state.get_part().gote_fu_board.reverse());
+
+					blocking_count
+				},
+				LegalMove::To(mv) if mv.obtained() == Some(ObtainKind::Ou) => {
+					0
+				},
+				LegalMove::To(mv) => {
+					let from = mv.src();
+
+					let from_mask = BitBoard::from(1 << (from + 1));
+
+					let to = mv.dst();
+					let to_mask = BitBoard::from(1 << (to + 1));
+
+					self_occupied_board ^= from_mask | to_mask;
+					flip_self_occupied_board ^= (from_mask | to_mask).reverse();
+					self_checked_bitboard &= !from_mask;
+
+					let captured_mask = !mv.obtained().map(|_| (1 << (mv.dst() + 1)).into()).unwrap_or(BitBoard::default());
+
+					opponent_occupied_board &= captured_mask;
+					flip_opponent_occupied_board &= captured_mask.reverse();
+
+					let (check_line,attacker) = Rule::gen_check_line(teban,state,m);
+
+					if check_line == 0 {
+						return 0;
+					}
+
+					if Rule::can_move_for_blocking_sente(state,
+													  check_line,
+													  self_occupied_board,
+													  opponent_occupied_board,
+													  flip_self_occupied_board,
+													  flip_opponent_occupied_board,
+													  captured_mask,
+													  attacker) {
+						blocking_count += 1;
+					}
+
+
+					blocking_count += can_drop_blocking_count(
+						teban.opposite(),mc,check_line,
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						state.get_part().gote_nari_board.reverse(),
+						state.get_part().gote_fu_board.reverse());
+
+					blocking_count
+				}
+			}
+		} else {
+			if state.get_part().gote_checked_board != 0 || state.get_part().sente_checked_board != 0 {
+				return 0;
+			}
+
+			let mut blocking_count = 0;
+
+			let mut self_occupied_board = state.part.gote_self_board;
+			let mut opponent_occupied_board = state.part.gote_opponent_board;
+			let mut flip_self_occupied_board = state.part.sente_opponent_board;
+			let mut flip_opponent_occupied_board = state.part.sente_self_board;
+			let mut self_checked_bitboard = state.part.gote_checked_board;
+
+			match m {
+				LegalMove::Put(mv) => {
+					let to = mv.dst();
+					let to_mask = BitBoard::from(1 << (to + 1));
+
+					self_occupied_board ^= to_mask.reverse();
+					flip_self_occupied_board ^= to_mask;
+
+					let (check_line,attacker) = Rule::gen_check_line(teban,state,m);
+
+					if check_line == 0 {
+						return 0;
+					}
+
+					if Rule::can_move_for_blocking_gote(state,
+													 check_line,
+													 self_occupied_board,
+													 opponent_occupied_board,
+													 flip_self_occupied_board,
+													 flip_opponent_occupied_board,
+													 !BitBoard::default(),
+													 attacker) {
+						blocking_count += 1;
+					}
+
+					blocking_count += can_drop_blocking_count(
+						teban.opposite(),mc,check_line,
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						state.get_part().sente_nari_board,
+						state.get_part().sente_fu_board);
+
+					blocking_count
+				},
+				LegalMove::To(mv) if mv.obtained() == Some(ObtainKind::Ou) => {
+					0
+				},
+				LegalMove::To(mv) => {
+					let from = mv.src();
+
+					let from_mask = BitBoard::from(1 << (from + 1));
+
+					let to = mv.dst();
+					let to_mask = BitBoard::from(1 << (to + 1));
+
+					self_occupied_board ^= (from_mask | to_mask).reverse();
+					flip_self_occupied_board ^= from_mask | to_mask;
+					self_checked_bitboard &= !from_mask.reverse();
+
+					let captured_mask = !mv.obtained().map(|_| (1 << (mv.dst() + 1)).into()).unwrap_or(BitBoard::default());
+
+					opponent_occupied_board &= captured_mask.reverse();
+					flip_opponent_occupied_board &= captured_mask;
+
+					let (check_line,attacker) = Rule::gen_check_line(teban,state,m);
+
+					if check_line == 0 {
+						return 0;
+					}
+
+					if Rule::can_move_for_blocking_gote(state,
+													 check_line,
+													 self_occupied_board,
+													 opponent_occupied_board,
+													 flip_self_occupied_board,
+													 flip_opponent_occupied_board,
+													 captured_mask,
+													 attacker) {
+						blocking_count += 1;
+					}
+
+					blocking_count += can_drop_blocking_count(
+						teban.opposite(),mc,check_line,
+						flip_opponent_occupied_board,
+						flip_self_occupied_board,
+						state.get_part().sente_nari_board,
+						state.get_part().sente_fu_board);
+
+					blocking_count
 				}
 			}
 		}
@@ -8987,6 +9336,7 @@ impl Rule {
 	/// * `m` - 王手になる手
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
 	pub fn gen_check_line(teban:Teban,state:&State,m:LegalMove) -> (BitBoard,u32) {
 		if teban == Teban::Sente {
 			if state.get_part().sente_checked_board != 0 || state.get_part().gote_checked_board != 0 {
@@ -9246,6 +9596,80 @@ impl Rule {
 					(check_line,attacker)
 				}
 			}
+		}
+	}
+
+	/// 飛車、角、香車による王手を手番側が歩を打つ手でブロック可能かどうかを返す
+	///
+	/// # Arguments
+	///
+	/// * `check_line` - 離れたマスからの王手のライン
+	/// * `self_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `opponent_occupied_board` - 手番視点で見た相手側の駒の位置
+	/// * `self_nari_board` - 手番視点で見た手番側の成り駒の位置
+	/// * `self_fu_board` - 手番視点で見た手番側の歩の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn has_blocking_drop_by_fu(check_line:BitBoard,
+								   self_occupied_board:BitBoard,
+								   opponent_occupied_board:BitBoard,
+								   self_nari_board:BitBoard,
+								   self_fu_board:BitBoard) -> bool {
+		if check_line == 0 {
+			false
+		} else {
+			check_line & Rule::gen_drop_candidate_bits_by_fu(
+				self_occupied_board,
+				opponent_occupied_board,
+				self_nari_board,
+				self_fu_board) != 0
+		}
+	}
+
+	/// 飛車、角、香車による王手を手番側が香車を打つ手でブロック可能かどうかを返す
+	///
+	/// # Arguments
+	///
+	/// * `check_line` - 離れたマスからの王手のライン
+	/// * `self_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `opponent_occupied_board` - 手番視点で見た相手側の駒の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn has_blocking_drop_by_kyou(check_line:BitBoard,
+								   self_occupied_board:BitBoard,
+								   opponent_occupied_board:BitBoard) -> bool {
+		if check_line == 0 {
+			false
+		} else {
+			check_line & Rule::gen_drop_candidate_bits_by_kyou(
+				self_occupied_board,
+				opponent_occupied_board
+			) != 0
+		}
+	}
+
+	/// 飛車、角、香車による王手を手番側が桂馬を打つ手でブロック可能かどうかを返す
+	///
+	/// # Arguments
+	///
+	/// * `check_line` - 離れたマスからの王手のライン
+	/// * `self_occupied_board` - 手番視点で見た手番側の駒の位置
+	/// * `opponent_occupied_board` - 手番視点で見た相手側の駒の位置
+	///
+	/// 渡した引数の状態が不正な場合の動作は未定義
+	#[inline]
+	pub fn has_blocking_drop_by_kei(check_line:BitBoard,
+									 self_occupied_board:BitBoard,
+									 opponent_occupied_board:BitBoard) -> bool {
+		if check_line == 0 {
+			false
+		} else {
+			check_line & Rule::gen_drop_candidate_bits_by_kei(
+				self_occupied_board,
+				opponent_occupied_board
+			) != 0
 		}
 	}
 
