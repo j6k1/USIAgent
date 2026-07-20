@@ -8378,7 +8378,7 @@ impl Rule {
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
 	pub fn gen_drop_candidate_bits(self_occupied_board:BitBoard, opponent_occupied_board:BitBoard) -> BitBoard {
-		!(self_occupied_board | opponent_occupied_board) &	BANMEN_MASK
+		!(self_occupied_board | opponent_occupied_board) & BANMEN_MASK
 	}
 
 	/// 歩を打つ合法手をビットボードに列挙
