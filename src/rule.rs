@@ -8831,10 +8831,10 @@ impl Rule {
 	///
 	/// 渡した引数の状態が不正な場合の動作は未定義
 	#[inline]
-	pub fn can_blocking_count(teban:Teban,state:&State,mc:MochigomaCollections,m:LegalMove) -> usize {
+	pub fn can_blocking_count(teban:Teban,state:&State,mc:&MochigomaCollections,m:LegalMove) -> usize {
 		#[inline]
 		fn can_drop_blocking_count(teban:Teban,
-								   mc:MochigomaCollections,
+								   mc:&MochigomaCollections,
 								   check_line:BitBoard,
 								   self_occupied_board:BitBoard,
 								   opponent_occupied_board:BitBoard,
@@ -8926,7 +8926,8 @@ impl Rule {
 			let mut opponent_occupied_board = state.part.sente_opponent_board;
 			let mut flip_self_occupied_board = state.part.gote_opponent_board;
 			let mut flip_opponent_occupied_board = state.part.gote_self_board;
-			let mut self_checked_bitboard = state.part.sente_checked_board;
+			let mut flip_opponent_nari_board = state.get_part().gote_nari_board;
+			let mut flip_opponent_fu_board = state.get_part().gote_fu_board;
 
 			match m {
 				LegalMove::Put(mv) => {
@@ -8938,7 +8939,11 @@ impl Rule {
 
 					let (check_line, attacker) = Rule::gen_check_line(teban, state, m);
 
-					if check_line != 0 && Rule::can_move_for_blocking_sente(state,
+					if check_line == 0 {
+						return 0;
+					}
+
+					if Rule::can_move_for_blocking_sente(state,
 															 check_line,
 															 self_occupied_board,
 															 opponent_occupied_board,
@@ -8953,8 +8958,8 @@ impl Rule {
 						teban.opposite(),mc,check_line,
 						flip_opponent_occupied_board,
 						flip_self_occupied_board,
-						state.get_part().gote_nari_board.reverse(),
-						state.get_part().gote_fu_board.reverse());
+						flip_opponent_nari_board.reverse(),
+						flip_opponent_fu_board.reverse());
 
 					blocking_count
 				},
@@ -8971,12 +8976,13 @@ impl Rule {
 
 					self_occupied_board ^= from_mask | to_mask;
 					flip_self_occupied_board ^= (from_mask | to_mask).reverse();
-					self_checked_bitboard &= !from_mask;
 
 					let captured_mask = !mv.obtained().map(|_| (1 << (mv.dst() + 1)).into()).unwrap_or(BitBoard::default());
 
 					opponent_occupied_board &= captured_mask;
 					flip_opponent_occupied_board &= captured_mask.reverse();
+					flip_opponent_nari_board &= captured_mask;
+					flip_opponent_fu_board &= captured_mask;
 
 					let (check_line,attacker) = Rule::gen_check_line(teban,state,m);
 
@@ -9000,8 +9006,8 @@ impl Rule {
 						teban.opposite(),mc,check_line,
 						flip_opponent_occupied_board,
 						flip_self_occupied_board,
-						state.get_part().gote_nari_board.reverse(),
-						state.get_part().gote_fu_board.reverse());
+						flip_opponent_nari_board.reverse(),
+						flip_opponent_fu_board.reverse());
 
 					blocking_count
 				}
@@ -9017,7 +9023,8 @@ impl Rule {
 			let mut opponent_occupied_board = state.part.gote_opponent_board;
 			let mut flip_self_occupied_board = state.part.sente_opponent_board;
 			let mut flip_opponent_occupied_board = state.part.sente_self_board;
-			let mut self_checked_bitboard = state.part.gote_checked_board;
+			let mut flip_opponent_nari_board = state.part.sente_nari_board;
+			let mut flip_opponent_fu_board = state.part.sente_fu_board;
 
 			match m {
 				LegalMove::Put(mv) => {
@@ -9048,8 +9055,8 @@ impl Rule {
 						teban.opposite(),mc,check_line,
 						flip_opponent_occupied_board,
 						flip_self_occupied_board,
-						state.get_part().sente_nari_board,
-						state.get_part().sente_fu_board);
+						flip_opponent_nari_board,
+						flip_opponent_fu_board);
 
 					blocking_count
 				},
@@ -9066,12 +9073,13 @@ impl Rule {
 
 					self_occupied_board ^= (from_mask | to_mask).reverse();
 					flip_self_occupied_board ^= from_mask | to_mask;
-					self_checked_bitboard &= !from_mask.reverse();
 
 					let captured_mask = !mv.obtained().map(|_| (1 << (mv.dst() + 1)).into()).unwrap_or(BitBoard::default());
 
 					opponent_occupied_board &= captured_mask.reverse();
 					flip_opponent_occupied_board &= captured_mask;
+					flip_opponent_nari_board &= captured_mask;
+					flip_opponent_fu_board &= captured_mask;
 
 					let (check_line,attacker) = Rule::gen_check_line(teban,state,m);
 
@@ -9094,8 +9102,8 @@ impl Rule {
 						teban.opposite(),mc,check_line,
 						flip_opponent_occupied_board,
 						flip_self_occupied_board,
-						state.get_part().sente_nari_board,
-						state.get_part().sente_fu_board);
+						flip_opponent_nari_board,
+						flip_opponent_fu_board);
 
 					blocking_count
 				}
