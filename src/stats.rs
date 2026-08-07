@@ -33,7 +33,7 @@ impl<const D:i32> Add<i32> for StatsEntry<D> {
         let clamped_bonus = bonus.clamp(-D,D);
 
         StatsEntry {
-            entry: clamped_bonus - self.entry * clamped_bonus.abs() / D
+            entry: self.entry - self.entry / 512 + clamped_bonus
         }
     }
 }

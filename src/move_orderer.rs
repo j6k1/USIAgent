@@ -2,6 +2,7 @@
 
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use consts::FU_SCORE;
 use error::InvalidInputError;
 use rule::{LegalMove, Rule, SquareToPoint, State};
 use see::calc_see;
@@ -10,21 +11,31 @@ use shogi::KomaKind::GFu;
 use shogi::Teban::{Gote, Sente};
 use stats::StatsEntry;
 
-const CM_BONUS:i32 = 64;
-const MAIN_HISTORY_WEIGHT: i32 = 2;
-const PIECE_TO_SQUARE_WEIGHT: i32 = 2;
-const FOLLOW_UP_WEIGHT: i32 = 1;
-const COUNTER_MOVE_WEIGHT: i32 = 1;
+const PROMOTION_BONUS:i32 = 10;
+const GOOD_CAPTURE_PROMOTION_BONUS:i32 = 150;
+const MARGINAL_CAPTURE_PROMOTION_BONUS:i32 = 50;
+const BAD_CAPTURE_PROMOTION_BONUS:i32 = 5;
+const CAPTURE_BASE_MARGINAL:i32 = 150;
+const KILLER_BASE:i32 = 2000;
+const CHECK_BASE:i32 = 1600;
+const MAIN_HISTORY_WEIGHT: i32 = 48;
+const PIECE_TO_SQUARE_WEIGHT: i32 = 32;
+const FOLLOW_UP_WEIGHT: i32 = 24;
+const CONTINUATION_WEIGHT: i32 = 90;
+const COUNTER_MOVE_WEIGHT: i32 = 60;
+const KILLER_MOVE_WEIGHT: i32 = 50;
+const CHECK_MOVE_WEIGHT: i32 = 40;
+
 pub const HISTORY_SCALE: i32 = 256;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// 指し手の並び替え順
 /// ※降順に並び変えるので優先度の低い物から列挙する
 pub enum MoveOrder {
-    BadCaptures(i32),
-    Quiet(i32),
-    Checks,
-    KillerMoves(usize),
-    GoodCaptures(i32),
+    BadCapture(i32),
+    Normal(i32),
+    Check(i32),
+    Killer(i32),
+    GoodCapture(i32),
     PV,
     TT
 }
@@ -169,7 +180,6 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             false
         })
     }
-
     /// Historyの更新
     ///
     /// # Arguments
@@ -189,8 +199,12 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_improve_history(
-        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32, ply: u32, move_history: &[Option<(u8,u8)>]
+        &mut self, teban: Teban, state: &State, m: LegalMove, _: u32, ply: u32, move_history: &[Option<(u8,u8)>]
     ) -> Result<(),InvalidInputError> {
+        const BONUS_MAIN: i32 = 24;
+        const BONUS_FOLLOW: i32 = 14;
+        const BONUS_CONT: i32 = 12;
+
         if m.obtained().is_some() {
             return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the history.")));
         }
@@ -204,33 +218,26 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         };
 
-        let bonus = depth as i32 * 6 * HISTORY_SCALE;
         let piece_index = self.calc_piece_index(teban,state,m)?;
 
-        self.history[piece_index][to as usize] += bonus;
+        self.history[piece_index][to as usize] += BONUS_MAIN;
 
-        self.piece_to_square[self.calc_piece_us_index(teban, piece_index)?][to as usize] += bonus;
+        self.piece_to_square[self.calc_piece_us_index(teban, piece_index)?][to as usize] += BONUS_MAIN;
 
         let next_piece = piece_index;
         let next_to = to;
 
-        for h in move_history.iter().rev().take(1) {
+        for h in move_history.iter().rev().take(3) {
             if let &Some((p,t)) = h {
-                self.follow_up_history[p as usize][t as usize][self.calc_piece_us_index(teban, next_piece)?][next_to as usize] += bonus;
+                self.follow_up_history[p as usize][t as usize][self.calc_piece_us_index(teban, next_piece)?][next_to as usize] += BONUS_FOLLOW;
             }
         }
 
-        let in_check = Rule::in_check(teban,state);
-
-        for (i,h) in self.continuation_history.iter_mut()
+        for (_,h) in self.continuation_history.iter_mut()
             .take(ply as usize + 1).rev().skip(1)
-            .take(6).enumerate() {
+            .take(3).enumerate() {
 
-            if in_check && i >= 2 {
-                break;
-            }
-
-            h[piece_index][to as usize] += (bonus >> i) + (i == 0) as i32 * 88;
+            h[piece_index][to as usize] += BONUS_CONT;
         }
 
         Ok(())
@@ -253,8 +260,10 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// [`InvalidInputError`]: ../error/struct.InvalidInputError.html
     #[inline]
     pub fn update_degrade_history(
-        &mut self, teban: Teban, state: &State, m: LegalMove, depth: u32
+        &mut self, teban: Teban, state: &State, m: LegalMove, _: u32
     ) -> Result<(),InvalidInputError> {
+        const PENALTY: i32 = -4;
+
         if m.obtained().is_some() {
             return Err(InvalidInputError(String::from("Move that captures a piece cannot be registered in the history.")));
         }
@@ -268,9 +277,7 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
             }
         };
 
-        let bonus = -(depth as i32 * 2 * HISTORY_SCALE);
-
-        self.history[self.calc_piece_index(teban,state,m)?][to as usize] += bonus;
+        self.history[self.calc_piece_index(teban,state,m)?][to as usize] += PENALTY;
 
         Ok(())
     }
@@ -574,11 +581,8 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     /// * `ply` - 次の探索深さ
     ///
     pub fn startup(&mut self) {
-        for h in self.continuation_history.iter_mut() {
-            for h in h.iter_mut() {
-                h.fill(StatsEntry::new(0));
-            }
-        }
+        self.killer_moves = vec![[None; 2]; self.max_ply+1];
+        self.usage_killer_moves = vec![0; self.max_ply+1];
     }
     /// 指し手を並び変える関数
     ///
@@ -639,107 +643,42 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
 
                 mvs.push((MoveOrder::PV,m,see));
             } else {
+                let piece_index = self.calc_piece_index(teban,state,m)?;
+
+                assert!(piece_index < 28);
+
                 match m {
                     LegalMove::To(mv) if mv.obtained().is_some() => {
                         let see = calc_see(teban,state,m);
 
                         if see >= 0 {
-                            mvs.push((MoveOrder::GoodCaptures(see),m,see));
+                       mvs.push((MoveOrder::GoodCapture(see + m.is_nari() as i32 * GOOD_CAPTURE_PROMOTION_BONUS), m, see));
+                        } else if see >= -FU_SCORE * 2 {
+                            mvs.push((MoveOrder::Normal(
+                                self.accumulate_history(ply, teban, state, m, prev_move, prev_kind, move_history)? +
+                                    CAPTURE_BASE_MARGINAL + see / 2 + m.is_nari() as i32 * MARGINAL_CAPTURE_PROMOTION_BONUS
+                            ), m, see));
                         } else {
-                            mvs.push((MoveOrder::BadCaptures(see),m,see));
+                            mvs.push((MoveOrder::BadCapture(see + m.is_nari() as i32 * BAD_CAPTURE_PROMOTION_BONUS), m, see));
                         }
                     },
                     _ => {
                         if Rule::is_oute_move(state,teban,m) {
-                            let see = E::see(teban,state,m);
+                            let s = MAIN_HISTORY_WEIGHT * self.history[piece_index][m.dst() as usize].value();
 
-                            mvs.push((MoveOrder::Checks,m,see));
-                        } else if self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) {
-                            let see = E::see(teban,state,m);
+                            mvs.push((MoveOrder::Check(s),m,0));
+                        } else if self.killer_moves[ply as usize][0].map(|k| k == m).unwrap_or(false) ||
+                                  self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false) {
+                            let s = MAIN_HISTORY_WEIGHT * self.history[piece_index][m.dst() as usize].value();
 
-                            mvs.push((MoveOrder::KillerMoves(1),m,see));
-                        } else if self.killer_moves[ply as usize][1].map(|k| k == m).unwrap_or(false) {
-                            let see = E::see(teban,state,m);
-
-                            mvs.push((MoveOrder::KillerMoves(0),m,see));
+                            mvs.push((MoveOrder::Killer(s),m,0));
                         } else {
-                            let to = match m {
-                                LegalMove::To(m) => {
-                                    m.dst()
-                                },
-                                LegalMove::Put(m) => {
-                                    m.dst()
-                                }
-                            };
-
-                            let bonus = {
-                                let index = if teban.opposite() == Teban::Sente {
-                                    prev_kind as usize
-                                } else if prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
-                                    prev_kind as usize - KomaKind::GFu as usize
-                                } else {
-                                    14
-                                };
-
-                                if prev_kind != KomaKind::Blank {
-                                    prev_move.map(|prev_move| {
-                                        let dst = match prev_move {
-                                            LegalMove::To(m) => {
-                                                m.dst()
-                                            },
-                                            LegalMove::Put(m) => {
-                                                m.dst()
-                                            }
-                                        };
-
-                                        if self.counter_moves[teban.opposite() as usize][index][dst as usize].map(|cm| {
-                                            m == cm
-                                        }).unwrap_or(false) {
-                                            CM_BONUS * COUNTER_MOVE_WEIGHT
-                                        } else {
-                                            0
-                                        }
-                                    }).unwrap_or(0)
-                                } else {
-                                    0
-                                }
-                            };
-
-                            let piece_index = self.calc_piece_index(teban,state,m)?;
-
-                            assert!(piece_index < 28);
-
-                            let mut s = MAIN_HISTORY_WEIGHT * self.history[piece_index][to as usize].value();
-
-                            s += PIECE_TO_SQUARE_WEIGHT * self.piece_to_square[self.calc_piece_us_index(teban, piece_index)?][to as usize].value();
-
-                            for h in move_history.iter().rev().take(1) {
-                                if let &Some((p, t)) = h {
-                                    let h = self.follow_up_history[p as usize][t as usize][self.calc_piece_us_index(teban, piece_index)?][to as usize].value();
-
-                                    s += FOLLOW_UP_WEIGHT * h;
-                                }
-                            }
-
-                            for (i,h) in self.continuation_history.iter()
-                                                                                     .take(ply as usize + 1)
-                                                                                     .rev().skip(1)
-                                                                                     .take(6).enumerate() {
-                                if i == 4 {
-                                    continue;
-                                }
-                                s += h[piece_index][to as usize].value() / (1 << 5);
-                            }
-
-                            s = s + bonus;
-                            s = E::effect(teban,state,m,s);
-
-                            let see = E::see(teban,state,m);
+                            let s = self.accumulate_history(ply,teban,state,m,prev_move,prev_kind,move_history)?;
 
                             mvs.push((
-                                MoveOrder::Quiet(s),
+                                MoveOrder::Normal(s + m.is_nari() as i32 * PROMOTION_BONUS),
                                 m,
-                                see
+                                0
                             ))
                         }
                     }
@@ -750,5 +689,73 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
         mvs.sort_by(|a,b| b.0.cmp(&a.0));
 
         Ok(mvs.into_iter().map(|(_,m,see)| (m,see)))
+    }
+
+    #[inline]
+    fn accumulate_history(&self, ply: u32, teban: Teban, state: &State, m: LegalMove,
+                          prev_move: Option<LegalMove>, prev_kind: KomaKind,
+                          move_history: &[Option<(u8,u8)>]) -> Result<i32,InvalidInputError> {
+        let to = match m {
+            LegalMove::To(m) => {
+                m.dst()
+            },
+            LegalMove::Put(m) => {
+                m.dst()
+            }
+        };
+
+        let bonus = {
+            let index = if teban.opposite() == Teban::Sente {
+                prev_kind as usize
+            } else if prev_kind >= KomaKind::GFu && prev_kind < KomaKind::Blank {
+                prev_kind as usize - KomaKind::GFu as usize
+            } else {
+                14
+            };
+
+            if prev_kind != KomaKind::Blank {
+                prev_move.map(|pm| {
+                    if self.counter_moves[teban.opposite() as usize][index][pm.dst() as usize].map(|cm| {
+                        m == cm
+                    }).unwrap_or(false) {
+                        COUNTER_MOVE_WEIGHT
+                    } else {
+                        0
+                    }
+                }).unwrap_or(0)
+            } else {
+                0
+            }
+        };
+
+        let piece_index = self.calc_piece_index(teban,state,m)?;
+
+        assert!(piece_index < 28);
+
+        let mut s = MAIN_HISTORY_WEIGHT * self.history[piece_index][to as usize].value();
+
+        s += PIECE_TO_SQUARE_WEIGHT * self.piece_to_square[self.calc_piece_us_index(teban, piece_index)?][to as usize].value();
+
+        for h in move_history.iter().rev().take(3) {
+            if let &Some((p, t)) = h {
+                let h = self.follow_up_history[p as usize][t as usize][self.calc_piece_us_index(teban, piece_index)?][to as usize].value();
+
+                s += FOLLOW_UP_WEIGHT * h;
+            }
+        }
+
+        let mut cs = 0;
+
+        for (i,h) in self.continuation_history.iter()
+            .take(ply as usize + 1)
+            .rev().skip(1)
+            .take(3).enumerate() {
+            let weight_shift = 2 + i;
+            cs += h[piece_index][to as usize].value() >> weight_shift;
+        }
+
+        s = s + cs * CONTINUATION_WEIGHT + bonus;
+
+        Ok(s)
     }
 }
