@@ -570,7 +570,7 @@ impl AtomicLegalMove {
 /// 合法手生成に内部で利用するビットボード群と盤面を管理する構造体
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct State {
-	banmen:Banmen,
+	pub(crate) banmen:Banmen,
 	pub(crate) part:PartialState
 }
 impl State {
@@ -13291,9 +13291,17 @@ impl Rule {
 	/// assert_eq!(State::new(banmen).get_part(),&p);
 	/// ```
 	#[inline]
-	pub fn apply_move_to_partial_state_none_check(state:&State,t:Teban,_:&MochigomaCollections,m:AppliedMove)
-		-> PartialState {
-		let mut ps = state.part.clone();
+	pub fn apply_move_to_partial_state_none_check(state:&State,t:Teban,mc:&MochigomaCollections,m:AppliedMove) -> PartialState {
+		let mut state = state.clone();
+
+		Rule::apply_move_to_partial_state_none_check_inplace(&mut state,t,mc,m);
+
+		state.part
+	}
+
+	#[inline]
+	pub(crate) fn apply_move_to_partial_state_none_check_inplace(state:&mut State,t:Teban,_:&MochigomaCollections,m:AppliedMove) {
+		let ps = &mut state.part;
 
 		match &state.banmen {
 			&Banmen(ref kinds) => {
@@ -14106,8 +14114,6 @@ impl Rule {
 
 		ps.sente_control_board = ps.sente_control_superposition.to_bitboard();
 		ps.gote_control_board = ps.gote_control_superposition.to_bitboard();
-
-		ps
 	}
 
 	/// 現在の局面に手を適用した結果を返す。合法手か否かのチェックは行わない。
@@ -14128,6 +14134,7 @@ impl Rule {
 		(ps.to_full_state(banmen),mc,o)
 	}
 
+
 	/// 現在の局面に手を適用した結果を返す。適用対象は盤面と持ち駒のみで`State`は返さない。
 	///
 	/// # Arguments
@@ -14140,12 +14147,21 @@ impl Rule {
 	pub fn apply_move_to_banmen_and_mochigoma_none_check(
 		banmen:&Banmen,t:Teban,mc:&MochigomaCollections,m:AppliedMove
 	) -> (Banmen,MochigomaCollections,Option<MochigomaKind>) {
+		let mut banmen = banmen.clone();
+		let mut mc = mc.clone();
 
-		let mut kinds = match banmen {
-			&Banmen(ref kinds) => kinds.clone(),
-		};
+		let obtained = Rule::apply_move_to_banmen_and_mochigoma_none_check_inplace(&mut banmen,t,&mut mc,m);
 
-		let (nmc,obtained) = match m {
+		(banmen,mc,obtained)
+	}
+
+	#[inline]
+	pub(crate) fn apply_move_to_banmen_and_mochigoma_none_check_inplace(
+		banmen:&mut Banmen,t:Teban,mc:&mut MochigomaCollections,m:AppliedMove
+	) -> Option<MochigomaKind> {
+		let kinds = &mut banmen.0;
+
+		let obtained = match m {
 			AppliedMove::To(m) => {
 				let from = m.src();
 				let to = m.dst();
@@ -14185,7 +14201,7 @@ impl Rule {
 							},
 							false => k,
 						};
-						(mc.clone(),None)
+						None
 					},
 					dst => {
 						let obtained = match ObtainKind::try_from(dst) {
@@ -14222,44 +14238,44 @@ impl Rule {
 						match obtained {
 							Some(obtained) => {
 								match mc {
-									&MochigomaCollections::Pair(ref ms, ref mg) => {
+									&mut MochigomaCollections::Pair(ref mut ms, ref mut mg) => {
 										match t {
 											Teban::Sente => {
-												let mut ms = ms.clone();
-
 												ms.put(obtained);
 
-												(MochigomaCollections::Pair(ms,mg.clone()),Some(obtained))
+												Some(obtained)
 											},
 											Teban::Gote => {
-												let mut mg = mg.clone();
-
 												mg.put(obtained);
 
-												(MochigomaCollections::Pair(ms.clone(),mg),Some(obtained))
+												Some(obtained)
 											}
 										}
 									},
-									&MochigomaCollections::Empty => {
+									mc @ &mut MochigomaCollections::Empty => {
 										match t {
 											Teban::Sente => {
 												let mut ms:Mochigoma = Mochigoma::new();
 
 												ms.insert(obtained,1);
-												(MochigomaCollections::Pair(ms,Mochigoma::new()),Some(obtained))
+												*mc = MochigomaCollections::Pair(ms,Mochigoma::new());
+
+												Some(obtained)
 											},
 											Teban::Gote => {
 												let mut mg:Mochigoma = Mochigoma::new();
 
 												mg.insert(obtained,1);
-												(MochigomaCollections::Pair(Mochigoma::new(),mg),Some(obtained))
+												*mc = MochigomaCollections::Pair(Mochigoma::new(),mg);
+
+												Some(obtained)
 											}
 										}
 									}
 								}
 							},
 							None => {
-								(mc.clone(),None)
+								None
 							}
 						}
 					}
@@ -14275,12 +14291,10 @@ impl Rule {
 
 				kinds[dy][dx] = KomaKind::from((t,k));
 
-				let mut mc = mc.clone();
-
 				match t {
 					Teban::Sente => {
 						match mc {
-							MochigomaCollections::Pair(ref mut mc,_) => {
+							&mut MochigomaCollections::Pair(ref mut mc,_) => {
 								let c = match mc.get(k) {
 									0 => {
 										0
@@ -14294,7 +14308,7 @@ impl Rule {
 					},
 					Teban::Gote => {
 						match mc {
-							MochigomaCollections::Pair(_,ref mut mc) => {
+							&mut MochigomaCollections::Pair(_,ref mut mc) => {
 								let c = match mc.get(k) {
 									0 => {
 										0
@@ -14308,11 +14322,11 @@ impl Rule {
 					}
 				};
 
-				(mc,None)
+				None
 			}
 		};
 
-		(Banmen(kinds),nmc,obtained)
+		obtained
 	}
 
 	/// 手が合法かどうかを返す

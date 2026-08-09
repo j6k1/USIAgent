@@ -499,6 +499,45 @@ impl From<(Teban,MochigomaKind)> for KomaKind {
 		}
 	}
 }
+impl From<(Teban,ObtainKind)> for KomaKind {
+	fn from((teban,kind): (Teban,ObtainKind)) -> KomaKind {
+		if teban == Teban::Sente {
+			match kind {
+				ObtainKind::Fu => KomaKind::SFu,
+				ObtainKind::Kyou => KomaKind::SKyou,
+				ObtainKind::Kei => KomaKind::SKei,
+				ObtainKind::Gin => KomaKind::SGin,
+				ObtainKind::Kin => KomaKind::SKin,
+				ObtainKind::Kaku => KomaKind::SKaku,
+				ObtainKind::Hisha => KomaKind::SHisha,
+				ObtainKind::Ou => KomaKind::SOu,
+				ObtainKind::FuN => KomaKind::SFuN,
+				ObtainKind::KyouN => KomaKind::SKyouN,
+				ObtainKind::KeiN => KomaKind::SKeiN,
+				ObtainKind::GinN => KomaKind::SGinN,
+				ObtainKind::KakuN => KomaKind::SKakuN,
+				ObtainKind::HishaN => KomaKind::SHishaN,
+			}
+		} else {
+			match kind {
+				ObtainKind::Fu => KomaKind::GFu,
+				ObtainKind::Kyou => KomaKind::GKyou,
+				ObtainKind::Kei => KomaKind::GKei,
+				ObtainKind::Gin => KomaKind::GGin,
+				ObtainKind::Kin => KomaKind::GKin,
+				ObtainKind::Kaku => KomaKind::GKaku,
+				ObtainKind::Hisha => KomaKind::GHisha,
+				ObtainKind::Ou => KomaKind::GOu,
+				ObtainKind::FuN => KomaKind::GFuN,
+				ObtainKind::KyouN => KomaKind::GKyouN,
+				ObtainKind::KeiN => KomaKind::GKeiN,
+				ObtainKind::GinN => KomaKind::GGinN,
+				ObtainKind::KakuN => KomaKind::GKakuN,
+				ObtainKind::HishaN => KomaKind::GHishaN,
+			}
+		}
+	}
+}
 const MOCHIGOMA_START_INDEXES:[u8; MOCHIGOMA_KIND_MAX + 1] = [
 	0,
 	18,

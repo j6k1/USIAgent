@@ -31,6 +31,7 @@ pub mod move_orderer;
 pub mod consts;
 pub mod stats;
 pub mod superposition;
+pub mod position;
 
 use std::error::Error;
 use std::fmt;
