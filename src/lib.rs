@@ -30,6 +30,7 @@ pub mod see;
 pub mod move_orderer;
 pub mod consts;
 pub mod stats;
+pub mod superposition;
 
 use std::error::Error;
 use std::fmt;
