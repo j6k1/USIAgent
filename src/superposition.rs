@@ -8,6 +8,7 @@ pub struct SuperPosition {
     boards:[BitBoard; 10]
 }
 impl SuperPosition {
+    /// 複数枚のビットボードを重ね合わせて効きのビットボードを生成して返す
     pub fn to_bitboard(&self) -> BitBoard {
         self.boards[0] |
         self.boards[1] |
