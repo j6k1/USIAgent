@@ -3,7 +3,7 @@
 use std::ops::{AddAssign, SubAssign};
 use bitboard::BitBoard;
 
-#[derive(Clone)]
+#[derive(Clone,Eq,PartialEq,Debug)]
 pub struct SuperPosition {
     boards:[BitBoard; 10]
 }
@@ -60,8 +60,8 @@ impl SubAssign<BitBoard> for SuperPosition {
         }
     }
 }
-impl From<SuperPosition> for BitBoard {
-    fn from(sp: SuperPosition) -> Self {
+impl From<&SuperPosition> for BitBoard {
+    fn from(sp: &SuperPosition) -> Self {
         sp.to_bitboard()
     }
 }

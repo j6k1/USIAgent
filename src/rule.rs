@@ -45,6 +45,7 @@ use shogi::KomaKind::{
 use Find;
 use math::Prng;
 use movepick::{MovePicker, RandomPicker};
+use superposition::SuperPosition;
 
 trait KomaKindFrom<T> {
 	fn kind_from(k:T) -> Self;
@@ -602,6 +603,9 @@ impl State {
 		let mut sente_opponent_ou_position_board:u128 = 0;
 		let mut gote_opponent_ou_position_board:u128 = 0;
 
+		let mut sente_control_superposition = SuperPosition::default();
+		let mut gote_control_superpositon = SuperPosition::default();
+
 		match banmen {
 			Banmen(ref kinds) => {
 				for y in 0..9 {
@@ -625,6 +629,12 @@ impl State {
 							GHisha | GHishaN => gote_hisha_board ^= 1 << (x * 9 + y + 1),
 							GOu => sente_opponent_ou_position_board ^= 1 << (x * 9 + y + 1),
 							_ => (),
+						}
+
+						if kind < GFu {
+							sente_control_superposition += Rule::gen_control_bits(x as u32 * 9 + y as u32, kind);
+						} else {
+							gote_control_superpositon += Rule::gen_control_bits(80 -(x as u32 * 9 + y as u32), kind);
 						}
 
 						if kind < GFu {
@@ -672,6 +682,10 @@ impl State {
 			gote_pin_board: BitBoard::default(),
 			sente_checked_board: BitBoard::default(),
 			gote_checked_board: BitBoard::default(),
+			sente_control_board:(&sente_control_superposition).into(),
+			gote_control_board:(&gote_control_superpositon).into(),
+			sente_control_superposition:sente_control_superposition,
+			gote_control_superposition:gote_control_superpositon
 		};
 
 		part.init_sente_checked();
@@ -680,7 +694,7 @@ impl State {
 
 		State {
 			banmen:banmen,
-			part:part
+			part:part,
 		}
 	}
 
@@ -766,6 +780,14 @@ pub struct PartialState {
 	pub sente_checked_board:BitBoard,
 	/// 後手側の駒のうち、先手側の王に王手をかけている駒の位置のビットボード
 	pub gote_checked_board:BitBoard,
+	/// 先手視点で見た先手側の駒の効きのビットボード
+	pub sente_control_board:BitBoard,
+	/// 後手視点で見た後手側の駒の効きのビットボード
+	pub gote_control_board:BitBoard,
+	/// 先手視点で見た先手側の効きを差分更新するためのSuperPosition
+	pub sente_control_superposition:SuperPosition,
+	/// 後手視点で見た後手側の効きを差分更新するためのSuperPosition
+	pub gote_control_superposition:SuperPosition
 }
 impl PartialState {
 	/// 自身に対応する盤面を引数に受け取り`State`へと変換して返す。
@@ -13361,6 +13383,12 @@ impl Rule {
 
 						let kind = kinds[sy as usize][sx as usize];
 
+						if kind < GFu {
+							ps.sente_control_superposition -= Rule::gen_control_bits(from,kind);
+						} else {
+							ps.gote_control_superposition -= Rule::gen_control_bits(80 - from, kind);
+						}
+
 						let obtained = if kind < GFu {
 							ps.sente_self_board = ps.sente_self_board ^ (from_mask | to_mask);
 							ps.gote_opponent_board = ps.gote_opponent_board ^ (inverse_from_mask | inverse_to_mask);
@@ -13446,6 +13474,12 @@ impl Rule {
 							let kind = kinds[oy as usize][ox as usize];
 
 							if kind < GFu {
+								ps.sente_control_superposition -= Rule::gen_control_bits(to,kind);
+							} else {
+								ps.gote_control_superposition -= Rule::gen_control_bits(80 - to, kind);
+							}
+
+							if kind < GFu {
 								ps.sente_self_board = ps.sente_self_board & obtained_mask;
 								ps.gote_opponent_board = ps.gote_opponent_board & inverse_obtained_mask;
 								ps.sente_nari_board = ps.sente_nari_board & obtained_mask;
@@ -13520,6 +13554,12 @@ impl Rule {
 						} else {
 							kind
 						};
+
+						if kind < GFu {
+							ps.sente_control_superposition += Rule::gen_control_bits(to,kind);
+						} else {
+							ps.gote_control_superposition += Rule::gen_control_bits(80 - to, kind);
+						}
 
 						match kind {
 							SFu => {
@@ -13930,6 +13970,8 @@ impl Rule {
 								ps.sente_self_board = ps.sente_self_board ^ to_mask;
 								ps.gote_opponent_board = ps.gote_opponent_board ^ inverse_to_mask;
 
+								ps.sente_control_superposition += Rule::gen_control_bits(to,KomaKind::from((t,m.kind())));
+
 								match m.kind() {
 									MochigomaKind::Fu => {
 										ps.sente_fu_board = ps.sente_fu_board ^ to_mask;
@@ -13957,6 +13999,8 @@ impl Rule {
 							Teban::Gote => {
 								ps.gote_self_board = ps.gote_self_board ^ inverse_to_mask;
 								ps.sente_opponent_board = ps.sente_opponent_board ^ to_mask;
+
+								ps.gote_control_superposition += Rule::gen_control_bits(80 - to,KomaKind::from((t,m.kind())));
 
 								match m.kind() {
 									MochigomaKind::Fu => {
@@ -14129,6 +14173,9 @@ impl Rule {
 			Rule::gen_check_removed_of_gote_kaku_by_new_pin(&ps) |
 			Rule::gen_check_removed_of_gote_hisha_by_new_pin(&ps));
 
+		ps.sente_control_board = ps.sente_control_superposition.to_bitboard();
+		ps.gote_control_board = ps.gote_control_superposition.to_bitboard();
+		
 		ps
 	}
 
