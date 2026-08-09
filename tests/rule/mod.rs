@@ -26,6 +26,7 @@ mod has_control_gote_sliders_exhaustive;
 mod ou_surrounding_threats_count;
 mod gen_mask;
 mod has_blocking;
+mod superposition;
 
 use std::cmp;
 use std::collections::HashMap;

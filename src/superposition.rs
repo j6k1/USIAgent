@@ -50,7 +50,7 @@ impl SubAssign<BitBoard> for SuperPosition {
 
         for i in 0..10 {
             let board = self.boards[i] ^ (self.boards[i] & rhs);
-            rhs ^= (self.boards[i] & rhs);
+            rhs ^= self.boards[i] & rhs;
 
             self.boards[i] = board;
 
