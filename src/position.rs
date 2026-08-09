@@ -211,6 +211,29 @@ impl Position {
                         }
                     }
 
+                    if undo_item.teban == Teban::Sente {
+                        self.state.part.sente_control_superposition -= Rule::gen_control_bits(to,to_kind);
+                    } else {
+                        self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
+                    };
+
+                    if undo_item.teban == Teban::Sente {
+                        self.state.part.sente_control_superposition += Rule::gen_control_bits(from,from_kind);
+                    } else {
+                        self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from,from_kind);
+                    };
+
+                    if let Some(kind) = obtained_kind {
+                        if undo_item.teban.opposite() == Teban::Sente {
+                            self.state.part.sente_control_superposition += Rule::gen_control_bits(to,kind);
+                        } else {
+                            self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to,from_kind);
+                        };
+                    }
+
+                    self.state.part.sente_checked_board = self.state.part.sente_control_superposition.to_bitboard();
+                    self.state.part.gote_checked_board = self.state.part.gote_control_superposition.to_bitboard();
+
                     self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
                     self.state.banmen[dy as usize][dx as usize] = obtained_kind.unwrap_or(KomaKind::Blank);
                     self.state.banmen[sy as usize][sx as usize] = from_kind;
@@ -322,6 +345,15 @@ impl Position {
                             }
                         }
                     }
+
+                    if undo_item.teban == Teban::Sente {
+                        self.state.part.sente_control_superposition -= Rule::gen_control_bits(p,kind);
+                    } else {
+                        self.state.part.gote_control_superposition -= Rule::gen_control_bits(80 - p,kind);
+                    };
+
+                    self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
+                    self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
                 }
             }
 
