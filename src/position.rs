@@ -35,6 +35,14 @@ impl Position {
         }
     }
 
+    pub fn get_state(&self) -> &State {
+        &self.state
+    }
+
+    pub fn get_mc(&self) -> &MochigomaCollections {
+        &self.mc
+    }
+
     pub fn apply_move(&mut self, teban: Teban,mv: LegalMove) {
         let sente_pin_board = self.state.part.sente_pin_board;
         let gote_pin_board = self.state.part.gote_pin_board;
