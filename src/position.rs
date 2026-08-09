@@ -96,8 +96,8 @@ impl Position {
                     let inverse_to = 80 - to;
                     let from = m.src();
                     let inverse_from = 80 - from;
-                    let (sx,sy) = to.square_to_point();
-                    let (dx,dy) = from.square_to_point();
+                    let (dx,dy) = to.square_to_point();
+                    let (sx,sy) = from.square_to_point();
 
                     let to_kind = self.state.get_banmen()[dy as usize][dx as usize];
 
