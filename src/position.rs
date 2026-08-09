@@ -235,7 +235,7 @@ impl Position {
                         if undo_item.teban.opposite() == Teban::Sente {
                             self.state.part.sente_control_superposition += Rule::gen_control_bits(to,kind);
                         } else {
-                            self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to,from_kind);
+                            self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to,kind);
                         };
                     }
 
