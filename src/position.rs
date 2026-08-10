@@ -141,11 +141,23 @@ impl Position {
                         if undo_item.teban == Teban::Sente {
                             self.state.part.gote_self_board ^= 1 << (inverse_to + 1);
                             self.state.part.sente_opponent_board ^= 1 << (to + 1);
-                            self.state.part.gote_nari_board &= !(1 << (to + 1));
+
+                            match obtained_kind {
+                                Some(kind) if kind.is_nari() => {
+                                    self.state.part.gote_nari_board |= 1 << (to + 1);
+                                },
+                                _ => ()
+                            }
                         } else {
                             self.state.part.sente_self_board ^= 1 << (to + 1);
                             self.state.part.gote_opponent_board ^= 1 << (inverse_to + 1);
-                            self.state.part.sente_nari_board &= !(1 << (to + 1));
+
+                            match obtained_kind {
+                                Some(kind) if kind.is_nari() => {
+                                    self.state.part.gote_nari_board |= 1 << (to + 1);
+                                },
+                                _ => ()
+                            }
                         }
                     }
 
@@ -154,14 +166,14 @@ impl Position {
                         self.state.part.gote_opponent_board ^= 1 << (inverse_from + 1);
 
                         if from_kind >= KomaKind::SFuN && from_kind < KomaKind::GFu {
-                            self.state.part.sente_nari_board ^= 1 << (from + 1);
+                            self.state.part.sente_nari_board |= 1 << (from + 1);
                         }
                     } else {
                         self.state.part.gote_self_board ^= 1 << (inverse_from + 1);
                         self.state.part.sente_opponent_board ^= 1 << (from + 1);
 
                         if from_kind >= KomaKind::GFuN && from_kind < KomaKind::Blank {
-                            self.state.part.gote_nari_board ^= 1 << (from + 1);
+                            self.state.part.gote_nari_board |= 1 << (from + 1);
                         }
                     }
 
