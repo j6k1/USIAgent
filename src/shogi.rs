@@ -238,22 +238,12 @@ impl Move {
 	}
 }
 /// 持ち駒
-#[derive(Debug,Eq)]
+#[derive(Debug,Eq,Clone,Copy)]
 pub enum MochigomaCollections {
 	/// 持ち駒が先手後手とも無し
 	Empty,
 	/// 先手後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で表現
 	Pair(Mochigoma,Mochigoma),
-}
-impl Clone for MochigomaCollections {
-	fn clone(&self) -> MochigomaCollections {
-		match *self {
-			MochigomaCollections::Empty => MochigomaCollections::Empty,
-			MochigomaCollections::Pair(ref ms, ref mg) => {
-				MochigomaCollections::Pair(ms.clone(),mg.clone())
-			}
-		}
-	}
 }
 impl PartialEq for MochigomaCollections {
 	fn eq(&self, other: &Self) -> bool {
@@ -567,7 +557,7 @@ const MOCHIGOMA_MASK:[u64; MOCHIGOMA_KIND_MAX + 1] = [
 ];
 const MOCHIGOMA_MASK_SOURCE:u64 = 0b10_10_1000_1000_1000_1000_100000000000000000;
 /// 持ち駒を固定長配列で管理するための構造体
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct Mochigoma {
 	bitboard:u64
 }

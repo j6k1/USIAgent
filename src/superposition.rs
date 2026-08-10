@@ -9,6 +9,7 @@ pub struct SuperPosition {
 }
 impl SuperPosition {
     /// 複数枚のビットボードを重ね合わせて効きのビットボードを生成して返す
+    #[inline]
     pub fn to_bitboard(&self) -> BitBoard {
         self.boards[0] |
         self.boards[1] |
@@ -23,6 +24,7 @@ impl SuperPosition {
     }
 }
 impl Default for SuperPosition {
+    #[inline]
     fn default() -> Self {
         SuperPosition {
             boards:[BitBoard::default(); 10]
@@ -30,6 +32,7 @@ impl Default for SuperPosition {
     }
 }
 impl AddAssign<BitBoard> for SuperPosition {
+    #[inline]
     fn add_assign(&mut self, rhs: BitBoard) {
         let mut rhs = rhs;
 
@@ -46,6 +49,7 @@ impl AddAssign<BitBoard> for SuperPosition {
     }
 }
 impl SubAssign<BitBoard> for SuperPosition {
+    #[inline]
     fn sub_assign(&mut self, rhs: BitBoard) {
         let mut rhs = rhs;
 
@@ -62,6 +66,7 @@ impl SubAssign<BitBoard> for SuperPosition {
     }
 }
 impl From<&SuperPosition> for BitBoard {
+    #[inline]
     fn from(sp: &SuperPosition) -> Self {
         sp.to_bitboard()
     }
