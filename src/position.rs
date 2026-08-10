@@ -49,8 +49,8 @@ impl Position {
         let sente_checked_board = self.state.part.sente_checked_board;
         let gote_checked_board = self.state.part.gote_checked_board;
 
-        Rule::apply_move_to_banmen_and_mochigoma_none_check_inplace(&mut self.state.banmen,teban,&mut self.mc,mv.to_applied_move());
         Rule::apply_move_to_partial_state_none_check_inplace(&mut self.state,teban,&self.mc,mv.to_applied_move());
+        Rule::apply_move_to_banmen_and_mochigoma_none_check_inplace(&mut self.state.banmen,teban,&mut self.mc,mv.to_applied_move());
 
         let mut sente_pin_changed = Vec::with_capacity(1);
 
