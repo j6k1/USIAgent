@@ -13414,7 +13414,7 @@ impl Rule {
 
 							if kind < GFu {
 								ps.sente_control_superposition -= Rule::gen_control_bits(to,kind);
-							} else {
+							} else if kind < Blank {
 								ps.gote_control_superposition -= Rule::gen_control_bits(80 - to, kind);
 							}
 

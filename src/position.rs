@@ -27,8 +27,8 @@ pub struct Position {
     undo_items:Vec<UndoItem>,
 }
 impl Position {
-    pub fn new(state:State,mc:MochigomaCollections)->Self{
-        Self {
+    pub fn new(state:State,mc:MochigomaCollections) -> Position {
+        Position {
             state,
             mc,
             undo_items:Vec::new(),
@@ -54,26 +54,34 @@ impl Position {
 
         let mut sente_pin_changed = Vec::with_capacity(1);
 
-        for p in (sente_pin_board ^ self.state.part.sente_pin_board).iter() {
-            sente_pin_changed.push(p as u8);
+        if sente_pin_board ^ self.state.part.sente_pin_board != 0 {
+            for p in (sente_pin_board ^ self.state.part.sente_pin_board).iter() {
+                sente_pin_changed.push(p as u8);
+            }
         }
 
         let mut gote_pin_changed = Vec::with_capacity(1);
 
-        for p in (gote_pin_board ^ self.state.part.gote_pin_board).iter() {
-            gote_pin_changed.push(p as u8);
+        if gote_pin_board ^ self.state.part.gote_pin_board != 0 {
+            for p in (gote_pin_board ^ self.state.part.gote_pin_board).iter() {
+                gote_pin_changed.push(p as u8);
+            }
         }
 
         let mut sente_checked_changed = Vec::with_capacity(2);
 
-        for p in (sente_checked_board ^ self.state.part.sente_checked_board).iter() {
-            sente_checked_changed.push(p as u8);
+        if sente_checked_board ^ self.state.part.sente_checked_board != 0 {
+            for p in (sente_checked_board ^ self.state.part.sente_checked_board).iter() {
+                sente_checked_changed.push(p as u8);
+            }
         }
 
         let mut gote_checked_changed = Vec::with_capacity(2);
 
-        for p in (gote_checked_board ^ self.state.part.gote_checked_board).iter() {
-            gote_checked_changed.push(p as u8);
+        if gote_checked_board ^ self.state.part.gote_checked_board != 0 {
+            for p in (gote_checked_board ^ self.state.part.gote_checked_board).iter() {
+                gote_checked_changed.push(p as u8);
+            }
         }
 
         let undo_item = UndoItem {
@@ -122,58 +130,58 @@ impl Position {
                     };
 
                     let obtained_kind = if let Some(obtained) = m.obtained() {
-                        Some(KomaKind::from((undo_item.teban.opposite(), obtained)))
+                        Some(KomaKind::from((undo_item.teban.opposite(),obtained)))
                     } else {
                         None
                     };
 
-                    if undo_item.teban == Teban::Sente {
+                    if to_kind < KomaKind::GFu {
                         self.state.part.sente_self_board ^= 1 << (to + 1);
                         self.state.part.gote_opponent_board ^= 1 << (inverse_to + 1);
-                        self.state.part.sente_nari_board &= !(1 << (to + 1));
-                    } else {
+
+                        if to_kind.is_nari() {
+                            self.state.part.sente_nari_board ^= 1 << (to + 1);
+                        }
+                    } else if to_kind < KomaKind::Blank {
                         self.state.part.gote_self_board ^= 1 << (inverse_to + 1);
                         self.state.part.sente_opponent_board ^= 1 << (to + 1);
-                        self.state.part.gote_nari_board &= !(1 << (to + 1));
+
+                        if to_kind.is_nari() {
+                            self.state.part.gote_nari_board ^= 1 << (to + 1);
+                        }
                     }
 
-                    if obtained_kind.is_some() {
-                        if undo_item.teban == Teban::Sente {
-                            self.state.part.gote_self_board ^= 1 << (inverse_to + 1);
-                            self.state.part.sente_opponent_board ^= 1 << (to + 1);
-
-                            match obtained_kind {
-                                Some(kind) if kind.is_nari() => {
-                                    self.state.part.gote_nari_board |= 1 << (to + 1);
-                                },
-                                _ => ()
-                            }
-                        } else {
+                    if let Some(obtained_kind) = obtained_kind {
+                        if obtained_kind < KomaKind::GFu {
                             self.state.part.sente_self_board ^= 1 << (to + 1);
                             self.state.part.gote_opponent_board ^= 1 << (inverse_to + 1);
 
-                            match obtained_kind {
-                                Some(kind) if kind.is_nari() => {
-                                    self.state.part.gote_nari_board |= 1 << (to + 1);
-                                },
-                                _ => ()
+                            if obtained_kind.is_nari() {
+                                self.state.part.sente_nari_board ^= 1 << (to + 1);
+                            }
+                        } else if obtained_kind < KomaKind::Blank {
+                            self.state.part.gote_self_board ^= 1 << (inverse_to + 1);
+                            self.state.part.sente_opponent_board ^= 1 << (to + 1);
+
+                            if obtained_kind.is_nari() {
+                                self.state.part.gote_nari_board ^= 1 << (to + 1);
                             }
                         }
                     }
 
-                    if undo_item.teban == Teban::Sente {
+                    if from_kind < KomaKind::GFu {
                         self.state.part.sente_self_board ^= 1 << (from + 1);
                         self.state.part.gote_opponent_board ^= 1 << (inverse_from + 1);
 
                         if from_kind >= KomaKind::SFuN && from_kind < KomaKind::GFu {
-                            self.state.part.sente_nari_board |= 1 << (from + 1);
+                            self.state.part.sente_nari_board ^= 1 << (from + 1);
                         }
-                    } else {
+                    } else if from_kind < KomaKind::Blank {
                         self.state.part.gote_self_board ^= 1 << (inverse_from + 1);
                         self.state.part.sente_opponent_board ^= 1 << (from + 1);
 
                         if from_kind >= KomaKind::GFuN && from_kind < KomaKind::Blank {
-                            self.state.part.gote_nari_board |= 1 << (from + 1);
+                            self.state.part.gote_nari_board ^= 1 << (from + 1);
                         }
                     }
 
@@ -231,28 +239,28 @@ impl Position {
                         }
                     }
 
-                    if undo_item.teban == Teban::Sente {
+                    if to_kind < KomaKind::GFu {
                         self.state.part.sente_control_superposition -= Rule::gen_control_bits(to,to_kind);
-                    } else {
+                    } else if to_kind < KomaKind::Blank {
                         self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
                     };
 
-                    if undo_item.teban == Teban::Sente {
+                    if from_kind < KomaKind::GFu {
                         self.state.part.sente_control_superposition += Rule::gen_control_bits(from,from_kind);
-                    } else {
+                    } else if from_kind < KomaKind::Blank {
                         self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from,from_kind);
                     };
 
                     if let Some(kind) = obtained_kind {
-                        if undo_item.teban.opposite() == Teban::Sente {
+                        if kind < KomaKind::GFu {
                             self.state.part.sente_control_superposition += Rule::gen_control_bits(to,kind);
-                        } else {
+                        } else if kind < KomaKind::Blank {
                             self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to,kind);
                         };
                     }
 
-                    self.state.part.sente_checked_board = self.state.part.sente_control_superposition.to_bitboard();
-                    self.state.part.gote_checked_board = self.state.part.gote_control_superposition.to_bitboard();
+                    self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
+                    self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
 
                     self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
                     self.state.banmen[dy as usize][dx as usize] = obtained_kind.unwrap_or(KomaKind::Blank);
@@ -277,12 +285,12 @@ impl Position {
                     let p = m.dst();
                     let (dx,dy) = p.square_to_point();
 
-                    let kind = KomaKind::from((undo_item.teban, m.kind()));
+                    let kind = self.state.get_banmen()[dy as usize][dx as usize];
 
-                    if undo_item.teban == Teban::Sente {
+                    if kind < KomaKind::GFu {
                         self.state.part.sente_self_board ^= 1 << (p + 1);
                         self.state.part.gote_opponent_board ^= 1 << (80 - p + 1);
-                    } else {
+                    } else if kind < KomaKind::Blank {
                         self.state.part.gote_self_board ^= 1 << (80 - p + 1);
                         self.state.part.sente_opponent_board ^= 1 << (p + 1);
                     }
@@ -318,7 +326,7 @@ impl Position {
                         KomaKind::GKyou | KomaKind::GKyouN => {
                             self.state.part.gote_kyou_board ^= 1 << (p + 1);
                         },
-                        KomaKind::GKei | KomaKind::GKeiN => {
+                        KomaKind::GKei | KomaKind::GKeiN=> {
                             self.state.part.gote_kei_board ^= 1 << (p + 1);
                         },
                         KomaKind::GGin | KomaKind::GGinN => {
@@ -366,9 +374,9 @@ impl Position {
                         }
                     }
 
-                    if undo_item.teban == Teban::Sente {
+                    if kind < KomaKind::GFu {
                         self.state.part.sente_control_superposition -= Rule::gen_control_bits(p,kind);
-                    } else {
+                    } else if kind < KomaKind::Blank {
                         self.state.part.gote_control_superposition -= Rule::gen_control_bits(80 - p,kind);
                     };
 
@@ -378,20 +386,22 @@ impl Position {
             }
 
             for &p in undo_item.sente_pin_changed.iter() {
-                self.state.part.sente_pin_board ^= 1 << (p + 1);
+                self.state.part.sente_pin_board ^= 1u128 << (p + 1);
             }
 
             for &p in undo_item.gote_pin_changed.iter() {
-                self.state.part.sente_pin_board ^= 1 << (p + 1);
+                self.state.part.gote_pin_board ^= 1u128 << (p + 1);
             }
 
             for &p in undo_item.sente_checked_changed.iter() {
-                self.state.part.sente_checked_board ^= 1 << (p + 1);
+                self.state.part.sente_checked_board ^= 1u128 << (p + 1);
             }
 
             for &p in undo_item.gote_checked_changed.iter() {
-                self.state.part.gote_checked_board ^= 1 << (p + 1);
+                self.state.part.gote_checked_board ^= 1u128 << (p + 1);
             }
+        } else {
+            return Err(InvalidStateError(String::from("The undo stack is empty.")));
         }
 
         Ok(())
