@@ -152,24 +152,33 @@ impl<const N: usize> Position<N> {
                     None
                 };
 
-                if undo_item.teban == Teban::Sente {
-                    self.state.part.sente_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
-                } else {
-                    self.state.part.gote_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
-                }
-
-                if let Some(obtained_kind) = obtained_kind {
-                    if undo_item.teban.opposite() == Teban::Sente {
-                        self.state.part.sente_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
-                    } else {
-                        self.state.part.gote_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
+                match undo_item.teban {
+                    Teban::Sente => {
+                        self.state.part.sente_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
+                    },
+                    Teban::Gote => {
+                        self.state.part.gote_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
                     }
                 }
 
-                if undo_item.teban == Teban::Sente {
-                    self.state.part.sente_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
-                } else {
-                    self.state.part.gote_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
+                if let Some(obtained_kind) = obtained_kind {
+                    match undo_item.teban.opposite() {
+                        Teban::Sente => {
+                            self.state.part.sente_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
+                        }
+                        Teban::Gote => {
+                            self.state.part.gote_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
+                        }
+                    }
+                }
+
+                match undo_item.teban {
+                    Teban::Sente => {
+                        self.state.part.sente_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
+                    }
+                    Teban::Gote => {
+                        self.state.part.gote_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
+                    }
                 }
 
                 for (kind,p) in [(to_kind,to),(from_kind,from),(obtained_kind.unwrap_or(KomaKind::Blank),to)] {
@@ -226,23 +235,32 @@ impl<const N: usize> Position<N> {
                     }
                 }
 
-                if to_kind < KomaKind::GFu {
-                    self.state.part.sente_control_superposition -= Rule::gen_control_bits(to,to_kind);
-                } else if to_kind < KomaKind::Blank {
-                    self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
+                match undo_item.teban {
+                    Teban::Sente => {
+                        self.state.part.sente_control_superposition -= Rule::gen_control_bits(to,to_kind);
+                    }
+                    Teban::Gote => {
+                        self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
+                    }
                 };
 
-                if from_kind < KomaKind::GFu {
-                    self.state.part.sente_control_superposition += Rule::gen_control_bits(from,from_kind);
-                } else if from_kind < KomaKind::Blank {
-                    self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from,from_kind);
+                match undo_item.teban {
+                    Teban::Sente => {
+                        self.state.part.sente_control_superposition += Rule::gen_control_bits(from,from_kind);
+                    }
+                    Teban::Gote => {
+                        self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from, from_kind);
+                    }
                 };
 
                 if let Some(kind) = obtained_kind {
-                    if kind < KomaKind::GFu {
-                        self.state.part.sente_control_superposition += Rule::gen_control_bits(to,kind);
-                    } else if kind < KomaKind::Blank {
-                        self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to,kind);
+                    match undo_item.teban.opposite() {
+                        Teban::Sente => {
+                            self.state.part.sente_control_superposition += Rule::gen_control_bits(to,kind);
+                        }
+                        Teban::Gote => {
+                            self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to, kind);
+                        }
                     };
                 }
 
@@ -317,10 +335,13 @@ impl<const N: usize> Position<N> {
 
                 self.mc = undo_item.mc;
 
-                if kind < KomaKind::GFu {
-                    self.state.part.sente_control_superposition -= Rule::gen_control_bits(p,kind);
-                } else if kind < KomaKind::Blank {
-                    self.state.part.gote_control_superposition -= Rule::gen_control_bits(80 - p,kind);
+                match undo_item.teban {
+                    Teban::Sente => {
+                        self.state.part.sente_control_superposition -= Rule::gen_control_bits(p,kind);
+                    }
+                    Teban::Gote => {
+                        self.state.part.gote_control_superposition -= Rule::gen_control_bits(80 - p, kind);
+                    }
                 };
 
                 self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
