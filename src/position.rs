@@ -27,6 +27,7 @@ pub struct Position {
     undo_items:Vec<UndoItem>,
 }
 impl Position {
+    #[inline]
     pub fn new(state:State,mc:MochigomaCollections) -> Position {
         Position {
             state,
@@ -35,14 +36,17 @@ impl Position {
         }
     }
 
+    #[inline]
     pub fn get_state(&self) -> &State {
         &self.state
     }
 
+    #[inline]
     pub fn get_mc(&self) -> &MochigomaCollections {
         &self.mc
     }
 
+    #[inline]
     pub fn apply_move(&mut self, teban: Teban,mv: LegalMove) {
         let sente_pin_board = self.state.part.sente_pin_board;
         let gote_pin_board = self.state.part.gote_pin_board;
@@ -96,6 +100,7 @@ impl Position {
         self.undo_items.push(undo_item);
     }
 
+    #[inline]
     pub fn undo_move(&mut self) -> Result<(),InvalidStateError>{
         if let Some(undo_item) = self.undo_items.pop() {
             match undo_item.mv {
