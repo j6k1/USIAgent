@@ -238,22 +238,12 @@ impl Move {
 	}
 }
 /// 持ち駒
-#[derive(Debug,Eq)]
+#[derive(Debug,Eq,Clone,Copy)]
 pub enum MochigomaCollections {
 	/// 持ち駒が先手後手とも無し
 	Empty,
 	/// 先手後手それぞれの持ち駒を`HashMap<MochigomaKind,u32>`で表現
 	Pair(Mochigoma,Mochigoma),
-}
-impl Clone for MochigomaCollections {
-	fn clone(&self) -> MochigomaCollections {
-		match *self {
-			MochigomaCollections::Empty => MochigomaCollections::Empty,
-			MochigomaCollections::Pair(ref ms, ref mg) => {
-				MochigomaCollections::Pair(ms.clone(),mg.clone())
-			}
-		}
-	}
 }
 impl PartialEq for MochigomaCollections {
 	fn eq(&self, other: &Self) -> bool {
@@ -458,6 +448,45 @@ impl MaxIndex for MochigomaKind {
 		MochigomaKind::Hisha as usize
 	}
 }
+impl From<(Teban,ObtainKind)> for KomaKind {
+	fn from((teban,kind): (Teban,ObtainKind)) -> KomaKind {
+		if teban == Teban::Sente {
+			match kind {
+				ObtainKind::Fu => KomaKind::SFu,
+				ObtainKind::Kyou => KomaKind::SKyou,
+				ObtainKind::Kei => KomaKind::SKei,
+				ObtainKind::Gin => KomaKind::SGin,
+				ObtainKind::Kin => KomaKind::SKin,
+				ObtainKind::Kaku => KomaKind::SKaku,
+				ObtainKind::Hisha => KomaKind::SHisha,
+				ObtainKind::Ou => KomaKind::SOu,
+				ObtainKind::FuN => KomaKind::SFuN,
+				ObtainKind::KyouN => KomaKind::SKyouN,
+				ObtainKind::KeiN => KomaKind::SKeiN,
+				ObtainKind::GinN => KomaKind::SGinN,
+				ObtainKind::KakuN => KomaKind::SKakuN,
+				ObtainKind::HishaN => KomaKind::SHishaN,
+			}
+		} else {
+			match kind {
+				ObtainKind::Fu => KomaKind::GFu,
+				ObtainKind::Kyou => KomaKind::GKyou,
+				ObtainKind::Kei => KomaKind::GKei,
+				ObtainKind::Gin => KomaKind::GGin,
+				ObtainKind::Kin => KomaKind::GKin,
+				ObtainKind::Kaku => KomaKind::GKaku,
+				ObtainKind::Hisha => KomaKind::GHisha,
+				ObtainKind::Ou => KomaKind::GOu,
+				ObtainKind::FuN => KomaKind::GFuN,
+				ObtainKind::KyouN => KomaKind::GKyouN,
+				ObtainKind::KeiN => KomaKind::GKeiN,
+				ObtainKind::GinN => KomaKind::GGinN,
+				ObtainKind::KakuN => KomaKind::GKakuN,
+				ObtainKind::HishaN => KomaKind::GHishaN,
+			}
+		}
+	}
+}
 /// 持ち駒の種別の配列
 pub const MOCHIGOMA_KINDS:[MochigomaKind; 7] = [
 	MochigomaKind::Fu,
@@ -528,7 +557,7 @@ const MOCHIGOMA_MASK:[u64; MOCHIGOMA_KIND_MAX + 1] = [
 ];
 const MOCHIGOMA_MASK_SOURCE:u64 = 0b10_10_1000_1000_1000_1000_100000000000000000;
 /// 持ち駒を固定長配列で管理するための構造体
-#[derive(Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct Mochigoma {
 	bitboard:u64
 }
