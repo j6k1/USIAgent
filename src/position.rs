@@ -115,73 +115,127 @@ impl<const N: usize> Position<N> {
             self.undo_items.get_unchecked_mut(self.curernt_index).assume_init()
         };
 
-        match undo_item.mv {
-            LegalMove::To(m) => {
-                let to = m.dst();
-                let inverse_to = 80 - to;
-                let from = m.src();
-                let inverse_from = 80 - from;
-                let (dx,dy) = to.square_to_point();
-                let (sx,sy) = from.square_to_point();
+        if undo_item.teban == Teban::Sente {
+            match undo_item.mv {
+                LegalMove::To(m) => {
+                    let to = m.dst();
+                    let inverse_to = 80 - to;
+                    let from = m.src();
+                    let (dx,dy) = to.square_to_point();
+                    let (sx,sy) = from.square_to_point();
 
-                let to_kind = self.state.get_banmen()[dy as usize][dx as usize];
+                    let to_kind = self.state.get_banmen()[dy as usize][dx as usize];
 
-                let from_kind = if m.is_nari() {
-                    match to_kind {
-                        KomaKind::SFuN => KomaKind::SFu,
-                        KomaKind::SKyouN => KomaKind::SKyou,
-                        KomaKind::SKeiN => KomaKind::SKei,
-                        KomaKind::SGinN => KomaKind::SGin,
-                        KomaKind::SKakuN => KomaKind::SKaku,
-                        KomaKind::SHishaN => KomaKind::SHisha,
-                        KomaKind::GFuN => KomaKind::GFu,
-                        KomaKind::GKyouN => KomaKind::GKyou,
-                        KomaKind::GKeiN => KomaKind::GKei,
-                        KomaKind::GGinN => KomaKind::GGin,
-                        KomaKind::GKakuN => KomaKind::GKaku,
-                        KomaKind::GHishaN => KomaKind::GHisha,
-                        _ => to_kind
-                    }
-                } else {
-                    to_kind
-                };
-
-                let obtained_kind = if let Some(obtained) = m.obtained() {
-                    Some(KomaKind::from((undo_item.teban.opposite(),obtained)))
-                } else {
-                    None
-                };
-
-                match undo_item.teban {
-                    Teban::Sente => {
-                        self.state.part.sente_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
-                    },
-                    Teban::Gote => {
-                        self.state.part.gote_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
-                    }
-                }
-
-                if let Some(obtained_kind) = obtained_kind {
-                    match undo_item.teban.opposite() {
-                        Teban::Sente => {
-                            self.state.part.sente_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
+                    let from_kind = if m.is_nari() {
+                        match to_kind {
+                            KomaKind::SFuN => KomaKind::SFu,
+                            KomaKind::SKyouN => KomaKind::SKyou,
+                            KomaKind::SKeiN => KomaKind::SKei,
+                            KomaKind::SGinN => KomaKind::SGin,
+                            KomaKind::SKakuN => KomaKind::SKaku,
+                            KomaKind::SHishaN => KomaKind::SHisha,
+                            KomaKind::GFuN => KomaKind::GFu,
+                            KomaKind::GKyouN => KomaKind::GKyou,
+                            KomaKind::GKeiN => KomaKind::GKei,
+                            KomaKind::GGinN => KomaKind::GGin,
+                            KomaKind::GKakuN => KomaKind::GKaku,
+                            KomaKind::GHishaN => KomaKind::GHisha,
+                            _ => to_kind
                         }
-                        Teban::Gote => {
-                            self.state.part.gote_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
+                    } else {
+                        to_kind
+                    };
+
+                    let obtained_kind = if let Some(obtained) = m.obtained() {
+                        Some(KomaKind::from((undo_item.teban.opposite(),obtained)))
+                    } else {
+                        None
+                    };
+
+                    self.state.part.sente_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
+
+                    if let Some(obtained_kind) = obtained_kind {
+                        self.state.part.gote_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
+                    }
+
+                    self.state.part.sente_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
+
+                    for (kind,p) in [(to_kind,to),(from_kind,from),(obtained_kind.unwrap_or(KomaKind::Blank),to)] {
+                        match kind {
+                            KomaKind::SFu | KomaKind::SFuN => {
+                                self.state.part.sente_fu_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKyou | KomaKind::SKyouN => {
+                                self.state.part.sente_kyou_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKei | KomaKind::SKeiN => {
+                                self.state.part.sente_kei_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SGin | KomaKind::SGinN => {
+                                self.state.part.sente_gin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKin => {
+                                self.state.part.sente_kin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKaku | KomaKind::SKakuN => {
+                                self.state.part.sente_kaku_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SHisha | KomaKind::SHishaN => {
+                                self.state.part.sente_hisha_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SOu => {
+                                self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
+                            },
+                            KomaKind::GFu | KomaKind::GFuN => {
+                                self.state.part.gote_fu_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKyou | KomaKind::GKyouN => {
+                                self.state.part.gote_kyou_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKei | KomaKind::GKeiN => {
+                                self.state.part.gote_kei_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GGin | KomaKind::GGinN => {
+                                self.state.part.gote_gin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKin => {
+                                self.state.part.gote_kin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKaku | KomaKind::GKakuN => {
+                                self.state.part.gote_kaku_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GHisha | KomaKind::GHishaN => {
+                                self.state.part.gote_hisha_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GOu => {
+                                self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::Blank => {}
                         }
                     }
-                }
 
-                match undo_item.teban {
-                    Teban::Sente => {
-                        self.state.part.sente_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
-                    }
-                    Teban::Gote => {
-                        self.state.part.gote_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
-                    }
-                }
+                    self.state.part.sente_control_superposition -= Rule::gen_control_bits(to, to_kind);
+                    self.state.part.sente_control_superposition += Rule::gen_control_bits(from, from_kind);
 
-                for (kind,p) in [(to_kind,to),(from_kind,from),(obtained_kind.unwrap_or(KomaKind::Blank),to)] {
+                    if let Some(kind) = obtained_kind {
+                        self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to, kind);
+                    }
+
+                    self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
+                    self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
+
+                    self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
+                    self.state.banmen[dy as usize][dx as usize] = obtained_kind.unwrap_or(KomaKind::Blank);
+                    self.state.banmen[sy as usize][sx as usize] = from_kind;
+
+                    self.mc = undo_item.mc;
+                },
+                LegalMove::Put(m) => {
+                    let p = m.dst();
+                    let (dx,dy) = p.square_to_point();
+
+                    let kind = self.state.get_banmen()[dy as usize][dx as usize];
+
                     match kind {
                         KomaKind::SFu | KomaKind::SFuN => {
                             self.state.part.sente_fu_board ^= 1 << (p + 1);
@@ -213,7 +267,7 @@ impl<const N: usize> Position<N> {
                         KomaKind::GKyou | KomaKind::GKyouN => {
                             self.state.part.gote_kyou_board ^= 1 << (p + 1);
                         },
-                        KomaKind::GKei | KomaKind::GKeiN => {
+                        KomaKind::GKei | KomaKind::GKeiN=> {
                             self.state.part.gote_kei_board ^= 1 << (p + 1);
                         },
                         KomaKind::GGin | KomaKind::GGinN => {
@@ -233,119 +287,200 @@ impl<const N: usize> Position<N> {
                         },
                         KomaKind::Blank => {}
                     }
+
+                    self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
+
+                    self.mc = undo_item.mc;
+
+                    self.state.part.sente_control_superposition -= Rule::gen_control_bits(p, kind);
+
+                    self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
+                    self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
                 }
+            }
+        } else {
+            match undo_item.mv {
+                LegalMove::To(m) => {
+                    let to = m.dst();
+                    let inverse_to = 80 - to;
+                    let from = m.src();
+                    let inverse_from = 80 - from;
+                    let (dx,dy) = to.square_to_point();
+                    let (sx,sy) = from.square_to_point();
 
-                match undo_item.teban {
-                    Teban::Sente => {
-                        self.state.part.sente_control_superposition -= Rule::gen_control_bits(to,to_kind);
-                    }
-                    Teban::Gote => {
-                        self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
-                    }
-                };
+                    let to_kind = self.state.get_banmen()[dy as usize][dx as usize];
 
-                match undo_item.teban {
-                    Teban::Sente => {
-                        self.state.part.sente_control_superposition += Rule::gen_control_bits(from,from_kind);
-                    }
-                    Teban::Gote => {
-                        self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from, from_kind);
-                    }
-                };
-
-                if let Some(kind) = obtained_kind {
-                    match undo_item.teban.opposite() {
-                        Teban::Sente => {
-                            self.state.part.sente_control_superposition += Rule::gen_control_bits(to,kind);
+                    let from_kind = if m.is_nari() {
+                        match to_kind {
+                            KomaKind::SFuN => KomaKind::SFu,
+                            KomaKind::SKyouN => KomaKind::SKyou,
+                            KomaKind::SKeiN => KomaKind::SKei,
+                            KomaKind::SGinN => KomaKind::SGin,
+                            KomaKind::SKakuN => KomaKind::SKaku,
+                            KomaKind::SHishaN => KomaKind::SHisha,
+                            KomaKind::GFuN => KomaKind::GFu,
+                            KomaKind::GKyouN => KomaKind::GKyou,
+                            KomaKind::GKeiN => KomaKind::GKei,
+                            KomaKind::GGinN => KomaKind::GGin,
+                            KomaKind::GKakuN => KomaKind::GKaku,
+                            KomaKind::GHishaN => KomaKind::GHisha,
+                            _ => to_kind
                         }
-                        Teban::Gote => {
-                            self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to, kind);
-                        }
+                    } else {
+                        to_kind
                     };
-                }
 
-                self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
-                self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
+                    let obtained_kind = if let Some(obtained) = m.obtained() {
+                        Some(KomaKind::from((undo_item.teban.opposite(),obtained)))
+                    } else {
+                        None
+                    };
 
-                self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
-                self.state.banmen[dy as usize][dx as usize] = obtained_kind.unwrap_or(KomaKind::Blank);
-                self.state.banmen[sy as usize][sx as usize] = from_kind;
+                    self.state.part.gote_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
 
-                self.mc = undo_item.mc;
-            },
-            LegalMove::Put(m) => {
-                let p = m.dst();
-                let (dx,dy) = p.square_to_point();
-
-                let kind = self.state.get_banmen()[dy as usize][dx as usize];
-
-                match kind {
-                    KomaKind::SFu | KomaKind::SFuN => {
-                        self.state.part.sente_fu_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::SKyou | KomaKind::SKyouN => {
-                        self.state.part.sente_kyou_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::SKei | KomaKind::SKeiN => {
-                        self.state.part.sente_kei_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::SGin | KomaKind::SGinN => {
-                        self.state.part.sente_gin_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::SKin => {
-                        self.state.part.sente_kin_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::SKaku | KomaKind::SKakuN => {
-                        self.state.part.sente_kaku_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::SHisha | KomaKind::SHishaN => {
-                        self.state.part.sente_hisha_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::SOu => {
-                        self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
-                    },
-                    KomaKind::GFu | KomaKind::GFuN => {
-                        self.state.part.gote_fu_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::GKyou | KomaKind::GKyouN => {
-                        self.state.part.gote_kyou_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::GKei | KomaKind::GKeiN=> {
-                        self.state.part.gote_kei_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::GGin | KomaKind::GGinN => {
-                        self.state.part.gote_gin_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::GKin => {
-                        self.state.part.gote_kin_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::GKaku | KomaKind::GKakuN => {
-                        self.state.part.gote_kaku_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::GHisha | KomaKind::GHishaN => {
-                        self.state.part.gote_hisha_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::GOu => {
-                        self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
-                    },
-                    KomaKind::Blank => {}
-                }
-
-                self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
-
-                self.mc = undo_item.mc;
-
-                match undo_item.teban {
-                    Teban::Sente => {
-                        self.state.part.sente_control_superposition -= Rule::gen_control_bits(p,kind);
+                    if let Some(obtained_kind) = obtained_kind {
+                        self.state.part.sente_nari_board ^= (obtained_kind.is_nari() as u128) << (to + 1);
                     }
-                    Teban::Gote => {
-                        self.state.part.gote_control_superposition -= Rule::gen_control_bits(80 - p, kind);
-                    }
-                };
 
-                self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
-                self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
+                    self.state.part.gote_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
+
+                    for (kind,p) in [(to_kind,to),(from_kind,from),(obtained_kind.unwrap_or(KomaKind::Blank),to)] {
+                        match kind {
+                            KomaKind::SFu | KomaKind::SFuN => {
+                                self.state.part.sente_fu_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKyou | KomaKind::SKyouN => {
+                                self.state.part.sente_kyou_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKei | KomaKind::SKeiN => {
+                                self.state.part.sente_kei_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SGin | KomaKind::SGinN => {
+                                self.state.part.sente_gin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKin => {
+                                self.state.part.sente_kin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SKaku | KomaKind::SKakuN => {
+                                self.state.part.sente_kaku_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SHisha | KomaKind::SHishaN => {
+                                self.state.part.sente_hisha_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::SOu => {
+                                self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
+                            },
+                            KomaKind::GFu | KomaKind::GFuN => {
+                                self.state.part.gote_fu_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKyou | KomaKind::GKyouN => {
+                                self.state.part.gote_kyou_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKei | KomaKind::GKeiN => {
+                                self.state.part.gote_kei_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GGin | KomaKind::GGinN => {
+                                self.state.part.gote_gin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKin => {
+                                self.state.part.gote_kin_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GKaku | KomaKind::GKakuN => {
+                                self.state.part.gote_kaku_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GHisha | KomaKind::GHishaN => {
+                                self.state.part.gote_hisha_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::GOu => {
+                                self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
+                            },
+                            KomaKind::Blank => {}
+                        }
+                    }
+
+                    self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
+                    self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from, from_kind);
+
+                    if let Some(kind) = obtained_kind {
+                        self.state.part.sente_control_superposition += Rule::gen_control_bits(to, kind);
+                    }
+
+                    self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
+                    self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
+
+                    self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
+                    self.state.banmen[dy as usize][dx as usize] = obtained_kind.unwrap_or(KomaKind::Blank);
+                    self.state.banmen[sy as usize][sx as usize] = from_kind;
+
+                    self.mc = undo_item.mc;
+                },
+                LegalMove::Put(m) => {
+                    let p = m.dst();
+                    let (dx,dy) = p.square_to_point();
+
+                    let kind = self.state.get_banmen()[dy as usize][dx as usize];
+
+                    match kind {
+                        KomaKind::SFu | KomaKind::SFuN => {
+                            self.state.part.sente_fu_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::SKyou | KomaKind::SKyouN => {
+                            self.state.part.sente_kyou_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::SKei | KomaKind::SKeiN => {
+                            self.state.part.sente_kei_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::SGin | KomaKind::SGinN => {
+                            self.state.part.sente_gin_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::SKin => {
+                            self.state.part.sente_kin_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::SKaku | KomaKind::SKakuN => {
+                            self.state.part.sente_kaku_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::SHisha | KomaKind::SHishaN => {
+                            self.state.part.sente_hisha_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::SOu => {
+                            self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
+                        },
+                        KomaKind::GFu | KomaKind::GFuN => {
+                            self.state.part.gote_fu_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::GKyou | KomaKind::GKyouN => {
+                            self.state.part.gote_kyou_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::GKei | KomaKind::GKeiN=> {
+                            self.state.part.gote_kei_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::GGin | KomaKind::GGinN => {
+                            self.state.part.gote_gin_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::GKin => {
+                            self.state.part.gote_kin_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::GKaku | KomaKind::GKakuN => {
+                            self.state.part.gote_kaku_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::GHisha | KomaKind::GHishaN => {
+                            self.state.part.gote_hisha_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::GOu => {
+                            self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
+                        },
+                        KomaKind::Blank => {}
+                    }
+
+                    self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
+
+                    self.mc = undo_item.mc;
+
+                    self.state.part.gote_control_superposition -= Rule::gen_control_bits(80 - p, kind);
+
+                    self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
+                    self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
+                }
             }
         }
 
