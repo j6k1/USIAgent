@@ -154,6 +154,9 @@ impl<const N: usize> Position<N> {
 
                     self.state.part.sente_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
 
+                    self.state.part.sente_control_superposition -= Rule::gen_control_bits(to, to_kind);
+                    self.state.part.sente_control_superposition += Rule::gen_control_bits(from, from_kind);
+
                     if before_to_kind != KomaKind::Blank {
                         self.state.part.gote_nari_board ^= (before_to_kind.is_nari() as u128) << (to + 1);
                         self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_to, before_to_kind);
@@ -214,9 +217,6 @@ impl<const N: usize> Position<N> {
                             KomaKind::Blank => {}
                         }
                     }
-
-                    self.state.part.sente_control_superposition -= Rule::gen_control_bits(to, to_kind);
-                    self.state.part.sente_control_superposition += Rule::gen_control_bits(from, from_kind);
 
                     self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
                     self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
@@ -312,6 +312,9 @@ impl<const N: usize> Position<N> {
 
                     self.state.part.gote_nari_board ^= (to_kind.is_nari() as u128) << (to + 1);
 
+                    self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
+                    self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from, from_kind);
+
                     if before_to_kind != KomaKind::Blank {
                         self.state.part.sente_nari_board ^= (before_to_kind.is_nari() as u128) << (to + 1);
                         self.state.part.sente_control_superposition += Rule::gen_control_bits(to, before_to_kind);
@@ -372,9 +375,6 @@ impl<const N: usize> Position<N> {
                             KomaKind::Blank => {}
                         }
                     }
-
-                    self.state.part.gote_control_superposition -= Rule::gen_control_bits(inverse_to,to_kind);
-                    self.state.part.gote_control_superposition += Rule::gen_control_bits(inverse_from, from_kind);
 
                     self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
                     self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
