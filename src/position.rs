@@ -224,7 +224,6 @@ impl<const N: usize> Position<N> {
                     self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
                     self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
 
-                    self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
                     self.state.banmen[dy as usize][dx as usize] = obtained_kind.unwrap_or(KomaKind::Blank);
                     self.state.banmen[sy as usize][sx as usize] = from_kind;
 
@@ -408,7 +407,6 @@ impl<const N: usize> Position<N> {
                     self.state.part.sente_control_board = self.state.part.sente_control_superposition.to_bitboard();
                     self.state.part.gote_control_board = self.state.part.gote_control_superposition.to_bitboard();
 
-                    self.state.banmen[dy as usize][dx as usize] = KomaKind::Blank;
                     self.state.banmen[dy as usize][dx as usize] = obtained_kind.unwrap_or(KomaKind::Blank);
                     self.state.banmen[sy as usize][sx as usize] = from_kind;
 
