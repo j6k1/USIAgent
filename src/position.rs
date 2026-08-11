@@ -65,7 +65,8 @@ impl<const N: usize> Position<N> {
         &self.mc
     }
 
-    /// 手を適用する#[inline]
+    /// 手を適用する
+    #[inline]
     pub fn apply_move(&mut self, teban: Teban,mv: LegalMove) -> Result<(),InvalidStateError> {
         if self.curernt_index >= N {
             return Err(InvalidStateError(String::from("Undo stack overflow")));
@@ -467,6 +468,7 @@ impl<const N: usize> Position<N> {
     }
 
     /// 局面の状態を一番最初の時点まで巻き戻す。Undoスタックも空に戻る。
+    #[inline]
     pub fn rewind(&mut self) -> Result<(),InvalidStateError> {
         while self.curernt_index > 0 {
             self.undo_move()?;
