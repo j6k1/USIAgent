@@ -49,17 +49,19 @@ impl<const N: usize> Position<N> {
         }
     }
 
+    /// 現在の盤面の状態への参照を返す
     #[inline]
     pub fn get_state(&self) -> &State {
         &self.state
     }
 
+    /// 現在の持ち駒の状態への参照を返す
     #[inline]
     pub fn get_mc(&self) -> &MochigomaCollections {
         &self.mc
     }
 
-    #[inline]
+    /// 手を適用する#[inline]
     pub fn apply_move(&mut self, teban: Teban,mv: LegalMove) -> Result<(),InvalidStateError> {
         if self.curernt_index >= N {
             return Err(InvalidStateError(String::from("Undo stack overflow")));
@@ -103,6 +105,7 @@ impl<const N: usize> Position<N> {
         Ok(())
     }
 
+    /// 盤面と持ち駒の状態を直前に適用された手が適用される前の状態に巻き戻す
     #[inline]
     pub fn undo_move(&mut self) -> Result<(),InvalidStateError> {
         if self.curernt_index == 0 {
