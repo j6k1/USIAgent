@@ -520,7 +520,8 @@ impl<E: QuietSeeEffect + Clone + Debug> MoveOrderer<E> {
     pub fn calc_piece_us_index(&self, teban: Teban, kind: usize) -> Result<usize,InvalidInputError> {
         if kind == KomaKind::Blank as usize {
             Err(InvalidInputError(String::from("There are no pieces on the move origin.")))
-        } else if teban == Teban::Sente && kind >= KomaKind::GFu as usize { Err(InvalidInputError(String::from(
+        } else if teban == Teban::Sente && kind >= KomaKind::GFu as usize {
+            Err(InvalidInputError(String::from(
                 "The piece type of the piece moved during Sente's turn is Gote."
             )))
         } else if teban == Teban::Gote && kind < KomaKind::GFu as usize {
