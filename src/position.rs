@@ -35,6 +35,7 @@ struct UndoItem {
     /// 後手側の駒のうち、先手側の王に王手をかけている駒の位置のビットボード
     pub gote_checked_board:BitBoard,
 }
+/// 手を適用した後適用前の状態に巻き戻し可能な盤面の状態
 #[derive(Debug,Clone)]
 pub struct Position<const N: usize> {
     state:State,
@@ -43,6 +44,11 @@ pub struct Position<const N: usize> {
     curernt_index:usize
 }
 impl<const N: usize> Position<N> {
+    /// `Position`の生成
+    ///
+    /// # Arguments
+    /// * `state` - 盤面の初期状態
+    /// * `mc` - 持ち駒の初期状態
     #[inline]
     pub fn new(state:State,mc:MochigomaCollections) -> Position<N> {
         Position {
@@ -66,6 +72,17 @@ impl<const N: usize> Position<N> {
     }
 
     /// 手を適用する
+    ///
+    /// # Arguments
+    /// * `teban` - 手を列挙したい手番
+    /// * `mv` - 適用する手
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidStateError`] Undoスタックのサイズを超えて手を適用しようとした
+    ///
+    /// [`InvalidStateError`]: ../error/struct.LimitSizeError.html
     #[inline]
     pub fn apply_move(&mut self, teban: Teban,mv: LegalMove) -> Result<(),InvalidStateError> {
         if self.curernt_index >= N {
@@ -126,6 +143,13 @@ impl<const N: usize> Position<N> {
     }
 
     /// 盤面と持ち駒の状態を直前に適用された手が適用される前の状態に巻き戻す
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidStateError`] Undoスタックが空(盤面は既に初期状態)なのに巻き戻そうとした
+    ///
+    /// [`InvalidStateError`]: ../error/struct.LimitSizeError.html
     #[inline]
     pub fn undo_move(&mut self) -> Result<(),InvalidStateError> {
         if self.curernt_index == 0 {
@@ -166,54 +190,96 @@ impl<const N: usize> Position<N> {
                     self.state.part.sente_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
 
                     for (kind,p) in [(to_kind,to),(from_kind,from),(before_to_kind,to)] {
+                        let mask = if kind == KomaKind::SOu {
+                            1 << (80 - p + 1)
+                        } else {
+                            1 << (p + 1)
+                        };
+
                         match kind {
-                            KomaKind::SFu | KomaKind::SFuN => {
-                                self.state.part.sente_fu_board ^= 1 << (p + 1);
+                            KomaKind::SFu => {
+                                self.state.part.sente_fu_board ^= mask;
                             },
-                            KomaKind::SKyou | KomaKind::SKyouN => {
-                                self.state.part.sente_kyou_board ^= 1 << (p + 1);
+                            KomaKind::SKyou => {
+                                self.state.part.sente_kyou_board ^= mask;
                             },
-                            KomaKind::SKei | KomaKind::SKeiN => {
-                                self.state.part.sente_kei_board ^= 1 << (p + 1);
+                            KomaKind::SKei => {
+                                self.state.part.sente_kei_board ^= mask;
                             },
-                            KomaKind::SGin | KomaKind::SGinN => {
-                                self.state.part.sente_gin_board ^= 1 << (p + 1);
+                            KomaKind::SGin => {
+                                self.state.part.sente_gin_board ^= mask;
                             },
                             KomaKind::SKin => {
-                                self.state.part.sente_kin_board ^= 1 << (p + 1);
+                                self.state.part.sente_kin_board ^= mask;
                             },
-                            KomaKind::SKaku | KomaKind::SKakuN => {
-                                self.state.part.sente_kaku_board ^= 1 << (p + 1);
+                            KomaKind::SKaku => {
+                                self.state.part.sente_kaku_board ^= mask;
                             },
-                            KomaKind::SHisha | KomaKind::SHishaN => {
-                                self.state.part.sente_hisha_board ^= 1 << (p + 1);
+                            KomaKind::SHisha => {
+                                self.state.part.sente_hisha_board ^= mask;
                             },
                             KomaKind::SOu => {
-                                self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
+                                self.state.part.gote_opponent_ou_position_board ^= mask;
                             },
-                            KomaKind::GFu | KomaKind::GFuN => {
-                                self.state.part.gote_fu_board ^= 1 << (p + 1);
+                            KomaKind::SFuN => {
+                                self.state.part.sente_fu_board ^= mask;
                             },
-                            KomaKind::GKyou | KomaKind::GKyouN => {
-                                self.state.part.gote_kyou_board ^= 1 << (p + 1);
+                            KomaKind::SKyouN => {
+                                self.state.part.sente_kyou_board ^= mask;
                             },
-                            KomaKind::GKei | KomaKind::GKeiN => {
-                                self.state.part.gote_kei_board ^= 1 << (p + 1);
+                            KomaKind::SKeiN => {
+                                self.state.part.sente_kei_board ^= mask;
                             },
-                            KomaKind::GGin | KomaKind::GGinN => {
-                                self.state.part.gote_gin_board ^= 1 << (p + 1);
+                            KomaKind::SGinN => {
+                                self.state.part.sente_gin_board ^= mask;
+                            },
+                            KomaKind::SKakuN => {
+                                self.state.part.sente_kaku_board ^= mask;
+                            },
+                            KomaKind::SHishaN => {
+                                self.state.part.sente_hisha_board ^= mask;
+                            },
+                            KomaKind::GFu => {
+                                self.state.part.gote_fu_board ^= mask;
+                            },
+                            KomaKind::GKyou => {
+                                self.state.part.gote_kyou_board ^= mask;
+                            },
+                            KomaKind::GKei => {
+                                self.state.part.gote_kei_board ^= mask;
+                            },
+                            KomaKind::GGin => {
+                                self.state.part.gote_gin_board ^= mask;
                             },
                             KomaKind::GKin => {
-                                self.state.part.gote_kin_board ^= 1 << (p + 1);
+                                self.state.part.gote_kin_board ^= mask;
                             },
-                            KomaKind::GKaku | KomaKind::GKakuN => {
-                                self.state.part.gote_kaku_board ^= 1 << (p + 1);
+                            KomaKind::GKaku => {
+                                self.state.part.gote_kaku_board ^= mask;
                             },
-                            KomaKind::GHisha | KomaKind::GHishaN => {
-                                self.state.part.gote_hisha_board ^= 1 << (p + 1);
+                            KomaKind::GHisha => {
+                                self.state.part.gote_hisha_board ^= mask;
                             },
                             KomaKind::GOu => {
-                                self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
+                                self.state.part.sente_opponent_ou_position_board ^= mask;
+                            },
+                            KomaKind::GFuN => {
+                                self.state.part.gote_fu_board ^= mask;
+                            },
+                            KomaKind::GKyouN => {
+                                self.state.part.gote_kyou_board ^= mask;
+                            },
+                            KomaKind::GKeiN => {
+                                self.state.part.gote_kei_board ^= mask;
+                            },
+                            KomaKind::GGinN => {
+                                self.state.part.gote_gin_board ^= mask;
+                            },
+                            KomaKind::GKakuN => {
+                                self.state.part.gote_kaku_board ^= mask;
+                            },
+                            KomaKind::GHishaN => {
+                                self.state.part.gote_hisha_board ^= mask;
                             },
                             KomaKind::Blank => {}
                         }
@@ -233,54 +299,96 @@ impl<const N: usize> Position<N> {
 
                     let kind = self.state.get_banmen()[dy as usize][dx as usize];
 
+                    let mask = if kind == KomaKind::SOu {
+                        1 << (80 - p + 1)
+                    } else {
+                        1 << (p + 1)
+                    };
+
                     match kind {
-                        KomaKind::SFu | KomaKind::SFuN => {
-                            self.state.part.sente_fu_board ^= 1 << (p + 1);
+                        KomaKind::SFu => {
+                            self.state.part.sente_fu_board ^= mask;
                         },
-                        KomaKind::SKyou | KomaKind::SKyouN => {
-                            self.state.part.sente_kyou_board ^= 1 << (p + 1);
+                        KomaKind::SKyou => {
+                            self.state.part.sente_kyou_board ^= mask;
                         },
-                        KomaKind::SKei | KomaKind::SKeiN => {
-                            self.state.part.sente_kei_board ^= 1 << (p + 1);
+                        KomaKind::SKei => {
+                            self.state.part.sente_kei_board ^= mask;
                         },
-                        KomaKind::SGin | KomaKind::SGinN => {
-                            self.state.part.sente_gin_board ^= 1 << (p + 1);
+                        KomaKind::SGin => {
+                            self.state.part.sente_gin_board ^= mask;
                         },
                         KomaKind::SKin => {
-                            self.state.part.sente_kin_board ^= 1 << (p + 1);
+                            self.state.part.sente_kin_board ^= mask;
                         },
-                        KomaKind::SKaku | KomaKind::SKakuN => {
-                            self.state.part.sente_kaku_board ^= 1 << (p + 1);
+                        KomaKind::SKaku => {
+                            self.state.part.sente_kaku_board ^= mask;
                         },
-                        KomaKind::SHisha | KomaKind::SHishaN => {
-                            self.state.part.sente_hisha_board ^= 1 << (p + 1);
+                        KomaKind::SHisha => {
+                            self.state.part.sente_hisha_board ^= mask;
                         },
                         KomaKind::SOu => {
-                            self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
+                            self.state.part.gote_opponent_ou_position_board ^= mask;
                         },
-                        KomaKind::GFu | KomaKind::GFuN => {
-                            self.state.part.gote_fu_board ^= 1 << (p + 1);
+                        KomaKind::SFuN => {
+                            self.state.part.sente_fu_board ^= mask;
                         },
-                        KomaKind::GKyou | KomaKind::GKyouN => {
-                            self.state.part.gote_kyou_board ^= 1 << (p + 1);
+                        KomaKind::SKyouN => {
+                            self.state.part.sente_kyou_board ^= mask;
                         },
-                        KomaKind::GKei | KomaKind::GKeiN=> {
-                            self.state.part.gote_kei_board ^= 1 << (p + 1);
+                        KomaKind::SKeiN => {
+                            self.state.part.sente_kei_board ^= mask;
                         },
-                        KomaKind::GGin | KomaKind::GGinN => {
-                            self.state.part.gote_gin_board ^= 1 << (p + 1);
+                        KomaKind::SGinN => {
+                            self.state.part.sente_gin_board ^= mask;
+                        },
+                        KomaKind::SKakuN => {
+                            self.state.part.sente_kaku_board ^= mask;
+                        },
+                        KomaKind::SHishaN => {
+                            self.state.part.sente_hisha_board ^= mask;
+                        },
+                        KomaKind::GFu => {
+                            self.state.part.gote_fu_board ^= mask;
+                        },
+                        KomaKind::GKyou => {
+                            self.state.part.gote_kyou_board ^= mask;
+                        },
+                        KomaKind::GKei => {
+                            self.state.part.gote_kei_board ^= mask;
+                        },
+                        KomaKind::GGin => {
+                            self.state.part.gote_gin_board ^= mask;
                         },
                         KomaKind::GKin => {
-                            self.state.part.gote_kin_board ^= 1 << (p + 1);
+                            self.state.part.gote_kin_board ^= mask;
                         },
-                        KomaKind::GKaku | KomaKind::GKakuN => {
-                            self.state.part.gote_kaku_board ^= 1 << (p + 1);
+                        KomaKind::GKaku => {
+                            self.state.part.gote_kaku_board ^= mask;
                         },
-                        KomaKind::GHisha | KomaKind::GHishaN => {
-                            self.state.part.gote_hisha_board ^= 1 << (p + 1);
+                        KomaKind::GHisha => {
+                            self.state.part.gote_hisha_board ^= mask;
                         },
                         KomaKind::GOu => {
-                            self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
+                            self.state.part.sente_opponent_ou_position_board ^= mask;
+                        },
+                        KomaKind::GFuN => {
+                            self.state.part.gote_fu_board ^= mask;
+                        },
+                        KomaKind::GKyouN => {
+                            self.state.part.gote_kyou_board ^= mask;
+                        },
+                        KomaKind::GKeiN => {
+                            self.state.part.gote_kei_board ^= mask;
+                        },
+                        KomaKind::GGinN => {
+                            self.state.part.gote_gin_board ^= mask;
+                        },
+                        KomaKind::GKakuN => {
+                            self.state.part.gote_kaku_board ^= mask;
+                        },
+                        KomaKind::GHishaN => {
+                            self.state.part.gote_hisha_board ^= mask;
                         },
                         KomaKind::Blank => {}
                     }
@@ -324,54 +432,96 @@ impl<const N: usize> Position<N> {
                     self.state.part.gote_nari_board ^= (from_kind.is_nari() as u128) << (from + 1);
 
                     for (kind,p) in [(to_kind,to),(from_kind,from),(before_to_kind,to)] {
+                        let mask = if kind == KomaKind::SOu {
+                            1 << (80 - p + 1)
+                        } else {
+                            1 << (p + 1)
+                        };
+
                         match kind {
-                            KomaKind::SFu | KomaKind::SFuN => {
-                                self.state.part.sente_fu_board ^= 1 << (p + 1);
+                            KomaKind::SFu => {
+                                self.state.part.sente_fu_board ^= mask;
                             },
-                            KomaKind::SKyou | KomaKind::SKyouN => {
-                                self.state.part.sente_kyou_board ^= 1 << (p + 1);
+                            KomaKind::SKyou => {
+                                self.state.part.sente_kyou_board ^= mask;
                             },
-                            KomaKind::SKei | KomaKind::SKeiN => {
-                                self.state.part.sente_kei_board ^= 1 << (p + 1);
+                            KomaKind::SKei => {
+                                self.state.part.sente_kei_board ^= mask;
                             },
-                            KomaKind::SGin | KomaKind::SGinN => {
-                                self.state.part.sente_gin_board ^= 1 << (p + 1);
+                            KomaKind::SGin => {
+                                self.state.part.sente_gin_board ^= mask;
                             },
                             KomaKind::SKin => {
-                                self.state.part.sente_kin_board ^= 1 << (p + 1);
+                                self.state.part.sente_kin_board ^= mask;
                             },
-                            KomaKind::SKaku | KomaKind::SKakuN => {
-                                self.state.part.sente_kaku_board ^= 1 << (p + 1);
+                            KomaKind::SKaku => {
+                                self.state.part.sente_kaku_board ^= mask;
                             },
-                            KomaKind::SHisha | KomaKind::SHishaN => {
-                                self.state.part.sente_hisha_board ^= 1 << (p + 1);
+                            KomaKind::SHisha => {
+                                self.state.part.sente_hisha_board ^= mask;
                             },
                             KomaKind::SOu => {
-                                self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
+                                self.state.part.gote_opponent_ou_position_board ^= mask;
                             },
-                            KomaKind::GFu | KomaKind::GFuN => {
-                                self.state.part.gote_fu_board ^= 1 << (p + 1);
+                            KomaKind::SFuN => {
+                                self.state.part.sente_fu_board ^= mask;
                             },
-                            KomaKind::GKyou | KomaKind::GKyouN => {
-                                self.state.part.gote_kyou_board ^= 1 << (p + 1);
+                            KomaKind::SKyouN => {
+                                self.state.part.sente_kyou_board ^= mask;
                             },
-                            KomaKind::GKei | KomaKind::GKeiN => {
-                                self.state.part.gote_kei_board ^= 1 << (p + 1);
+                            KomaKind::SKeiN => {
+                                self.state.part.sente_kei_board ^= mask;
                             },
-                            KomaKind::GGin | KomaKind::GGinN => {
-                                self.state.part.gote_gin_board ^= 1 << (p + 1);
+                            KomaKind::SGinN => {
+                                self.state.part.sente_gin_board ^= mask;
+                            },
+                            KomaKind::SKakuN => {
+                                self.state.part.sente_kaku_board ^= mask;
+                            },
+                            KomaKind::SHishaN => {
+                                self.state.part.sente_hisha_board ^= mask;
+                            },
+                            KomaKind::GFu => {
+                                self.state.part.gote_fu_board ^= mask;
+                            },
+                            KomaKind::GKyou => {
+                                self.state.part.gote_kyou_board ^= mask;
+                            },
+                            KomaKind::GKei => {
+                                self.state.part.gote_kei_board ^= mask;
+                            },
+                            KomaKind::GGin => {
+                                self.state.part.gote_gin_board ^= mask;
                             },
                             KomaKind::GKin => {
-                                self.state.part.gote_kin_board ^= 1 << (p + 1);
+                                self.state.part.gote_kin_board ^= mask;
                             },
-                            KomaKind::GKaku | KomaKind::GKakuN => {
-                                self.state.part.gote_kaku_board ^= 1 << (p + 1);
+                            KomaKind::GKaku => {
+                                self.state.part.gote_kaku_board ^= mask;
                             },
-                            KomaKind::GHisha | KomaKind::GHishaN => {
-                                self.state.part.gote_hisha_board ^= 1 << (p + 1);
+                            KomaKind::GHisha => {
+                                self.state.part.gote_hisha_board ^= mask;
                             },
                             KomaKind::GOu => {
-                                self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
+                                self.state.part.sente_opponent_ou_position_board ^= mask;
+                            },
+                            KomaKind::GFuN => {
+                                self.state.part.gote_fu_board ^= mask;
+                            },
+                            KomaKind::GKyouN => {
+                                self.state.part.gote_kyou_board ^= mask;
+                            },
+                            KomaKind::GKeiN => {
+                                self.state.part.gote_kei_board ^= mask;
+                            },
+                            KomaKind::GGinN => {
+                                self.state.part.gote_gin_board ^= mask;
+                            },
+                            KomaKind::GKakuN => {
+                                self.state.part.gote_kaku_board ^= mask;
+                            },
+                            KomaKind::GHishaN => {
+                                self.state.part.gote_hisha_board ^= mask;
                             },
                             KomaKind::Blank => {}
                         }
@@ -391,54 +541,96 @@ impl<const N: usize> Position<N> {
 
                     let kind = self.state.get_banmen()[dy as usize][dx as usize];
 
+                    let mask = if kind == KomaKind::SOu {
+                        1 << (80 - p + 1)
+                    } else {
+                        1 << (p + 1)
+                    };
+
                     match kind {
-                        KomaKind::SFu | KomaKind::SFuN => {
-                            self.state.part.sente_fu_board ^= 1 << (p + 1);
+                        KomaKind::SFu => {
+                            self.state.part.sente_fu_board ^= mask;
                         },
-                        KomaKind::SKyou | KomaKind::SKyouN => {
-                            self.state.part.sente_kyou_board ^= 1 << (p + 1);
+                        KomaKind::SKyou => {
+                            self.state.part.sente_kyou_board ^= mask;
                         },
-                        KomaKind::SKei | KomaKind::SKeiN => {
-                            self.state.part.sente_kei_board ^= 1 << (p + 1);
+                        KomaKind::SKei => {
+                            self.state.part.sente_kei_board ^= mask;
                         },
-                        KomaKind::SGin | KomaKind::SGinN => {
-                            self.state.part.sente_gin_board ^= 1 << (p + 1);
+                        KomaKind::SGin => {
+                            self.state.part.sente_gin_board ^= mask;
                         },
                         KomaKind::SKin => {
-                            self.state.part.sente_kin_board ^= 1 << (p + 1);
+                            self.state.part.sente_kin_board ^= mask;
                         },
-                        KomaKind::SKaku | KomaKind::SKakuN => {
-                            self.state.part.sente_kaku_board ^= 1 << (p + 1);
+                        KomaKind::SKaku => {
+                            self.state.part.sente_kaku_board ^= mask;
                         },
-                        KomaKind::SHisha | KomaKind::SHishaN => {
-                            self.state.part.sente_hisha_board ^= 1 << (p + 1);
+                        KomaKind::SHisha => {
+                            self.state.part.sente_hisha_board ^= mask;
                         },
                         KomaKind::SOu => {
-                            self.state.part.gote_opponent_ou_position_board ^= 1 << (80 - p + 1);
+                            self.state.part.gote_opponent_ou_position_board ^= mask;
                         },
-                        KomaKind::GFu | KomaKind::GFuN => {
-                            self.state.part.gote_fu_board ^= 1 << (p + 1);
+                        KomaKind::SFuN => {
+                            self.state.part.sente_fu_board ^= mask;
                         },
-                        KomaKind::GKyou | KomaKind::GKyouN => {
-                            self.state.part.gote_kyou_board ^= 1 << (p + 1);
+                        KomaKind::SKyouN => {
+                            self.state.part.sente_kyou_board ^= mask;
                         },
-                        KomaKind::GKei | KomaKind::GKeiN=> {
-                            self.state.part.gote_kei_board ^= 1 << (p + 1);
+                        KomaKind::SKeiN => {
+                            self.state.part.sente_kei_board ^= mask;
                         },
-                        KomaKind::GGin | KomaKind::GGinN => {
-                            self.state.part.gote_gin_board ^= 1 << (p + 1);
+                        KomaKind::SGinN => {
+                            self.state.part.sente_gin_board ^= mask;
+                        },
+                        KomaKind::SKakuN => {
+                            self.state.part.sente_kaku_board ^= mask;
+                        },
+                        KomaKind::SHishaN => {
+                            self.state.part.sente_hisha_board ^= mask;
+                        },
+                        KomaKind::GFu => {
+                            self.state.part.gote_fu_board ^= mask;
+                        },
+                        KomaKind::GKyou => {
+                            self.state.part.gote_kyou_board ^= mask;
+                        },
+                        KomaKind::GKei => {
+                            self.state.part.gote_kei_board ^= mask;
+                        },
+                        KomaKind::GGin => {
+                            self.state.part.gote_gin_board ^= mask;
                         },
                         KomaKind::GKin => {
-                            self.state.part.gote_kin_board ^= 1 << (p + 1);
+                            self.state.part.gote_kin_board ^= mask;
                         },
-                        KomaKind::GKaku | KomaKind::GKakuN => {
-                            self.state.part.gote_kaku_board ^= 1 << (p + 1);
+                        KomaKind::GKaku => {
+                            self.state.part.gote_kaku_board ^= mask;
                         },
-                        KomaKind::GHisha | KomaKind::GHishaN => {
-                            self.state.part.gote_hisha_board ^= 1 << (p + 1);
+                        KomaKind::GHisha => {
+                            self.state.part.gote_hisha_board ^= mask;
                         },
                         KomaKind::GOu => {
-                            self.state.part.sente_opponent_ou_position_board ^= 1 << (p + 1);
+                            self.state.part.sente_opponent_ou_position_board ^= mask;
+                        },
+                        KomaKind::GFuN => {
+                            self.state.part.gote_fu_board ^= mask;
+                        },
+                        KomaKind::GKyouN => {
+                            self.state.part.gote_kyou_board ^= mask;
+                        },
+                        KomaKind::GKeiN => {
+                            self.state.part.gote_kei_board ^= mask;
+                        },
+                        KomaKind::GGinN => {
+                            self.state.part.gote_gin_board ^= mask;
+                        },
+                        KomaKind::GKakuN => {
+                            self.state.part.gote_kaku_board ^= mask;
+                        },
+                        KomaKind::GHishaN => {
+                            self.state.part.gote_hisha_board ^= mask;
                         },
                         KomaKind::Blank => {}
                     }
@@ -468,6 +660,13 @@ impl<const N: usize> Position<N> {
     }
 
     /// 局面の状態を一番最初の時点まで巻き戻す。Undoスタックも空に戻る。
+    ///
+    /// # Errors
+    ///
+    /// この関数は以下のエラーを返すケースがあります。
+    /// * [`InvalidStateError`] 局面の巻き戻し中にエラーが発生した(現状の実装では実際には発生しない)
+    ///
+    /// [`InvalidStateError`]: ../error/struct.LimitSizeError.html
     #[inline]
     pub fn rewind(&mut self) -> Result<(),InvalidStateError> {
         while self.curernt_index > 0 {

@@ -3,6 +3,7 @@
 use std::ops::{AddAssign, SubAssign};
 use bitboard::BitBoard;
 
+/// 10枚のビットボードを組み合わせることで盤面上の飛車角香車を除くすべての駒の効き情報を高速に差分更新可能な構造体
 #[derive(Clone,Eq,PartialEq,Debug)]
 pub struct SuperPosition {
     boards:[BitBoard; 10]
